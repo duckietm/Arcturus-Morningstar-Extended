@@ -94,21 +94,17 @@ public class YoutubeManager {
                         final int itemId = set.getInt("item_id");
                         final String playlistId = set.getString("playlist_id");
 
+
                         youtubeDataLoaderPool.submit(() -> {
-                            ArrayList<YoutubePlaylist> playlists = this.playlists.getOrDefault(itemId, new ArrayList<>());
-
                             YoutubePlaylist playlist;
-
                             try {
                                 playlist = this.getPlaylistDataById(playlistId);
                                 if (playlist != null) {
-                                    playlists.add(playlist);
+                                    this.addPlaylistToItem(itemId, playlist);
                                 }
                             } catch (IOException e) {
                                 LOGGER.error("Failed to load YouTube playlist {} ERROR: {}", playlistId, e);
                             }
-
-                            this.playlists.put(itemId, playlists);
                         });
                     }
                 }
@@ -122,7 +118,6 @@ public class YoutubeManager {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             LOGGER.info("YouTube Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
         });
     }
@@ -220,6 +215,7 @@ public class YoutubeManager {
         playlist = new YoutubePlaylist(playlistId, name, description, videos);
 
         this.playlistCache.put(playlistId, playlist);
+        LOGGER.info("Loaded youtube playList into cache:" + playlistId);
 
         return playlist;
 
@@ -231,5 +227,6 @@ public class YoutubeManager {
 
     public void addPlaylistToItem(int itemId, YoutubePlaylist playlist) {
         this.playlists.computeIfAbsent(itemId, k -> new ArrayList<>()).add(playlist);
+        LOGGER.info("Loaded youtube playList into FurniID:" + itemId);
     }
 }
