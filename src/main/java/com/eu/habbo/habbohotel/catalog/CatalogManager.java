@@ -674,9 +674,13 @@ public class CatalogManager {
 
         page = this.getCatalogPage(pageId);
 
+        if (page == null)
+            return false;
+
         page.getCatalogItems().put(item.getId(), item);
 
         item.setPageId(pageId);
+        item.setNeedsUpdate(true);
 
         item.run();
         return true;
