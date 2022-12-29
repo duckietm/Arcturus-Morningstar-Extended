@@ -8,9 +8,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.ssl.NotSslRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 
 @ChannelHandler.Sharable
@@ -60,9 +62,16 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         if (Emulator.getConfig().getBoolean("debug.mode")) {
-            if (cause instanceof TooLongFrameException) {
+            if (cause instanceof NotSslRecordException) {
+                LOGGER.error("Someone ({}) speaks transport plaintext instead of ssl, will close the channel: ", ctx.channel().remoteAddress());
+            }
+            else if (cause instanceof TooLongFrameException) {
                 LOGGER.error("Disconnecting client, reason: \"" + cause.getMessage() + "\".");
-            } else {
+            }
+            else if (cause instanceof SSLException) {
+                LOGGER.error("SSL Problem: "+cause.getMessage(),cause);
+            }
+            else {
                 LOGGER.error("Disconnecting client, exception in GameMessageHander.", cause);
             }
         }
