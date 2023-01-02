@@ -118,10 +118,17 @@ public class Habbo implements Runnable {
 
     public boolean connect() {
         String ip = "";
+        String ProxyIP = "";
 
         if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
             SocketAddress address = this.client.getChannel().remoteAddress();
             ip = ((InetSocketAddress) address).getAddress().getHostAddress();
+            ProxyIP = "- no proxy server used";
+        }
+        else
+        {
+            SocketAddress address = this.client.getChannel().remoteAddress();
+            ProxyIP = ((InetSocketAddress) address).getAddress().getHostAddress();
         }
 
         if (Emulator.getPluginManager().isRegistered(UserGetIPAddressEvent.class, true)) {
@@ -149,7 +156,7 @@ public class Habbo implements Runnable {
         this.messenger.connectionChanged(this, true, false);
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
-        LOGGER.info("{} logged in from IP {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin());
+        LOGGER.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
         return true;
     }
 

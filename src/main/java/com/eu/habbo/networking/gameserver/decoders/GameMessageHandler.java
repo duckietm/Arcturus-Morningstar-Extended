@@ -74,10 +74,10 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
                 LOGGER.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
             }
             else if (cause instanceof TooLongFrameException) {
-                LOGGER.error("Disconnecting client, reason: \"" + cause.getMessage() + "\".");
+                LOGGER.error("Disconnecting client, reason " + cause.getMessage());
             }
             else if (cause instanceof SSLHandshakeException) {
-                LOGGER.error("URL Request error from source: " + ctx.channel().remoteAddress());
+                LOGGER.error("URL Request error from source " + ctx.channel().remoteAddress());
             }
             else if (cause instanceof NoSuchAlgorithmException) {
                 LOGGER.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
@@ -86,7 +86,7 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
                 LOGGER.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
             }
             else if (cause instanceof UnsupportedMessageTypeException) {
-                LOGGER.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!): " + ctx.channel().remoteAddress());
+                LOGGER.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!) " + ctx.channel().remoteAddress());
             }
             else if (cause instanceof SSLException) {
                 LOGGER.error("SSL Problem: "+ cause.getMessage() + cause);
