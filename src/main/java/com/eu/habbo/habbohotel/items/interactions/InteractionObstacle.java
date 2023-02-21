@@ -76,18 +76,12 @@ public class InteractionObstacle extends HabboItem {
         Emulator.getThreading().run(new HabboItemNewState(this, room, "0"), 2000);
 
         // Jump animation.
-        roomUnit.removeStatus(RoomUnitStatus.MOVE);
-        roomUnit.removeStatus(RoomUnitStatus.JUMP);
-        roomUnit.statusUpdate(true);
-
-        horse.getRoomUnit().removeStatus(RoomUnitStatus.JUMP);
-        horse.getRoomUnit().removeStatus(RoomUnitStatus.MOVE);
         horse.getRoomUnit().setStatus(RoomUnitStatus.JUMP, "0");
-        horse.getRoomUnit().statusUpdate(true);
+        room.updateRoomUnit(horse.getRoomUnit());
 
         Emulator.getThreading().run(() -> {
             horse.getRoomUnit().removeStatus(RoomUnitStatus.JUMP);
-            horse.getRoomUnit().statusUpdate(true);
+            room.updateRoomUnit(horse.getRoomUnit());
         }, 1000);
 
         // Achievement.
