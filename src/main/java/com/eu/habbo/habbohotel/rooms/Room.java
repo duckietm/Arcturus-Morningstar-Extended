@@ -27,6 +27,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
 import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.permissions.Permission;
+import com.eu.habbo.habbohotel.pets.HorsePet;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetManager;
 import com.eu.habbo.habbohotel.pets.RideablePet;
@@ -83,6 +84,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -3805,6 +3807,27 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 return habbo;
         }
         return null;
+    }
+
+    public HorsePet getHabboHorse(final RoomUnit roomUnit) {
+        final AtomicReference<HorsePet> result = new AtomicReference<>();
+
+        this.currentPets.forEachEntry((i, pet) -> {
+            if (!(pet instanceof HorsePet)) {
+                return true;
+            }
+
+            final HorsePet horsePet = (HorsePet) pet;
+
+            if (horsePet.getRider() == null || horsePet.getRider().getRoomUnit() != roomUnit) {
+                return true;
+            }
+
+            result.set((HorsePet) pet);
+            return false;
+        });
+
+        return result.get();
     }
 
     public Habbo getHabbo(int userId) {
