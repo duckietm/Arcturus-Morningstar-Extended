@@ -123,11 +123,10 @@ public class Habbo implements Runnable {
     public boolean connect() {
         String ip = "";
         String ProxyIP = "";
-        String ipAddress = String.valueOf(this.client.getChannel().remoteAddress());
 
         Pattern VALID_IPV4_PATTERN = null;
         Pattern VALID_IPV6_PATTERN = null;
-		String ipv4Pattern = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
+        String ipv4Pattern = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 		String ipv6Pattern = "([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}";
 
         try {
@@ -171,9 +170,10 @@ public class Habbo implements Runnable {
         Matcher ipv4match = VALID_IPV4_PATTERN.matcher(this.habboInfo.getIpLogin());
         Matcher ipv6match = VALID_IPV6_PATTERN.matcher(this.habboInfo.getIpLogin());
         if (ipv4match.matches() | ipv6match.matches()) {
-            LOGGER.info("IPv4 Checked: " + this.habboInfo.getIpLogin());
+            LOGGER.info("\u001B[32m"+ "IP Checked: " + this.habboInfo.getIpLogin());
         } else {
-            LOGGER.info("IPv4 Failed: " + this.habboInfo.getIpLogin());
+            LOGGER.debug("\u001B[31m" + "IP Failed: " + this.habboInfo.getIpLogin());
+            return false;
         }
 
         this.habboInfo.setMachineID(this.client.getMachineId());
