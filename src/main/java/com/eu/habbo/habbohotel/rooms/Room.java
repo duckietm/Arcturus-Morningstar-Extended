@@ -1464,6 +1464,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 if (unit.hasStatus(RoomUnitStatus.MOVE))
                                     continue;
 
+                                if (unit.pendingRollerTask())
+                                    continue;
+
                                 RoomTile tile = tileInFront.copy();
                                 tile.setStackHeight(unit.getZ() + zOffset);
 
@@ -1483,11 +1486,13 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                         RideablePet riding = rollingHabbo.getHabboInfo().getRiding();
                                         if (riding != null) {
                                             RoomUnit ridingUnit = riding.getRoomUnit();
-                                            tile.setStackHeight(ridingUnit.getZ() + zOffset);
-                                            rolledUnitIds.add(ridingUnit.getId());
-                                            updatedUnit.remove(ridingUnit);
-                                            messages.add(new RoomUnitOnRollerComposer(ridingUnit, roller, ridingUnit.getCurrentLocation(), ridingUnit.getZ(), tile, tile.getStackHeight(), room));
-                                            isRiding = true;
+                                            if (!ridingUnit.pendingRollerTask()) {
+                                                tile.setStackHeight(ridingUnit.getZ() + zOffset);
+                                                rolledUnitIds.add(ridingUnit.getId());
+                                                updatedUnit.remove(ridingUnit);
+                                                ridingUnit.scheduleRollerTask(new RoomUnitOnRollerComposer(ridingUnit, roller, ridingUnit.getCurrentLocation(), ridingUnit.getZ(), tile, tile.getStackHeight(), room));
+                                                isRiding = true;
+                                            }
                                         }
                                     }
                                 }
@@ -1495,7 +1500,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 usersRolledThisTile.add(unit.getId());
                                 rolledUnitIds.add(unit.getId());
                                 updatedUnit.remove(unit);
-                                messages.add(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(), unit.getZ() + (isRiding ? 1 : 0), tile, tile.getStackHeight() + (isRiding ? 1 : 0), room));
+                                unit.scheduleRollerTask(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(), unit.getZ() + (isRiding ? 1 : 0), tile, tile.getStackHeight() + (isRiding ? 1 : 0), room));
 
                                 if (itemsOnRoller.isEmpty()) {
                                     HabboItem item = room.getTopItemAt(tileInFront.x, tileInFront.y);

@@ -40,7 +40,7 @@ public class ThreadPooling {
         return null;
     }
 
-    public ScheduledFuture run(Runnable run, long delay) {
+    public ScheduledFuture<?> run(Runnable run, long delay) {
         try {
             if (this.canAdd) {
                 return this.scheduledPool.schedule(() -> {
