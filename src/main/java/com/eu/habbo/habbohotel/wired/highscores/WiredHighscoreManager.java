@@ -72,6 +72,34 @@ public class WiredHighscoreManager {
         }
     }
 
+    public void setHighscoreData(WiredHighscoreDataEntry entry) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+            final String userIds = String.join(",", entry.getUserIds().stream().map(Object::toString).collect(Collectors.toList()));
+
+            // Select existing
+            try (PreparedStatement selectScore = connection.prepareStatement("SELECT `id` FROM `items_highscore_data` WHERE `item_id` = ? AND `user_ids` = ? LIMIT 1")) {
+                selectScore.setInt(1, entry.getItemId());
+                selectScore.setString(2, userIds);
+
+                try (final ResultSet scoreResult = selectScore.executeQuery()) {
+                    if (scoreResult.next()) {
+                        // Set
+                        try (PreparedStatement statement = connection.prepareStatement("UPDATE `items_highscore_data` SET `score` = ? WHERE `id` = ?")) {
+                            statement.setInt(1, entry.getScore());
+                            statement.setInt(2, scoreResult.getInt("id"));
+                            statement.execute();
+                        }
+                    } else {
+                        // Insert
+                        addHighscoreData(entry);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+    }
+
     private List<WiredHighscoreDataEntry> loadHighscoreData(final int itemId) {
         final List<WiredHighscoreDataEntry> result = new ArrayList<>();
 

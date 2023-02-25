@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.ItemManager;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredHighscore;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSuper;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -46,32 +47,22 @@ public class WiredEffectSuper extends InteractionWiredEffect {
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         LOGGER.debug("Executing super wired effect, key {} value {}", this.configKey, this.configValue);
 
-        // Fetch Habbo.
-        Habbo habbo = room.getHabbo(roomUnit);
-
-        switch (this.configKey) {
-            case "addpoint":
-                final ItemManager itemManager = Emulator.getGameEnvironment().getItemManager();
-                final WiredHighscoreManager wiredHighscoreManager = itemManager.getHighscoreManager();
-                final THashSet<InteractionWiredHighscore> wiredHighscores = room.getRoomSpecialTypes().getWiredHighscores();
-
-                final List<Integer> userIds = Collections.singletonList(habbo.getHabboInfo().getId());
-                final int score = Integer.parseInt(configValue);
-
-                for (final InteractionWiredHighscore highscore : wiredHighscores) {
-                    final int itemId = highscore.getId();
-                    final WiredHighscoreDataEntry entry = new WiredHighscoreDataEntry(itemId, userIds, score, true, Emulator.getIntUnixTimestamp());
-
-                    wiredHighscoreManager.addOrUpdateHighscoreData(entry);
+        try {
+            switch (this.configKey) {
+                case "addpoint": {
+                    final int score = Integer.parseInt(configValue);
+                    WiredSuper.addPoint(roomUnit, room, score);
+                    break;
                 }
 
-                for (final InteractionWiredHighscore highscore : wiredHighscores) {
-                    highscore.reloadData();
-
-                    room.updateItem(highscore);
+                case "setpoint": {
+                    final int score = Integer.parseInt(configValue);
+                    WiredSuper.setPoint(roomUnit, room, score);
+                    break;
                 }
-
-                break;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to run wired effect super " + this.configKey, e);
         }
 
         return true;
