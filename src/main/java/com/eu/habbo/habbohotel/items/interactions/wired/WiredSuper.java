@@ -69,6 +69,29 @@ public class WiredSuper {
         }
     }
 
+    public static boolean noTotalClassement(RoomUnit roomUnit, Room room) {
+        final Habbo habbo = room.getHabbo(roomUnit);
+
+        if (habbo == null) {
+            return false;
+        }
+
+        final ItemManager itemManager = Emulator.getGameEnvironment().getItemManager();
+        final WiredHighscoreManager wiredHighscoreManager = itemManager.getHighscoreManager();
+        final THashSet<InteractionWiredHighscore> wiredHighscores = room.getRoomSpecialTypes().getWiredHighscores();
+        final List<Integer> userIds = Collections.singletonList(habbo.getHabboInfo().getId());
+
+        for (final InteractionWiredHighscore highscore : wiredHighscores) {
+            final WiredHighscoreDataEntry entry = wiredHighscoreManager.getHighscoreRow(highscore.getId(), userIds);
+
+            if (entry != null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static boolean totalPointEqual(RoomUnit roomUnit, Room room, int score) {
         final Habbo habbo = room.getHabbo(roomUnit);
 

@@ -65,7 +65,7 @@ public class WiredConditionSuper extends InteractionWiredCondition {
         try {
             switch (this.configKey) {
                 case "nototalclassement": {
-                    break;
+                    return WiredSuper.noTotalClassement(roomUnit, room);
                 }
 
                 case "totalpointequal": {
