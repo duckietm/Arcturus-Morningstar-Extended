@@ -3,33 +3,29 @@ package com.eu.habbo.habbohotel.items.interactions.wired.effects;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.items.ItemManager;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
-import com.eu.habbo.habbohotel.items.interactions.InteractionWiredHighscore;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSuper;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreDataEntry;
-import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WiredEffectSuper extends InteractionWiredEffect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectSuper.class);
     private static final WiredEffectType WIRED_EFFECT_TYPE = WiredEffectType.BOT_MOVE;
+    private static final int CONFIG_MAX_LENGTH = 100;
 
     private final List<HabboItem> selectedItems = new ArrayList<>();
     private String configKey = "";
@@ -62,7 +58,7 @@ public class WiredEffectSuper extends InteractionWiredEffect {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to run wired effect super " + this.configKey, e);
+            LOGGER.error("Failed to run super wired effect " + this.configKey, e);
         }
 
         return true;
@@ -171,8 +167,8 @@ public class WiredEffectSuper extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
         }
 
-        if (configuration.length() > 100) {
-            throw new WiredSaveException("Configuration too long");
+        if (configuration.length() > CONFIG_MAX_LENGTH) {
+            return false;
         }
 
         if (configuration.contains(":")) {

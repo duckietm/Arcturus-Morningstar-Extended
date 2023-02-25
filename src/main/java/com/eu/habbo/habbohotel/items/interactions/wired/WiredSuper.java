@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 // Mikee: Lazy, sorry.
+// Mikee: Yeah, duplicate code, sorry.
 public class WiredSuper {
 
     public static void addPoint(final RoomUnit roomUnit, final Room room, final int scoreToAdd) {
@@ -26,7 +27,6 @@ public class WiredSuper {
         final ItemManager itemManager = Emulator.getGameEnvironment().getItemManager();
         final WiredHighscoreManager wiredHighscoreManager = itemManager.getHighscoreManager();
         final THashSet<InteractionWiredHighscore> wiredHighscores = room.getRoomSpecialTypes().getWiredHighscores();
-
         final List<Integer> userIds = Collections.singletonList(habbo.getHabboInfo().getId());
 
         for (final InteractionWiredHighscore highscore : wiredHighscores) {
@@ -53,7 +53,6 @@ public class WiredSuper {
         final ItemManager itemManager = Emulator.getGameEnvironment().getItemManager();
         final WiredHighscoreManager wiredHighscoreManager = itemManager.getHighscoreManager();
         final THashSet<InteractionWiredHighscore> wiredHighscores = room.getRoomSpecialTypes().getWiredHighscores();
-
         final List<Integer> userIds = Collections.singletonList(habbo.getHabboInfo().getId());
 
         for (final InteractionWiredHighscore highscore : wiredHighscores) {
@@ -70,4 +69,26 @@ public class WiredSuper {
         }
     }
 
+    public static boolean totalPointEqual(RoomUnit roomUnit, Room room, int score) {
+        final Habbo habbo = room.getHabbo(roomUnit);
+
+        if (habbo == null) {
+            return false;
+        }
+
+        final ItemManager itemManager = Emulator.getGameEnvironment().getItemManager();
+        final WiredHighscoreManager wiredHighscoreManager = itemManager.getHighscoreManager();
+        final THashSet<InteractionWiredHighscore> wiredHighscores = room.getRoomSpecialTypes().getWiredHighscores();
+        final List<Integer> userIds = Collections.singletonList(habbo.getHabboInfo().getId());
+
+        for (final InteractionWiredHighscore highscore : wiredHighscores) {
+            final WiredHighscoreDataEntry entry = wiredHighscoreManager.getHighscoreRow(highscore.getId(), userIds);
+
+            if (entry != null && entry.getScore() == score) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
