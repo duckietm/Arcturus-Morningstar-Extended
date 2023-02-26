@@ -31,10 +31,6 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 public class Habbo implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Habbo.class);
@@ -123,6 +119,7 @@ public class Habbo implements Runnable {
     public boolean connect() {
         String ip = "";
         String ProxyIP = "";
+<<<<<<< HEAD
 
         Pattern VALID_IPV4_PATTERN = null;
         Pattern VALID_IPV6_PATTERN = null;
@@ -136,6 +133,8 @@ public class Habbo implements Runnable {
         catch (PatternSyntaxException e) {
             LOGGER.info("Unable to compile pattern", e);
         }
+=======
+>>>>>>> parent of 1b60be8a (Add IP health check IPv4 and IPv6)
 
         if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
             SocketAddress address = this.client.getChannel().remoteAddress();
@@ -167,6 +166,7 @@ public class Habbo implements Runnable {
             return false;
         }
 
+<<<<<<< HEAD
         Matcher ipv4match = VALID_IPV4_PATTERN.matcher(this.habboInfo.getIpLogin());
         Matcher ipv6match = VALID_IPV6_PATTERN.matcher(this.habboInfo.getIpLogin());
         if (ipv4match.matches() | ipv6match.matches()) {
@@ -176,6 +176,8 @@ public class Habbo implements Runnable {
             return false;
         }
 
+=======
+>>>>>>> parent of 1b60be8a (Add IP health check IPv4 and IPv6)
         this.habboInfo.setMachineID(this.client.getMachineId());
         this.isOnline(true);
 
