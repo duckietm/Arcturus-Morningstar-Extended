@@ -27,6 +27,16 @@ public class GameClient {
     private boolean handshakeFinished;
     private String machineId = "";
 
+    private boolean finishedReleaseEvent = false;
+
+    public void finishedReleaseEvent() {
+        this.finishedReleaseEvent = true;
+    }
+
+    public boolean didFinishReleaseEvent() {
+        return this.finishedReleaseEvent;
+    }
+
     public final ConcurrentHashMap<Integer, Integer> incomingPacketCounter = new ConcurrentHashMap<>(25);
     public final ConcurrentHashMap<Class<? extends MessageHandler>, Long> messageTimestamps = new ConcurrentHashMap<>();
     public long lastPacketCounterCleared = Emulator.getIntUnixTimestamp();

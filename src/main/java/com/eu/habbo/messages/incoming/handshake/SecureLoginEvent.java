@@ -46,11 +46,14 @@ import java.util.Date;
 public class SecureLoginEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureLoginEvent.class);
 
-
-
     @Override
     public void handle() throws Exception {
         if (!this.client.getChannel().isOpen()) {
+            Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
+            return;
+        }
+
+        if (!this.client.didFinishReleaseEvent()) {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
             return;
         }
@@ -77,11 +80,12 @@ public class SecureLoginEvent extends MessageHandler {
             LOGGER.debug("Client is trying to connect without SSO ticket! Closed connection...");
             return;
         }
-
+		
         if (this.client.getHabbo() == null) {
             Habbo habbo = Emulator.getGameEnvironment().getHabboManager().loadHabbo(sso);
             if (habbo != null) {
                 try {
+
                     habbo.setClient(this.client);
                     this.client.setHabbo(habbo);
                     if(!this.client.getHabbo().connect()) {
