@@ -119,22 +119,6 @@ public class Habbo implements Runnable {
     public boolean connect() {
         String ip = "";
         String ProxyIP = "";
-<<<<<<< HEAD
-
-        Pattern VALID_IPV4_PATTERN = null;
-        Pattern VALID_IPV6_PATTERN = null;
-        String ipv4Pattern = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
-		String ipv6Pattern = "([0-9a-f]{1,4}:){7}([0-9a-f]){1,4}";
-
-        try {
-            VALID_IPV4_PATTERN = Pattern.compile(ipv4Pattern, Pattern.CASE_INSENSITIVE);
-            VALID_IPV6_PATTERN = Pattern.compile(ipv6Pattern, Pattern.CASE_INSENSITIVE);
-        }
-        catch (PatternSyntaxException e) {
-            LOGGER.info("Unable to compile pattern", e);
-        }
-=======
->>>>>>> parent of 1b60be8a (Add IP health check IPv4 and IPv6)
 
         if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
             SocketAddress address = this.client.getChannel().remoteAddress();
@@ -166,18 +150,6 @@ public class Habbo implements Runnable {
             return false;
         }
 
-<<<<<<< HEAD
-        Matcher ipv4match = VALID_IPV4_PATTERN.matcher(this.habboInfo.getIpLogin());
-        Matcher ipv6match = VALID_IPV6_PATTERN.matcher(this.habboInfo.getIpLogin());
-        if (ipv4match.matches() | ipv6match.matches()) {
-            LOGGER.info("\u001B[32m"+ "IP Checked: " + this.habboInfo.getIpLogin());
-        } else {
-            LOGGER.debug("\u001B[31m" + "IP Failed: " + this.habboInfo.getIpLogin());
-            return false;
-        }
-
-=======
->>>>>>> parent of 1b60be8a (Add IP health check IPv4 and IPv6)
         this.habboInfo.setMachineID(this.client.getMachineId());
         this.isOnline(true);
 
