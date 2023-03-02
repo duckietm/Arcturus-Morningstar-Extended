@@ -26,7 +26,6 @@ public class CleanerThread implements Runnable {
     private static final int REMOVE_INACTIVE_ROOMS = 120;
     private static final int REMOVE_INACTIVE_GUILDS = 60;
     private static final int REMOVE_INACTIVE_TOURS = 600;
-    private static final int SAVE_ERROR_LOGS = 30;
     private static final int CLEAR_CACHED_VALUES = 60 * 60;
     private static final int CALLBACK_TIME = 60 * 15;
 
@@ -35,7 +34,6 @@ public class CleanerThread implements Runnable {
     private static int LAST_INACTIVE_ROOMS_CLEARED = Emulator.getIntUnixTimestamp();
     private static int LAST_INACTIVE_GUILDS_CLEARED = Emulator.getIntUnixTimestamp();
     private static int LAST_INACTIVE_TOURS_CLEARED = Emulator.getIntUnixTimestamp();
-    private static int LAST_ERROR_LOGS_SAVED = Emulator.getIntUnixTimestamp();
     private static int LAST_DAILY_REFILL = Emulator.getIntUnixTimestamp();
     private static int LAST_CALLBACK = Emulator.getIntUnixTimestamp();
     private static int LAST_HABBO_CACHE_CLEARED = Emulator.getIntUnixTimestamp();
@@ -79,11 +77,6 @@ public class CleanerThread implements Runnable {
         if (time - LAST_INACTIVE_TOURS_CLEARED > REMOVE_INACTIVE_TOURS) {
             Emulator.getGameEnvironment().getGuideManager().cleanup();
             LAST_INACTIVE_TOURS_CLEARED = time;
-        }
-
-        if (time - LAST_ERROR_LOGS_SAVED > SAVE_ERROR_LOGS) {
-            Emulator.getDatabaseLogger().save();
-            LAST_ERROR_LOGS_SAVED = time;
         }
 
         if (time - LAST_CALLBACK > CALLBACK_TIME) {
