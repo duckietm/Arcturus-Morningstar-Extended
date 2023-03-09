@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.gameclients;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.crypto.HabboEncryption;
+import com.eu.habbo.habbohotel.LatencyTracker;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
@@ -22,6 +23,7 @@ public class GameClient {
 
     private final Channel channel;
     private final HabboEncryption encryption;
+    private final LatencyTracker latencyTracker;
 
     private Habbo habbo;
     private boolean handshakeFinished;
@@ -49,6 +51,7 @@ public class GameClient {
                     Emulator.getCrypto().getModulus(),
                     Emulator.getCrypto().getPrivateExponent())
                 : null;
+        this.latencyTracker = new LatencyTracker();
     }
 
     public Channel getChannel() {
@@ -57,6 +60,10 @@ public class GameClient {
 
     public HabboEncryption getEncryption() {
         return encryption;
+    }
+
+    public LatencyTracker getLatencyTracker() {
+        return latencyTracker;
     }
 
     public Habbo getHabbo() {
