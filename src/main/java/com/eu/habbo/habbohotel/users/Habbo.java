@@ -142,6 +142,12 @@ public class Habbo implements Runnable {
             this.habboInfo.setIpLogin(ip);
         }
 
+        if (this.client.getMachineId() == null || this.client.getMachineId().length() == 0) {
+            return false;
+        }
+
+        this.habboInfo.setMachineID(this.client.getMachineId());
+
         if (Emulator.getGameEnvironment().getModToolManager().hasMACBan(this.client)) {
             return false;
         }
@@ -150,9 +156,7 @@ public class Habbo implements Runnable {
             return false;
         }
 
-        this.habboInfo.setMachineID(this.client.getMachineId());
         this.isOnline(true);
-
         this.messenger.connectionChanged(this, true, false);
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
