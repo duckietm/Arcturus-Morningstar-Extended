@@ -3114,13 +3114,13 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         if (!habbo.getHabboStats().allowTalk())
             return;
 
-        if (habbo.getRoomUnit().isInvisible() && Emulator.getConfig().getBoolean("invisible.prevent.chat", false)) {
-            if (!CommandHandler.handleCommand(habbo.getClient(), roomChatMessage.getUnfilteredMessage())) {
-                habbo.whisper(Emulator.getTexts().getValue("invisible.prevent.chat.error"));
-            }
-
-            return;
-        }
+//        if (habbo.getRoomUnit().isInvisible() && Emulator.getConfig().getBoolean("invisible.prevent.chat", false)) {
+//            if (!CommandHandler.handleCommand(habbo.getClient(), roomChatMessage.getUnfilteredMessage())) {
+//                habbo.whisper(Emulator.getTexts().getValue("invisible.prevent.chat.error"));
+//            }
+//
+//            return;
+//        }
 
         if (habbo.getHabboInfo().getCurrentRoom() != this)
             return;
