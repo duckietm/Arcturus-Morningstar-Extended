@@ -715,7 +715,8 @@ public class RoomManager {
         habbo.getRoomUnit().setPathFinderRoom(room);
         habbo.getRoomUnit().resetIdleTimer();
 
-        habbo.getRoomUnit().setInvisible(false);
+        /// ...
+
         room.addHabbo(habbo);
 
         List<Habbo> habbos = new ArrayList<>();
@@ -739,9 +740,9 @@ public class RoomManager {
             }
 
             for (Habbo h : visibleHabbos) {
-                if (!h.getRoomUnit().isInvisible()) {
+              //  if (!h.getRoomUnit().isInvisible()) {
                     habbos.add(h);
-                }
+              //  }
             }
 
             synchronized (room.roomUnitLock) {
