@@ -103,7 +103,7 @@ public class PluginManager {
         Messenger.MAXIMUM_FRIENDS_HC = Emulator.getConfig().getInt("hotel.users.max.friends.hc", 1100);
         Room.MAXIMUM_BOTS = Emulator.getConfig().getInt("hotel.max.bots.room");
         Room.MAXIMUM_PETS = Emulator.getConfig().getInt("hotel.pets.max.room");
-        Room.MAXIMUM_FURNI = Emulator.getConfig().getInt("hotel.room.furni.max", 2500);
+        Room.MAXIMUM_FURNI = Emulator.getConfig().getInt("hotel.room.furni.max", 3000);
         Room.MAXIMUM_POSTITNOTES = Emulator.getConfig().getInt("hotel.room.stickies.max", 200);
         Room.HAND_ITEM_TIME = Emulator.getConfig().getInt("hotel.rooms.handitem.time");
         Room.IDLE_CYCLES = Emulator.getConfig().getInt("hotel.roomuser.idle.cycles", 240);
