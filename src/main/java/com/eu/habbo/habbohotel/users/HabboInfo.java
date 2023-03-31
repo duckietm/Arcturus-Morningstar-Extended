@@ -58,6 +58,8 @@ public class HabboInfo implements Runnable {
     private List<NavigatorSavedSearch> savedSearches = new ArrayList<>();
     private List<MessengerCategory> messengerCategories = new ArrayList<>();
 
+    private Boolean isInvisibleInRooms = false;
+
     public HabboInfo(ResultSet set) {
         try {
             this.id = set.getInt("id");
@@ -568,5 +570,13 @@ public class HabboInfo implements Runnable {
         }
 
         return HabboStats.load(this);
+    }
+
+    public Boolean isInvisibleInRooms() {
+        return this.isInvisibleInRooms;
+    }
+
+    public void toggleInvisibility() {
+        this.isInvisibleInRooms = !this.isInvisibleInRooms;
     }
 }
