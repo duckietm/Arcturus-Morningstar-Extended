@@ -48,7 +48,6 @@ import com.eu.habbo.plugin.events.rooms.UserVoteRoomEvent;
 import com.eu.habbo.plugin.events.users.HabboAddedToRoomEvent;
 import com.eu.habbo.plugin.events.users.UserEnterRoomEvent;
 import com.eu.habbo.plugin.events.users.UserExitRoomEvent;
-import com.eu.habbo.plugin.events.users.UsernameTalkEvent;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TIntProcedure;
@@ -626,7 +625,7 @@ public class RoomManager {
             return;
         }
 
-        if (room.getUserCount() >= room.getUsersMax() && !habbo.hasPermission(Permission.ACC_FULLROOMS) && !room.hasRights(habbo)) {
+        if (room.getUserCountWithoutInvisibleHabbos() >= room.getUsersMax() && !habbo.hasPermission(Permission.ACC_FULLROOMS) && !room.hasRights(habbo)) {
             habbo.getClient().sendResponse(new RoomEnterErrorComposer(RoomEnterErrorComposer.ROOM_ERROR_GUESTROOM_FULL));
             return;
         }
@@ -715,8 +714,6 @@ public class RoomManager {
         habbo.getRoomUnit().setPathFinderRoom(room);
         habbo.getRoomUnit().resetIdleTimer();
 
-        /// ...
-
         room.addHabbo(habbo);
 
         List<Habbo> habbos = new ArrayList<>();
@@ -731,18 +728,21 @@ public class RoomManager {
                 visibleHabbos = event.visibleHabbos;
             }
 
-            for (Habbo habboToSendEnter : habbosToSendEnter) {
-                GameClient client = habboToSendEnter.getClient();
-                if (client != null) {
-                    client.sendResponse(new RoomUsersComposer(habbo).compose());
-                    client.sendResponse(new RoomUserStatusComposer(habbo.getRoomUnit()).compose());
+            //
+            if (!habbo.getHabboInfo().isInvisibleInRooms()) {
+                for (Habbo habboToSendEnter : habbosToSendEnter) {
+                    GameClient client = habboToSendEnter.getClient();
+                    if (client != null) {
+                        client.sendResponse(new RoomUsersComposer(habbo).compose());
+                        client.sendResponse(new RoomUserStatusComposer(habbo.getRoomUnit()).compose());
+                    }
                 }
             }
 
             for (Habbo h : visibleHabbos) {
-              //  if (!h.getRoomUnit().isInvisible()) {
+                if (!h.getHabboInfo().isInvisibleInRooms()) {
                     habbos.add(h);
-              //  }
+                }
             }
 
             synchronized (room.roomUnitLock) {
@@ -1021,7 +1021,7 @@ public class RoomManager {
         ArrayList<Room> rooms = new ArrayList<>();
 
         for (Room room : this.activeRooms.values()) {
-            if (room.getUserCount() > 0) {
+            if (room.getUserCountWithoutInvisibleHabbos() > 0) {
                 if (!room.isPublicRoom() || RoomManager.SHOW_PUBLIC_IN_POPULAR_TAB) rooms.add(room);
             }
         }
@@ -1322,6 +1322,10 @@ public class RoomManager {
             Habbo friend = Emulator.getGameEnvironment().getHabboManager().getHabbo(buddy.getId());
 
             if (friend == null || friend.getHabboInfo() == null) continue;
+
+            if (friend.getHabboInfo().isInvisibleInRooms()) {
+                continue;
+            }
 
             Room room = friend.getHabboInfo().getCurrentRoom();
             if (room != null && !rooms.contains(room) && room.hasRights(habbo)) rooms.add(room);

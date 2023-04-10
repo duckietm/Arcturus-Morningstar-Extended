@@ -990,8 +990,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     @Override
     public int compareTo(Room o) {
-        if (o.getUserCount() != this.getUserCount()) {
-            return o.getCurrentHabbos().size() - this.getCurrentHabbos().size();
+        if (o.getUserCountWithoutInvisibleHabbos() != this.getUserCountWithoutInvisibleHabbos()) {
+            return o.getUserCountWithoutInvisibleHabbos() - this.getUserCountWithoutInvisibleHabbos();
         }
 
         return this.id - o.id;
@@ -1008,8 +1008,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             message.appendInt(this.ownerId);
             message.appendString(this.ownerName);
         }
+
         message.appendInt(this.state.getState());
-        message.appendInt(this.getUserCount());
+        message.appendInt(this.getUserCountWithoutInvisibleHabbos());
         message.appendInt(this.usersMax);
         message.appendString(this.description);
         message.appendInt(0);
@@ -2242,6 +2243,18 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         return this.currentHabbos.size();
     }
 
+    /**
+     * Get all users but without the players that are invisible.
+     *
+     * @return the amount of visible players.
+     */
+    public int getUserCountWithoutInvisibleHabbos() {
+        return (int) this.currentHabbos.values()
+                .stream()
+                .filter((habbo -> !habbo.getHabboInfo().isInvisibleInRooms()))
+                .count();
+    }
+
     public ConcurrentHashMap<Integer, Habbo> getCurrentHabbos() {
         return this.currentHabbos;
     }
@@ -2657,7 +2670,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             habbo.getRoomUnit().setId(this.unitCounter);
             this.currentHabbos.put(habbo.getHabboInfo().getId(), habbo);
             this.unitCounter++;
-            this.updateDatabaseUserCount();
+
+            // don't update the db if the user is invisible
+            if (!habbo.getHabboInfo().isInvisibleInRooms()) {
+                this.updateDatabaseUserCount();
+            }
         }
     }
 
@@ -3807,9 +3824,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     public Habbo getHabbo(String username) {
         for (Habbo habbo : this.getHabbos()) {
-            if (habbo.getHabboInfo().getUsername().equalsIgnoreCase(username))
+            if (habbo.getHabboInfo().getUsername().equalsIgnoreCase(username) && !habbo.getHabboInfo().isInvisibleInRooms())
                 return habbo;
         }
+
         return null;
     }
 
