@@ -111,7 +111,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     public static boolean HABBO_CHAT_DELAY = false;
     public static int MAXIMUM_BOTS = 10;
     public static int MAXIMUM_PETS = 10;
-    public static int MAXIMUM_FURNI = 2500;
+    public static int MAXIMUM_FURNI = 3000;
     public static int MAXIMUM_POSTITNOTES = 200;
     public static int HAND_ITEM_TIME = 10;
     public static int IDLE_CYCLES = 240;
