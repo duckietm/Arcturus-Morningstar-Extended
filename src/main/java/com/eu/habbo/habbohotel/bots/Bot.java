@@ -198,7 +198,7 @@ public class Bot implements Runnable {
                             .replace(Emulator.getTexts().getValue("wired.variable.item_count", "%item_count%"), this.room.itemCount() + "")
                             .replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), this.name)
                             .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), this.room.getName())
-                            .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), this.room.getUserCount() + "");
+                            .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), this.room.getUserCount() + ""); // TODO: Should getUserCount be replaced with getUsersWithoutInvisibleHabbos?
 
                     if(!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{ message })) {
                         this.talk(message);

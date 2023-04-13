@@ -816,7 +816,15 @@ public class RoomUnit {
             return;
         }
 
+        if (this.room == null) {
+            return;
+        }
+
         this.rollerTask = Emulator.getThreading().run(() -> {
+            if (this.room == null) {
+                return;
+            }
+
             if (this.isWalking()) {
                 return;
             }
