@@ -22,6 +22,7 @@ import com.eu.habbo.plugin.events.users.UserPointsEvent;
 import gnu.trove.TIntCollection;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +32,8 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Habbo implements Runnable {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Habbo.class);
 
     private final HabboInfo habboInfo;
     private final HabboStats habboStats;
@@ -160,7 +160,7 @@ public class Habbo implements Runnable {
         this.messenger.connectionChanged(this, true, false);
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
-        LOGGER.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
+        log.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
         return true;
     }
 
@@ -187,7 +187,7 @@ public class Habbo implements Runnable {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
 
         try {
@@ -203,13 +203,13 @@ public class Habbo implements Runnable {
 
             this.habboStats.dispose();
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
             return;
         } finally {
             Emulator.getGameEnvironment().getRoomManager().unloadRoomsForHabbo(this);
             Emulator.getGameEnvironment().getHabboManager().removeHabbo(this);
         }
-        LOGGER.info("{} disconnected.", this.habboInfo.getUsername());
+        log.info("{} disconnected.", this.habboInfo.getUsername());
         this.client = null;
     }
 
@@ -420,7 +420,7 @@ public class Habbo implements Runnable {
 
     public void mute(int seconds, boolean isFlood) {
         if (seconds <= 0) {
-            LOGGER.warn("Tried to mute user for {} seconds, which is invalid.", seconds);
+            log.warn("Tried to mute user for {} seconds, which is invalid.", seconds);
             return;
         }
 

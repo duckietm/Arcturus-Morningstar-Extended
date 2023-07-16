@@ -2,13 +2,11 @@ package com.eu.habbo.messages.incoming.handshake;
 
 import com.eu.habbo.messages.NoAuthMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoAuthMessage
 public class MachineIDEvent extends MessageHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MachineIDEvent.class);
 
     private static final int HASH_LENGTH = 64;
 
@@ -17,14 +15,10 @@ public class MachineIDEvent extends MessageHandler {
         String storedMachineId = this.packet.readString();
         String clientFingerprint = this.packet.readString();
         String capabilities = this.packet.readString();
-
         if (storedMachineId.length() > HASH_LENGTH) {
             storedMachineId = storedMachineId.substring(0, HASH_LENGTH);
         }
-
         this.client.setMachineId(storedMachineId);
-
-        LOGGER.debug("Setting client MachineId to {}", storedMachineId);
+        log.debug("Setting client MachineId to {}", storedMachineId);
     }
-
 }

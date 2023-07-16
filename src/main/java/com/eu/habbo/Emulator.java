@@ -17,6 +17,7 @@ import com.eu.habbo.plugin.events.emulator.EmulatorStartShutdownEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStoppedEvent;
 import com.eu.habbo.threading.ThreadPooling;
 import com.eu.habbo.util.imager.badges.BadgeImager;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +30,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class Emulator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Emulator.class);
     private static final String OS_NAME = (System.getProperty("os.name") != null ? System.getProperty("os.name") : "Unknown");
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
 
@@ -82,13 +83,6 @@ public final class Emulator {
         Runtime.getRuntime().addShutdownHook(hook);
     }
 
-    public static void promptEnterKey(){
-        System.out.println("\n");
-        System.out.println("Press \"ENTER\" if you agree to the terms stated above...");
-        Scanner scanner = new Scanner(System.in);
-        scanner.nextLine();
-    }
-
     public static void main(String[] args) throws Exception {
         try {
             // Check if running on Windows and not in IntelliJ.
@@ -113,13 +107,9 @@ public final class Emulator {
             // Checks if this is a BETA build before allowing them to continue.
             if (PREVIEW.toLowerCase().contains("beta")) {
                 System.out.println("Warning, this is a beta build, this means that there may be unintended consequences so make sure you take regular backups while using this build. If you notice any issues you should make an issue on the Krews Git.");
-                promptEnterKey();
             }
-            LOGGER.info("eek. Has it really been a year?");
-            LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
-            LOGGER.info("Version: {}", version);
-            LOGGER.info("Build: {}", build);
-            LOGGER.info("Follow our development at https://git.krews.org/morningstar/Arcturus-Community");
+            log.info("Version: {}", version);
+            log.info("Build: {}", build);
 
             long startTime = System.nanoTime();
 
@@ -152,16 +142,16 @@ public final class Emulator {
             Emulator.rconServer.connect();
             Emulator.badgeImager = new BadgeImager();
 
-            LOGGER.info("Arcturus Morningstar has successfully loaded.");
-            LOGGER.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
-            LOGGER.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
+            log.info("Arcturus Morningstar has successfully loaded.");
+            log.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
+            log.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
 
             Emulator.debugging = Emulator.getConfig().getBoolean("debug.mode");
 
             if (debugging) {
                 ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 root.setLevel(Level.DEBUG);
-                LOGGER.debug("Debugging enabled.");
+                log.debug("Debugging enabled.");
             }
 
             Emulator.getPluginManager().fireEvent(new EmulatorLoadedEvent());
@@ -169,7 +159,7 @@ public final class Emulator {
             Emulator.timeStarted = getIntUnixTimestamp();
 
             if (Emulator.getConfig().getInt("runtime.threads") < (Runtime.getRuntime().availableProcessors() * 2)) {
-                LOGGER.warn("Emulator settings runtime.threads ({}) can be increased to ({}) to possibly increase performance.",
+                log.warn("Emulator settings runtime.threads ({}) can be increased to ({}) to possibly increase performance.",
                         Emulator.getConfig().getInt("runtime.threads"),
                         Runtime.getRuntime().availableProcessors() * 2);
             }
@@ -192,7 +182,7 @@ public final class Emulator {
                         System.out.println("Waiting for command: ");
                     } catch (Exception e) {
                         if (!(e instanceof IOException && e.getMessage().equals("Bad file descriptor"))) {
-                            LOGGER.error("Error while reading command", e);
+                            log.error("Error while reading command", e);
                         }
                     }
                 }
@@ -234,7 +224,7 @@ public final class Emulator {
         Emulator.isShuttingDown = true;
         Emulator.isReady = false;
 
-        LOGGER.info("Stopping Arcturus Morningstar {}", version);
+        log.info("Stopping Arcturus Morningstar {}", version);
 
         try {
             if (Emulator.getPluginManager() != null)
@@ -285,7 +275,7 @@ public final class Emulator {
         } catch (Exception e) {
         }
 
-        LOGGER.info("Stopped Arcturus Morningstar {}", version);
+        log.info("Stopped Arcturus Morningstar {}", version);
 
         if (Emulator.database != null) {
             Emulator.getDatabase().dispose();
@@ -458,7 +448,7 @@ public final class Emulator {
         try {
             res = format.parse(date);
         } catch (Exception e) {
-            LOGGER.error("Error parsing date", e);
+            log.error("Error parsing date", e);
         }
         return res;
     }
