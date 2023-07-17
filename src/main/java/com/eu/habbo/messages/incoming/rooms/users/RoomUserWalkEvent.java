@@ -12,11 +12,10 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RoomUserWalkEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUserWalkEvent.class);
 
     @Override
     public int getRatelimit() {
@@ -158,7 +157,7 @@ public class RoomUserWalkEvent extends MessageHandler {
                     }
                 }
             } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
+                log.error("Caught exception", e);
             }
         }
     }

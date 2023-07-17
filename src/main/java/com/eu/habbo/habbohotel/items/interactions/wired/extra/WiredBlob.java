@@ -10,14 +10,13 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class WiredBlob extends InteractionDefault {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredBlob.class);
 
     enum WiredBlobState {
         ACTIVE("0"),
@@ -106,14 +105,14 @@ public class WiredBlob extends InteractionDefault {
         String[] params = this.getBaseItem().getCustomParams().split(",");
 
         if (params.length != 2) {
-            LOGGER.error("Wired blobs should have customparams with two parameters (points,resetsWithGame)");
+            log.error("Wired blobs should have customparams with two parameters (points,resetsWithGame)");
             return;
         }
 
         try {
             this.POINTS_REWARD = Integer.parseInt(params[0]);
         } catch (NumberFormatException e) {
-            LOGGER.error("Wired blobs should have customparams with the first parameter being the amount of points (number)");
+            log.error("Wired blobs should have customparams with the first parameter being the amount of points (number)");
             return;
         }
 

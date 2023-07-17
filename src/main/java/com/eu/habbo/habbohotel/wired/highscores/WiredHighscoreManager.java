@@ -1,9 +1,7 @@
 package com.eu.habbo.habbohotel.wired.highscores;
 
 import com.eu.habbo.Emulator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,9 +13,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class WiredHighscoreManager {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredHighscoreManager.class);
     
     private final static String locale = (System.getProperty("user.language") != null ? System.getProperty("user.language") : "en");
     private final static String country = (System.getProperty("user.country") != null ? System.getProperty("user.country") : "US");
@@ -27,7 +24,7 @@ public class WiredHighscoreManager {
     private final static ZoneId zoneId = ZoneId.systemDefault();
 
     public void load() {
-        LOGGER.info("Highscore Manager -> Loaded");
+        log.info("Highscore Manager -> Loaded");
     }
 
     public void addHighscoreData(WiredHighscoreDataEntry entry) {
@@ -40,7 +37,7 @@ public class WiredHighscoreManager {
 
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -68,7 +65,7 @@ public class WiredHighscoreManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -96,7 +93,7 @@ public class WiredHighscoreManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -113,7 +110,7 @@ public class WiredHighscoreManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return result;
@@ -135,7 +132,7 @@ public class WiredHighscoreManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return null;

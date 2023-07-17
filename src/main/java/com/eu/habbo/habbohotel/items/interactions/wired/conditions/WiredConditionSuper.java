@@ -9,15 +9,14 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ServerMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class WiredConditionSuper extends InteractionWiredCondition {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredConditionSuper.class);
     private static final WiredConditionType WIRED_EFFECT_TYPE = WiredConditionType.ACTOR_WEARS_BADGE;
     private static final int CONFIG_MAX_LENGTH = 100;
 
@@ -60,7 +59,7 @@ public class WiredConditionSuper extends InteractionWiredCondition {
 
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        LOGGER.debug("Executing super wired condition, key {} value {}", this.configKey, this.configValue);
+        log.debug("Executing super wired condition, key {} value {}", this.configKey, this.configValue);
 
         try {
             switch (this.configKey) {
@@ -74,7 +73,7 @@ public class WiredConditionSuper extends InteractionWiredCondition {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to run super wired condition " + this.configKey, e);
+            log.error("Failed to run super wired condition " + this.configKey, e);
         }
 
         return false;

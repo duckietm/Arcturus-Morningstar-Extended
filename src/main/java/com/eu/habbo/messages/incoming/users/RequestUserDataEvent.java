@@ -8,13 +8,12 @@ import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
 import com.eu.habbo.messages.outgoing.users.MeMenuSettingsComposer;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.eu.habbo.messages.outgoing.users.UserPerksComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 
+@Slf4j
 public class RequestUserDataEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RequestUserDataEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -58,7 +57,7 @@ public class RequestUserDataEvent extends MessageHandler {
 
 
         } else {
-            LOGGER.debug("Attempted to request user data where Habbo was null.");
+            log.debug("Attempted to request user data where Habbo was null.");
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
         }
     }

@@ -7,13 +7,12 @@ import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 
+@Slf4j
 public class RoomUnitTeleport implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnitTeleport.class);
 
     private RoomUnit roomUnit;
     private Room room;
@@ -45,7 +44,7 @@ public class RoomUnitTeleport implements Runnable {
             try {
                 topItem.onWalkOff(this.roomUnit, this.room, new Object[]{this});
             } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
+                log.error("Caught exception", e);
             }
         }
         this.roomUnit.setPath(new LinkedList<>());

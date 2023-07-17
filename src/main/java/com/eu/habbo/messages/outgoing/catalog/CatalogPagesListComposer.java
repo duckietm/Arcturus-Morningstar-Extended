@@ -7,13 +7,12 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
 public class CatalogPagesListComposer extends MessageComposer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogPagesListComposer.class);
 
     private final Habbo habbo;
     private final String mode;
@@ -49,7 +48,7 @@ public class CatalogPagesListComposer extends MessageComposer {
 
             return this.response;
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
 
         return null;

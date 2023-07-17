@@ -7,11 +7,10 @@ import com.eu.habbo.habbohotel.rooms.RoomCategory;
 import com.eu.habbo.habbohotel.rooms.RoomState;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RoomSettingsSaveEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomSettingsSaveEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -102,7 +101,7 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                     }
 
                     ScripterManager.scripterDetected(this.client, message);
-                    LOGGER.info(message);
+                    log.info(message);
                 }
 
 

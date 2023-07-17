@@ -13,17 +13,16 @@ import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class WiredEffectSuper extends InteractionWiredEffect {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectSuper.class);
     private static final WiredEffectType WIRED_EFFECT_TYPE = WiredEffectType.BOT_MOVE;
     private static final int CONFIG_MAX_LENGTH = 100;
 
@@ -41,7 +40,7 @@ public class WiredEffectSuper extends InteractionWiredEffect {
 
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        LOGGER.debug("Executing super wired effect, key {} value {}", this.configKey, this.configValue);
+        log.debug("Executing super wired effect, key {} value {}", this.configKey, this.configValue);
 
         try {
             switch (this.configKey) {
@@ -58,7 +57,7 @@ public class WiredEffectSuper extends InteractionWiredEffect {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to run super wired effect " + this.configKey, e);
+            log.error("Failed to run super wired effect " + this.configKey, e);
         }
 
         return true;

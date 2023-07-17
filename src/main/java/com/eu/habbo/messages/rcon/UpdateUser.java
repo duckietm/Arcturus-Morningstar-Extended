@@ -6,16 +6,14 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
 import com.eu.habbo.messages.outgoing.users.MeMenuSettingsComposer;
 import com.eu.habbo.messages.outgoing.users.UpdateUserLookComposer;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class UpdateUser extends RCONMessage<UpdateUser.JSON> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateUser.class);
-
+    
     public UpdateUser() {
         super(UpdateUser.JSON.class);
     }
@@ -108,7 +106,7 @@ public class UpdateUser extends RCONMessage<UpdateUser.JSON> {
                         }
                     }
                 } catch (SQLException e) {
-                    LOGGER.error("Caught SQL exception", e);
+                    log.error("Caught SQL exception", e);
                 }
             }
         }

@@ -11,12 +11,10 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserEffectComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserRemoveComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUsersComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 class TeleportInteraction extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TeleportInteraction.class);
-
     private final Room room;
     private final GameClient client;
     private final HabboItem teleportOne;
@@ -116,7 +114,7 @@ class TeleportInteraction extends Thread {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 

@@ -8,19 +8,17 @@ import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.Incoming;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomChatMessage.class);
     private static final String QUERY = "INSERT INTO chatlogs_room (user_from_id, user_to_id, message, timestamp, room_id) VALUES (?, ?, ?, ?, ?)";
-
     private static final List<String> chatColors = Arrays.asList("@red@", "@cyan@", "@blue@", "@green@", "@purple@");
     public static int MAXIMUM_LENGTH = 100;
     //Configuration. Loaded from database & updated accordingly.
@@ -137,7 +135,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             try {
                 this.message = this.message.substring(0, RoomChatMessage.MAXIMUM_LENGTH - 1);
             } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
+                log.error("Caught exception", e);
             }
         }
 
@@ -199,7 +197,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(0);
             message.appendInt(this.getMessage().length());
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 
@@ -222,7 +220,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
                     if (muteTime > 0) {
                         this.habbo.mute(muteTime, false);
                     } else {
-                        LOGGER.error("Invalid hotel.wordfilter.automute defined in emulator_settings ({}).", muteTime);
+                        log.error("Invalid hotel.wordfilter.automute defined in emulator_settings ({}).", muteTime);
                     }
                 }
 

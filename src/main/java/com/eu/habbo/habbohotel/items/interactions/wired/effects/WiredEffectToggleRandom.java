@@ -26,8 +26,7 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,8 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class WiredEffectToggleRandom extends InteractionWiredEffect {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectToggleRandom.class);
 
     public static final WiredEffectType type = WiredEffectType.TOGGLE_RANDOM;
 
@@ -183,7 +182,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
                 item.setExtradata(Emulator.getRandom().nextInt(item.getBaseItem().getStateCount() + 1) + "");
                 room.updateItem(item);
             } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
+                log.error("Caught exception", e);
             }
         }
         return true;

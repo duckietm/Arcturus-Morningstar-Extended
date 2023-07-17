@@ -6,15 +6,14 @@ import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class ChangeUsername extends RCONMessage<ChangeUsername.JSON> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChangeUsername.class);
 
     public ChangeUsername() {
         super(ChangeUsername.JSON.class);
@@ -59,7 +58,7 @@ public class ChangeUsername extends RCONMessage<ChangeUsername.JSON> {
         catch (Exception e) {
             this.status = RCONMessage.SYSTEM_ERROR;
             this.message = "Exception occurred";
-            LOGGER.error("Exception occurred", e);
+            log.error("Exception occurred", e);
         }
     }
 

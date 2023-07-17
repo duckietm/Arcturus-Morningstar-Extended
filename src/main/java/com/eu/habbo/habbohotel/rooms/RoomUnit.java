@@ -22,18 +22,15 @@ import com.eu.habbo.util.pathfinding.Rotation;
 import gnu.trove.map.TMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RoomUnit {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnit.class);
-
     public boolean isWiredTeleporting = false;
     public boolean isLeavingTeleporter = false;
     private final ConcurrentHashMap<RoomUnitStatus, String> status;
@@ -369,7 +366,7 @@ public class RoomUnit {
             return false;
 
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
             return false;
         }
     }
@@ -812,7 +809,7 @@ public class RoomUnit {
 
     public void scheduleRollerTask(final RoomUnitOnRollerComposer composer) {
         if (pendingRollerTask()) {
-            LOGGER.warn("Attempted to schedule roller task with pending task in place");
+            log.warn("Attempted to schedule roller task with pending task in place");
             return;
         }
 
@@ -848,6 +845,6 @@ public class RoomUnit {
 
         rollerTask.cancel(false);
 
-        LOGGER.debug("Cancelled roller task");
+        log.debug("Cancelled roller task");
     }
 }

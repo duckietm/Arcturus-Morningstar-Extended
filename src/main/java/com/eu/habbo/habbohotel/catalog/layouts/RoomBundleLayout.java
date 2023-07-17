@@ -14,14 +14,13 @@ import com.eu.habbo.messages.outgoing.navigator.CanCreateRoomComposer;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TObjectProcedure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.Map;
 
+@Slf4j
 public class RoomBundleLayout extends SingleBundle {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomBundleLayout.class);
 
     public int roomId;
     public Room room;
@@ -48,7 +47,7 @@ public class RoomBundleLayout extends SingleBundle {
                 if (this.room != null)
                     this.room.preventUnloading = true;
             } else {
-                LOGGER.error("No room id specified for room bundle " + this.getPageName() + "(" + this.getId() + ")");
+                log.error("No room id specified for room bundle " + this.getPageName() + "(" + this.getId() + ")");
             }
         }
 
@@ -190,7 +189,7 @@ public class RoomBundleLayout extends SingleBundle {
                     statement.setInt(3, this.room.getId());
                     statement.execute();
                 } catch (SQLException e) {
-                    LOGGER.error("Caught SQL exception", e);
+                    log.error("Caught SQL exception", e);
                 }
             }
 
@@ -224,7 +223,7 @@ public class RoomBundleLayout extends SingleBundle {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         Room r = Emulator.getGameEnvironment().getRoomManager().loadRoom(roomId);

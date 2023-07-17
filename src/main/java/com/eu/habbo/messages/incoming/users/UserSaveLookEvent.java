@@ -9,12 +9,10 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
 import com.eu.habbo.messages.outgoing.users.UpdateUserLookComposer;
 import com.eu.habbo.plugin.events.users.UserSavedLookEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class UserSaveLookEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserSaveLookEvent.class);
-
     @Override
     public void handle() throws Exception {
         String genderCode = this.packet.readString();
@@ -25,7 +23,7 @@ public class UserSaveLookEvent extends MessageHandler {
         } catch (IllegalArgumentException e) {
             String message = Emulator.getTexts().getValue("scripter.warning.look.gender").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%gender%", genderCode);
             ScripterManager.scripterDetected(this.client, message);
-            LOGGER.info(message);
+            log.info(message);
             return;
         }
 

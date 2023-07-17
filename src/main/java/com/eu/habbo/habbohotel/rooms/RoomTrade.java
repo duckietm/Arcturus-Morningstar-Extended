@@ -12,15 +12,14 @@ import com.eu.habbo.plugin.events.furniture.FurnitureRedeemedEvent;
 import com.eu.habbo.plugin.events.trading.TradeConfirmEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class RoomTrade {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomTrade.class);
     //Configuration. Loaded from database & updated accordingly.
     public static boolean TRADING_ENABLED = true;
     public static boolean TRADING_REQUIRES_PERK = true;
@@ -217,7 +216,7 @@ public class RoomTrade {
                 statement.executeBatch();
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         THashSet<HabboItem> itemsUserOne = new THashSet<>(userOne.getItems());

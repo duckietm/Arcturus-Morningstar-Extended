@@ -9,14 +9,14 @@ import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredConditionHabboHasHandItem.class);
 
     public static final WiredConditionType type = WiredConditionType.ACTOR_HAS_HANDITEM;
 
@@ -84,7 +84,7 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
                 this.handItem = Integer.parseInt(wiredData);
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 

@@ -1,11 +1,10 @@
 package com.eu.habbo.core.consolecommands;
 
 import gnu.trove.map.hash.THashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class ConsoleCommand {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleCommand.class);
     private static final THashMap<String, ConsoleCommand> commands = new THashMap<>();
 
     public final String key;
@@ -45,21 +44,19 @@ public abstract class ConsoleCommand {
                     command.handle(message);
                     return true;
                 } catch (Exception e) {
-                    LOGGER.error("Caught exception", e);
+                    log.error("Caught exception", e);
                 }
             } else {
-                LOGGER.info("Unknown Console Command " + message[0]);
-                LOGGER.info("Commands Available (" + commands.size() + "): ");
+                log.info("Unknown Console Command " + message[0]);
+                log.info("Commands Available (" + commands.size() + "): ");
 
                 for (ConsoleCommand c : commands.values()) {
-                    LOGGER.info(c.key + " - " + c.usage);
+                    log.info(c.key + " - " + c.usage);
                 }
             }
         }
 
         return false;
     }
-
     public abstract void handle(String[] args) throws Exception;
-
 }

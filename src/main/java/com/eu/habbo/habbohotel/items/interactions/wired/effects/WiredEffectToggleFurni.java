@@ -29,8 +29,7 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,11 +37,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class WiredEffectToggleFurni extends InteractionWiredEffect {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectToggleFurni.class);
 
     public static final WiredEffectType type = WiredEffectType.TOGGLE_STATE;
-
     private final THashSet<HabboItem> items;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES = new ArrayList<Class<? extends HabboItem>>() {
@@ -200,7 +198,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
                     item.onClick(habbo != null && !(item instanceof InteractionGameTimer) ? habbo.getClient() : null, room, new Object[]{state, this.getType()});
                 }
             } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
+                log.error("Caught exception", e);
             }
         }
 
