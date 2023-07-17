@@ -9,15 +9,12 @@ import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.messages.ServerMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class InteractionDefault extends HabboItem {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InteractionDefault.class);
-
     public InteractionDefault(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
     }
@@ -79,7 +76,7 @@ public class InteractionDefault extends HabboItem {
                         try {
                             currentState = Integer.valueOf(this.getExtradata());
                         } catch (NumberFormatException e) {
-                            LOGGER.error("Incorrect extradata (" + this.getExtradata() + ") for item ID (" + this.getId() + ") of type (" + this.getBaseItem().getName() + ")");
+                            log.error("Incorrect extradata (" + this.getExtradata() + ") for item ID (" + this.getId() + ") of type (" + this.getBaseItem().getName() + ")");
                         }
 
                         this.setExtradata("" + (currentState + 1) % this.getBaseItem().getStateCount());

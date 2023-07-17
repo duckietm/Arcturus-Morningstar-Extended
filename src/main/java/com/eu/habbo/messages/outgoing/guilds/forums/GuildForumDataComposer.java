@@ -13,18 +13,15 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
+@Slf4j
 public class GuildForumDataComposer extends MessageComposer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuildForumDataComposer.class);
-
     public final Guild guild;
     public Habbo habbo;
 
@@ -78,21 +75,17 @@ public class GuildForumDataComposer extends MessageComposer {
                 newComments = set.getInt(1);
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         response.appendInt(guild.getId());
-
         response.appendString(guild.getName());
         response.appendString(guild.getDescription());
         response.appendString(guild.getBadge());
-
         response.appendInt(totalThreads);
         response.appendInt(0); //Rating
-
         response.appendInt(totalComments); //Total comments
         response.appendInt(newComments); //Unread comments
-
         response.appendInt(lastComment != null ? lastComment.getThreadId() : -1);
         response.appendInt(lastComment != null ? lastComment.getUserId() : -1);
         response.appendString(lastComment != null && lastComment.getHabbo() != null ? lastComment.getHabbo().getHabboInfo().getUsername() : "");

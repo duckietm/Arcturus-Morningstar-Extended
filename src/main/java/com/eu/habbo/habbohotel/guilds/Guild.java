@@ -1,16 +1,14 @@
 package com.eu.habbo.habbohotel.guilds;
 
 import com.eu.habbo.Emulator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class Guild implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Guild.class);
     public boolean needsUpdate;
     public int lastRequested = Emulator.getIntUnixTimestamp();
     private int id;
@@ -94,7 +92,7 @@ public class Guild implements Runnable {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -119,7 +117,7 @@ public class Guild implements Runnable {
 
                 this.needsUpdate = false;
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }

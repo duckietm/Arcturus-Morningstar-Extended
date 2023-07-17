@@ -2,16 +2,12 @@ package com.eu.habbo.messages.incoming.hotelview;
 
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.hotelview.HotelViewDataComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HotelViewDataEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HotelViewDataEvent.class);
-
-
     @Override
     public void handle() {
-
 
         try {
             String data = this.packet.readString();
@@ -33,7 +29,7 @@ public class HotelViewDataEvent extends MessageHandler {
                 this.client.sendResponse(new HotelViewDataComposer(data, data.split(",")[data.split(",").length - 1]));
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 }

@@ -9,16 +9,14 @@ import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
 import gnu.trove.map.hash.TLongLongHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public abstract class InteractionWired extends InteractionDefault {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InteractionWired.class);
     private long cooldown;
     private TLongLongHashMap userExecutionCache = new TLongLongHashMap(3);
 
@@ -33,11 +31,8 @@ public abstract class InteractionWired extends InteractionDefault {
     }
 
     public abstract boolean execute(RoomUnit roomUnit, Room room, Object[] stuff);
-
     public abstract String getWiredData();
-
     public abstract void serializeWiredData(ServerMessage message, Room room);
-
     public abstract void loadWiredData(ResultSet set, Room room) throws SQLException;
 
     @Override
@@ -58,7 +53,7 @@ public abstract class InteractionWired extends InteractionDefault {
                 statement.setInt(2, this.getId());
                 statement.execute();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
         super.run();

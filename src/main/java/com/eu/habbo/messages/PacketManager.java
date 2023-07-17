@@ -71,16 +71,12 @@ import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import gnu.trove.map.hash.THashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class PacketManager {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PacketManager.class);
-
     private static final List<Integer> logList = new ArrayList<>();
     public static boolean DEBUG_SHOW_PACKETS = false;
     public static boolean MULTI_THREADED_PACKET_HANDLING = false;
@@ -176,7 +172,7 @@ public class PacketManager {
 
                 if (client.getHabbo() == null && !handlerClass.isAnnotationPresent(NoAuthMessage.class)) {
                     if (DEBUG_SHOW_PACKETS) {
-                        LOGGER.warn("Client packet {} requires an authenticated session.", packet.getMessageId());
+                        log.warn("Client packet {} requires an authenticated session.", packet.getMessageId());
                     }
 
                     return;
@@ -187,7 +183,7 @@ public class PacketManager {
                 if (handler.getRatelimit() > 0) {
                     if (client.messageTimestamps.containsKey(handlerClass) && System.currentTimeMillis() - client.messageTimestamps.get(handlerClass) < handler.getRatelimit()) {
                         if (PacketManager.DEBUG_SHOW_PACKETS) {
-                            LOGGER.warn("Client packet {} was ratelimited.", packet.getMessageId());
+                            log.warn("Client packet {} was ratelimited.", packet.getMessageId());
                         }
 
                         return;
@@ -197,7 +193,7 @@ public class PacketManager {
                 }
 
                 if (logList.contains(packet.getMessageId()) && client.getHabbo() != null) {
-                    LOGGER.info("User {} sent packet {} with body {}", client.getHabbo().getHabboInfo().getUsername(), packet.getMessageId(), packet.getMessageBody());
+                    log.info("User {} sent packet {} with body {}", client.getHabbo().getHabboInfo().getUsername(), packet.getMessageId(), packet.getMessageBody());
                 }
 
                 handler.client = client;
@@ -214,7 +210,7 @@ public class PacketManager {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 

@@ -11,9 +11,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.UnsupportedMessageTypeException;
 import io.netty.handler.ssl.NotSslRecordException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
@@ -21,10 +19,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
 @ChannelHandler.Sharable
+@Slf4j
 public class GameMessageHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameMessageHandler.class);
-
-
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) {
         if (!Emulator.getGameServer().getGameClientManager().addClient(ctx)) {
@@ -51,7 +47,7 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
 
             handler.run();
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 
@@ -68,31 +64,31 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
         }
         if (Emulator.getConfig().getBoolean("debug.mode")) {
             if (cause instanceof NotSslRecordException) {
-                LOGGER.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
+                log.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
             }
             else if (cause instanceof DecoderException) {
-                LOGGER.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
+                log.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
             }
             else if (cause instanceof TooLongFrameException) {
-                LOGGER.error("Disconnecting client, reason: {}", cause.getMessage());
+                log.error("Disconnecting client, reason: {}", cause.getMessage());
             }
             else if (cause instanceof SSLHandshakeException) {
-                LOGGER.error("URL Request error from source: {}", ctx.channel().remoteAddress());
+                log.error("URL Request error from source: {}", ctx.channel().remoteAddress());
             }
             else if (cause instanceof NoSuchAlgorithmException) {
-                LOGGER.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
+                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
             }
             else if (cause instanceof KeyManagementException) {
-                LOGGER.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
+                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
             }
             else if (cause instanceof UnsupportedMessageTypeException) {
-                LOGGER.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!) {}", ctx.channel().remoteAddress());
+                log.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!) {}", ctx.channel().remoteAddress());
             }
             else if (cause instanceof SSLException) {
-                LOGGER.error("SSL Problem: {}", cause.getMessage() + cause);
+                log.error("SSL Problem: {}", cause.getMessage() + cause);
             }
             else {
-                LOGGER.error("Disconnecting client, exception in GameMessageHandler.", cause);
+                log.error("Disconnecting client, exception in GameMessageHandler.", cause);
             }
         }
         ctx.channel().close();

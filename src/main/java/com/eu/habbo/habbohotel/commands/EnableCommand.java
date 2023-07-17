@@ -5,11 +5,10 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.users.Habbo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class EnableCommand extends Command {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnableCommand.class);
 
     public EnableCommand() {
         super("cmd_enable", Emulator.getTexts().getValue("commands.keys.cmd_enable").split(";"));
@@ -43,7 +42,7 @@ public class EnableCommand extends Command {
                             }
                         }
                     } catch (Exception e) {
-                        LOGGER.error("Caught exception", e);
+                        log.error("Caught exception", e);
                     }
                 }
             }

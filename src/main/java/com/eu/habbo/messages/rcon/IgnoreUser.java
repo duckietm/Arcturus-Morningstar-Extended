@@ -3,16 +3,13 @@ package com.eu.habbo.messages.rcon;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class IgnoreUser extends RCONMessage<IgnoreUser.JSONIgnoreUser> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IgnoreUser.class);
-
     public IgnoreUser() {
         super(JSONIgnoreUser.class);
     }
@@ -30,7 +27,7 @@ public class IgnoreUser extends RCONMessage<IgnoreUser.JSONIgnoreUser> {
                 statement.setInt(2, object.target_id);
                 statement.execute();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
 
             this.message = "offline";
@@ -38,9 +35,7 @@ public class IgnoreUser extends RCONMessage<IgnoreUser.JSONIgnoreUser> {
     }
 
     static class JSONIgnoreUser {
-
         public int user_id;
-
         public int target_id;
     }
 }

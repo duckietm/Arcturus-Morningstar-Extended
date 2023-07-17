@@ -8,14 +8,11 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.plugin.events.guilds.forums.GuildForumThreadCommentBeforeCreated;
 import com.eu.habbo.plugin.events.guilds.forums.GuildForumThreadCommentCreated;
 import gnu.trove.map.hash.THashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 
+@Slf4j
 public class ForumThreadComment implements Runnable, ISerialize {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ForumThreadComment.class);
-
     private static THashMap<Integer, ForumThreadComment> forumCommentsCache = new THashMap<>();
     private final int commentId;
     private final int threadId;
@@ -67,7 +64,7 @@ public class ForumThreadComment implements Runnable, ISerialize {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return foundComment;
@@ -106,7 +103,7 @@ public class ForumThreadComment implements Runnable, ISerialize {
                 Emulator.getPluginManager().fireEvent(new GuildForumThreadCommentCreated(createdComment));
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return createdComment;
@@ -203,7 +200,7 @@ public class ForumThreadComment implements Runnable, ISerialize {
 
             this.needsUpdate = false;
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 }

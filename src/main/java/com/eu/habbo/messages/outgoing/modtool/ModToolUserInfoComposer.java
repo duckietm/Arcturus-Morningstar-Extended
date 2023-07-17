@@ -8,15 +8,12 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.map.hash.THashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 import java.util.ArrayList;
 
+@Slf4j
 public class ModToolUserInfoComposer extends MessageComposer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModToolUserInfoComposer.class);
-
     private final ResultSet set;
 
     public ModToolUserInfoComposer(ResultSet set) {
@@ -37,10 +34,10 @@ public class ModToolUserInfoComposer extends MessageComposer {
                        totalBans = set.getInt("amount");
                     }
                 } catch (SQLException e) {
-                    LOGGER.error("Caught SQL exception", e);
+                    log.error("Caught SQL exception", e);
                 }
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
 
             this.response.appendInt(this.set.getInt("user_id"));
@@ -80,7 +77,7 @@ public class ModToolUserInfoComposer extends MessageComposer {
 
             return this.response;
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
         return null;
     }

@@ -13,21 +13,15 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GuildManager {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuildManager.class);
-
     private final THashMap<GuildPartType, THashMap<Integer, GuildPart>> guildParts;
-
     private final TIntObjectMap<Guild> guilds;
-
     private final THashSet<ForumView> views = new THashSet<>();
 
     public GuildManager() {
@@ -38,7 +32,7 @@ public class GuildManager {
         this.loadGuildParts();
         this.loadGuildViews();
 
-        LOGGER.info("Guild Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        log.info("Guild Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
 
@@ -56,7 +50,7 @@ public class GuildManager {
                 this.guildParts.get(GuildPartType.valueOf(set.getString("type").toUpperCase())).put(set.getInt("id"), new GuildPart(set));
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -70,7 +64,7 @@ public class GuildManager {
                 this.views.add(new ForumView(set));
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -111,7 +105,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         habbo.getHabboStats().addGuild(guild.getId());
@@ -159,7 +153,7 @@ public class GuildManager {
                 room.setGuild(0);
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -280,7 +274,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -292,7 +286,7 @@ public class GuildManager {
             statement.setInt(3, guild.getId());
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -307,7 +301,7 @@ public class GuildManager {
             statement.setInt(3, guild.getId());
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -329,7 +323,7 @@ public class GuildManager {
             statement.setInt(2, guild.getId());
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -356,7 +350,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return member;
@@ -379,7 +373,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return guildMembers;
@@ -401,7 +395,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return guildMembers;
@@ -420,7 +414,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return 0;
@@ -438,7 +432,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return guildAdmins;
@@ -470,7 +464,7 @@ public class GuildManager {
                 if (g != null)
                     g.loadMemberCount();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
 
@@ -498,7 +492,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return guilds;
@@ -518,7 +512,7 @@ public class GuildManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return guilds;
@@ -597,7 +591,7 @@ public class GuildManager {
             statement.setInt(2, furni.getId());
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -612,7 +606,7 @@ public class GuildManager {
 
             guildIterator.remove();
         }
-        LOGGER.info("Guild Manager -> Disposed!");
+        log.info("Guild Manager -> Disposed!");
     }
 
     public boolean hasViewedForum(int userId, int guildId) {
@@ -632,7 +626,7 @@ public class GuildManager {
 
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 

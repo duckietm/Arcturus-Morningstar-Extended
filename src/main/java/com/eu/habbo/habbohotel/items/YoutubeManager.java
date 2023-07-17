@@ -7,8 +7,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import gnu.trove.map.hash.THashMap;
 import lombok.extern.slf4j.Slf4j;
-
-
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;

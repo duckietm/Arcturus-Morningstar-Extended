@@ -5,9 +5,7 @@ import com.eu.habbo.core.ConfigurationManager;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,12 +13,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-
+@Slf4j
 public class Database {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Database.class);
-
     private HikariDataSource dataSource;
     private DatabasePool databasePool;
 
@@ -32,21 +26,21 @@ public class Database {
         try {
             this.databasePool = new DatabasePool();
             if (!this.databasePool.getStoragePooling(config)) {
-                LOGGER.info("Failed to connect to the database. Please check config.ini and make sure the MySQL process is running. Shutting down...");
+                log.info("Failed to connect to the database. Please check config.ini and make sure the MySQL process is running. Shutting down...");
                 SQLException = true;
                 return;
             }
             this.dataSource = this.databasePool.getDatabase();
         } catch (Exception e) {
             SQLException = true;
-            LOGGER.error("Failed to connect to your database.", e);
+            log.error("Failed to connect to your database.", e);
         } finally {
             if (SQLException) {
                 Emulator.prepareShutdown();
             }
         }
 
-        LOGGER.info("Database -> Connected! ({} MS)", System.currentTimeMillis() - millis);
+        log.info("Database -> Connected! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public void dispose() {

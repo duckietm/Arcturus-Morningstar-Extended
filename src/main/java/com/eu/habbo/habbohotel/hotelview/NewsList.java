@@ -1,18 +1,15 @@
 package com.eu.habbo.habbohotel.hotelview;
 
 import com.eu.habbo.Emulator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+@Slf4j
 public class NewsList {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NewsList.class);
-
     private final ArrayList<NewsWidget> newsWidgets;
 
     public NewsList() {
@@ -29,7 +26,7 @@ public class NewsList {
                     this.newsWidgets.add(new NewsWidget(set));
                 }
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }

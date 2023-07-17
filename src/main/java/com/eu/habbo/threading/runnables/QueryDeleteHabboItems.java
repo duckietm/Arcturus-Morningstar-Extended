@@ -3,16 +3,13 @@ package com.eu.habbo.threading.runnables;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import gnu.trove.map.TIntObjectMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class QueryDeleteHabboItems implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryDeleteHabboItems.class);
-
     private TIntObjectMap<HabboItem> items;
 
     public QueryDeleteHabboItems(TIntObjectMap<HabboItem> items) {
@@ -32,7 +29,7 @@ public class QueryDeleteHabboItems implements Runnable {
 
             statement.executeBatch();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         this.items.clear();

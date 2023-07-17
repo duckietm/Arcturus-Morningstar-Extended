@@ -7,16 +7,13 @@ import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
 import com.eu.habbo.messages.outgoing.users.UserClothesComposer;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class GiveUserClothing extends RCONMessage<GiveUserClothing.JSONGiveUserClothing> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GiveUserClothing.class);
-
     public GiveUserClothing() {
         super(GiveUserClothing.JSONGiveUserClothing.class);
     }
@@ -30,7 +27,7 @@ public class GiveUserClothing extends RCONMessage<GiveUserClothing.JSONGiveUserC
             statement.setInt(2, object.clothing_id);
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         if (habbo != null) {

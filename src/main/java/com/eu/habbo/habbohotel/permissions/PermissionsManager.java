@@ -6,17 +6,14 @@ import com.eu.habbo.plugin.HabboPlugin;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class PermissionsManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PermissionsManager.class);
-
     private final TIntObjectHashMap<Rank> ranks;
     private final TIntIntHashMap enables;
     private final THashMap<String, List<Rank>> badges;
@@ -29,7 +26,7 @@ public class PermissionsManager {
 
         this.reload();
 
-        LOGGER.info("Permissions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        log.info("Permissions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public void reload() {
@@ -60,7 +57,7 @@ public class PermissionsManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -73,7 +70,7 @@ public class PermissionsManager {
                     this.enables.put(set.getInt("effect_id"), set.getInt("min_rank"));
                 }
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }

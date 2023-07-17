@@ -4,17 +4,14 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TObjectProcedure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class CraftingManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CraftingManager.class);
-
     private final THashMap<Item, CraftingAltar> altars;
 
     public CraftingManager() {
@@ -56,14 +53,14 @@ public class CraftingManager {
                                 recipe.addIngredient(ingredientItem, set.getInt("crafting_recipes_ingredients.amount"));
                                 altar.addIngredient(ingredientItem);
                             } else {
-                                LOGGER.error("Unknown ingredient item " + set.getInt("crafting_recipes_ingredients.item_id"));
+                                log.error("Unknown ingredient item " + set.getInt("crafting_recipes_ingredients.item_id"));
                             }
                         }
                     }
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -117,7 +114,7 @@ public class CraftingManager {
             }
             statement.executeBatch();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         this.altars.clear();

@@ -6,8 +6,7 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumListComposer;
 import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,8 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
+@Slf4j
 public class GuildForumListEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuildForumListEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -64,7 +63,7 @@ public class GuildForumListEvent extends MessageHandler {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
             this.client.sendResponse(new ConnectionErrorComposer(500));
         }
 
@@ -88,7 +87,7 @@ public class GuildForumListEvent extends MessageHandler {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
             this.client.sendResponse(new ConnectionErrorComposer(500));
         }
 

@@ -8,19 +8,15 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import io.netty.channel.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class GameClient {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameClient.class);
-
     private final Channel channel;
     private final HabboEncryption encryption;
     private final LatencyTracker latencyTracker;
@@ -136,7 +132,7 @@ public class GameClient {
                 this.habbo = null;
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 }

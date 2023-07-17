@@ -10,11 +10,9 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 class FreezeHandleSnowballExplosion implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FreezeHandleSnowballExplosion.class);
 
     private final FreezeThrowSnowball thrownData;
 
@@ -104,7 +102,7 @@ class FreezeHandleSnowballExplosion implements Runnable {
 
             Emulator.getThreading().run(new FreezeResetExplosionTiles(freezeTiles, this.thrownData.room), 1000);
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
     }
 }

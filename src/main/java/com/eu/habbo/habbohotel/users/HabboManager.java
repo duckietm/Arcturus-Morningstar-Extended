@@ -13,9 +13,7 @@ import com.eu.habbo.messages.outgoing.users.UserPerksComposer;
 import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
 import com.eu.habbo.plugin.events.users.UserRankChangedEvent;
 import com.eu.habbo.plugin.events.users.UserRegisteredEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,10 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class HabboManager {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(HabboManager.class);
-
     //Configuration. Loaded from database & updated accordingly.
     public static String WELCOME_MESSAGE = "";
     public static boolean NAMECHANGE_ENABLED = false;
@@ -41,7 +37,7 @@ public class HabboManager {
 
         this.onlineHabbos = new ConcurrentHashMap<>();
 
-        LOGGER.info("Habbo Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        log.info("Habbo Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public static HabboInfo getOfflineHabboInfo(int id) {
@@ -54,7 +50,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return info;
@@ -72,7 +68,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return info;
@@ -115,7 +111,7 @@ public class HabboManager {
             }
             statement.close();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         habbo = this.cloneCheck(userId);
@@ -148,15 +144,15 @@ public class HabboManager {
                             stmt.setInt(2, habbo.getHabboInfo().getId());
                             stmt.execute();
                         } catch (SQLException e) {
-                            LOGGER.error("Caught SQL exception", e);
+                            log.error("Caught SQL exception", e);
                         }
                     }
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         } catch (Exception ex) {
-            LOGGER.error("Caught exception", ex);
+            log.error("Caught exception", ex);
         }
 
         return habbo;
@@ -197,7 +193,7 @@ public class HabboManager {
 //
 
 
-        LOGGER.info("Habbo Manager -> Disposed!");
+        log.info("Habbo Manager -> Disposed!");
     }
 
     public ArrayList<HabboInfo> getCloneAccounts(Habbo habbo, int limit) {
@@ -215,7 +211,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return habboInfo;
@@ -233,7 +229,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
 
         return nameChanges;
@@ -287,7 +283,7 @@ public class HabboManager {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
 
@@ -304,7 +300,7 @@ public class HabboManager {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }

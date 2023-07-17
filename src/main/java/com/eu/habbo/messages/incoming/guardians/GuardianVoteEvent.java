@@ -4,11 +4,10 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.guides.GuardianTicket;
 import com.eu.habbo.habbohotel.guides.GuardianVoteType;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GuardianVoteEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GuardianVoteEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -26,7 +25,7 @@ public class GuardianVoteEvent extends MessageHandler {
             } else if (voteType == 2) {
                 type = GuardianVoteType.AWFULLY;
             } else {
-                LOGGER.error("Uknown vote type: " + voteType);
+                log.error("Uknown vote type: " + voteType);
             }
 
             ticket.vote(this.client.getHabbo(), type);

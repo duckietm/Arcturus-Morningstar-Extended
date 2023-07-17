@@ -4,17 +4,14 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Slf4j
 public class GnomePet extends Pet implements IPetLook {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GnomePet.class);
-
     private final String gnomeData;
 
     public GnomePet(ResultSet set) throws SQLException {
@@ -51,7 +48,7 @@ public class GnomePet extends Pet implements IPetLook {
                 statement.setInt(2, this.id);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }

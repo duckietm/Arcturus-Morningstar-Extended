@@ -5,15 +5,11 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.messages.outgoing.users.AddUserBadgeComposer;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 
+@Slf4j
 public class GiveBadge extends RCONMessage<GiveBadge.GiveBadgeJSON> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GiveBadge.class);
-
-
     public GiveBadge() {
         super(GiveBadgeJSON.class);
     }
@@ -80,7 +76,7 @@ public class GiveBadge extends RCONMessage<GiveBadge.GiveBadgeJSON> {
                     }
                 }
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
                 this.status = RCONMessage.STATUS_ERROR;
                 this.message = e.getMessage();
             }

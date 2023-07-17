@@ -2,17 +2,13 @@ package com.eu.habbo.messages;
 
 import com.eu.habbo.messages.incoming.Incoming;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
+@Slf4j
 public class PacketNames {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PacketNames.class);
-
     private final HashMap<Integer, String> incoming;
     private final HashMap<Integer, String> outgoing;
 
@@ -42,14 +38,14 @@ public class PacketNames {
                     int packetId = field.getInt(null);
                     if (packetId > 0) {
                         if (target.containsKey(packetId)) {
-                            LOGGER.warn("Duplicate packet id found {} for {}.", packetId, clazz.getSimpleName());
+                            log.warn("Duplicate packet id found {} for {}.", packetId, clazz.getSimpleName());
                             continue;
                         }
 
                         target.put(packetId, field.getName());
                     }
                 } catch (IllegalAccessException e) {
-                    LOGGER.error("Failed to read field integer.", e);
+                    log.error("Failed to read field integer.", e);
                 }
             }
         }

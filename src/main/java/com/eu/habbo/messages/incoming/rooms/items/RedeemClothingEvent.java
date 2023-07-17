@@ -12,16 +12,13 @@ import com.eu.habbo.messages.outgoing.rooms.UpdateStackHeightComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
 import com.eu.habbo.messages.outgoing.users.UserClothesComposer;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 public class RedeemClothingEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedeemClothingEvent.class);
-
     @Override
     public void handle() throws Exception {
         int itemId = this.packet.readInt();
@@ -49,7 +46,7 @@ public class RedeemClothingEvent extends MessageHandler {
                                 statement.setInt(2, clothing.id);
                                 statement.execute();
                             } catch (SQLException e) {
-                                LOGGER.error("Caught SQL exception", e);
+                                log.error("Caught SQL exception", e);
                             }
 
                             this.client.getHabbo().getInventory().getWardrobeComponent().getClothing().add(clothing.id);
@@ -61,7 +58,7 @@ public class RedeemClothingEvent extends MessageHandler {
                             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FIGURESET_OWNED_ALREADY.key));
                         }
                     } else {
-                        LOGGER.error("[Catalog] No definition in catalog_clothing found for clothing name " + item.getBaseItem().getName() + ". Could not redeem clothing!");
+                        log.error("[Catalog] No definition in catalog_clothing found for clothing name " + item.getBaseItem().getName() + ". Could not redeem clothing!");
                     }
                 }
             }

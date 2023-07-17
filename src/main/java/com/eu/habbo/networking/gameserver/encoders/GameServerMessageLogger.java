@@ -6,14 +6,11 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.util.ANSI;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
+@Slf4j
 public class GameServerMessageLogger extends MessageToMessageEncoder<ServerMessage> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameServerMessageLogger.class);
     private final PacketNames names;
 
     public GameServerMessageLogger()  {
@@ -22,7 +19,7 @@ public class GameServerMessageLogger extends MessageToMessageEncoder<ServerMessa
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ServerMessage message, List<Object> out) {
-        LOGGER.debug(String.format("[" + ANSI.BLUE + "SERVER" + ANSI.DEFAULT + "][%-4d][%-41s] => %s",
+        log.debug(String.format("[" + ANSI.BLUE + "SERVER" + ANSI.DEFAULT + "][%-4d][%-41s] => %s",
                 message.getHeader(),
                 this.names.getOutgoingName(message.getHeader()),
                 message.getBodyString()));

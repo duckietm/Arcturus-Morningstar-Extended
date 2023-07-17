@@ -9,12 +9,10 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSearchResultsComposer;
 import gnu.trove.map.hash.THashMap;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.*;
 
 @Slf4j
 public class RequestNewNavigatorRoomsEvent extends MessageHandler {
-
     @Override
     public void handle() throws Exception {
         String view = this.packet.readString();
@@ -113,7 +111,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
         }
         catch (Exception e)
         {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
         */
     }

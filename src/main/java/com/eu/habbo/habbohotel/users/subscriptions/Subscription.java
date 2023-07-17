@@ -1,14 +1,13 @@
 package com.eu.habbo.habbohotel.users.subscriptions;
 
 import com.eu.habbo.Emulator;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-/**
- * @author Beny
- */
+@Slf4j
 public class Subscription {
     public static final String HABBO_CLUB = "HABBO_CLUB";
 
@@ -79,7 +78,7 @@ public class Subscription {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            SubscriptionManager.LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 
@@ -97,7 +96,7 @@ public class Subscription {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            SubscriptionManager.LOGGER.error("Caught SQL exception", e);
+            log.error("Caught SQL exception", e);
         }
     }
 

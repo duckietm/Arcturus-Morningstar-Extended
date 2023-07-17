@@ -2,28 +2,21 @@ package com.eu.habbo.habbohotel.hotelview;
 
 import com.eu.habbo.Emulator;
 import gnu.trove.map.hash.THashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+@Slf4j
 public class HallOfFame {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HallOfFame.class);
-
     private final THashMap<Integer, HallOfFameWinner> winners = new THashMap<>();
-
-
     private String competitionName;
-
     public HallOfFame() {
         this.setCompetitionName("xmasRoomComp");
 
         this.reload();
     }
-
 
     public void reload() {
         this.winners.clear();
@@ -35,7 +28,7 @@ public class HallOfFame {
                     this.winners.put(winner.getId(), winner);
                 }
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }
