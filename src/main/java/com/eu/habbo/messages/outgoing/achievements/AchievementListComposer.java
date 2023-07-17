@@ -8,12 +8,10 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AchievementListComposer extends MessageComposer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AchievementListComposer.class);
-
     private final Habbo habbo;
 
     public AchievementListComposer(Habbo habbo) {
@@ -53,7 +51,7 @@ public class AchievementListComposer extends MessageComposer {
 
             this.response.appendString("");
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
         }
 
         return this.response;

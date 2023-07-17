@@ -5,12 +5,10 @@ import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 import com.eu.habbo.networking.camera.CameraIncomingMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CameraUpdateNotification extends CameraIncomingMessage {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CameraUpdateNotification.class);
 
     public CameraUpdateNotification(Short header, ByteBuf body) {
         super(header, body);
@@ -23,11 +21,11 @@ public class CameraUpdateNotification extends CameraIncomingMessage {
         int type = this.readInt();
 
         if (type == 0) {
-            LOGGER.info("Camera update: {}", message);
+            log.info("Camera update: {}", message);
         } else if (type == 1) {
-            LOGGER.warn("Camera update: {}", message);
+            log.warn("Camera update: {}", message);
         } else if (type == 2) {
-            LOGGER.error("Camera update: {}", message);
+            log.error("Camera update: {}", message);
         }
 
         if (alert) {

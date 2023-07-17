@@ -26,8 +26,7 @@ import com.eu.habbo.messages.outgoing.users.UserPointsComposer;
 import com.eu.habbo.threading.runnables.ShutdownEmulator;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,8 +34,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 
+@Slf4j
 public class CatalogBuyItemAsGiftEvent extends MessageHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogBuyItemAsGiftEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -118,7 +117,7 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
                                 }
                             }
                         } catch (SQLException e) {
-                            LOGGER.error("Caught SQL exception", e);
+                            log.error("Caught SQL exception", e);
                         }
                     } else {
                         userId = habbo.getHabboInfo().getId();
@@ -294,7 +293,7 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
                                         try {
                                             guildId = Integer.parseInt(extraData);
                                         } catch (Exception e) {
-                                            LOGGER.error("Caught exception", e);
+                                            log.error("Caught exception", e);
                                             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
                                             return;
                                         }
@@ -366,7 +365,7 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
 
                     this.client.sendResponse(new PurchaseOKComposer(item));
                 } catch (Exception e) {
-                    LOGGER.error("Exception caught", e);
+                    log.error("Exception caught", e);
                     this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
                 }
             } finally {

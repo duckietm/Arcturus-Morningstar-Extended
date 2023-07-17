@@ -12,8 +12,7 @@ import com.eu.habbo.plugin.events.bots.BotShoutEvent;
 import com.eu.habbo.plugin.events.bots.BotTalkEvent;
 import com.eu.habbo.plugin.events.bots.BotWhisperEvent;
 import com.eu.habbo.threading.runnables.BotFollowHabbo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,9 +21,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+@Slf4j
 public class Bot implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
-
     public static final String NO_CHAT_SET = "${bot.skill.chatter.configuration.text.placeholder}";
     public static String[] PLACEMENT_MESSAGES = "Yo!;Hello I'm a real party animal!;Hello!".split(";");
 
@@ -164,7 +162,7 @@ public class Bot implements Runnable {
                 statement.execute();
                 this.needsUpdate = false;
             } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
+                log.error("Caught SQL exception", e);
             }
         }
     }
