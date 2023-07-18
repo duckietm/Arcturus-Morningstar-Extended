@@ -53,6 +53,7 @@ public final class Emulator {
 
 
     public static String build = "";
+    public static String debuglevel = "";
     public static boolean isReady = false;
     public static boolean isShuttingDown = false;
     public static boolean stopped = false;
@@ -143,11 +144,17 @@ public final class Emulator {
             log.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
 
             Emulator.debugging = Emulator.getConfig().getBoolean("debug.mode");
+            Emulator.debuglevel = Emulator.getConfig().getValue("debug.level", "DEBUG");
+            /* Debug level can be : INFO WARN DEBUG TRACE*/
 
             if (debugging) {
                 ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 root.setLevel(Level.DEBUG);
                 log.debug("Debugging enabled.");
+                Level logLevel = Level.toLevel(Emulator.debuglevel);
+                root.setLevel(logLevel);
+                log.info("Debugging enabled.");
+                log.info("The loaded debug mode is {}", Emulator.debuglevel);
             }
 
             Emulator.getPluginManager().fireEvent(new EmulatorLoadedEvent());
