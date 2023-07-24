@@ -15,7 +15,7 @@ class DatabasePool {
             HikariConfig databaseConfiguration = new HikariConfig();
             databaseConfiguration.setMaximumPoolSize(config.getInt("db.pool.maxsize", 50));
             databaseConfiguration.setMinimumIdle(config.getInt("db.pool.minsize", 10));
-            databaseConfiguration.setJdbcUrl("jdbc:mariadb://" + config.getValue("db.hostname", "localhost") + ":" + config.getValue("db.port", "3306") + "/" + config.getValue("db.database", "habbo") + config.getValue("db.params"));
+            databaseConfiguration.setJdbcUrl("jdbc:mysql://" + config.getValue("db.hostname", "localhost") + ":" + config.getValue("db.port", "3306") + "/" + config.getValue("db.database", "habbo") + config.getValue("db.params"));
             databaseConfiguration.addDataSourceProperty("serverName", config.getValue("db.hostname", "localhost"));
             databaseConfiguration.addDataSourceProperty("port", config.getValue("db.port", "3306"));
             databaseConfiguration.addDataSourceProperty("databaseName", config.getValue("db.database", "habbo"));
