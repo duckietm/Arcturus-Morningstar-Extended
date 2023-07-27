@@ -10,8 +10,8 @@ import com.eu.habbo.messages.outgoing.Outgoing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RoomUnitOnRollerComposer extends MessageComposer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnitOnRollerComposer.class);
     private final RoomUnit roomUnit;
     private final HabboItem roller;
     private final RoomTile oldLocation;
@@ -67,7 +67,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
         this.response.appendString(this.newZ + "");
 
         if (this.roller != null && room.getLayout() != null) {
-            log.debug("Roller activated");
+            LOGGER.debug("Roller activated");
 
             HabboItem topItem = this.room.getTopItemAt(this.oldLocation.x, this.oldLocation.y);
             HabboItem topItemNewLocation = this.room.getTopItemAt(this.newLocation.x, this.newLocation.y);
@@ -76,7 +76,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                 try {
                     topItem.onWalkOff(this.roomUnit, this.room, new Object[]{this});
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
 
@@ -88,7 +88,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                 try {
                     topItemNewLocation.onWalkOn(this.roomUnit, this.room, new Object[]{this});
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
         } else {
