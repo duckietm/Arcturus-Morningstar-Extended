@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.roomunit.RoomUnitLookAtPointEvent;
@@ -21,6 +22,7 @@ import com.eu.habbo.util.pathfinding.Rotation;
 import gnu.trove.map.TMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RoomUnit {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnit.class);
 
     public boolean isWiredTeleporting = false;
     public boolean isLeavingTeleporter = false;
@@ -79,6 +80,7 @@ public class RoomUnit {
     private Room room;
     private RoomRightLevels rightsLevel = RoomRightLevels.NONE;
     private THashSet<Integer> overridableTiles;
+    private ScheduledFuture<?> rollerTask;
 
     public RoomUnit() {
         this.id = 0;
@@ -329,6 +331,7 @@ public class RoomUnit {
             this.setPreviousLocation(this.getCurrentLocation());
 
             this.setStatus(RoomUnitStatus.MOVE, next.x + "," + next.y + "," + zHeight);
+            this.cancelRollerTask();
             if (habbo != null) {
                 if (habbo.getHabboInfo().getRiding() != null) {
                     RoomUnit ridingUnit = habbo.getHabboInfo().getRiding().getRoomUnit();
@@ -345,7 +348,7 @@ public class RoomUnit {
                     }
                 }
             }
-            //room.sendComposer(new RoomUserStatusComposer(this).compose());
+            room.sendComposer(new RoomUserStatusComposer(this).compose());
 
             this.setZ(zHeight);
             this.setCurrentLocation(room.getLayout().getTile(next.x, next.y));
@@ -366,7 +369,7 @@ public class RoomUnit {
             return false;
 
         } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
+            log.error("Caught exception", e);
             return false;
         }
     }
@@ -805,5 +808,47 @@ public class RoomUnit {
 
     public void setMoveBlockingTask(ScheduledFuture moveBlockingTask) {
         this.moveBlockingTask = moveBlockingTask;
+    }
+
+    public void scheduleRollerTask(final RoomUnitOnRollerComposer composer) {
+        if (pendingRollerTask()) {
+            log.warn("Attempted to schedule roller task with pending task in place");
+            return;
+        }
+
+        if (this.room == null) {
+            return;
+        }
+
+        this.rollerTask = Emulator.getThreading().run(() -> {
+
+            if (this.room == null) {
+                return;
+            }
+
+            if (this.isWalking()) {
+                return;
+            }
+
+            if (this.getCurrentLocation() != composer.getOldLocation()) {
+                return;
+            }
+
+            this.room.sendComposer(composer.compose());
+        }, this.room.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
+    }
+
+    public boolean pendingRollerTask() {
+        return rollerTask != null && !rollerTask.isCancelled() && !rollerTask.isDone();
+    }
+
+    public void cancelRollerTask() {
+        if (!pendingRollerTask()) {
+            return;
+        }
+
+        rollerTask.cancel(false);
+
+        log.debug("Cancelled roller task");
     }
 }
