@@ -69,7 +69,6 @@ import gnu.trove.procedure.TIntObjectProcedure;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
 import io.netty.util.internal.ConcurrentSet;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +86,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class Room implements Comparable<Room>, ISerialize, Runnable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Room.class);
 
     public static final Comparator SORT_SCORE = (o1, o2) -> {
 
@@ -273,7 +273,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
             this.loadBans(connection);
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.tradeMode = set.getInt("trade_mode");
@@ -321,49 +321,49 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     this.loadLayout();
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadRights(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadItems(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadHeightmap();
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadBots(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadPets(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadWordFilter(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 try {
                     this.loadWiredData(connection);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
                 this.idleCycles = 0;
@@ -371,7 +371,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                 this.roomCycleTask = Emulator.getThreading().getService().scheduleAtFixedRate(this, 500, 500, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
 
             this.traxManager = new TraxManager(this);
@@ -414,7 +414,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } else {
-            log.error("Unknown Room Layout for Room (ID: {})", this.id);
+            LOGGER.error("Unknown Room Layout for Room (ID: {})", this.id);
         }
     }
 
@@ -429,11 +429,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         if (this.itemCount() > Room.MAXIMUM_FURNI) {
-            log.error("Room ID: {} has exceeded the furniture limit ({} > {}).", this.getId(), this.itemCount(), Room.MAXIMUM_FURNI);
+            LOGGER.error("Room ID: {} has exceeded the furniture limit ({} > {}).", this.getId(), this.itemCount(), Room.MAXIMUM_FURNI);
         }
     }
 
@@ -450,14 +450,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                             ((InteractionWired) item).loadWiredData(set, this);
                         }
                     } catch (SQLException e) {
-                        log.error("Caught SQL exception", e);
+                        LOGGER.error("Caught SQL exception", e);
                     }
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -493,7 +493,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -523,12 +523,12 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                         this.getFurniOwnerNames().put(pet.getUserId(), set.getString("pet_owner_name"));
                     } catch (SQLException e) {
-                        log.error("Caught SQL exception", e);
+                        LOGGER.error("Caught SQL exception", e);
                     }
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -543,7 +543,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -959,7 +959,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                             botIterator.value().needsUpdate(true);
                             Emulator.getThreading().run(botIterator.value());
                         } catch (NoSuchElementException e) {
-                            log.error("Caught exception", e);
+                            LOGGER.error("Caught exception", e);
                             break;
                         }
                     }
@@ -967,7 +967,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     this.currentBots.clear();
                     this.currentPets.clear();
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
 
@@ -979,7 +979,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 this.preLoaded = true;
                 this.layout = null;
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
 
@@ -1070,7 +1070,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     Emulator.getThreading().run(
                             Room.this::cycle);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
         }
@@ -1133,7 +1133,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 statement.executeUpdate();
                 this.needsUpdate = false;
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -1144,7 +1144,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             statement.setInt(2, this.id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -1291,7 +1291,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
 
                         } catch (NoSuchElementException e) {
-                            log.error("Caught exception", e);
+                            LOGGER.error("Caught exception", e);
                             break;
                         }
                     }
@@ -1304,7 +1304,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                             try {
                                 petIterator.advance();
                             } catch (NoSuchElementException e) {
-                                log.error("Caught exception", e);
+                                LOGGER.error("Caught exception", e);
                                 break;
                             }
 
@@ -1462,9 +1462,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 if (unit.hasStatus(RoomUnitStatus.MOVE))
                                     continue;
 
-                                if (unit.pendingRollerTask())
-                                    continue;
-
                                 RoomTile tile = tileInFront.copy();
                                 tile.setStackHeight(unit.getZ() + zOffset);
 
@@ -1496,7 +1493,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 usersRolledThisTile.add(unit.getId());
                                 rolledUnitIds.add(unit.getId());
                                 updatedUnit.remove(unit);
-                                unit.scheduleRollerTask(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(), unit.getZ() + (isRiding ? 1 : 0), tile, tile.getStackHeight() + (isRiding ? 1 : 0), room));
+                                messages.add(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(), unit.getZ() + (isRiding ? 1 : 0), tile, tile.getStackHeight() + (isRiding ? 1 : 0), room));
 
                                 if (itemsOnRoller.isEmpty()) {
                                     HabboItem item = room.getTopItemAt(tileInFront.x, tileInFront.y);
@@ -1507,7 +1504,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                                 try {
                                                     item.onWalkOn(unit, room, new Object[] { rollerTile, tileInFront });
                                                 } catch (Exception e) {
-                                                    log.error("Caught exception", e);
+                                                    LOGGER.error("Caught exception", e);
                                                 }
                                             }
                                         }, this.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
@@ -1549,11 +1546,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                                     continue;
                                             }
 
-                                            final double currentZOffset = zOffset;
-
-                                            Emulator.getThreading().run(() -> {
-                                                this.sendComposer(new FloorItemOnRollerComposer(item, roller, tileInFront, currentZOffset, room).compose());
-                                            }, this.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
+                                            messages.add(new FloorItemOnRollerComposer(item, roller, tileInFront, zOffset, room));
                                             rollerFurniIds.add(item.getId());
                                         }
                                     }
@@ -2054,7 +2047,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     }
 
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
             }
@@ -2182,7 +2175,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             statement.setInt(10, this.promotion.getCategory());
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.needsUpdate = true;
@@ -2223,7 +2216,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 game = gameType.getDeclaredConstructor(Room.class).newInstance(this);
                 this.addGame(game);
             } catch (Exception e) {
-                log.error("Error getting game " + gameType.getName(), e);
+                LOGGER.error("Error getting game " + gameType.getName(), e);
             }
         }
 
@@ -2300,7 +2293,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 return this.habboQueue.remove(habbo.getHabboInfo().getId()) != null;
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return true;
@@ -2373,7 +2366,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 if (habbo != null) {
                     this.furniOwnerNames.put(item.getUserId(), habbo.getUsername());
                 } else {
-                    log.error("Failed to find username for item (ID: {}, UserID: {})", item.getId(), item.getUserId());
+                    LOGGER.error("Failed to find username for item (ID: {}, UserID: {})", item.getId(), item.getUserId());
                 }
             }
         }
@@ -2710,7 +2703,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     item.onWalkOff(habbo.getRoomUnit(), this, new Object[]{});
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
         }
@@ -2767,7 +2760,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     iterator.advance();
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
 
@@ -2787,7 +2780,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     iterator.advance();
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
 
@@ -2809,7 +2802,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     iterator.advance();
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
 
@@ -2852,7 +2845,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             try {
                 petIterator.advance();
             } catch (NoSuchElementException e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
                 break;
             }
 
@@ -2931,7 +2924,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 try {
                     petIterator.advance();
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
 
@@ -3105,7 +3098,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             try {
                 doorTileTopItem.onWalkOn(habbo.getRoomUnit(), this, new Object[]{});
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
     }
@@ -3330,7 +3323,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                         bot.onUserSay(roomChatMessage);
 
                     } catch (NoSuchElementException e) {
-                        log.error("Caught exception", e);
+                        LOGGER.error("Caught exception", e);
                         break;
                     }
                 }
@@ -3362,7 +3355,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                                 break;
                             } catch (Exception e) {
-                                log.error("Caught exception", e);
+                                LOGGER.error("Caught exception", e);
                             }
                         }
                     }
@@ -3881,7 +3874,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -3900,7 +3893,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -3951,7 +3944,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -3988,7 +3981,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -4011,7 +4004,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             statement.setInt(1, this.id);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.refreshRightsInRoom();
@@ -4071,7 +4064,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -4381,7 +4374,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 statement.setString(2, word);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
                 return;
             }
 
@@ -4398,7 +4391,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 statement.setString(2, word);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
