@@ -150,7 +150,7 @@ public class GuildManager {
             Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(guild.getRoomId());
 
             if (room != null) {
-                room.setGuild(0);
+                room.setGuildId(0);
             }
         } catch (SQLException e) {
             log.error("Caught SQL exception", e);

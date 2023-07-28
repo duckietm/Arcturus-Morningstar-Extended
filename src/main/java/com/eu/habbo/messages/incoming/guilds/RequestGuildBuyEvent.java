@@ -86,7 +86,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
                     }
                     Guild guild = Emulator.getGameEnvironment().getGuildManager().createGuild(this.client.getHabbo(), roomId, r.getName(), name, description, badge, colorOne, colorTwo);
 
-                    r.setGuild(guild.getId());
+                    r.setGuildId(guild.getId());
                     r.removeAllRights();
                     r.setNeedsUpdate(true);
 
