@@ -2585,25 +2585,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         }
     }
 
-    public THashSet<HabboItem> getFloorItems() {
-        THashSet<HabboItem> items = new THashSet<>();
-        TIntObjectIterator<HabboItem> iterator = this.roomItems.iterator();
-
-        for (int i = this.roomItems.size(); i-- > 0; ) {
-            try {
-                iterator.advance();
-            } catch (Exception e) {
-                break;
-            }
-
-            if (iterator.value().getBaseItem().getType() == FurnitureType.FLOOR)
-                items.add(iterator.value());
-
-        }
-
-
-        return items;
-
+    public List<HabboItem> getFloorItems() {
+        return roomItems.valueCollection().stream().filter(i -> i.getBaseItem().getType() == FurnitureType.FLOOR).toList();
     }
 
     public THashSet<HabboItem> getWallItems() {
@@ -2616,32 +2599,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             } catch (Exception e) {
                 break;
             }
-
             if (iterator.value().getBaseItem().getType() == FurnitureType.WALL)
                 items.add(iterator.value());
         }
-
         return items;
-
     }
 
-    public THashSet<HabboItem> getPostItNotes() {
-        THashSet<HabboItem> items = new THashSet<>();
-        TIntObjectIterator<HabboItem> iterator = this.roomItems.iterator();
-
-        for (int i = this.roomItems.size(); i-- > 0; ) {
-            try {
-                iterator.advance();
-            } catch (Exception e) {
-                break;
-            }
-
-            if (iterator.value().getBaseItem().getInteractionType().getType() == InteractionPostIt.class)
-                items.add(iterator.value());
-        }
-
-        return items;
-
+    public List<HabboItem> getPostItNotes() {
+        return roomItems.valueCollection().stream().filter(i -> i.getBaseItem().getInteractionType().getType() == InteractionPostIt.class).toList();
     }
 
     public void addHabbo(Habbo habbo) {
@@ -2699,10 +2664,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             }
         }
 
-        if (habbo.getHabboInfo().getCurrentGame() != null) {
-            if (this.getGame(habbo.getHabboInfo().getCurrentGame()) != null) {
-                this.getGame(habbo.getHabboInfo().getCurrentGame()).removeHabbo(habbo);
-            }
+        if (habbo.getHabboInfo().getCurrentGame() != null && this.getGame(habbo.getHabboInfo().getCurrentGame()) != null) {
+            this.getGame(habbo.getHabboInfo().getCurrentGame()).removeHabbo(habbo);
+
         }
 
         RoomTrade trade = this.getActiveTradeForHabbo(habbo);
@@ -2765,63 +2729,28 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     public Bot getBotByRoomUnitId(int id) {
         synchronized (this.currentBots) {
-            TIntObjectIterator<Bot> iterator = this.currentBots.iterator();
-
-            for (int i = this.currentBots.size(); i-- > 0; ) {
-                try {
-                    iterator.advance();
-                } catch (NoSuchElementException e) {
-                    LOGGER.error("Caught exception", e);
-                    break;
-                }
-
-                if (iterator.value().getRoomUnit().getId() == id)
-                    return iterator.value();
-            }
+            return currentBots.valueCollection().stream().filter(b -> b.getRoomUnit().getId() == id).findFirst().orElse(null);
         }
-
-        return null;
     }
 
     public List<Bot> getBots(String name) {
-        List<Bot> bots = new ArrayList<>();
-
         synchronized (this.currentBots) {
-            TIntObjectIterator<Bot> iterator = this.currentBots.iterator();
-
-            for (int i = this.currentBots.size(); i-- > 0; ) {
-                try {
-                    iterator.advance();
-                } catch (NoSuchElementException e) {
-                    LOGGER.error("Caught exception", e);
-                    break;
-                }
-
-                if (iterator.value().getName().equalsIgnoreCase(name))
-                    bots.add(iterator.value());
-            }
+            return currentBots.valueCollection().stream().filter(b -> b.getName().equalsIgnoreCase(name)).toList();
         }
-
-        return bots;
     }
 
     public boolean hasBotsAt(final int x, final int y) {
         final boolean[] result = {false};
 
         synchronized (this.currentBots) {
-            this.currentBots.forEachValue(new TObjectProcedure<Bot>() {
-                @Override
-                public boolean execute(Bot object) {
-                    if (object.getRoomUnit().getX() == x && object.getRoomUnit().getY() == y) {
-                        result[0] = true;
-                        return false;
-                    }
-
-                    return true;
+            this.currentBots.forEachValue(object -> {
+                if (object.getRoomUnit().getX() == x && object.getRoomUnit().getY() == y) {
+                    result[0] = true;
+                    return false;
                 }
+                return true;
             });
         }
-
         return result[0];
     }
 
@@ -2830,21 +2759,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public Pet getPet(RoomUnit roomUnit) {
-        TIntObjectIterator<Pet> petIterator = this.currentPets.iterator();
-
-        for (int i = this.currentPets.size(); i-- > 0; ) {
-            try {
-                petIterator.advance();
-            } catch (NoSuchElementException e) {
-                LOGGER.error("Caught exception", e);
-                break;
-            }
-
-            if (petIterator.value().getRoomUnit() == roomUnit)
-                return petIterator.value();
-        }
-
-        return null;
+        return currentPets.valueCollection().stream().filter(p -> p.getRoomUnit() == roomUnit).findFirst().orElse(null);
     }
 
     public boolean removeBot(Bot bot) {
@@ -2900,11 +2815,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public boolean hasHabbosAt(int x, int y) {
-        for (Habbo habbo : this.getHabbos()) {
-            if (habbo.getRoomUnit().getX() == x && habbo.getRoomUnit().getY() == y)
-                return true;
-        }
-        return false;
+        return getHabbos().stream().anyMatch(h -> h.getRoomUnit().getX() == x && h.getRoomUnit().getY() == y);
     }
 
     public boolean hasPetsAt(int x, int y) {
