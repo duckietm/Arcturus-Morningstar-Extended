@@ -4125,6 +4125,15 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public void giveEffect(RoomUnit roomUnit, int effectId, int duration) {
+        this.giveEffect(roomUnit, effectId, duration, false);
+    }
+
+    public void giveEffect(RoomUnit roomUnit, int effectId, int duration, boolean ignoreChecks) {
+        if (roomUnit == null || roomUnit.getRoom() == null) return;
+
+        Habbo habbo = roomUnit.getRoom().getHabbo(roomUnit);
+
+        if (roomUnit.getRoomUnitType() == RoomUnitType.USER && (habbo == null || habbo.getHabboInfo().isInGame() && !ignoreChecks)) { return; }
         if (duration == -1 || duration == Integer.MAX_VALUE) {
             duration = Integer.MAX_VALUE;
         } else {
