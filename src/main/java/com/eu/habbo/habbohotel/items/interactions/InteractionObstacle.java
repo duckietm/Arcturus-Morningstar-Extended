@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class InteractionObstacle extends HabboItem implements ICycleable {
 
-    private THashSet<RoomTile> middleTiles;
+    private final THashSet<RoomTile> middleTiles;
 
     public InteractionObstacle(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -55,7 +55,7 @@ public class InteractionObstacle extends HabboItem implements ICycleable {
     }
 
     @Override
-    public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
+    public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) {
         /*Pet pet = room.getPet(roomUnit);
 
         if (pet instanceof HorsePet && ((HorsePet) pet).getRider() != null) {
@@ -180,12 +180,12 @@ public class InteractionObstacle extends HabboItem implements ICycleable {
                         continue;
 
                     RoomTile tileInfront = room.getLayout().getTileInFront(unit.getCurrentLocation(), unit.getBodyRotation().getValue());
-                    if(tileInfront.state != RoomTileState.INVALID && tileInfront.state != RoomTileState.BLOCKED && room.getRoomUnitsAt(tileInfront).size() == 0) {
+                    if(tileInfront.getState() != RoomTileState.INVALID && tileInfront.getState() != RoomTileState.BLOCKED && room.getRoomUnitsAt(tileInfront).size() == 0) {
                         unit.setGoalLocation(tileInfront);
                     }
                     else {
                         RoomTile tileBehind = room.getLayout().getTileInFront(unit.getCurrentLocation(), Objects.requireNonNull(unit.getBodyRotation().getOpposite()).getValue());
-                        if(tileBehind.state != RoomTileState.INVALID && tileBehind.state != RoomTileState.BLOCKED && room.getRoomUnitsAt(tileBehind).size() == 0) {
+                        if(tileBehind.getState() != RoomTileState.INVALID && tileBehind.getState() != RoomTileState.BLOCKED && room.getRoomUnitsAt(tileBehind).size() == 0) {
                             unit.setGoalLocation(tileBehind);
                         }
                     }
