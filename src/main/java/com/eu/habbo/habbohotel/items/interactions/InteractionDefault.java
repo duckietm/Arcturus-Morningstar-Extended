@@ -96,33 +96,36 @@ public class InteractionDefault extends HabboItem {
 
     @Override
     public void onWalkOn(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
+    Habbo habbo = room.getHabbo(roomUnit);
+
+    if (habbo != null && habbo.getHabboInfo().getRiding() == null) {
         super.onWalkOn(roomUnit, room, objects);
+            if (roomUnit != null) {
+                if (this.getBaseItem().getEffectF() > 0 || this.getBaseItem().getEffectM() > 0) {
+                    if (roomUnit.getRoomUnitType().equals(RoomUnitType.USER)) {
+                        if (habbo != null) {
+                            if (habbo.getHabboInfo().getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0 && habbo.getRoomUnit().getEffectId() != this.getBaseItem().getEffectM()) {
+                                room.giveEffect(habbo, this.getBaseItem().getEffectM(), -1);
+                                log.error("newHabbos Effect Male");
+                                return;
+                            }
 
-        if (roomUnit != null) {
-            if (this.getBaseItem().getEffectF() > 0 || this.getBaseItem().getEffectM() > 0) {
-                if (roomUnit.getRoomUnitType().equals(RoomUnitType.USER)) {
-                    Habbo habbo = room.getHabbo(roomUnit);
-
-                    if (habbo != null) {
-                        if (habbo.getHabboInfo().getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0 && habbo.getRoomUnit().getEffectId() != this.getBaseItem().getEffectM()) {
-                            room.giveEffect(habbo, this.getBaseItem().getEffectM(), -1);
-                            return;
+                            if (habbo.getHabboInfo().getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0 && habbo.getRoomUnit().getEffectId() != this.getBaseItem().getEffectF()) {
+                                room.giveEffect(habbo, this.getBaseItem().getEffectF(), -1);
+                                log.error("newHabbos Effect Female");
+                            }
                         }
+                    } else if (roomUnit.getRoomUnitType().equals(RoomUnitType.BOT)) {
+                        Bot bot = room.getBot(roomUnit);
 
-                        if (habbo.getHabboInfo().getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0 && habbo.getRoomUnit().getEffectId() != this.getBaseItem().getEffectF()) {
-                            room.giveEffect(habbo, this.getBaseItem().getEffectF(), -1);
-                        }
-                    }
-                } else if (roomUnit.getRoomUnitType().equals(RoomUnitType.BOT)) {
-                    Bot bot = room.getBot(roomUnit);
-
-                    if (bot != null) {
-                        if (bot.getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0 && roomUnit.getEffectId() != this.getBaseItem().getEffectM()) {
-                            room.giveEffect(bot.getRoomUnit(), this.getBaseItem().getEffectM(), -1);
-                            return;
-                        }
-                        if (bot.getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0 && roomUnit.getEffectId() != this.getBaseItem().getEffectF()) {
-                            room.giveEffect(bot.getRoomUnit(), this.getBaseItem().getEffectF(), -1);
+                        if (bot != null) {
+                            if (bot.getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0 && roomUnit.getEffectId() != this.getBaseItem().getEffectM()) {
+                                room.giveEffect(bot.getRoomUnit(), this.getBaseItem().getEffectM(), -1);
+                                return;
+                            }
+                            if (bot.getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0 && roomUnit.getEffectId() != this.getBaseItem().getEffectF()) {
+                                room.giveEffect(bot.getRoomUnit(), this.getBaseItem().getEffectF(), -1);
+                            }
                         }
                     }
                 }
@@ -132,54 +135,58 @@ public class InteractionDefault extends HabboItem {
 
     @Override
     public void onWalkOff(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
-        super.onWalkOff(roomUnit, room, objects);
+        Habbo habboride = room.getHabbo(roomUnit);
 
-        if (roomUnit != null) {
-            if (this.getBaseItem().getEffectF() > 0 || this.getBaseItem().getEffectM() > 0) {
-                int nextEffectM = 0;
-                int nextEffectF = 0;
+        if (habboride != null && habboride.getHabboInfo().getRiding() == null) {
+            super.onWalkOff(roomUnit, room, objects);
 
-                if (objects != null && objects.length == 2) {
-                    if (objects[0] instanceof RoomTile && objects[1] instanceof RoomTile) {
-                        RoomTile goalTile = (RoomTile) objects[0];
-                        HabboItem topItem = room.getTopItemAt(goalTile.x, goalTile.y, (objects[0] != objects[1]) ? this : null);
+            if (roomUnit != null) {
+                if (this.getBaseItem().getEffectF() > 0 || this.getBaseItem().getEffectM() > 0) {
+                    int nextEffectM = 0;
+                    int nextEffectF = 0;
 
-                        if (topItem != null && (topItem.getBaseItem().getEffectM() == this.getBaseItem().getEffectM() || topItem.getBaseItem().getEffectF() == this.getBaseItem().getEffectF())) {
-                            return;
-                        }
+                    if (objects != null && objects.length == 2) {
+                        if (objects[0] instanceof RoomTile && objects[1] instanceof RoomTile) {
+                            RoomTile goalTile = (RoomTile) objects[0];
+                            HabboItem topItem = room.getTopItemAt(goalTile.x, goalTile.y, (objects[0] != objects[1]) ? this : null);
 
-                        if(topItem != null) {
-                            nextEffectM = topItem.getBaseItem().getEffectM();
-                            nextEffectF = topItem.getBaseItem().getEffectF();
-                        }
-                    }
-                }
+                            if (topItem != null && (topItem.getBaseItem().getEffectM() == this.getBaseItem().getEffectM() || topItem.getBaseItem().getEffectF() == this.getBaseItem().getEffectF())) {
+                                return;
+                            }
 
-                if (roomUnit.getRoomUnitType().equals(RoomUnitType.USER)) {
-                    Habbo habbo = room.getHabbo(roomUnit);
-
-                    if (habbo != null) {
-
-                        if (habbo.getHabboInfo().getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0) {
-                            room.giveEffect(habbo, nextEffectM, -1);
-                            return;
-                        }
-
-                        if (habbo.getHabboInfo().getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0) {
-                            room.giveEffect(habbo, nextEffectF, -1);
+                            if (topItem != null) {
+                                nextEffectM = topItem.getBaseItem().getEffectM();
+                                nextEffectF = topItem.getBaseItem().getEffectF();
+                            }
                         }
                     }
-                } else if (roomUnit.getRoomUnitType().equals(RoomUnitType.BOT)) {
-                    Bot bot = room.getBot(roomUnit);
 
-                    if (bot != null) {
-                        if (bot.getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0) {
-                            room.giveEffect(roomUnit, nextEffectM, -1);
-                            return;
+                    if (roomUnit.getRoomUnitType().equals(RoomUnitType.USER)) {
+                        Habbo habbo = room.getHabbo(roomUnit);
+
+                        if (habbo != null) {
+
+                            if (habbo.getHabboInfo().getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0) {
+                                room.giveEffect(habbo, nextEffectM, -1);
+                                return;
+                            }
+
+                            if (habbo.getHabboInfo().getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0) {
+                                room.giveEffect(habbo, nextEffectF, -1);
+                            }
                         }
+                    } else if (roomUnit.getRoomUnitType().equals(RoomUnitType.BOT)) {
+                        Bot bot = room.getBot(roomUnit);
 
-                        if (bot.getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0) {
-                            room.giveEffect(roomUnit, nextEffectF, -1);
+                        if (bot != null) {
+                            if (bot.getGender().equals(HabboGender.M) && this.getBaseItem().getEffectM() > 0) {
+                                room.giveEffect(roomUnit, nextEffectM, -1);
+                                return;
+                            }
+
+                            if (bot.getGender().equals(HabboGender.F) && this.getBaseItem().getEffectF() > 0) {
+                                room.giveEffect(roomUnit, nextEffectF, -1);
+                            }
                         }
                     }
                 }
