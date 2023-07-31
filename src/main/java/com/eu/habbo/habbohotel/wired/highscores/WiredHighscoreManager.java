@@ -155,7 +155,10 @@ public class WiredHighscoreManager {
                 ));
 
         if (scoreType == WiredHighscoreScoreType.CLASSIC) {
-            return highscores.sorted(WiredHighscoreRow::compareTo).collect(Collectors.toList());
+            return highscores
+            .filter(Objects::nonNull) // Filter out any null rows (in case of null usernames)
+            .sorted(WiredHighscoreRow::compareTo)
+            .collect(Collectors.toList());
         }
 
         if (scoreType == WiredHighscoreScoreType.PERTEAM) {
