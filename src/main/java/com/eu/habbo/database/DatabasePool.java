@@ -9,6 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 class DatabasePool {
     private static final String DB_POOL_MAX_SIZE = "db.pool.maxsize";
     private static final String DB_POOL_MIN_SIZE = "db.pool.minsize";
+    private static final String DB_HOSTNAME_KEY = "db.hostname";
+    private static final String DB_PORT_KEY = "db.port";
+    private static final String DB_PASSWORD_KEY = "db.password";
+    private static final String DB_NAME_KEY = "db.database";
+    private static final String DB_USER_KEY = "db.username";
+    private static final String DB_PARAMS_KEY = "db.params";
     private HikariDataSource database;
     private static DatabasePool instance;
 
@@ -27,18 +33,17 @@ class DatabasePool {
             HikariConfig databaseConfiguration = new HikariConfig();
             databaseConfiguration.setMaximumPoolSize(config.getInt(DB_POOL_MAX_SIZE, 50));
             databaseConfiguration.setMinimumIdle(config.getInt(DB_POOL_MIN_SIZE, 10));
-            databaseConfiguration.setJdbcUrl("jdbc:mariadb://" + config.getValue("db.hostname", "localhost") + ":" + config.getValue("db.port", "3306") + "/" + config.getValue("db.database", "habbo") + config.getValue("db.params"));
-            databaseConfiguration.addDataSourceProperty("serverName", config.getValue("db.hostname", "localhost"));
-            databaseConfiguration.addDataSourceProperty("port", config.getValue("db.port", "3306"));
-            databaseConfiguration.addDataSourceProperty("databaseName", config.getValue("db.database", "habbo"));
-            databaseConfiguration.addDataSourceProperty("user", config.getValue("db.username"));
-            databaseConfiguration.addDataSourceProperty("password", config.getValue("db.password"));
+            databaseConfiguration.setJdbcUrl("jdbc:mariadb://" + config.getValue(DB_HOSTNAME_KEY, "localhost") + ":" + config.getValue(DB_PORT_KEY, "3306") + "/" + config.getValue(DB_NAME_KEY) + config.getValue(DB_PARAMS_KEY));
+            databaseConfiguration.addDataSourceProperty("serverName", config.getValue(DB_HOSTNAME_KEY, "localhost"));
+            databaseConfiguration.addDataSourceProperty("port", config.getValue(DB_PORT_KEY, "3306"));
+            databaseConfiguration.addDataSourceProperty("databaseName", config.getValue(DB_NAME_KEY));
+            databaseConfiguration.addDataSourceProperty("user", config.getValue(DB_USER_KEY));
+            databaseConfiguration.addDataSourceProperty("password", config.getValue(DB_PASSWORD_KEY));
             databaseConfiguration.addDataSourceProperty("dataSource.logger", "org.mariadb.jdbc.Driver");
             databaseConfiguration.addDataSourceProperty("dataSource.logSlowQueries", "true");
             databaseConfiguration.addDataSourceProperty("dataSource.dumpQueriesOnException", "true");
             databaseConfiguration.addDataSourceProperty("prepStmtCacheSize", "500");
             databaseConfiguration.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            // databaseConfiguration.addDataSourceProperty("dataSource.logWriter", Logging.getErrorsSQLWriter());
             databaseConfiguration.addDataSourceProperty("cachePrepStmts", "true");
             databaseConfiguration.addDataSourceProperty("useServerPrepStmts", "true");
             databaseConfiguration.addDataSourceProperty("rewriteBatchedStatements", "true");
@@ -49,7 +54,10 @@ class DatabasePool {
             databaseConfiguration.setLeakDetectionThreshold(20000L);
             databaseConfiguration.setMaxLifetime(1800000L);
             databaseConfiguration.setIdleTimeout(600000L);
-            //databaseConfiguration.setDriverClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+            log.info("INITIALIZING DATABASE SERVER: " + config.getValue(DB_HOSTNAME_KEY));
+            log.info("ON PORT: " + config.getValue(DB_PORT_KEY));
+            log.info("HABBO DATABASE: " + config.getValue(DB_NAME_KEY));
+
             this.database = new HikariDataSource(databaseConfiguration);
         } catch (Exception e) {
             log.error("Error initializing database connection pool: {}", e.getMessage());
