@@ -1452,7 +1452,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                                     continue;
                                             }
 
-                                            messages.add(new FloorItemOnRollerComposer(item, roller, tileInFront, zOffset, room));
+                                            final double currentZOffset = zOffset;
+
+                                            Emulator.getThreading().run(() -> {
+                                                this.sendComposer(new FloorItemOnRollerComposer(item, roller, tileInFront, currentZOffset, room).compose());
+                                            }, this.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
                                             rollerFurniIds.add(item.getId());
                                     }
                                 }
