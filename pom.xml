@@ -102,12 +102,22 @@
             <version>2.10</version>
         </dependency>
 
-        <!-- MySQL Connector -->
+        <!-- MySQL Connector
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>3.1.4</version>
+        </dependency> -->
+
+        <!-- MySQL Connector -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.1.0</version>
+            <scope>runtime</scope>
         </dependency>
+
+
 
         <!-- Trove -->
         <dependency>
