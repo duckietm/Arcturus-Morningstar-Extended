@@ -49,6 +49,7 @@ import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.messages.outgoing.users.MutedWhisperComposer;
 import com.eu.habbo.plugin.Event;
+import com.eu.habbo.plugin.PluginManager;
 import com.eu.habbo.plugin.events.furniture.*;
 import com.eu.habbo.plugin.events.rooms.RoomLoadedEvent;
 import com.eu.habbo.plugin.events.rooms.RoomUnloadedEvent;
@@ -1433,8 +1434,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                         if (allowFurniture || !stackContainsRoller || InteractionRoller.NO_RULES) {
                             Event furnitureRolledEvent = null;
+                            PluginManager pluginManager = Emulator.getPluginManager(); // Store the plugin manager
 
-                            if (Emulator.getPluginManager().isRegistered(FurnitureRolledEvent.class, true)) {
+                            if (pluginManager.isRegistered(FurnitureRolledEvent.class, true)) {
                                 furnitureRolledEvent = new FurnitureRolledEvent(null, null, null);
                             }
 
@@ -1444,20 +1446,23 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                                 for (HabboItem item : sortedItems) {
                                     if ((item.getX() == roller.getX() && item.getY() == roller.getY() && zOffset <= 0) && (item != roller)) {
-                                         if (furnitureRolledEvent != null) {
-                                                furnitureRolledEvent = new FurnitureRolledEvent(item, roller, tileInFront);
-                                                Emulator.getPluginManager().fireEvent(furnitureRolledEvent);
+                                        if (furnitureRolledEvent != null) {
+                                            furnitureRolledEvent = new FurnitureRolledEvent(item, roller, tileInFront);
+                                            pluginManager.fireEvent(furnitureRolledEvent);
 
-                                                if (furnitureRolledEvent.isCancelled())
-                                                    continue;
+                                            if (furnitureRolledEvent.isCancelled()) {
+                                                continue;
                                             }
+                                        }
 
-                                            final double currentZOffset = zOffset;
+                                        final double currentZOffset = zOffset;
+                                        int delay = (getRollerSpeed() == 0) ? 250 : InteractionRoller.DELAY; // Calculate delay once
 
-                                            Emulator.getThreading().run(() -> {
-                                                this.sendComposer(new FloorItemOnRollerComposer(item, roller, tileInFront, currentZOffset, room).compose());
-                                            }, this.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
-                                            rollerFurniIds.add(item.getId());
+                                        Emulator.getThreading().run(() -> {
+                                            this.sendComposer(new FloorItemOnRollerComposer(item, roller, tileInFront, currentZOffset, room).compose());
+                                        }, delay);
+
+                                        rollerFurniIds.add(item.getId());
                                     }
                                 }
                             }
