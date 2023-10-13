@@ -23,6 +23,7 @@ public class Incoming {
     public static final int TradeAcceptEvent = 3863;
     public static final int RequestCatalogModeEvent = 1195;
     public static final int RequestUserCreditsEvent = 273;
+    public static final int FriendListUpdateEvent = 1419;
     public static final int FriendPrivateMessageEvent = 3567;
     public static final int CloseDiceEvent = 1533;
     public static final int RoomUserRemoveRightsEvent = 2064;

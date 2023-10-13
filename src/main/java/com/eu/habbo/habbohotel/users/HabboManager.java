@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HabboManager {
     //Configuration. Loaded from database & updated accordingly.
     public static String WELCOME_MESSAGE = "";
-    public static boolean NAMECHANGE_ENABLED = false;
 
     private final ConcurrentHashMap<Integer, Habbo> onlineHabbos;
 
@@ -126,7 +125,6 @@ public class HabboManager {
             return null;
         }
 
-
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE auth_ticket = ? LIMIT 1")) {
             statement.setString(1, sso);
@@ -139,16 +137,18 @@ public class HabboManager {
                     }
 
                     if (!Emulator.debugging) {
-                        try (PreparedStatement stmt = connection.prepareStatement("UPDATE users SET auth_ticket = ? WHERE id = ? LIMIT 1")) {
-                            stmt.setString(1, "");
-                            stmt.setInt(2, habbo.getHabboInfo().getId());
-                            stmt.execute();
-                        } catch (SQLException e) {
-                            log.error("Caught SQL exception", e);
-                        }
+
+                            try (PreparedStatement stmt = connection.prepareStatement("UPDATE users SET auth_ticket = ? WHERE id = ? LIMIT 1")) {
+                                stmt.setString(1, "");
+                                stmt.setInt(2, habbo.getHabboInfo().getId());
+                                stmt.execute();
+                            } catch (SQLException e) {
+                                log.error("Caught SQL exception", e);
+                            }
                     }
                 }
             }
+
         } catch (SQLException e) {
             log.error("Caught SQL exception", e);
         } catch (Exception ex) {
