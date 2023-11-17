@@ -11,6 +11,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.UnsupportedMessageTypeException;
 import io.netty.handler.ssl.NotSslRecordException;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -63,26 +64,33 @@ public class GameMessageHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         if (Emulator.getConfig().getBoolean("debug.mode")) {
+            String clientIpAddress = ctx.channel().remoteAddress().toString();
+            String xForwardedFor = (String) ctx.channel().attr(AttributeKey.valueOf("X-Forwarded-For")).get();
+            if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+                clientIpAddress = xForwardedFor;
+            }
+            clientIpAddress = clientIpAddress.substring(1, clientIpAddress.lastIndexOf(':'));
+
             if (cause instanceof NotSslRecordException) {
-                log.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
+                log.error("Someone speaks transport plaintext instead of SSL, IP: {}", clientIpAddress);
             }
             else if (cause instanceof DecoderException) {
-                log.error("Someone speaks transport plaintext instead of ssl, we will close the channel");
+                log.error("Someone speaks transport plaintext instead of SSL, IP: {}", clientIpAddress);
             }
             else if (cause instanceof TooLongFrameException) {
                 log.error("Disconnecting client, reason: {}", cause.getMessage());
             }
             else if (cause instanceof SSLHandshakeException) {
-                log.error("URL Request error from source: {}", ctx.channel().remoteAddress());
+                log.error("URL Request error from source: {}",  clientIpAddress);
             }
             else if (cause instanceof NoSuchAlgorithmException) {
-                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
+                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request, IP: {}", clientIpAddress);
             }
             else if (cause instanceof KeyManagementException) {
-                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request");
+                log.error("Invalid SSL algorithm, only TLSv1.2 supported in the request, IP: {}", clientIpAddress);
             }
             else if (cause instanceof UnsupportedMessageTypeException) {
-                log.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!) {}", ctx.channel().remoteAddress());
+                log.error("There was an illegal SSL request from (X-forwarded-for/CF-Connecting-IP has not being injected yet!) {}",  clientIpAddress);
             }
             else if (cause instanceof SSLException) {
                 log.error("SSL Problem: {}", cause.getMessage() + cause);
