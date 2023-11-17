@@ -28,7 +28,7 @@ public class RedeemItemEvent extends MessageHandler {
                 boolean furnitureRedeemEventRegistered = Emulator.getPluginManager().isRegistered(FurnitureRedeemedEvent.class, true);
                 FurnitureRedeemedEvent furniRedeemEvent = new FurnitureRedeemedEvent(item, this.client.getHabbo(), 0, FurnitureRedeemedEvent.CREDITS);
 
-                if (item.getBaseItem().getName().startsWith("CF_") || item.getBaseItem().getName().startsWith("CFC_") || item.getBaseItem().getName().startsWith("DF_") || item.getBaseItem().getName().startsWith("PF_") || item.getBaseItem().getName().startsWith("nft_")) {
+                if (item.getBaseItem().getName().startsWith("CF_") || item.getBaseItem().getName().startsWith("CFC_") || item.getBaseItem().getName().startsWith("DF_") || item.getBaseItem().getName().startsWith("PF_") || item.getBaseItem().getName().startsWith("nft_credit_")) {
                     if ((item.getBaseItem().getName().startsWith("CF_") || item.getBaseItem().getName().startsWith("CFC_")) && !item.getBaseItem().getName().contains("_diamond_")) {
                         int credits;
                         try {
@@ -59,8 +59,7 @@ public class RedeemItemEvent extends MessageHandler {
                             log.error("Failed to parse redeemable points furniture: " + item.getBaseItem().getName() + ". Must be in format of ntf_credit_<amount>.");
                             return;
                         }
-                        log.error("We doen iets !");
-                        furniRedeemEvent = new FurnitureRedeemedEvent(item, this.client.getHabbo(), points, 101);
+                        furniRedeemEvent = new FurnitureRedeemedEvent(item, this.client.getHabbo(), points, FurnitureRedeemedEvent.NFT);
 
                     } else if (item.getBaseItem().getName().startsWith("DF_")) {
                         int pointsType;

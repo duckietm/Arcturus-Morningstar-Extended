@@ -171,7 +171,6 @@ public class RoomManager {
                 }
             }
         } catch (SQLException e) {
-			log.info(query);
             log.error("Caught SQL exception", e);
         }
 
