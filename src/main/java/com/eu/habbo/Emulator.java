@@ -27,6 +27,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +36,7 @@ public final class Emulator {
 
     private static final String OS_NAME = (System.getProperty("os.name") != null ? System.getProperty("os.name") : "Unknown");
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
-
+    private static final SecureRandom secureRandom = new SecureRandom();
     public final static int MAJOR = 3;
     public final static int MINOR = 5;
     public final static int BUILD = 1;
@@ -350,6 +351,10 @@ public final class Emulator {
 
     public static Random getRandom() {
         return ThreadLocalRandom.current();
+    }
+	
+	public static SecureRandom getRandomDice() {
+        return secureRandom;
     }
 
     public static BadgeImager getBadgeImager() {
