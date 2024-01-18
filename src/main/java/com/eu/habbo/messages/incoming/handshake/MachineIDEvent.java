@@ -2,9 +2,7 @@ package com.eu.habbo.messages.incoming.handshake;
 
 import com.eu.habbo.messages.NoAuthMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @NoAuthMessage
 public class MachineIDEvent extends MessageHandler {
 
@@ -19,6 +17,5 @@ public class MachineIDEvent extends MessageHandler {
             storedMachineId = storedMachineId.substring(0, HASH_LENGTH);
         }
         this.client.setMachineId(storedMachineId);
-        log.debug("Setting client MachineId to {}", storedMachineId);
     }
 }

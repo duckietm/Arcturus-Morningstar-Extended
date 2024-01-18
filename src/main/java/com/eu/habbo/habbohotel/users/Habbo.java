@@ -161,6 +161,7 @@ public class Habbo implements Runnable {
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
         log.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
+        log.info("{} client MachineId = {}", this.habboInfo.getUsername(), this.client.getMachineId());
         return true;
     }
 
