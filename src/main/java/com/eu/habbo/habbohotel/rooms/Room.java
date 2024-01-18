@@ -1354,7 +1354,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 if (unit.getRoomUnitType() == RoomUnitType.PET) {
                                     Pet pet = this.getPet(unit);
                                     if (pet instanceof RideablePet && ((RideablePet) pet).getRider() != null) {
-                                        unitsOnTile.remove(unit);
+                                        break;
                                     }
                                 }
                             }
@@ -1365,6 +1365,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 if (rolledUnitIds.contains(unit.getId())) continue;
 
                                 if (usersRolledThisTile.size() >= Room.ROLLERS_MAXIMUM_ROLL_AVATARS) break;
+
+                                if (unit.getRoomUnitType() == RoomUnitType.PET) {
+                                    break;
+                                }
 
                                 if (stackContainsRoller && !allowFurniture && !(topItem != null && topItem.isWalkable()))
                                     continue;
