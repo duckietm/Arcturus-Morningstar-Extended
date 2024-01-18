@@ -150,7 +150,7 @@ public class WordFilter {
                     if (Emulator.getPluginManager().fireEvent(new UserTriggerWordFilterEvent(habbo, word)).isCancelled())
                         continue;
                 }
-                filteredMessage = filteredMessage.replace("(?i)" + word.key, word.replacement);
+                filteredMessage = filteredMessage.replaceAll("(?i)" + Pattern.quote(word.key), word.replacement);
                 foundShit = true;
 
                 if (habbo != null && word.muteTime > 0) {
@@ -184,7 +184,7 @@ public class WordFilter {
                         continue;
                 }
 
-                message = message.replace(word.key, word.replacement);
+                 message = message.replaceAll("(?i)" + Pattern.quote(word.key), word.replacement);
                 roomChatMessage.filtered = true;
             }
         }

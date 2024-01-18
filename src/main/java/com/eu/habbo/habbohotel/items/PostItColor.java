@@ -13,7 +13,25 @@ public enum PostItColor {
     PINK("FF9CFF"),
 
 
-    YELLOW("FFFF33");
+    YELLOW("FFFF33"),
+
+
+    RED("FF9C9D"),
+
+
+    ORANGE("FFCD9C"),
+
+
+    PURPLE("C3B1E1"),
+
+
+    LIGHTBLUE("DBDEFB"),
+
+
+    WHITE("FFFFFF"),
+
+
+    BLACK("282828");
 
     public final String hexColor;
 
