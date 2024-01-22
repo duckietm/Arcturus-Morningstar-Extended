@@ -44,7 +44,7 @@ public class AddYoutubePlaylistCommand extends Command {
             return true;
         }
 
-        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(Integer.parseInt(params[1]), playlist);
+        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(itemId, playlist);
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO `youtube_playlists` (`item_id`, `playlist_id`) VALUES (?, ?)")) {
             statement.setInt(1, itemId);
