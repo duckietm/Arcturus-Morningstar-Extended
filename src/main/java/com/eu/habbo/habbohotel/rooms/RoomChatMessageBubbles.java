@@ -46,7 +46,15 @@ public enum RoomChatMessageBubbles {
     UNKNOWN_42(42, "", true, false),
     UNKNOWN_43(43, "", true, false),
     UNKNOWN_44(44, "", true, false),
-    UNKNOWN_45(45, "", true, false);
+    UNKNOWN_45(45, "", true, false),
+	UNKNOWN_46(46, "", true, false),
+    UNKNOWN_47(46, "", true, false),
+    UNKNOWN_48(46, "", true, false),
+    UNKNOWN_49(46, "", true, false),
+    UNKNOWN_50(46, "", true, false),
+    UNKNOWN_51(46, "", true, false),
+    UNKNOWN_52(46, "", true, false),
+    UNKNOWN_53(46, "", true, false);
 
     private final int type;
     private final String permission;
