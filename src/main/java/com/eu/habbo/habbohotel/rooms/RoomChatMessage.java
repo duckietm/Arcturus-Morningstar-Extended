@@ -35,24 +35,31 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     private RoomChatMessageBubbles bubble;
     private Habbo targetHabbo;
     private byte emotion;
+    private String chatColor;
+
 
     public RoomChatMessage(MessageHandler message) {
+
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {
-            String data = message.packet.readString();
+            String data = message.packet.readString(); // Assuming readString() reads the entire string
             this.targetHabbo = message.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(data.split(" ")[0]);
             this.message = data.substring(data.split(" ")[0].length() + 1);
         } else {
-            this.message = message.packet.readString();
+            this.message = message.packet.readString(); // Assuming readString() reads the entire string
         }
+
         try {
             this.bubble = RoomChatMessageBubbles.getBubble(message.packet.readInt());
         } catch (Exception e) {
             this.bubble = RoomChatMessageBubbles.NORMAL;
         }
 
+        this.chatColor = message.packet.readString();
+        log.info("ChatColor: " + chatColor);
+
         if (!message.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
-                if (i == this.bubble.getType()) {
+                if (i.equals(this.bubble.getType())) {
                     this.bubble = RoomChatMessageBubbles.NORMAL;
                     break;
                 }
@@ -172,6 +179,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
     @Override
     public void serialize(ServerMessage message) {
+
+
         if (this.habbo != null && this.bubble.isOverridable()) {
             if (!this.habbo.hasPermission(Permission.ACC_ANYCHATCOLOR)) {
                 for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
@@ -195,7 +204,9 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(this.getEmotion());
             message.appendInt(this.getBubble().getType());
             message.appendInt(0);
+            message.appendString(this.chatColor);
             message.appendInt(this.getMessage().length());
+
         } catch (Exception e) {
             log.error("Caught exception", e);
         }
