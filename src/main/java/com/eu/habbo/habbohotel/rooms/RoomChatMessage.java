@@ -35,8 +35,11 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     private RoomChatMessageBubbles bubble;
     private Habbo targetHabbo;
     private byte emotion;
+    private String chatColor; //Added ChatColor
+
 
     public RoomChatMessage(MessageHandler message) {
+
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {
             String data = message.packet.readString();
             this.targetHabbo = message.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(data.split(" ")[0]);
@@ -44,15 +47,18 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         } else {
             this.message = message.packet.readString();
         }
+
         try {
             this.bubble = RoomChatMessageBubbles.getBubble(message.packet.readInt());
         } catch (Exception e) {
             this.bubble = RoomChatMessageBubbles.NORMAL;
         }
 
+        this.chatColor = message.packet.readString();  //Added ChatColor
+
         if (!message.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
-                if (i == this.bubble.getType()) {
+                if (i.equals(this.bubble.getType())) {
                     this.bubble = RoomChatMessageBubbles.NORMAL;
                     break;
                 }
@@ -98,7 +104,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
         if (this.bubble.isOverridable() && this.getHabbo().getHabboStats().chatColor != RoomChatMessageBubbles.NORMAL)
             this.bubble = this.getHabbo().getHabboStats().chatColor;
-    }
+    } //Added ChatColor
 
     public RoomChatMessage(String message, Habbo habbo, Habbo targetHabbo, RoomChatMessageBubbles bubble) {
         this.message = message;
@@ -112,7 +118,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
         if (this.bubble.isOverridable() && this.getHabbo().getHabboStats().chatColor != RoomChatMessageBubbles.NORMAL)
             this.bubble = this.getHabbo().getHabboStats().chatColor;
-    }
+    } //Added ChatColor
 
     private void checkEmotion() {
         if (this.message.contains(":)") || this.message.contains(":-)") || this.message.contains(":]")) {
@@ -172,6 +178,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
     @Override
     public void serialize(ServerMessage message) {
+
+
         if (this.habbo != null && this.bubble.isOverridable()) {
             if (!this.habbo.hasPermission(Permission.ACC_ANYCHATCOLOR)) {
                 for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
@@ -195,7 +203,9 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(this.getEmotion());
             message.appendInt(this.getBubble().getType());
             message.appendInt(0);
+            message.appendString(this.chatColor); //Added ChatColor
             message.appendInt(this.getMessage().length());
+
         } catch (Exception e) {
             log.error("Caught exception", e);
         }
@@ -205,7 +215,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         if (!this.habbo.getHabboStats().hasActiveClub()) {
             for (String chatColor : chatColors) {
                 this.message = this.message.replace(chatColor, "");
-            }
+            } //Added ChatColor
         }
 
         if (Emulator.getConfig().getBoolean("hotel.wordfilter.enabled") && Emulator.getConfig().getBoolean("hotel.wordfilter.rooms")) {
