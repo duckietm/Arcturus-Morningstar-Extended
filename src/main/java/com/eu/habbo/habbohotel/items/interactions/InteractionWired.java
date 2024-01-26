@@ -8,17 +8,17 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
-import gnu.trove.map.hash.TLongLongHashMap;
 import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 @Slf4j
 public abstract class InteractionWired extends InteractionDefault {
     private long cooldown;
-    private TLongLongHashMap userExecutionCache = new TLongLongHashMap(3);
+    private final HashMap<Long,Long> userExecutionCache = new HashMap<>();
 
     InteractionWired(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -71,10 +71,9 @@ public abstract class InteractionWired extends InteractionDefault {
     }
 
     public void activateBox(Room room, RoomUnit roomUnit, long millis) {
-        this.setExtradata(this.getExtradata().equals("1") ? "0" : "1");
-        room.sendComposer(new ItemStateComposer(this).compose());
-        if (roomUnit != null) {
-            this.addUserExecutionCache(roomUnit.getId(), millis);
+        if (!room.isHideWired()) {
+            this.setExtradata(this.getExtradata().equals("1") ? "0" : "1");
+            room.sendComposer(new ItemStateComposer(this).compose());
         }
     }
 
@@ -107,7 +106,7 @@ public abstract class InteractionWired extends InteractionDefault {
         } else {
             if (this.userExecutionCache.containsKey((long)roomUnitId)) {
                 long lastTimestamp = this.userExecutionCache.get((long)roomUnitId);
-                if (timestamp - lastTimestamp < 100L) {
+                if (timestamp - lastTimestamp < Math.max(100L, this.requiredCooldown())) {
                     return false;
                 }
             }
