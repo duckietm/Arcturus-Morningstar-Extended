@@ -103,16 +103,16 @@ public abstract class InteractionWired extends InteractionDefault {
     public boolean userCanExecute(int roomUnitId, long timestamp) {
         if (roomUnitId == -1) {
             return true;
-        } else {
-            if (this.userExecutionCache.containsKey((long)roomUnitId)) {
-                long lastTimestamp = this.userExecutionCache.get((long)roomUnitId);
-                if (timestamp - lastTimestamp < Math.max(100L, this.requiredCooldown())) {
-                    return false;
-                }
-            }
-
-            return true;
         }
+
+        if (this.userExecutionCache.containsKey((long)roomUnitId)) {
+            long lastTimestamp = this.userExecutionCache.get((long)roomUnitId);
+            if (timestamp - lastTimestamp < Math.max(100L, this.requiredCooldown())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void clearUserExecutionCache() {
