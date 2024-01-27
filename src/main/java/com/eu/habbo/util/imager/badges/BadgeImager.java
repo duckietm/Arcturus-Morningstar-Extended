@@ -5,7 +5,7 @@ import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.guilds.GuildPart;
 import com.eu.habbo.habbohotel.guilds.GuildPartType;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

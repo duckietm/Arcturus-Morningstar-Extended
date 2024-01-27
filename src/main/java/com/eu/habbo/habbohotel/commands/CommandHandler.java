@@ -46,19 +46,6 @@ public class CommandHandler {
 
         commands.put(command.getClass().getName(), command);
     }
-
-
-    public static void addCommand(Class<? extends Command> command) {
-        try {
-            //command.getConstructor().setAccessible(true);
-            addCommand(command.newInstance());
-            log.debug("Added command: {}", command.getName());
-        } catch (Exception e) {
-            log.error("Caught exception", e);
-        }
-    }
-
-
     public static boolean handleCommand(GameClient gameClient, String commandLine) {
         if (gameClient != null) {
             if (commandLine.startsWith(":")) {

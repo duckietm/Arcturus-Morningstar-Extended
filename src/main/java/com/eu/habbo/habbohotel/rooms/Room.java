@@ -75,11 +75,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -1932,10 +1932,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     public void setChatDistance(int chatDistance) {
         this.chatDistance = chatDistance;
-    }
-
-    public void removeAllPets() {
-        removeAllPets(-1);
     }
 
     /**
