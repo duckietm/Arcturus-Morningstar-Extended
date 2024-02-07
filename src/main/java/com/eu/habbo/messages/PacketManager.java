@@ -309,6 +309,7 @@ public class PacketManager {
         this.registerHandler(Incoming.SaveIgnoreRoomInvitesEvent, SaveIgnoreRoomInvitesEvent.class);
         this.registerHandler(Incoming.SavePreferOldChatEvent, SavePreferOldChatEvent.class);
         this.registerHandler(Incoming.ActivateEffectEvent, ActivateEffectEvent.class);
+        this.registerHandler(Incoming.PerformanceLogMessageEvent, PerformanceLogMessageEvent.class);
         this.registerHandler(Incoming.EnableEffectEvent, EnableEffectEvent.class);
         this.registerHandler(Incoming.UserActivityEvent, UserActivityEvent.class);
         this.registerHandler(Incoming.UserNuxEvent, UserNuxEvent.class);
