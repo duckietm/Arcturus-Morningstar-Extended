@@ -2497,8 +2497,21 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         }
     }
 
-    public List<HabboItem> getFloorItems() {
-        return roomItems.valueCollection().stream().filter(i -> i.getBaseItem().getType() == FurnitureType.FLOOR).toList();
+    public THashSet<HabboItem> getFloorItems() {
+        THashSet<HabboItem> items = new THashSet<>();
+        TIntObjectIterator<HabboItem> iterator = this.roomItems.iterator();
+
+        for (int i = this.roomItems.size(); i-- > 0; ) {
+            try {
+                iterator.advance();
+            } catch (Exception e) {
+                break;
+            }
+
+            if (iterator.value().getBaseItem().getType() == FurnitureType.FLOOR)
+                items.add(iterator.value());
+        }
+        return items;
     }
 
     public THashSet<HabboItem> getWallItems() {
