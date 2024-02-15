@@ -37,6 +37,10 @@ class TeleportActionTwo implements Runnable {
             delayOffset = 0;
         }
 
+        if(this.client.getHabbo() == null) {
+            return;
+        }
+
         if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != this.room)
             return;
 

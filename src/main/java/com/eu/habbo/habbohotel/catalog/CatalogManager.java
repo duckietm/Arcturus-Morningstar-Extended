@@ -900,7 +900,9 @@ public class CatalogManager {
                 boolean badgeFound = false;
 
                 for (int i = 0; i < amount; i++) {
-                    habbo.getHabboStats().addLtdLog(item.getId(), Emulator.getIntUnixTimestamp());
+                    if(item.isLimited()) {
+                        habbo.getHabboStats().addLtdLog(item.getId(), Emulator.getIntUnixTimestamp());
+                    }
 
                     for (Item baseItem : item.getBaseItems()) {
                         for (int k = 0; k < item.getItemAmount(baseItem.getId()); k++) {

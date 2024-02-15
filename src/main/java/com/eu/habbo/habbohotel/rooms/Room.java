@@ -197,6 +197,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     private TraxManager traxManager;
     private boolean cycleOdd;
     private long cycleTimestamp;
+    public Map<String, Long> repeatersLastTick = new HashMap<>();
+
+
 
     public Room(ResultSet set) throws SQLException {
         this.id = set.getInt("id");
@@ -513,6 +516,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     public void updateTiles(THashSet<RoomTile> tiles) {
         for (RoomTile tile : tiles) {
+            if(tile == null) {
+                continue;
+            }
             this.tileCache.remove(tile);
             tile.setStackHeight(this.getStackHeight(tile.x, tile.y, false));
             tile.setState(this.calculateTileState(tile));
@@ -722,6 +728,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public void updateBotsAt(short x, short y) {
+        if(this.layout == null) {
+            return;
+        }
         HabboItem topItem = this.getTopItemAt(x, y);
 
         THashSet<RoomUnit> roomUnits = new THashSet<>();

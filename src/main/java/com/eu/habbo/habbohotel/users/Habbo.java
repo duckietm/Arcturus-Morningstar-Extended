@@ -453,20 +453,24 @@ public class Habbo implements Runnable {
     }
 
     public void clearCaches() {
-        int timestamp = Emulator.getIntUnixTimestamp();
-        THashMap<Integer, List<Integer>> newLog = new THashMap<>();
-        for (Map.Entry<Integer, List<Integer>> ltdLog : this.habboStats.ltdPurchaseLog.entrySet()) {
-            for (Integer time : ltdLog.getValue()) {
-                if (time > timestamp) {
-                    if (!newLog.containsKey(ltdLog.getKey())) {
-                        newLog.put(ltdLog.getKey(), new ArrayList<>());
-                    }
+        int currentTimestamp = Emulator.getIntUnixTimestamp();
+        int twentyFourHoursInSeconds = 24 * 60 * 60; // 24 hours in seconds
 
-                    newLog.get(ltdLog.getKey()).add(time);
+        THashMap<Integer, List<Integer>> newLog = new THashMap<>();
+
+        for (Map.Entry<Integer, List<Integer>> ltdLog : this.habboStats.ltdPurchaseLog.entrySet()) {
+            List<Integer> filteredTimestamps = new ArrayList<>();
+
+            for (Integer time : ltdLog.getValue()) {
+                if (currentTimestamp - time <= twentyFourHoursInSeconds) {
+                    filteredTimestamps.add(time);
                 }
             }
-        }
 
+            if (!filteredTimestamps.isEmpty()) {
+                newLog.put(ltdLog.getKey(), filteredTimestamps);
+            }
+        }
         this.habboStats.ltdPurchaseLog = newLog;
     }
 

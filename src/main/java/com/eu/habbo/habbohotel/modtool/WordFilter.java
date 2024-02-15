@@ -194,6 +194,10 @@ public class WordFilter {
         }
     }
 
+    public THashSet<WordFilterWord> getWords() {
+        return new THashSet<>(this.words);
+    }
+
     public void addWord(WordFilterWord word) {
         this.words.add(word);
     }

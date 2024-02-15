@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.FURNI_HAVE_HABBO;
+    protected boolean all;
     protected THashSet<HabboItem> items;
 
     public WiredConditionFurniHaveHabbo(ResultSet set, Item baseItem) throws SQLException {
@@ -40,6 +41,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.all = false;
     }
 
     @Override
@@ -65,6 +67,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     public String getWiredData() {
         this.refresh();
         return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+                this.all,
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -76,6 +79,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
 
         if (wiredData.startsWith("{")) {
             JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            this.all = data.all;
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -88,14 +92,17 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
             String[] data = wiredData.split(":");
 
             if (data.length >= 1) {
+                this.all = (data[0].equals("1"));
 
-                String[] items = data[1].split(";");
+                if (data.length == 2) {
+                    String[] items = data[1].split(";");
 
-                for (String s : items) {
-                    HabboItem item = room.getHabboItem(Integer.parseInt(s));
+                    for (String s : items) {
+                        HabboItem item = room.getHabboItem(Integer.parseInt(s));
 
-                    if (item != null)
-                        this.items.add(item);
+                        if (item != null)
+                            this.items.add(item);
+                    }
                 }
             }
         }
@@ -120,7 +127,8 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.all ? 1 : 0);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -170,9 +178,11 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     }
 
     static class JsonData {
+        boolean all;
         List<Integer> itemIds;
 
-        public JsonData(List<Integer> itemIds) {
+        public JsonData(boolean all, List<Integer> itemIds) {
+            this.all = all;
             this.itemIds = itemIds;
         }
     }

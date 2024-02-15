@@ -47,7 +47,7 @@ public class CommandHandler {
         commands.put(command.getClass().getName(), command);
     }
     public static boolean handleCommand(GameClient gameClient, String commandLine) {
-        if (gameClient != null) {
+        if (gameClient != null && commandLine != null) {
             if (commandLine.startsWith(":")) {
                 commandLine = commandLine.replaceFirst(":", "");
 
