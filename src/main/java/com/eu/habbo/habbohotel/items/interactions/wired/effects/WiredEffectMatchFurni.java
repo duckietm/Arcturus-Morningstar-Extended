@@ -4,7 +4,6 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.interfaces.InteractionWiredMatchFurniSettings;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -16,7 +15,8 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-@Slf4j
 public class WiredEffectMatchFurni extends InteractionWiredEffect implements InteractionWiredMatchFurniSettings {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectMatchFurni.class);
 
     private static final WiredEffectType type = WiredEffectType.MATCH_SSHOT;
     public boolean checkForWiredResetPermission = true;
@@ -124,7 +124,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
                     }
 
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
             }
 
@@ -175,18 +175,21 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 3) throw new WiredSaveException("Invalid data");
-        boolean setState = settings.getIntParams()[0] == 1;
-        boolean setDirection = settings.getIntParams()[1] == 1;
-        boolean setPosition = settings.getIntParams()[2] == 1;
+    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
+        packet.readInt();
+
+        boolean setState = packet.readInt() == 1;
+        boolean setDirection = packet.readInt() == 1;
+        boolean setPosition = packet.readInt() == 1;
+
+        packet.readString();
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
         if (room == null)
             throw new WiredSaveException("Trying to save wired in unloaded room");
 
-        int itemsCount = settings.getFurniIds().length;
+        int itemsCount = packet.readInt();
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
@@ -195,7 +198,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         List<WiredMatchFurniSetting> newSettings = new ArrayList<>();
 
         for (int i = 0; i < itemsCount; i++) {
-            int itemId = settings.getFurniIds()[i];
+            int itemId = packet.readInt();
             HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
 
             if(it == null)
@@ -204,7 +207,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
         }
 
-        int delay = settings.getDelay();
+        int delay = packet.readInt();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

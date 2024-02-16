@@ -2,21 +2,20 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WiredConditionHabboHasHandItem.class);
 
     public static final WiredConditionType type = WiredConditionType.ACTOR_HAS_HANDITEM;
 
@@ -52,9 +51,10 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
-        if(settings.getIntParams().length < 1) return false;
-        this.handItem = settings.getIntParams()[0];
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
+
+        this.handItem = packet.readInt();
 
         return true;
     }
@@ -84,7 +84,7 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
                 this.handItem = Integer.parseInt(wiredData);
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 

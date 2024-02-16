@@ -8,7 +8,6 @@ import com.eu.habbo.habbohotel.games.wired.WiredGame;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -135,15 +134,16 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 1) throw new WiredSaveException("invalid data");
-
-        int team = settings.getIntParams()[0];
+    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
+        packet.readInt();
+        int team = packet.readInt();
 
         if(team < 1 || team > 4)
             throw new WiredSaveException("Team is invalid");
 
-        int delay = settings.getDelay();
+        packet.readInt();
+        packet.readString();
+        int delay = packet.readInt();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

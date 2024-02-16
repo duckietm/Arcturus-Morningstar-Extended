@@ -5,14 +5,12 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.ICycleable;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
@@ -187,26 +185,28 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+    public boolean saveData(ClientMessage packet, GameClient gameClient) {
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
         if (room == null)
             return false;
 
-        if(settings.getIntParams().length < 2) throw new WiredSaveException("invalid data");
+        packet.readInt();
 
-        this.direction = settings.getIntParams()[0];
-        this.rotation = settings.getIntParams()[1];
+        this.direction = packet.readInt();
+        this.rotation = packet.readInt();
 
-        int count = settings.getFurniIds().length;
+        packet.readString();
+
+        int count = packet.readInt();
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count", 5)) return false;
 
         this.items.clear();
         for (int i = 0; i < count; i++) {
-            this.items.add(room.getHabboItem(settings.getFurniIds()[i]));
+            this.items.add(room.getHabboItem(packet.readInt()));
         }
 
-        this.setDelay(settings.getDelay());
+        this.setDelay(packet.readInt());
 
         return true;
     }

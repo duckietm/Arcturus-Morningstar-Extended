@@ -2,7 +2,6 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
@@ -87,10 +86,11 @@ public class WiredConditionHabboCount extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
-        if(settings.getIntParams().length < 2) return false;
-        this.lowerLimit = settings.getIntParams()[0];
-        this.upperLimit = settings.getIntParams()[1];
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
+
+        this.lowerLimit = packet.readInt();
+        this.upperLimit = packet.readInt();
 
         return true;
     }

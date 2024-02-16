@@ -3,7 +3,6 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -138,11 +137,14 @@ public class WiredConditionNotFurniHaveFurni extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
-        if(settings.getIntParams().length < 1) return false;
-        this.all = settings.getIntParams()[0] == 1;
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
 
-        int count = settings.getFurniIds().length;
+        this.all = packet.readInt() == 1;
+
+        packet.readString();
+
+        int count = packet.readInt();
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) return false;
 
         this.items.clear();
@@ -151,7 +153,7 @@ public class WiredConditionNotFurniHaveFurni extends InteractionWiredCondition {
 
         if (room != null) {
             for (int i = 0; i < count; i++) {
-                HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
+                HabboItem item = room.getHabboItem(packet.readInt());
 
                 if (item != null)
                     this.items.add(item);

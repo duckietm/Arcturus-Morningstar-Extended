@@ -5,7 +5,6 @@ import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -15,7 +14,8 @@ import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WiredTriggerBotReachedFurni.class);
 
     public final static WiredTriggerType type = WiredTriggerType.WALKS_ON_FURNI;
 
@@ -97,15 +97,17 @@ public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
-        this.botName = settings.getStringParam();
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
+
+        this.botName = packet.readString();
 
         this.items.clear();
 
-        int count = settings.getFurniIds().length;
+        int count = packet.readInt();
 
         for (int i = 0; i < count; i++) {
-            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]));
+            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(packet.readInt()));
         }
 
         return true;
@@ -160,7 +162,7 @@ public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
                         if (item != null)
                             this.items.add(item);
                     } catch (Exception e) {
-                        log.error("Caught exception", e);
+                        LOGGER.error("Caught exception", e);
                     }
                 }
             }

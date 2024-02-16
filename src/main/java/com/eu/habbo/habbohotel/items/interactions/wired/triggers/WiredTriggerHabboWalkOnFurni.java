@@ -3,7 +3,6 @@ package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -83,13 +82,16 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
+        packet.readString();
+
         this.items.clear();
 
-        int count = settings.getFurniIds().length;
+        int count = packet.readInt();
 
         for (int i = 0; i < count; i++) {
-            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]));
+            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(packet.readInt()));
         }
 
         return true;

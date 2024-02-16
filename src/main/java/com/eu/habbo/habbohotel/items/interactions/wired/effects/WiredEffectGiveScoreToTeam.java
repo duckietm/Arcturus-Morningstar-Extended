@@ -8,7 +8,6 @@ import com.eu.habbo.habbohotel.games.GameTeam;
 import com.eu.habbo.habbohotel.games.GameTeamColors;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
@@ -122,25 +121,28 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 3) throw  new WiredSaveException("Invalid data");
+    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
+        packet.readInt();
 
-        int points = settings.getIntParams()[0];
+        int points = packet.readInt();
 
         if(points < 1 || points > 100)
             throw new WiredSaveException("Points is invalid");
 
-        int timesPerGame = settings.getIntParams()[1];
+        int timesPerGame = packet.readInt();
 
         if(timesPerGame < 1 || timesPerGame > 10)
             throw new WiredSaveException("Times per game is invalid");
 
-        int team = settings.getIntParams()[2];
+        int team = packet.readInt();
 
         if(team < 1 || team > 4)
             throw new WiredSaveException("Team is invalid");
 
-        int delay = settings.getDelay();
+        packet.readString();
+        packet.readInt();
+
+        int delay = packet.readInt();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

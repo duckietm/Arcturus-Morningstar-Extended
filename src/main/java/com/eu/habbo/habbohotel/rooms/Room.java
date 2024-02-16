@@ -2779,10 +2779,16 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public List<Habbo> getHabbosAt(short x, short y) {
+        if(this.layout == null) {
+            return new ArrayList<>();
+        }
         return this.getHabbosAt(this.layout.getTile(x, y));
     }
 
     public List<Habbo> getHabbosAt(RoomTile tile) {
+        if(this.layout == null) {
+            return new ArrayList<>();
+        }
         return getHabbos().stream().filter(h -> h.getRoomUnit().getCurrentLocation().equals(tile)).toList();
     }
 
@@ -3233,6 +3239,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     @Deprecated
     public THashSet<HabboItem> getItemsAt(int x, int y) {
+        if (this.getLayout() == null) {
+            return null;
+        }
         RoomTile tile = this.getLayout().getTile((short) x, (short) y);
 
         if (tile != null) {
@@ -4503,7 +4512,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             }
         }
 
-        THashSet<RoomTile> oldOccupiedTiles = this.layout.getTilesAt(this.layout.getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+        THashSet<RoomTile> oldOccupiedTiles = new THashSet<>();
+        if(oldLocation != null) {
+            oldOccupiedTiles.addAll(this.layout.getTilesAt(oldLocation, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation()));
+        }
 
         int oldRotation = item.getRotation();
 

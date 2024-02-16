@@ -2,7 +2,6 @@ package com.eu.habbo.habbohotel.items.interactions;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
@@ -45,7 +44,7 @@ public abstract class InteractionWiredTrigger extends InteractionWired {
 
     public abstract WiredTriggerType getType();
 
-    public abstract boolean saveData(WiredSettings settings);
+    public abstract boolean saveData(ClientMessage packet);
 
     protected int getDelay() {
         return this.delay;

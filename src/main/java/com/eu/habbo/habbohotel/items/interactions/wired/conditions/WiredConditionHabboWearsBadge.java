@@ -2,7 +2,6 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -89,8 +88,10 @@ public class WiredConditionHabboWearsBadge extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
-        this.badge = settings.getStringParam();
+    public boolean saveData(ClientMessage packet) {
+        packet.readInt();
+
+        this.badge = packet.readString();
 
         return true;
     }

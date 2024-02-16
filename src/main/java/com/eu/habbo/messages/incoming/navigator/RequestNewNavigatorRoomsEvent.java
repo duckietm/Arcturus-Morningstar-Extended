@@ -85,7 +85,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
             return;
 
         try {
-            List<SearchResultList> resultLists2 = filter.getResult(this.client.getHabbo(), field, part, category != null ? category.getId() : -1);
+            List<SearchResultList> resultLists2 = (ArrayList)((ArrayList)filter.getResult(this.client.getHabbo(), field, part, category != null ? category.getId() : -1)).clone();
             List<SearchResultList> resultLists = new ArrayList<>();
             for(SearchResultList searchResultList : resultLists2) {
                 List<Room> rooms = new ArrayList<>();

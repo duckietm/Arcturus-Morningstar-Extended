@@ -2,7 +2,6 @@ package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -66,7 +65,7 @@ public class WiredTriggerCollision extends InteractionWiredTrigger {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings) {
+    public boolean saveData(ClientMessage packet) {
         return true;
     }
 

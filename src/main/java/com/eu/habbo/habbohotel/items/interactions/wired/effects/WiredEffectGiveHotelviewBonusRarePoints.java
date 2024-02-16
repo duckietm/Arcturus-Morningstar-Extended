@@ -5,7 +5,6 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
-import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -68,14 +67,17 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) {
+    public boolean saveData(ClientMessage packet, GameClient gameClient) {
+        packet.readInt();
+
         try {
-            this.amount = Integer.parseInt(settings.getStringParam());
+            this.amount = Integer.parseInt(packet.readString());
         } catch (Exception e) {
             return false;
         }
 
-        this.setDelay(settings.getDelay());
+        packet.readInt();
+        this.setDelay(packet.readInt());
 
         return true;
     }
