@@ -1,6 +1,6 @@
-# Arcturus Morningstar #
+# Arcturus Morningstar Extended #
 
-Arcturus Morningstar is as a fork of Arcturus Emulator by TheGeneral. Arcturus Morningstar is released under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.txt) 
+Arcturus Morningstar Extended is as a fork of Arcturus Emulator by TheGeneral and modified by Krews. Arcturus Morningstar Extended is also released under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.txt) 
 and is developed for free by talented developers and is compatible with the following client revision/community projects:
 
 | Community Clients | [Nitro Client](https://github.com/billsonnn/nitro-react) |
