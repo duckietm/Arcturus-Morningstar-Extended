@@ -15,7 +15,6 @@ There are two main branches in use on the Arcturus Morningstar git. Below the pr
 | master | Tested on a production hotel and is stable for every day use with no known serious exploits. |
 | ------------- | ------------- |
 | dev | The most up-to-date, but features may not work as intended. Use at your own risk. |
-| ------------- | ------------- |
 
 There is no set timeframe on when new versions will be released or when the stable branch will be updated
 
