@@ -25,11 +25,12 @@ We have placed the myBoBBa database [myBobba](https://github.com/ObjectRetros/20
 
 ## Can I Help!? ##
 #### Reporting Bugs: ####
-You can report problems via the [Issue Tracker](https://github.com/duckietm/Arcturus-Morningstar-Extended/issues*
+You can report problems via the [Issue Tracker](https://github.com/duckietm/Arcturus-Morningstar-Extended/issues)*
 
 ###### * When making an bug report or a feature request use the template we provide so that it can be categorized correctly and we have more information to replicate a bug or implement a feature correctly. ######
 #### Can I contribute code to this project? ####
-Of Course! if you have fixed a bug from the git please feel free to do a [merge request](https://github.com/duckietm/Arcturus-Morningstar-Extended/issues)*
+Of Course! if you have fixed a bug from the git please feel free to do a
+[merge request](https://github.com/duckietm/Arcturus-Morningstar-Extended/issues) 
 
 ###### * Anyone is allowed to fork the project and make pull requests, we make no guarantee that pull requests will be approved into the project. Please Do NOT push code which does not replicate behaviour on habbo.com, instead make the behaviour configurable or as a plugin. ######
 
