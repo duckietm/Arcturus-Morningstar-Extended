@@ -9,6 +9,32 @@ and is developed for free by talented developers and is compatible with the foll
 ## Download ##
 [Latest compiled version](https://)
 
+## Connection ##
+In this build the Websocket has been intregrated, so do not load the websocket plugin!
+
+### How do I connect to my emulator using Secure Websockets (wss)?
+You have several options to add WSS support to your websocket server. 
+
+- You can add your certificate and key file to the path `/ssl/cert.pem` and `/ssl/privkey.pem` to add WSS support directly to the server **Note**:The client will not accept self-signed certificates, you must use a certificate signed by a CA (you can get one for free from letsencrypt.org)
+  
+- **RECOMMENDED** You can proxy WSS with either cloudflare or nginx. **Note**: Adding a proxy means that you will have to configure `ws.nitro.ip.header` so that the plugin is able to get the player's real ip address, and not the IP address of the proxy.
+
+### Proxying WSS with Cloudflare
+You can easily proxy wss traffic using Cloudflare. However, you should first make sure that your `ws.nitro.port` is set to one that is listed as HTTPS Cloudflare Compatible in the following link:
+https://support.cloudflare.com/hc/en-us/articles/200169156-Which-ports-will-Cloudflare-work-with-
+
+As of writing this, the following ports are listed as compatible:
+- 443
+- 2053
+- 2083
+- 2087
+- 2096
+- 8443
+
+After your port is set to one that is compatible, create a new A record for a subdomain that will be used for websocket connections, and make sure that it is set to be proxied by Cloudflare (the cloud should be orange if it is being proxied). It should be pointing to your emulator IP.
+
+Finally, create a new page rule under the Page Rules tab in Cloudflare and disable SSL for the subdomain you created above. You will now be able to connect using secure websockets using the following example url, where I created an A record for the subdomain `ws` and I set my `ws.nitro.port` to 2096: `wss://ws.example.com:2096` 
+
 ### Branches ###
 There are two main branches in use on the Arcturus Morningstar git. Below the pros an
 
@@ -20,6 +46,7 @@ There is no set timeframe on when new versions will be released or when the stab
 
 ### Database ###
 We have placed the myBoBBa database [myBobba](https://github.com/ObjectRetros/2023-hotel-files) to get you started on building your Retro hotel.
+Also there is a file call UpdateDatabase.sql this will hold all the updates that are required, please run this after the myBoBBa Database import
 
 ## Can I Help!? ##
 #### Reporting Bugs: ####
@@ -69,6 +96,7 @@ The robust Plugin System included in the original Arcturus release is also inclu
 	   - Brenoepic
 	   - Stankman
 	   - Laynester
+	   - Bill
 	   - Mikee
 	   - Merijn
 	   - Puffin
