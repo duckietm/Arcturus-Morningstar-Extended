@@ -9,7 +9,7 @@
 - [x] Prevent exploits on thumbnails, not just photos.
 - [x] No more FTP (no one used that).
 
-[Download the latest compiled version here!](https://git.krews.org/duckietm/habbocamera/-/blob/main/Compiled/Camera-1.6.jar)
+[Download the latest compiled version here!](https://github.com/duckietm/Arcturus-Morningstar-Extended/blob/main/Plugins/Camera/Compiled/Camera-1.6.jar)
 
 ## Informations
 All missing settings in the database will be created with this plugin after the first launch of your emulator.
@@ -45,15 +45,7 @@ All missing settings in the database will be created with this plugin after the 
 Since this plugin doesn't use FTP like “Apollyon”, you can delete these values ​​in your database under `emulator_settings` if necessary.
 
 ## Comparison
-Apollyon doesn't show you any errors like you don't have enough currency, this plugin doesn't have that bug as shown in the pictures.
-
-### Apollyon
-![first](https://cdn.discordapp.com/attachments/1098244829462405183/1154449248297963610/image.png)
-![second](https://cdn.discordapp.com/attachments/1098244829462405183/1154448684063404104/image.png)
-
-### Camera
-![first](https://cdn.discordapp.com/attachments/1098244829462405183/1154446836917076070/image.png)
-![second](https://cdn.discordapp.com/attachments/1098244829462405183/1154446698249199707/image.png)
+Apollyon doesn't show you any errors like you don't have enough currency.
 
 # Credits
 
