@@ -76,4 +76,5 @@ The robust Plugin System included in the original Arcturus release is also inclu
 	   - Merijn
 	   - Puffin
 	   - ObjectRetros
+	   - EntenKoeniq
 	   - DuckieTM
