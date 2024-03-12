@@ -10,13 +10,17 @@ import com.eu.habbo.habbohotel.GameEnvironment;
 import com.eu.habbo.networking.camera.CameraClient;
 import com.eu.habbo.networking.gameserver.GameServer;
 import com.eu.habbo.networking.rconserver.RCONServer;
+import com.eu.habbo.networking.websockets.NetworkChannelInitializer;
 import com.eu.habbo.plugin.PluginManager;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorLoadedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStartShutdownEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStoppedEvent;
+import com.eu.habbo.plugin.events.users.UserGetIPAddressEvent;
 import com.eu.habbo.threading.ThreadPooling;
 import com.eu.habbo.util.imager.badges.BadgeImager;
+import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +42,8 @@ public final class Emulator {
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
     private static final SecureRandom secureRandom = new SecureRandom();
     public final static int MAJOR = 3;
-    public final static int MINOR = 5;
-    public final static int BUILD = 1;
+    public final static int MINOR = 6;
+    public final static int BUILD = 0;
     public final static String PREVIEW = "";
 
     public static final String version = "Arcturus Morningstar" + " " + MAJOR + "." + MINOR + "." + BUILD + " " + PREVIEW;
@@ -50,7 +54,8 @@ public final class Emulator {
                     "██╔████╔██║██║   ██║██████╔╝██╔██╗ ██║██║██╔██╗ ██║██║  ███╗███████╗   ██║   ███████║██████╔╝\n" +
                     "██║╚██╔╝██║██║   ██║██╔══██╗██║╚██╗██║██║██║╚██╗██║██║   ██║╚════██║   ██║   ██╔══██║██╔══██╗\n" +
                     "██║ ╚═╝ ██║╚██████╔╝██║  ██║██║ ╚████║██║██║ ╚████║╚██████╔╝███████║   ██║   ██║  ██║██║  ██║\n" +
-                    "╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝\n" ;
+                    "╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝\n" +
+                    "                                                                               Extended version";
 
 
     public static String build = "";
@@ -74,6 +79,7 @@ public final class Emulator {
     private static GameEnvironment gameEnvironment;
     private static PluginManager pluginManager;
     private static BadgeImager badgeImager;
+    public static final AttributeKey<String> WS_IP = AttributeKey.valueOf("WS_IP");
 
     static {
         Thread hook = new Thread(new Runnable() {
@@ -139,7 +145,15 @@ public final class Emulator {
             Emulator.rconServer.initializePipeline();
             Emulator.rconServer.connect();
             Emulator.badgeImager = new BadgeImager();
-
+            Emulator.getConfig().register("websockets.whitelist", "localhost");
+            Emulator.getConfig().register("ws.nitro.host", "0.0.0.0");
+            Emulator.getConfig().register("ws.nitro.port", "2096");
+            Emulator.getConfig().register("ws.nitro.ip.header", "");
+            NetworkChannelInitializer wsChannelHandler = new NetworkChannelInitializer();
+            Emulator.getGameServer().getServerBootstrap().childHandler(wsChannelHandler);
+            Emulator.getGameServer().getServerBootstrap().bind(Emulator.getConfig().getValue("ws.nitro.host", "0.0.0.0"), Emulator.getConfig().getInt("ws.nitro.port", 2096)).sync();
+            log.info("Websockets has started!");
+            log.info("Websockets Listening on " + (wsChannelHandler.isSSL() ? "wss://" : "ws://") + Emulator.getConfig().getValue("ws.nitro.host", "0.0.0.0") + ":" + Emulator.getConfig().getInt("ws.nitro.port", 2096));
             log.info("Arcturus Morningstar has successfully loaded.");
             log.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
             log.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
@@ -327,6 +341,16 @@ public final class Emulator {
 
     public static RCONServer getRconServer() {
         return rconServer;
+    }
+
+    public void onUserGetIPEvent(UserGetIPAddressEvent e) {
+        Channel channel = e.habbo.getClient().getChannel();
+        if(channel != null && channel.hasAttr(Emulator.WS_IP)) {
+            String ip = channel.attr(Emulator.WS_IP).get();
+            if(!ip.isEmpty()) {
+                e.setUpdatedIp(ip);
+            }
+        }
     }
 
     /**
