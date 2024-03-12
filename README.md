@@ -19,7 +19,7 @@ There are two main branches in use on the Arcturus Morningstar git. Below the pr
 There is no set timeframe on when new versions will be released or when the stable branch will be updated
 
 ### Database ###
-We have placed the myBoBBa database [myBobba](https://github.com/ObjectRetros/2023-hotel-files)
+We have placed the myBoBBa database [myBobba](https://github.com/ObjectRetros/2023-hotel-files) to get you started on building your Retro hotel.
 
 ## Can I Help!? ##
 #### Reporting Bugs: ####
