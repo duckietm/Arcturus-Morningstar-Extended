@@ -1,0 +1,3 @@
+[submodule "morningstar-default-database"]
+	path = morningstar-default-database
+	url = https://git.krews.org/morningstar/morningstar-default-database
