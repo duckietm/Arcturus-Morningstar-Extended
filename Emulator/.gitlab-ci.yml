@@ -1,0 +1,18 @@
+image: maven:latest
+
+stages:
+  - build
+
+build:
+  stage: build
+  script:
+    - mvn package
+  only:
+    changes:
+      - src/**/*
+      - pom.xml
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - target/Habbo-*.jar
+  
