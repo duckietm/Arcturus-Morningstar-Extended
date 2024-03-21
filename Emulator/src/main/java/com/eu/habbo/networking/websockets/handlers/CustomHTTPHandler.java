@@ -50,7 +50,7 @@ public class CustomHTTPHandler extends ChannelInboundHandlerAdapter {
         if(!Utils.isWhitelisted(origin, Emulator.getConfig().getValue("websockets.whitelist", "localhost").split(","))) {
             LOGGER.warn("Access denied for IP: {}", clientIP);
 
-            FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN, Unpooled.wrappedBuffer("W.T.F are you doing?".getBytes()));
+            FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN, Unpooled.wrappedBuffer("Origin forbidden".getBytes()));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
             return false;
         }
