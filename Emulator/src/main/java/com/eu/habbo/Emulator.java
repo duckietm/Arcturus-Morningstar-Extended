@@ -10,16 +10,13 @@ import com.eu.habbo.habbohotel.GameEnvironment;
 import com.eu.habbo.networking.camera.CameraClient;
 import com.eu.habbo.networking.gameserver.GameServer;
 import com.eu.habbo.networking.rconserver.RCONServer;
-import com.eu.habbo.networking.websockets.NetworkChannelInitializer;
 import com.eu.habbo.plugin.PluginManager;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorLoadedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStartShutdownEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStoppedEvent;
-import com.eu.habbo.plugin.events.users.UserGetIPAddressEvent;
 import com.eu.habbo.threading.ThreadPooling;
 import com.eu.habbo.util.imager.badges.BadgeImager;
-import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -145,15 +142,7 @@ public final class Emulator {
             Emulator.rconServer.initializePipeline();
             Emulator.rconServer.connect();
             Emulator.badgeImager = new BadgeImager();
-            Emulator.getConfig().register("websockets.whitelist", "localhost");
-            Emulator.getConfig().register("ws.nitro.host", "0.0.0.0");
-            Emulator.getConfig().register("ws.nitro.port", "2096");
-            Emulator.getConfig().register("ws.nitro.ip.header", "");
-            NetworkChannelInitializer wsChannelHandler = new NetworkChannelInitializer();
-            Emulator.getGameServer().getServerBootstrap().childHandler(wsChannelHandler);
-            Emulator.getGameServer().getServerBootstrap().bind(Emulator.getConfig().getValue("ws.nitro.host", "0.0.0.0"), Emulator.getConfig().getInt("ws.nitro.port", 2096)).sync();
-            log.info("Websockets has started!");
-            log.info("Websockets Listening on " + (wsChannelHandler.isSSL() ? "wss://" : "ws://") + Emulator.getConfig().getValue("ws.nitro.host", "0.0.0.0") + ":" + Emulator.getConfig().getInt("ws.nitro.port", 2096));
+
             log.info("Arcturus Morningstar has successfully loaded.");
             log.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
             log.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
@@ -343,19 +332,6 @@ public final class Emulator {
         return rconServer;
     }
 
-    public void onUserGetIPEvent(UserGetIPAddressEvent e) {
-        Channel channel = e.habbo.getClient().getChannel();
-        if(channel != null && channel.hasAttr(Emulator.WS_IP)) {
-            String ip = channel.attr(Emulator.WS_IP).get();
-            if(!ip.isEmpty()) {
-                e.setUpdatedIp(ip);
-            }
-        }
-    }
-
-    /**
-     * @deprecated Do not use. Please use LoggerFactory.getLogger(YourClass.class) to log.
-     */
     @Deprecated
     public static Logging getLogging() {
         return logging;
