@@ -1098,10 +1098,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
             }
 
-            for (ICycleable task : this.roomSpecialTypes.getCycleTasks()) {
-                task.cycle(this);
-            }
-
             if (!this.currentHabbos.isEmpty()) {
                 this.idleCycles = 0;
 
@@ -1253,6 +1249,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 updatedUnit.add(pet.getRoomUnit());
                             }
                         }
+                }
+
+                // Delay in cycle unit for wireds that need unit position and periods - First the cycle unit's is executed and then the periods in Habbo are the same
+                for (ICycleable task : this.roomSpecialTypes.getCycleTasks()) {
+                    task.cycle(this);
                 }
 
                 if (this.rollerSpeed != -1 && this.rollerCycle >= this.rollerSpeed) {

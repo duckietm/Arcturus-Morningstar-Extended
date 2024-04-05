@@ -44,6 +44,7 @@ import com.eu.habbo.habbohotel.items.interactions.totems.InteractionTotemLegs;
 import com.eu.habbo.habbohotel.items.interactions.totems.InteractionTotemPlanet;
 import com.eu.habbo.habbohotel.items.interactions.wired.conditions.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.*;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredAddonOneCondition;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
@@ -264,6 +265,7 @@ public class ItemManager {
 
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_one_condition", WiredAddonOneCondition.class));
         this.interactionsList.add(new ItemInteraction("wf_blob", WiredBlob.class));
 
 

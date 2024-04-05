@@ -6,6 +6,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.wired.WiredAddonType;
+import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -22,6 +24,16 @@ public class WiredExtraUnseen extends InteractionWiredExtra {
 
     public WiredExtraUnseen(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
+    }
+
+    @Override
+    public boolean saveData(ClientMessage packet) {
+        return true;
+    }
+
+    @Override
+    public WiredAddonType getType() {
+        return null;
     }
 
     @Override

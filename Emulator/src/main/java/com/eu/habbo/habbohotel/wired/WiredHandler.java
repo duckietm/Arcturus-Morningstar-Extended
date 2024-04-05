@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectGiveReward;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTriggerStacks;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredAddonOneCondition;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -164,6 +165,8 @@ public class WiredHandler {
 
             THashSet<InteractionWiredCondition> conditions = room.getRoomSpecialTypes().getConditions(trigger.getX(), trigger.getY());
             THashSet<InteractionWiredEffect> effects = room.getRoomSpecialTypes().getEffects(trigger.getX(), trigger.getY());
+            WiredAddonOneCondition wiredAddonOneCondition = (WiredAddonOneCondition) room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY()).stream().filter(w -> w.getClass() == WiredAddonOneCondition.class).findAny().orElse(null);
+
             if (Emulator.getPluginManager().fireEvent(new WiredStackTriggeredEvent(room, roomUnit, trigger, effects, conditions)).isCancelled())
                 return false;
 
@@ -175,12 +178,66 @@ public class WiredHandler {
                     }
                 }
 
-                for (InteractionWiredCondition condition : conditions) {
-                    if (!((condition.operator() == WiredConditionOperator.OR && matchedConditions.contains(condition.getType())) ||
-                            (condition.operator() == WiredConditionOperator.AND && condition.execute(roomUnit, room, stuff))) &&
-                            !Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
+                if (wiredAddonOneCondition != null) {
+                    int countConditionSucceeded = 0;
+                    if (wiredAddonOneCondition.items != null && !wiredAddonOneCondition.items.isEmpty()) {
+                        for (WiredMatchFurniSetting setting : wiredAddonOneCondition.items) {
+                            HabboItem item = room.getHabboItem(setting.item_id);
+                            if (item instanceof InteractionWiredCondition condition) {
+                                if (!((condition.operator() == WiredConditionOperator.OR && matchedConditions.contains(condition.getType())) ||
+                                        (condition.operator() == WiredConditionOperator.AND && condition.execute(roomUnit, room, stuff))) &&
+                                        !Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
+                                    continue;
+                                }
 
+                                countConditionSucceeded++;
+                            }
+                        }
+                    } else {
+                        for (InteractionWiredCondition condition : conditions) {
+                            if (!((condition.operator() == WiredConditionOperator.OR && matchedConditions.contains(condition.getType())) ||
+                                    (condition.operator() == WiredConditionOperator.AND && condition.execute(roomUnit, room, stuff))) &&
+                                    !Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
+                                continue;
+                            }
+
+                            countConditionSucceeded++;
+                        }
+                    }
+
+                    if (wiredAddonOneCondition.type == 0 && conditions.size() != countConditionSucceeded) {
                         return false;
+                    } else if (wiredAddonOneCondition.type == 1 && countConditionSucceeded < 1) {
+                        return false;
+                    } else if (wiredAddonOneCondition.type == 2 && countConditionSucceeded < (conditions.size() - 1)) {
+                        return false;
+                    } else if (wiredAddonOneCondition.type == 3 && countConditionSucceeded != 0) {
+                        return false;
+                    } else {
+                        int newKey;
+
+                        try {
+                            newKey = Integer.parseInt(wiredAddonOneCondition.key);
+                        } catch (NumberFormatException ignored) {
+                            newKey = 0;
+                        }
+
+                        if (wiredAddonOneCondition.type == 4 && countConditionSucceeded >= newKey) {
+                            return false;
+                        } else if (wiredAddonOneCondition.type == 5 && countConditionSucceeded <= newKey) {
+                            return false;
+                        } else if (wiredAddonOneCondition.type == 6 && countConditionSucceeded != newKey) {
+                            return false;
+                        }
+                    }
+                } else {
+                    for (InteractionWiredCondition condition : conditions) {
+                        if (!((condition.operator() == WiredConditionOperator.OR && matchedConditions.contains(condition.getType())) ||
+                                (condition.operator() == WiredConditionOperator.AND && condition.execute(roomUnit, room, stuff))) &&
+                                !Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
+
+                            return false;
+                        }
                     }
                 }
             }
