@@ -5,10 +5,11 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RoomUnitVendingMachineAction implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnitVendingMachineAction.class);
 
     private final Habbo habbo;
     private final HabboItem habboItem;
@@ -31,7 +32,7 @@ public class RoomUnitVendingMachineAction implements Runnable {
                             try {
                                 this.habboItem.onClick(this.habbo.getClient(), this.room, new Object[]{0});
                             } catch (Exception e) {
-                                log.error("Caught exception", e);
+                                LOGGER.error("Caught exception", e);
                             }
                         } else {
                             if (this.room.getLayout().getTile(tile.x, tile.y).isWalkable()) {

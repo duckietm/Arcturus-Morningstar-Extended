@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -314,11 +315,8 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
-        packet.readInt();
-        packet.readString();
-
-        int itemsCount = packet.readInt();
+    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
@@ -327,7 +325,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
         List<HabboItem> newItems = new ArrayList<>();
 
         for (int i = 0; i < itemsCount; i++) {
-            int itemId = packet.readInt();
+            int itemId = settings.getFurniIds()[i];
             HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
 
             if(it == null)
@@ -336,7 +334,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
             newItems.add(it);
         }
 
-        int delay = packet.readInt();
+        int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

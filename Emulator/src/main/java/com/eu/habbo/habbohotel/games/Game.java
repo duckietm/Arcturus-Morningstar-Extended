@@ -20,11 +20,14 @@ import com.eu.habbo.plugin.events.games.GameStartedEvent;
 import com.eu.habbo.plugin.events.games.GameStoppedEvent;
 import com.eu.habbo.threading.runnables.SaveScoreForTeam;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 import java.util.stream.Collectors;
-@Slf4j
+
 public abstract class Game implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Game.class);
     protected final THashMap<GameTeamColors, GameTeam> teams = new THashMap<>();
     protected final Room room;
     private final Class<? extends GameTeam> gameTeamClazz;
@@ -72,7 +75,7 @@ public abstract class Game implements Runnable {
                 return true;
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return false;

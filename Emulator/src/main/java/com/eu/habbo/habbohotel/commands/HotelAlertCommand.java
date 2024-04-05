@@ -23,7 +23,7 @@ public class HotelAlertCommand extends Command {
                 message.append(params[i]).append(" ");
             }
 
-            ServerMessage msg = new StaffAlertWithLinkComposer(message + "\r\n\r\nVan:" + gameClient.getHabbo().getHabboInfo().getUsername(), "").compose();
+            ServerMessage msg = new StaffAlertWithLinkComposer(message + "\r\n-" + gameClient.getHabbo().getHabboInfo().getUsername(), "").compose();
 
             for (Map.Entry<Integer, Habbo> set : Emulator.getGameEnvironment().getHabboManager().getOnlineHabbos().entrySet()) {
                 Habbo habbo = set.getValue();

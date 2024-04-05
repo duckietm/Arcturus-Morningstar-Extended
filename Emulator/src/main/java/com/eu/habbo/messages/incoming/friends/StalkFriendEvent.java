@@ -34,7 +34,7 @@ public class StalkFriendEvent extends MessageHandler {
             return;
         }
 
-        if (habbo.getHabboInfo().getCurrentRoom() == null || habbo.getHabboInfo().isInvisibleInRooms()) {
+        if (habbo.getHabboInfo().getCurrentRoom() == null) {
             this.client.sendResponse(new StalkErrorComposer(StalkErrorComposer.FRIEND_NOT_IN_ROOM));
             return;
         }

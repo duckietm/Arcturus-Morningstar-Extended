@@ -4,13 +4,15 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import gnu.trove.TIntCollection;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-@Slf4j
 public class ClothingValidationManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClothingValidationManager.class);
 
     public static String FIGUREDATA_URL = "";
     public static boolean VALIDATE_ON_HC_EXPIRE = false;
@@ -36,7 +38,7 @@ public class ClothingValidationManager {
             VALIDATE_ON_MIMIC = false;
             VALIDATE_ON_MANNEQUIN = false;
             VALIDATE_ON_FBALLGATE = false;
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -202,7 +204,7 @@ public class ClothingValidationManager {
                 }
             } catch (Exception e) {
                 //habbo.alert(e.getMessage());
-                log.error("Error in clothing validation", e);
+                LOGGER.error("Error in clothing validation", e);
             }
         });
 

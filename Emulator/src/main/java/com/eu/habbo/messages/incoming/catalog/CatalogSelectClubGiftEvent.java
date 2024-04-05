@@ -9,10 +9,12 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.*;
 import com.eu.habbo.messages.outgoing.users.ClubGiftReceivedComposer;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class CatalogSelectClubGiftEvent extends MessageHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogSelectClubGiftEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -20,13 +22,13 @@ public class CatalogSelectClubGiftEvent extends MessageHandler {
         String itemName = this.packet.readString();
 
         if(itemName.isEmpty()) {
-            log.error("itemName is empty");
+            LOGGER.error("itemName is empty");
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             return;
         }
 
         if(this.client.getHabbo().getHabboStats().getRemainingClubGifts() < 1) {
-            log.error("User has no remaining club gifts");
+            LOGGER.error("User has no remaining club gifts");
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             return;
         }
@@ -34,7 +36,7 @@ public class CatalogSelectClubGiftEvent extends MessageHandler {
         CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().getCatalogPageByLayout(CatalogPageLayouts.club_gift.name().toLowerCase());
 
         if(page == null) {
-            log.error("Catalog page not found");
+            LOGGER.error("Catalog page not found");
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             return;
         }
@@ -42,7 +44,7 @@ public class CatalogSelectClubGiftEvent extends MessageHandler {
         CatalogItem catalogItem = page.getCatalogItems().valueCollection().stream().filter(x -> x.getName().equalsIgnoreCase(itemName)).findAny().orElse(null);
 
         if(catalogItem == null) {
-            log.error("Catalog item not found");
+            LOGGER.error("Catalog item not found");
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             return;
         }
@@ -54,7 +56,7 @@ public class CatalogSelectClubGiftEvent extends MessageHandler {
         catch (NumberFormatException ignored) { }
 
         if(daysRequired > (int) Math.floor(this.client.getHabbo().getHabboStats().getPastTimeAsClub() / 86400.0)) {
-            log.error("Not been member for long enough");
+            LOGGER.error("Not been member for long enough");
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             return;
         }

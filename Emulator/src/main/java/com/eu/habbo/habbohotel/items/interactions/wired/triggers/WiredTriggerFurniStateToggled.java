@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -135,16 +136,13 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-        packet.readString();
-
+    public boolean saveData(WiredSettings settings) {
         this.items.clear();
 
-        int count = packet.readInt();
+        int count = settings.getFurniIds().length;
 
         for (int i = 0; i < count; i++) {
-            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(packet.readInt()));
+            this.items.add(Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]));
         }
 
         return true;

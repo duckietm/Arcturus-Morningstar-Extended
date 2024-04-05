@@ -20,7 +20,7 @@ public class HallOfFameWinner implements Comparable<HallOfFameWinner> {
         this.id = set.getInt("id");
         this.username = set.getString("username");
         this.look = set.getString("look");
-        this.points = set.getInt("achievement_score");
+        this.points = set.getInt("hof_points");
     }
 
 

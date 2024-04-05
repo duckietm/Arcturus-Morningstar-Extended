@@ -9,15 +9,16 @@ import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.threading.runnables.HabboItemNewState;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 class TeleportActionTwo implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TeleportActionTwo.class);
 
     private final HabboItem currentTeleport;
     private final Room room;
@@ -35,10 +36,6 @@ class TeleportActionTwo implements Runnable {
 
         if (this.currentTeleport instanceof InteractionTeleportTile) {
             delayOffset = 0;
-        }
-
-        if(this.client.getHabbo() == null) {
-            return;
         }
 
         if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != this.room)
@@ -79,7 +76,7 @@ class TeleportActionTwo implements Runnable {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 

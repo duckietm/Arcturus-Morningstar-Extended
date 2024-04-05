@@ -3,15 +3,17 @@ package com.eu.habbo.messages.rcon;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class GivePixels extends RCONMessage<GivePixels.JSONGivePixels> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GivePixels.class);
+
+
     public GivePixels() {
         super(JSONGivePixels.class);
     }
@@ -29,7 +31,7 @@ public class GivePixels extends RCONMessage<GivePixels.JSONGivePixels> {
                 statement.execute();
             } catch (SQLException e) {
                 this.status = RCONMessage.SYSTEM_ERROR;
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.message = "offline";
@@ -37,7 +39,10 @@ public class GivePixels extends RCONMessage<GivePixels.JSONGivePixels> {
     }
 
     static class JSONGivePixels {
+
         public int user_id;
+
+
         public int pixels;
     }
 }

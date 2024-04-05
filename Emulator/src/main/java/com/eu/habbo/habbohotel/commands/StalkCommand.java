@@ -24,11 +24,6 @@ public class StalkCommand extends Command {
                 return true;
             }
 
-            if (habbo.getHabboInfo().isInvisibleInRooms()) {
-                gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_stalk.not_room").replace("%user%", params[1]), RoomChatMessageBubbles.ALERT);
-                return true;
-            }
-
             if (habbo.getHabboInfo().getCurrentRoom() == null) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_stalk.not_room").replace("%user%", params[1]), RoomChatMessageBubbles.ALERT);
                 return true;

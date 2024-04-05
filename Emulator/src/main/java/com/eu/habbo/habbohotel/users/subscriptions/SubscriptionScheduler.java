@@ -4,12 +4,17 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.core.Scheduler;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.plugin.events.users.subscriptions.UserSubscriptionExpiredEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-@Slf4j
+/**
+ * @author Beny
+ */
 public class SubscriptionScheduler extends Scheduler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionScheduler.class);
 
     public SubscriptionScheduler() {
         super(Emulator.getConfig().getInt("subscriptions.scheduler.interval", 10));
@@ -50,7 +55,7 @@ public class SubscriptionScheduler extends Scheduler {
                     }
                 }
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
 

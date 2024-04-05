@@ -18,14 +18,16 @@ import com.eu.habbo.plugin.events.users.achievements.UserAchievementLeveledEvent
 import com.eu.habbo.plugin.events.users.achievements.UserAchievementProgressEvent;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TObjectIntProcedure;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Slf4j
 public class AchievementManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AchievementManager.class);
+
     public static boolean TALENTTRACK_ENABLED = false;
 
     private final THashMap<String, Achievement> achievements;
@@ -57,7 +59,7 @@ public class AchievementManager {
                     statement.setInt(4, amount);
                     statement.execute();
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 }
             }
         }
@@ -139,7 +141,7 @@ public class AchievementManager {
                 try {
                     badge = habbo.getInventory().getBadgesComponent().getBadge(("ACH_" + achievement.name + oldLevel.level).toLowerCase());
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     return;
                 }
             }
@@ -207,7 +209,7 @@ public class AchievementManager {
             statement.setInt(3, 1);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -221,7 +223,7 @@ public class AchievementManager {
             }
             statement.executeBatch();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -235,7 +237,7 @@ public class AchievementManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return 0;
@@ -258,9 +260,9 @@ public class AchievementManager {
                         }
                     }
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                 }
 
 
@@ -280,13 +282,13 @@ public class AchievementManager {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
-                log.error("Achievement Manager -> Failed to load!");
+                LOGGER.error("Caught SQL exception", e);
+                LOGGER.error("Achievement Manager -> Failed to load!");
                 return;
             }
         }
 
-        log.info("Achievement Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Achievement Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public Achievement getAchievement(String name) {

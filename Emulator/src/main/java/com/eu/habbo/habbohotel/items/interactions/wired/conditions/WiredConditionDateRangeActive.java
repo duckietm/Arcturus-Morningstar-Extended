@@ -3,12 +3,13 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,10 +51,10 @@ public class WiredConditionDateRangeActive extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-        this.startDate = packet.readInt();
-        this.endDate = packet.readInt();
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 2) return false;
+        this.startDate = settings.getIntParams()[0];
+        this.endDate = settings.getIntParams()[1];
         return true;
     }
 

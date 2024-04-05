@@ -18,9 +18,7 @@ public class IdleTimeoutHandler extends ChannelDuplexHandler {
     private final long pongTimeoutNanos;
 
     volatile ScheduledFuture<?> pingScheduleFuture;
-    volatile boolean sentPing;
-    volatile long lastPingTime; // in nanoseconds
-    volatile long lastPongTime; // in nanoseconds
+    volatile long lastPongTime;// in nanoseconds
 
     private volatile int state; // 0 - none, 1 - initialized, 2 - destroyed
 
@@ -99,18 +97,10 @@ public class IdleTimeoutHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         // check if its a pong message
-        if (msg instanceof ClientMessage) {
+        if(msg instanceof ClientMessage) {
             ClientMessage packet = (ClientMessage) msg;
-            if (packet.getMessageId() == Incoming.PongEvent) {
+            if(packet.getMessageId() == Incoming.PongEvent) {
                 this.lastPongTime = System.nanoTime();
-
-                final GameClient client = ctx.channel().attr(GameServerAttributes.CLIENT).get();
-                if (client != null) {
-                    if (sentPing) {
-                        sentPing = false;
-                        client.getLatencyTracker().update(lastPongTime - lastPingTime);
-                    }
-                }
             }
         }
         super.channelRead(ctx, msg);
@@ -130,15 +120,13 @@ public class IdleTimeoutHandler extends ChannelDuplexHandler {
             }
 
             long currentTime = System.nanoTime();
-            if (currentTime - lastPongTime > pongTimeoutNanos) {
+            if(currentTime - lastPongTime > pongTimeoutNanos) {
                 ctx.close();// add a promise here ?
                 return;
             }
 
-            final GameClient client = ctx.channel().attr(GameServerAttributes.CLIENT).get();
+            GameClient client = ctx.channel().attr(GameServerAttributes.CLIENT).get();
             if (client != null) {
-                lastPingTime = System.nanoTime();
-                sentPing = true;
                 client.sendResponse(new PingComposer());
             }
 

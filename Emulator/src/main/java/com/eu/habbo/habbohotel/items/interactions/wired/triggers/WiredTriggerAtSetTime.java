@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -110,9 +111,9 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-        this.executeTime = packet.readInt() * 500;
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 1) return false;
+        this.executeTime = settings.getIntParams()[0] * 500;
 
         this.resetTimer();
 

@@ -4,13 +4,16 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class GiveRespect extends RCONMessage<GiveRespect.JSONGiveRespect> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GiveRespect.class);
+
 
     public GiveRespect() {
         super(JSONGiveRespect.class);
@@ -34,7 +37,7 @@ public class GiveRespect extends RCONMessage<GiveRespect.JSONGiveRespect> {
                 statement.execute();
             } catch (SQLException e) {
                 this.status = RCONMessage.SYSTEM_ERROR;
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.message = "offline";
@@ -42,9 +45,16 @@ public class GiveRespect extends RCONMessage<GiveRespect.JSONGiveRespect> {
     }
 
     static class JSONGiveRespect {
+
         public int user_id;
+
+
         public int respect_given = 0;
+
+
         public int respect_received = 0;
+
+
         public int daily_respects = 0;
     }
 }

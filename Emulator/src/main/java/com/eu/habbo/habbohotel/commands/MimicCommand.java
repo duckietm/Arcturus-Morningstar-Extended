@@ -32,6 +32,9 @@ public class MimicCommand extends Command {
             } else if (habbo.hasPermission(Permission.ACC_NOT_MIMICED) && !gameClient.getHabbo().hasPermission(Permission.ACC_NOT_MIMICED)) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_mimic.blocked").replace("%user%", params[1]).replace("%gender_name%", (habbo.getHabboInfo().getGender().equals(HabboGender.M) ? Emulator.getTexts().getValue("gender.him") : Emulator.getTexts().getValue("gender.her"))), RoomChatMessageBubbles.ALERT);
                 return true;
+            } else if (!habbo.hasPermission("acc_mimic_unredeemed") && FigureUtil.hasBlacklistedClothing(habbo.getHabboInfo().getLook(), gameClient.getHabbo().getForbiddenClothing())) {
+                gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_mimic.forbidden_clothing"), RoomChatMessageBubbles.ALERT);
+                return true;
             } else {
                 gameClient.getHabbo().getHabboInfo().setLook(ClothingValidationManager.VALIDATE_ON_MIMIC ? ClothingValidationManager.validateLook(gameClient.getHabbo(), habbo.getHabboInfo().getLook(), habbo.getHabboInfo().getGender().name()) : habbo.getHabboInfo().getLook());
                 gameClient.getHabbo().getHabboInfo().setGender(habbo.getHabboInfo().getGender());

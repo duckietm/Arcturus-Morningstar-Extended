@@ -8,11 +8,14 @@ import com.eu.habbo.habbohotel.rooms.RoomCategory;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSearchResultsComposer;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
-@Slf4j
 public class RequestNewNavigatorRoomsEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestNewNavigatorRoomsEvent.class);
+
     @Override
     public void handle() throws Exception {
         String view = this.packet.readString();
@@ -85,7 +88,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
             return;
 
         try {
-            List<SearchResultList> resultLists2 = (ArrayList)((ArrayList)filter.getResult(this.client.getHabbo(), field, part, category != null ? category.getId() : -1)).clone();
+            List<SearchResultList> resultLists2 = filter.getResult(this.client.getHabbo(), field, part, category != null ? category.getId() : -1);
             List<SearchResultList> resultLists = new ArrayList<>();
             for(SearchResultList searchResultList : resultLists2) {
                 List<Room> rooms = new ArrayList<>();
@@ -96,7 +99,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
             resultLists = toQueryResults(resultLists);
             this.client.sendResponse(new NewNavigatorSearchResultsComposer(view, query, resultLists));
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         /*
@@ -111,7 +114,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
         }
         catch (Exception e)
         {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         */
     }

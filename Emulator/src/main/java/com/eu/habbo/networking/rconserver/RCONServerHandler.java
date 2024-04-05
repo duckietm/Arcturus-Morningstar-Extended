@@ -1,5 +1,6 @@
 package com.eu.habbo.networking.rconserver;
 
+
 import com.eu.habbo.Emulator;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -8,10 +9,13 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RCONServerHandler extends ChannelInboundHandlerAdapter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RCONServerHandler.class);
+
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         String adress = ctx.channel().remoteAddress().toString().split(":")[0].replace("/", "");
@@ -24,7 +28,7 @@ public class RCONServerHandler extends ChannelInboundHandlerAdapter {
 
         ctx.channel().close();
 
-        log.warn("RCON Remote connection closed: {}. IP not allowed!", adress);
+        LOGGER.warn("RCON Remote connection closed: {}. IP not allowed!", adress);
     }
 
     @Override
@@ -42,9 +46,9 @@ public class RCONServerHandler extends ChannelInboundHandlerAdapter {
             key = object.get("key").getAsString();
             response = Emulator.getRconServer().handle(ctx, key, object.get("data").toString());
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.error("Unknown RCON Message: {}", key);
+            LOGGER.error("Unknown RCON Message: {}", key);
         } catch (Exception e) {
-            log.error("Invalid RCON Message: {}", message);
+            LOGGER.error("Invalid RCON Message: {}", message);
             e.printStackTrace();
         }
 

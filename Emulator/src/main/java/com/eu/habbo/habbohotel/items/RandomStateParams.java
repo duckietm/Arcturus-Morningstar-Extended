@@ -1,10 +1,13 @@
 package com.eu.habbo.habbohotel.items;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 
-@Slf4j
 public class RandomStateParams {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RandomStateParams.class);
+
     private int states = -1;
     private int delay = -1;
 
@@ -22,7 +25,7 @@ public class RandomStateParams {
                     this.delay = Integer.parseInt(keyValue[1]);
                     break;
                 default:
-                    log.warn("RandomStateParams: unknown key: " + keyValue[0]);
+                    LOGGER.warn("RandomStateParams: unknown key: " + keyValue[0]);
                     break;
             }
         });

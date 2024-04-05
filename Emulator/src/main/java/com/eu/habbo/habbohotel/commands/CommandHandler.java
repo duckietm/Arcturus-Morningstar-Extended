@@ -16,15 +16,17 @@ import com.eu.habbo.plugin.events.users.UserCommandEvent;
 import com.eu.habbo.plugin.events.users.UserExecuteCommandEvent;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-@Slf4j
 public class CommandHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
 
     private final static THashMap<String, Command> commands = new THashMap<>(5);
     private static final Comparator<Command> ALPHABETICAL_ORDER = new Comparator<Command>() {
@@ -37,7 +39,7 @@ public class CommandHandler {
     public CommandHandler() {
         long millis = System.currentTimeMillis();
         this.reloadCommands();
-        log.info("Command Handler -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Command Handler -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public static void addCommand(Command command) {
@@ -46,8 +48,21 @@ public class CommandHandler {
 
         commands.put(command.getClass().getName(), command);
     }
+
+
+    public static void addCommand(Class<? extends Command> command) {
+        try {
+            //command.getConstructor().setAccessible(true);
+            addCommand(command.newInstance());
+            LOGGER.debug("Added command: {}", command.getName());
+        } catch (Exception e) {
+            LOGGER.error("Caught exception", e);
+        }
+    }
+
+
     public static boolean handleCommand(GameClient gameClient, String commandLine) {
-        if (gameClient != null && commandLine != null) {
+        if (gameClient != null) {
             if (commandLine.startsWith(":")) {
                 commandLine = commandLine.replaceFirst(":", "");
 
@@ -75,7 +90,7 @@ public class CommandHandler {
 
                                         succes = event.succes;
                                     } catch (Exception e) {
-                                        log.error("Caught exception", e);
+                                        LOGGER.error("Caught exception", e);
                                     }
 
                                     if (gameClient.getHabbo().getHabboInfo().getRank().isLogCommands()) {
@@ -279,7 +294,6 @@ public class CommandHandler {
         addCommand(new AddYoutubePlaylistCommand());
         addCommand(new SoftKickCommand());
         addCommand(new SubscriptionCommand());
-        addCommand(new PingCommand());
 
         addCommand(new TestCommand());
     }
@@ -306,6 +320,6 @@ public class CommandHandler {
 
     public void dispose() {
         commands.clear();
-        log.info("Command Handler -> Disposed!");
+        LOGGER.info("Command Handler -> Disposed!");
     }
 }

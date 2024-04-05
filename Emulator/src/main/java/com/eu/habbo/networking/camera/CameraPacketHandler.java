@@ -3,11 +3,14 @@ package com.eu.habbo.networking.camera;
 import com.eu.habbo.networking.camera.messages.incoming.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 
-@Slf4j
 public class CameraPacketHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CameraPacketHandler.class);
+
     private static CameraPacketHandler INSTANCE;
     private final HashMap<Short, Class<? extends CameraIncomingMessage>> packetDefinitions;
 
@@ -38,7 +41,7 @@ public class CameraPacketHandler {
                 message.handle(channel);
                 message.buffer.release();
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
     }

@@ -60,13 +60,17 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Constructor;
 import java.sql.*;
 import java.util.*;
 
-@Slf4j
 public class ItemManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemManager.class);
+
     //Configuration. Loaded from database & updated accordingly.
     public static boolean RECYCLER_ENABLED = true;
 
@@ -101,7 +105,7 @@ public class ItemManager {
         this.highscoreManager.load();
         this.loadNewUserGifts();
 
-        log.info("Item Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Item Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     protected void loadItemInteractions() {
@@ -262,6 +266,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_handitem", WiredConditionHabboHasHandItem.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_date_rng_active", WiredConditionDateRangeActive.class));
 
+
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
         this.interactionsList.add(new ItemInteraction("wf_blob", WiredBlob.class));
@@ -357,7 +362,7 @@ public class ItemManager {
                 return interaction;
         }
 
-        log.debug("Can't find interaction class: {}", type.getName());
+        LOGGER.debug("Can't find interaction class: {}", type.getName());
         return this.getItemInteraction(InteractionDefault.class);
     }
 
@@ -387,12 +392,12 @@ public class ItemManager {
                     else
                         this.items.get(id).update(set);
                 } catch (Exception e) {
-                    log.error("Failed to load Item ({})", set.getInt("id"));
-                    log.error("Caught exception", e);
+                    LOGGER.error("Failed to load Item ({})", set.getInt("id"));
+                    LOGGER.error("Caught exception", e);
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -405,16 +410,16 @@ public class ItemManager {
                 try {
                     reward = new CrackableReward(set);
                 } catch (Exception e) {
-                    log.error("Failed to load items_crackable item_id = {}", set.getInt("item_id"));
-                    log.error("Caught exception", e);
+                    LOGGER.error("Failed to load items_crackable item_id = {}", set.getInt("item_id"));
+                    LOGGER.error("Caught exception", e);
                     continue;
                 }
                 this.crackableRewards.put(set.getInt("item_id"), reward);
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -448,7 +453,7 @@ public class ItemManager {
                 this.soundTracks.put(set.getString("code"), new SoundTrack(set));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -481,16 +486,16 @@ public class ItemManager {
                         try {
                             return itemClass.getDeclaredConstructor(int.class, int.class, Item.class, String.class, int.class, int.class).newInstance(set.getInt(1), habboId, item, extraData, limitedStack, limitedSells);
                         } catch (Exception e) {
-                            log.error("Caught exception", e);
+                            LOGGER.error("Caught exception", e);
                             return new InteractionDefault(set.getInt(1), habboId, item, extraData, limitedStack, limitedSells);
                         }
                     }
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         return null;
     }
@@ -505,7 +510,7 @@ public class ItemManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -530,7 +535,7 @@ public class ItemManager {
             statement.setInt(1, item.getId());
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -557,7 +562,7 @@ public class ItemManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return item;
@@ -597,9 +602,9 @@ public class ItemManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return item;
@@ -611,7 +616,7 @@ public class ItemManager {
             statement.setInt(2, itemTwoId);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -621,7 +626,7 @@ public class ItemManager {
             statement.setInt(2, hopper.getBaseItem().getId());
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -636,7 +641,7 @@ public class ItemManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return a;
@@ -652,9 +657,9 @@ public class ItemManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return item;
@@ -675,7 +680,7 @@ public class ItemManager {
 
                 return (HabboItem) c.newInstance(set, baseItem);
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
 
@@ -699,7 +704,7 @@ public class ItemManager {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -715,7 +720,7 @@ public class ItemManager {
             return null;
 
         if (extraData.length() > 1000) {
-            log.error("Extradata exceeds maximum length of 1000 characters: {}", extraData);
+            LOGGER.error("Extradata exceeds maximum length of 1000 characters: {}", extraData);
             extraData = extraData.substring(0, 1000);
         }
 
@@ -770,8 +775,9 @@ public class ItemManager {
 
     public void dispose() {
         this.items.clear();
+        this.highscoreManager.dispose();
 
-        log.info("Item Manager -> Disposed!");
+        LOGGER.info("Item Manager -> Disposed!");
     }
 
     public List<String> getInteractionList() {

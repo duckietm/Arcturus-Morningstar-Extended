@@ -22,7 +22,6 @@ import com.eu.habbo.plugin.events.users.UserPointsEvent;
 import gnu.trove.TIntCollection;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +31,9 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class Habbo implements Runnable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Habbo.class);
 
     private final HabboInfo habboInfo;
     private final HabboStats habboStats;
@@ -118,17 +118,10 @@ public class Habbo implements Runnable {
 
     public boolean connect() {
         String ip = "";
-        String ProxyIP = "";
 
         if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
             SocketAddress address = this.client.getChannel().remoteAddress();
             ip = ((InetSocketAddress) address).getAddress().getHostAddress();
-            ProxyIP = "- no proxy server used";
-        }
-        else
-        {
-            SocketAddress address = this.client.getChannel().remoteAddress();
-            ProxyIP = ((InetSocketAddress) address).getAddress().getHostAddress();
         }
 
         if (Emulator.getPluginManager().isRegistered(UserGetIPAddressEvent.class, true)) {
@@ -142,12 +135,6 @@ public class Habbo implements Runnable {
             this.habboInfo.setIpLogin(ip);
         }
 
-        if (this.client.getMachineId() == null || this.client.getMachineId().length() == 0) {
-            return false;
-        }
-
-        this.habboInfo.setMachineID(this.client.getMachineId());
-
         if (Emulator.getGameEnvironment().getModToolManager().hasMACBan(this.client)) {
             return false;
         }
@@ -156,12 +143,13 @@ public class Habbo implements Runnable {
             return false;
         }
 
+        this.habboInfo.setMachineID(this.client.getMachineId());
         this.isOnline(true);
+
         this.messenger.connectionChanged(this, true, false);
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
-        log.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
-        log.info("{} client MachineId = {}", this.habboInfo.getUsername(), this.client.getMachineId());
+        LOGGER.info("{} logged in from IP {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin());
         return true;
     }
 
@@ -188,7 +176,7 @@ public class Habbo implements Runnable {
                 }
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         try {
@@ -204,13 +192,13 @@ public class Habbo implements Runnable {
 
             this.habboStats.dispose();
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
             return;
         } finally {
             Emulator.getGameEnvironment().getRoomManager().unloadRoomsForHabbo(this);
             Emulator.getGameEnvironment().getHabboManager().removeHabbo(this);
         }
-        log.info("{} disconnected.", this.habboInfo.getUsername());
+        LOGGER.info("{} disconnected.", this.habboInfo.getUsername());
         this.client = null;
     }
 
@@ -421,7 +409,7 @@ public class Habbo implements Runnable {
 
     public void mute(int seconds, boolean isFlood) {
         if (seconds <= 0) {
-            log.warn("Tried to mute user for {} seconds, which is invalid.", seconds);
+            LOGGER.warn("Tried to mute user for {} seconds, which is invalid.", seconds);
             return;
         }
 
@@ -453,24 +441,20 @@ public class Habbo implements Runnable {
     }
 
     public void clearCaches() {
-        int currentTimestamp = Emulator.getIntUnixTimestamp();
-        int twentyFourHoursInSeconds = 24 * 60 * 60; // 24 hours in seconds
-
+        int timestamp = Emulator.getIntUnixTimestamp();
         THashMap<Integer, List<Integer>> newLog = new THashMap<>();
-
         for (Map.Entry<Integer, List<Integer>> ltdLog : this.habboStats.ltdPurchaseLog.entrySet()) {
-            List<Integer> filteredTimestamps = new ArrayList<>();
-
             for (Integer time : ltdLog.getValue()) {
-                if (currentTimestamp - time <= twentyFourHoursInSeconds) {
-                    filteredTimestamps.add(time);
+                if (time > timestamp) {
+                    if (!newLog.containsKey(ltdLog.getKey())) {
+                        newLog.put(ltdLog.getKey(), new ArrayList<>());
+                    }
+
+                    newLog.get(ltdLog.getKey()).add(time);
                 }
             }
-
-            if (!filteredTimestamps.isEmpty()) {
-                newLog.put(ltdLog.getKey(), filteredTimestamps);
-            }
         }
+
         this.habboStats.ltdPurchaseLog = newLog;
     }
 

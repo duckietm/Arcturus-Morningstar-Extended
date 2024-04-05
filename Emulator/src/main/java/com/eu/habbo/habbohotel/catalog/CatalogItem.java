@@ -7,7 +7,8 @@ import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,8 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-@Slf4j
 public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogItem.class);
     int id;
     int limitedStack;
     private int pageId;
@@ -28,12 +29,26 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
     private int amount;
     private boolean allowGift = false;
     private int limitedSells;
+
+
     private String extradata;
+
+
     private boolean clubOnly;
+
+
     private boolean haveOffer;
+
+
     private int offerId;
+
+
     private boolean needsUpdate;
+
+
     private int orderNumber;
+
+
     private HashMap<Integer, Integer> bundle;
 
     public CatalogItem(ResultSet set) throws SQLException {
@@ -168,10 +183,6 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         return this.orderNumber;
     }
 
-    public void setNeedsUpdate(boolean needsUpdate) {
-        this.needsUpdate = needsUpdate;
-    }
-
     public synchronized void sellRare() {
         this.limitedSells++;
 
@@ -203,7 +214,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
 
                     identifier = Integer.parseInt(itemId);
                 } catch (Exception e) {
-                    log.info("Invalid value (" + itemId + ") for items_base column for catalog_item id (" + this.id + "). Value must be integer or of the format of integer:amount;integer:amount");
+                    LOGGER.info("Invalid value (" + itemId + ") for items_base column for catalog_item id (" + this.id + "). Value must be integer or of the format of integer:amount;integer:amount");
                     continue;
                 }
                 if (identifier > 0) {
@@ -250,8 +261,8 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
                     }
                 }
             } catch (Exception e) {
-                log.debug("Failed to load " + this.itemId);
-                log.error("Caught exception", e);
+                LOGGER.debug("Failed to load " + this.itemId);
+                LOGGER.error("Caught exception", e);
             }
         } else {
             try {
@@ -335,7 +346,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
                 statement.setInt(3, this.getId());
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.needsUpdate = false;

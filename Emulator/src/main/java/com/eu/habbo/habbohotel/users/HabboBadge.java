@@ -1,11 +1,13 @@
 package com.eu.habbo.habbohotel.users;
 
 import com.eu.habbo.Emulator;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 
-@Slf4j
 public class HabboBadge implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HabboBadge.class);
     private int id;
     private String code;
     private int slot;
@@ -78,7 +80,7 @@ public class HabboBadge implements Runnable {
                 this.needsUpdate = false;
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 

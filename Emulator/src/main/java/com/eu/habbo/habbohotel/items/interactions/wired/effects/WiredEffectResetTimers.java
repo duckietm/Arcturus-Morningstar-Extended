@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
@@ -67,13 +68,8 @@ public class WiredEffectResetTimers extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) {
-        packet.readInt();
-        packet.readString();
-        packet.readInt();
-        this.delay = packet.readInt();
-        this.setDelay(this.delay);
-
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
+        this.setDelay(settings.getDelay());
         return true;
     }
 

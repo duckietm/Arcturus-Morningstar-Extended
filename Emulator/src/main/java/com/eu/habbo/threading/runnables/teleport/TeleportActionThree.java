@@ -72,6 +72,7 @@ class TeleportActionThree implements Runnable {
         targetTeleport.setExtradata("2");
         targetRoom.updateItem(targetTeleport);
         //targetRoom.updateHabbo(this.client.getHabbo());
+        //LOGGER.info((targetTeleport.getX() + " | " + targetTeleport.getY());
         this.client.getHabbo().getHabboInfo().setCurrentRoom(targetRoom);
         //Emulator.getThreading().run(new HabboItemNewState(this.currentTeleport, this.room, "0"), 500);
         Emulator.getThreading().run(new TeleportActionFour(targetTeleport, targetRoom, this.client), this.currentTeleport instanceof InteractionTeleportTile ? 0 : 500);

@@ -6,15 +6,16 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 public class SendGift extends RCONMessage<SendGift.SendGiftJSON> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SendGift.class);
 
     public SendGift() {
         super(SendGiftJSON.class);
@@ -58,7 +59,7 @@ public class SendGift extends RCONMessage<SendGift.SendGiftJSON> {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         } else {
             username = habbo.getHabboInfo().getUsername();

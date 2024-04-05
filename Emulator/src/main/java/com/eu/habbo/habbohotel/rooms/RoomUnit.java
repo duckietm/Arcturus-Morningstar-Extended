@@ -715,6 +715,14 @@ public class RoomUnit {
         this.rightsLevel = rightsLevel;
     }
 
+    public boolean isInvisible() {
+        return this.invisible;
+    }
+
+    public void setInvisible(boolean invisible) {
+        this.invisible = invisible;
+    }
+
     public Room getRoom() {
         return room;
     }

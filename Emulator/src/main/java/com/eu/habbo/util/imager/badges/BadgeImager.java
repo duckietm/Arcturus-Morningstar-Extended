@@ -5,7 +5,8 @@ import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.guilds.GuildPart;
 import com.eu.habbo.habbohotel.guilds.GuildPartType;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -16,17 +17,18 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.util.Map;
 
-@Slf4j
 public class BadgeImager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BadgeImager.class);
 
     final THashMap<String, BufferedImage> cachedImages = new THashMap<>();
 
     public BadgeImager() {
         if (Emulator.getConfig().getBoolean("imager.internal.enabled")) {
             if (this.reload()) {
-                log.info("Badge Imager -> Loaded!");
+                LOGGER.info("Badge Imager -> Loaded!");
             } else {
-                log.warn("Badge Imager -> Disabled! Please check your configuration!");
+                LOGGER.warn("Badge Imager -> Disabled! Please check your configuration!");
             }
         }
     }
@@ -115,7 +117,7 @@ public class BadgeImager {
     public synchronized boolean reload() {
         File file = new File(Emulator.getConfig().getValue("imager.location.badgeparts"));
         if (!file.exists()) {
-            log.error("BadgeImager output folder: {} does not exist!", Emulator.getConfig().getValue("imager.location.badgeparts"));
+            LOGGER.error("BadgeImager output folder: {} does not exist!", Emulator.getConfig().getValue("imager.location.badgeparts"));
             return false;
         }
 
@@ -128,7 +130,7 @@ public class BadgeImager {
                             try {
                                 this.cachedImages.put(map.getValue().valueA, ImageIO.read(new File(Emulator.getConfig().getValue("imager.location.badgeparts"), "badgepart_" + map.getValue().valueA.replace(".gif", ".png"))));
                             } catch (Exception e) {
-                                log.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueA.replace(".gif", ".png")));
+                                LOGGER.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueA.replace(".gif", ".png")));
                             }
                         }
 
@@ -136,14 +138,14 @@ public class BadgeImager {
                             try {
                                 this.cachedImages.put(map.getValue().valueB, ImageIO.read(new File(Emulator.getConfig().getValue("imager.location.badgeparts"), "badgepart_" + map.getValue().valueB.replace(".gif", ".png"))));
                             } catch (Exception e) {
-                                log.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueB.replace(".gif", ".png")));
+                                LOGGER.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueB.replace(".gif", ".png")));
                             }
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
             return false;
         }
 
@@ -159,7 +161,7 @@ public class BadgeImager {
             if (outputFile.exists())
                 return;
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
             return;
         }
 
@@ -215,9 +217,7 @@ public class BadgeImager {
 
                 point = getPoint(image, imagePart, position);
 
-                if(color != null) {
-                    recolor(imagePart, colorFromHexString(color.valueA));
-                }
+                recolor(imagePart, colorFromHexString(color.valueA));
 
                 graphics.drawImage(imagePart, point.x, point.y, null);
             }
@@ -239,7 +239,7 @@ public class BadgeImager {
         try {
             ImageIO.write(image, "PNG", outputFile);
         } catch (Exception e) {
-            log.error("Failed to generate guild badge: {}.png Make sure the output folder exists and is writable!", outputFile);
+            LOGGER.error("Failed to generate guild badge: {}.png Make sure the output folder exists and is writable!", outputFile);
         }
 
         graphics.dispose();

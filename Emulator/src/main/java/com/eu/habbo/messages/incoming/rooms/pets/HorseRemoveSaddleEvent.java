@@ -10,14 +10,17 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetHorseFigureComposer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 public class HorseRemoveSaddleEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HorseRemoveSaddleEvent.class);
+
     @Override
     public void handle() throws Exception {
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
@@ -37,12 +40,12 @@ public class HorseRemoveSaddleEvent extends MessageHandler {
                     if (set.next()) {
                         saddleItemId = set.getInt("id");
                     } else {
-                        log.error("There is no viable fallback saddle item for old horses with no saddle item ID. Horse pet ID: " + horse.getId());
+                        LOGGER.error("There is no viable fallback saddle item for old horses with no saddle item ID. Horse pet ID: " + horse.getId());
                         return;
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 

@@ -3,13 +3,17 @@ package com.eu.habbo.messages.rcon;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class GiveCredits extends RCONMessage<GiveCredits.JSONGiveCredits> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GiveCredits.class);
+
+
     public GiveCredits() {
         super(JSONGiveCredits.class);
     }
@@ -27,14 +31,18 @@ public class GiveCredits extends RCONMessage<GiveCredits.JSONGiveCredits> {
                 statement.execute();
             } catch (SQLException e) {
                 this.status = RCONMessage.SYSTEM_ERROR;
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
+
             this.message = "offline";
         }
     }
 
     static class JSONGiveCredits {
+
         public int user_id;
+
+
         public int credits;
     }
 }

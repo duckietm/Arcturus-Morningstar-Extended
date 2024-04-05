@@ -8,14 +8,11 @@ import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.Incoming;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import lombok.extern.slf4j.Slf4j;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-
-@Slf4j
 public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
     private static final String QUERY = "INSERT INTO chatlogs_room (user_from_id, user_to_id, message, timestamp, room_id) VALUES (?, ?, ?, ?, ?)";
@@ -141,8 +138,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             try {
                 this.message = this.message.substring(0, RoomChatMessage.MAXIMUM_LENGTH - 1);
             } catch (Exception e) {
-                log.error("Caught exception", e);
-            }
+              }
         }
 
         Emulator.getDatabaseLogger().store(this);
@@ -207,7 +203,6 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(this.getMessage().length());
 
         } catch (Exception e) {
-            log.error("Caught exception", e);
         }
     }
 
@@ -230,7 +225,6 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
                     if (muteTime > 0) {
                         this.habbo.mute(muteTime, false);
                     } else {
-                        log.error("Invalid hotel.wordfilter.automute defined in emulator_settings ({}).", muteTime);
                     }
                 }
 

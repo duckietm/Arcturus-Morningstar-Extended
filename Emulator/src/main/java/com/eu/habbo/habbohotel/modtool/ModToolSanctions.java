@@ -4,7 +4,9 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.plugin.events.sanctions.SanctionEvent;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,8 +14,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
-@Slf4j
 public class ModToolSanctions {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModToolSanctions.class);
+
     private final THashMap<Integer, ArrayList<ModToolSanctionItem>> sanctionHashmap;
     private final THashMap<Integer, ModToolSanctionLevelItem> sanctionLevelsHashmap;
 
@@ -23,7 +26,7 @@ public class ModToolSanctions {
         this.sanctionLevelsHashmap = new THashMap<>();
         this.loadModSanctions();
 
-        log.info("Sanctions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Sanctions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public synchronized void loadModSanctions() {
@@ -41,7 +44,7 @@ public class ModToolSanctions {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -68,7 +71,7 @@ public class ModToolSanctions {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             return this.sanctionHashmap;
@@ -87,7 +90,7 @@ public class ModToolSanctions {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -98,7 +101,7 @@ public class ModToolSanctions {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -109,7 +112,7 @@ public class ModToolSanctions {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -120,7 +123,7 @@ public class ModToolSanctions {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 

@@ -23,13 +23,17 @@ import com.eu.habbo.threading.runnables.freeze.FreezeThrowSnowball;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 public class FreezeGame extends Game {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FreezeGame.class);
+
     public static final int effectId = 39;
+
     public static int POWER_UP_POINTS;
     public static int POWER_UP_CHANCE;
     public static int POWER_UP_PROTECT_TIME;
@@ -261,7 +265,7 @@ public class FreezeGame extends Game {
                 }
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 

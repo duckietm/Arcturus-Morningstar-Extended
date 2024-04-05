@@ -2,11 +2,15 @@ package com.eu.habbo.core;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
-@Slf4j
 public class GotwPointsScheduler extends Scheduler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GotwPointsScheduler.class);
+
     public static boolean IGNORE_HOTEL_VIEW;
     public static boolean IGNORE_IDLED;
     public static String GOTW_POINTS_NAME;
@@ -64,7 +68,7 @@ public class GotwPointsScheduler extends Scheduler {
                     }
                 }
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
     }

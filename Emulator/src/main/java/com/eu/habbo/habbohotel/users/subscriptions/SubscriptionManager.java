@@ -3,7 +3,8 @@ package com.eu.habbo.habbohotel.users.subscriptions;
 import com.eu.habbo.Emulator;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -12,8 +13,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
+/**
+ * @author Beny
+ */
 public class SubscriptionManager {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionManager.class);
 
     public THashMap<String, Class<? extends Subscription>> types;
 
@@ -39,7 +44,7 @@ public class SubscriptionManager {
 
     public Class<? extends Subscription> getSubscriptionClass(String type) {
         if(!this.types.containsKey(type)) {
-            log.debug("Can't find subscription class: {}", type);
+            LOGGER.debug("Can't find subscription class: {}", type);
             return Subscription.class;
         }
 
@@ -66,17 +71,17 @@ public class SubscriptionManager {
                     subscriptions.add(subscription);
                 }
             } catch (IllegalAccessException e) {
-                log.error("IllegalAccessException", e);
+                LOGGER.error("IllegalAccessException", e);
             } catch (InstantiationException e) {
-                log.error("InstantiationException", e);
+                LOGGER.error("InstantiationException", e);
             } catch (InvocationTargetException e) {
-                log.error("InvocationTargetException", e);
+                LOGGER.error("InvocationTargetException", e);
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
         catch (NoSuchMethodException e) {
-            log.error("Caught NoSuchMethodException", e);
+            LOGGER.error("Caught NoSuchMethodException", e);
         }
 
         return subscriptions;

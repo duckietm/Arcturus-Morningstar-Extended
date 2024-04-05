@@ -2,7 +2,8 @@ package com.eu.habbo.habbohotel.rooms;
 
 import com.eu.habbo.Emulator;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.sql.ResultSet;
@@ -12,8 +13,8 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
-@Slf4j
 public class RoomLayout {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoomLayout.class);
     protected static final int BASICMOVEMENTCOST = 10;
     protected static final int DIAGONALMOVEMENTCOST = 14;
     public static double MAXIMUM_STEP_HEIGHT = 1.1;
@@ -44,7 +45,7 @@ public class RoomLayout {
 
             this.parse();
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -274,12 +275,7 @@ public class RoomLayout {
 
         RoomTile doorTile = this.room.getLayout().getDoorTile();
 
-        long startMillis = System.currentTimeMillis();
-
         while (!openList.isEmpty()) {
-            if (System.currentTimeMillis() - startMillis > Emulator.getConfig().getInt("pathfinder.execution_time.milli", 25) && Emulator.getConfig().getBoolean("pathfinder.max_execution_time.enabled", false)) {
-                return null;
-            }
             RoomTile current = this.lowestFInOpen(openList);
             if (current.x == newTile.x && current.y == newTile.y) {
                 return this.calcPath(this.findTile(openList, oldTile.x, oldTile.y), current);

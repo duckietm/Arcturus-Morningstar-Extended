@@ -4,14 +4,17 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 class HopperActionTwo implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HopperActionTwo.class);
+
     private final HabboItem teleportOne;
     private final Room room;
     private final GameClient client;
@@ -40,7 +43,7 @@ class HopperActionTwo implements Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         if (targetRoomId != 0 && targetItemId != 0) {

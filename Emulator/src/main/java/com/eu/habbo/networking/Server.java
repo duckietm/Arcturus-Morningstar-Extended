@@ -9,11 +9,15 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 public abstract class Server {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+
     protected final ServerBootstrap serverBootstrap;
     protected final EventLoopGroup bossGroup;
     protected final EventLoopGroup workerGroup;
@@ -51,22 +55,22 @@ public abstract class Server {
         }
 
         if (!channelFuture.isSuccess()) {
-            log.info("Failed to connect to the host (" + this.host + ":" + this.port + ")@" + this.name);
+            LOGGER.info("Failed to connect to the host (" + this.host + ":" + this.port + ")@" + this.name);
             System.exit(0);
         } else {
-            log.info("Started GameServer on " + this.host + ":" + this.port + "@" + this.name);
+            LOGGER.info("Started GameServer on " + this.host + ":" + this.port + "@" + this.name);
         }
     }
 
     public void stop() {
-        log.info("Stopping " + this.name);
+        LOGGER.info("Stopping " + this.name);
         try {
             this.workerGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
             this.bossGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
         } catch(InterruptedException e) {
-            log.error("Exception during {} shutdown... HARD STOP", this.name, e);
+            LOGGER.error("Exception during {} shutdown... HARD STOP", this.name, e);
         }
-        log.info("GameServer Stopped!");
+        LOGGER.info("GameServer Stopped!");
     }
 
     public ServerBootstrap getServerBootstrap() {

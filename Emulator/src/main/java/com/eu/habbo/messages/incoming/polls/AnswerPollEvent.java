@@ -6,14 +6,15 @@ import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.users.AddUserBadgeComposer;
 import com.eu.habbo.messages.outgoing.wired.WiredRewardAlertComposer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class AnswerPollEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnswerPollEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -46,7 +47,7 @@ public class AnswerPollEvent extends MessageHandler {
                 statement.setString(4, answer.toString());
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             if (poll.lastQuestionId == questionId) {

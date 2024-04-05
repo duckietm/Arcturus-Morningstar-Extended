@@ -6,11 +6,14 @@ import com.eu.habbo.messages.outgoing.inventory.InventoryItemsComposer;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.NoSuchElementException;
 
-@Slf4j
 public class RequestInventoryItemsEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestInventoryItemsEvent.class);
+
     @Override
     public void handle() throws Exception {
         int totalItems = this.client.getHabbo().getInventory().getItemsComponent().getItems().size();
@@ -45,7 +48,7 @@ public class RequestInventoryItemsEvent extends MessageHandler {
                     items.put(iterator.key(), iterator.value());
                     count++;
                 } catch (NoSuchElementException e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     break;
                 }
 

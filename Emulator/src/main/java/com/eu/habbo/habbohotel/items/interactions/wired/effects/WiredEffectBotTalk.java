@@ -5,13 +5,13 @@ import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
@@ -52,15 +52,14 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
-        packet.readInt();
-
-        int mode = packet.readInt();
+    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        if(settings.getIntParams().length < 1) throw new WiredSaveException("Mode is invalid");
+        int mode = settings.getIntParams()[0];
 
         if(mode != 0 && mode != 1)
             throw new WiredSaveException("Mode is invalid");
 
-        String dataString = packet.readString();
+        String dataString = settings.getStringParam();
 
         String splitBy = "\t";
         if(!dataString.contains(splitBy))
@@ -71,8 +70,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         if (data.length != 2)
             throw new WiredSaveException("Malformed data string. Invalid data length");
 
-        packet.readInt();
-        int delay = packet.readInt();
+        int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

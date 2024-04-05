@@ -1,8 +1,8 @@
 package com.eu.habbo.habbohotel.catalog;
 
 import com.eu.habbo.Emulator;
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class Voucher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Voucher.class);
 
     public final int id;
     public final String code;
@@ -46,7 +46,7 @@ public class Voucher {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -69,7 +69,7 @@ public class Voucher {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 }

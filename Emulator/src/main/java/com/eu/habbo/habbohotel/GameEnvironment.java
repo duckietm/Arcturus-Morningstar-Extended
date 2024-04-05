@@ -23,10 +23,13 @@ import com.eu.habbo.habbohotel.rooms.RoomManager;
 import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionManager;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionScheduler;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class GameEnvironment {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameEnvironment.class);
+
     public CreditsScheduler creditsScheduler;
     public PixelScheduler pixelScheduler;
     public PointsScheduler pointsScheduler;
@@ -55,7 +58,7 @@ public class GameEnvironment {
     private CalendarManager calendarManager;
 
     public void load() throws Exception {
-        log.info("GameEnvironment -> Loading...");
+        LOGGER.info("GameEnvironment -> Loading...");
 
         this.permissionsManager = new PermissionsManager();
         this.habboManager = new HabboManager();
@@ -97,7 +100,7 @@ public class GameEnvironment {
         this.subscriptionScheduler = new SubscriptionScheduler();
         Emulator.getThreading().run(this.subscriptionScheduler);
 
-        log.info("GameEnvironment -> Loaded!");
+        LOGGER.info("GameEnvironment -> Loaded!");
     }
 
     public void dispose() {
@@ -115,7 +118,7 @@ public class GameEnvironment {
         this.hotelViewManager.dispose();
         this.subscriptionManager.dispose();
         this.calendarManager.dispose();
-        log.info("GameEnvironment -> Disposed!");
+        LOGGER.info("GameEnvironment -> Disposed!");
     }
 
     public HabboManager getHabboManager() {

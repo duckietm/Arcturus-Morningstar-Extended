@@ -5,11 +5,14 @@ import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 
-@Slf4j
 public class MarketPlaceOffer implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MarketPlaceOffer.class);
+
     public int avarage;
     public int count;
     private int offerId;
@@ -67,7 +70,7 @@ public class MarketPlaceOffer implements Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -87,7 +90,7 @@ public class MarketPlaceOffer implements Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -161,7 +164,7 @@ public class MarketPlaceOffer implements Runnable {
                 statement.setInt(3, this.offerId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }

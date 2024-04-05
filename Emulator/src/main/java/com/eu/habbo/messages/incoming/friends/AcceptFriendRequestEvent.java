@@ -6,7 +6,8 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.friends.FriendRequestErrorComposer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,8 +16,8 @@ import java.sql.SQLException;
 
 import static com.eu.habbo.habbohotel.users.HabboManager.getOfflineHabboInfo;
 
-@Slf4j
 public class AcceptFriendRequestEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AcceptFriendRequestEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -53,7 +54,7 @@ public class AcceptFriendRequestEvent extends MessageHandler {
                         }
                     }
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                     return;
                 }
             }

@@ -4,11 +4,14 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
-@Slf4j
 public class PrivateRoomsComposer extends MessageComposer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PrivateRoomsComposer.class);
+
     private final List<Room> rooms;
 
     public PrivateRoomsComposer(List<Room> rooms) {
@@ -42,7 +45,7 @@ public class PrivateRoomsComposer extends MessageComposer {
             this.response.appendString("E");
             return this.response;
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         return null;
     }

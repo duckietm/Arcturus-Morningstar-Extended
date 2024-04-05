@@ -6,7 +6,9 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameGate;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameScoreboard;
+import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTeamItem;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
+import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiPuck;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTeleporter;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTile;
 import com.eu.habbo.habbohotel.items.interactions.games.freeze.InteractionFreezeBlock;
@@ -15,6 +17,7 @@ import com.eu.habbo.habbohotel.items.interactions.games.freeze.InteractionFreeze
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagField;
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagPole;
 import com.eu.habbo.habbohotel.items.interactions.pets.*;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -33,7 +36,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 public class WiredEffectToggleFurni extends InteractionWiredEffect {
@@ -41,7 +43,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
 
     public static final WiredEffectType type = WiredEffectType.TOGGLE_STATE;
 
-    private final CopyOnWriteArraySet<HabboItem> items;
+    private final THashSet<HabboItem> items;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES = new ArrayList<Class<? extends HabboItem>>() {
         {
@@ -85,12 +87,12 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
 
     public WiredEffectToggleFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
-        this.items = new CopyOnWriteArraySet<>();
+        this.items = new THashSet<>();
     }
 
     public WiredEffectToggleFurni(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
-        this.items = new CopyOnWriteArraySet<>();
+        this.items = new THashSet<>();
     }
 
     @Override
@@ -141,11 +143,8 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException {
-        packet.readInt();
-        packet.readString();
-
-        int itemsCount = packet.readInt();
+    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
@@ -154,7 +153,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         List<HabboItem> newItems = new ArrayList<>();
 
         for (int i = 0; i < itemsCount; i++) {
-            int itemId = packet.readInt();
+            int itemId = settings.getFurniIds()[i];
             HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
 
             if(it == null)
@@ -163,7 +162,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
             newItems.add(it);
         }
 
-        int delay = packet.readInt();
+        int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
             throw new WiredSaveException("Delay too long");

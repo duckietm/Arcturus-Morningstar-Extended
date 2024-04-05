@@ -3,14 +3,15 @@ package com.eu.habbo.habbohotel.commands;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.YoutubeManager;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class AddYoutubePlaylistCommand extends Command {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddYoutubePlaylistCommand.class);
 
     public AddYoutubePlaylistCommand() {
         super("cmd_add_youtube_playlist", Emulator.getTexts().getValue("commands.keys.cmd_add_youtube_playlist").split(";"));
@@ -26,7 +27,7 @@ public class AddYoutubePlaylistCommand extends Command {
         int itemId;
 
         try {
-            itemId = Integer.parseInt(params[1]);
+            itemId = Integer.valueOf(params[1]);
         } catch (NumberFormatException e) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_add_youtube_playlist.no_base_item"));
             return true;
@@ -44,7 +45,7 @@ public class AddYoutubePlaylistCommand extends Command {
             return true;
         }
 
-        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(itemId, playlist);
+        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(Integer.valueOf(params[1]), playlist);
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO `youtube_playlists` (`item_id`, `playlist_id`) VALUES (?, ?)")) {
             statement.setInt(1, itemId);
@@ -52,7 +53,7 @@ public class AddYoutubePlaylistCommand extends Command {
 
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_add_youtube_playlist"));

@@ -13,16 +13,21 @@ import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreClearType;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreRow;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreScoreType;
 import com.eu.habbo.messages.ServerMessage;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-@Slf4j
 public class InteractionWiredHighscore extends HabboItem {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InteractionWiredHighscore.class);
+
     public WiredHighscoreScoreType scoreType;
     public WiredHighscoreClearType clearType;
+
     private List<WiredHighscoreRow> data;
+
     public InteractionWiredHighscore(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
 
@@ -35,7 +40,7 @@ public class InteractionWiredHighscore extends HabboItem {
             this.scoreType = WiredHighscoreScoreType.valueOf(name);
             this.clearType = WiredHighscoreClearType.values()[ctype];
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         this.reloadData();
@@ -53,7 +58,7 @@ public class InteractionWiredHighscore extends HabboItem {
             this.scoreType = WiredHighscoreScoreType.valueOf(name);
             this.clearType = WiredHighscoreClearType.values()[ctype];
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         this.reloadData();
@@ -88,7 +93,7 @@ public class InteractionWiredHighscore extends HabboItem {
             this.setExtradata(Math.abs(state - 1) + "");
             room.updateItem(this);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         if(client != null && !(objects.length >= 2 && objects[1] instanceof WiredEffectType)) {

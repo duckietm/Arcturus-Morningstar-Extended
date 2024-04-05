@@ -19,14 +19,18 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.THashSet;
 import gnu.trove.stack.array.TIntArrayStack;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Constructor;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Slf4j
 public class HabboStats implements Runnable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HabboStats.class);
+
     public final TIntArrayList secretRecipes;
     public final HabboNavigatorWindowSettings navigatorWindowSettings;
     public final THashMap<String, Object> cache;
@@ -98,7 +102,7 @@ public class HabboStats implements Runnable {
     public THashSet<Subscription> subscriptions;
 
     private HabboStats(ResultSet set, HabboInfo habboInfo) throws SQLException {
-        this.cache = new THashMap<>(10000);
+        this.cache = new THashMap<>(0);
         this.achievementProgress = new THashMap<>(0);
         this.achievementCache = new THashMap<>(0);
         this.recentPurchases = new THashMap<>(0);
@@ -253,7 +257,7 @@ public class HabboStats implements Runnable {
             statement.setInt(1, habboInfo.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return load(habboInfo);
@@ -312,7 +316,7 @@ public class HabboStats implements Runnable {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return stats;
@@ -396,7 +400,7 @@ public class HabboStats implements Runnable {
 
             this.navigatorWindowSettings.save(connection);
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -519,12 +523,12 @@ public class HabboStats implements Runnable {
                             return sub;
                         }
                         catch (Exception e) {
-                            log.error("Caught exception", e);
+                            LOGGER.error("Caught exception", e);
                         }
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -607,7 +611,7 @@ public class HabboStats implements Runnable {
             statement.setInt(2, roomId);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.favoriteRooms.add(roomId);
@@ -621,7 +625,7 @@ public class HabboStats implements Runnable {
                 statement.setInt(2, roomId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -651,7 +655,7 @@ public class HabboStats implements Runnable {
             statement.setInt(2, id);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.secretRecipes.add(id);
@@ -756,7 +760,7 @@ public class HabboStats implements Runnable {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -773,7 +777,7 @@ public class HabboStats implements Runnable {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }

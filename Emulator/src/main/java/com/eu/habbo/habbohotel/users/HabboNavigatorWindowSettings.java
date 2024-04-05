@@ -4,15 +4,17 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.navigation.DisplayMode;
 import com.eu.habbo.habbohotel.navigation.ListMode;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-@Slf4j
 public class HabboNavigatorWindowSettings {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HabboNavigatorWindowSettings.class);
     public final THashMap<String, HabboNavigatorPersonalDisplayMode> displayModes = new THashMap<>(2);
     private final int userId;
     public int x = 100;
@@ -54,7 +56,7 @@ public class HabboNavigatorWindowSettings {
                 statement.setString(4, displayMode.name().toLowerCase());
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.displayModes.put(category, new HabboNavigatorPersonalDisplayMode(listMode, displayMode));
@@ -115,7 +117,7 @@ public class HabboNavigatorWindowSettings {
                 statement.execute();
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 }

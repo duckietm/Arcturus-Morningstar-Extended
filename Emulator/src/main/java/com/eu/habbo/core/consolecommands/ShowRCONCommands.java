@@ -1,10 +1,11 @@
 package com.eu.habbo.core.consolecommands;
 
 import com.eu.habbo.Emulator;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class ShowRCONCommands extends ConsoleCommand {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShowRCONCommands.class);
 
     public ShowRCONCommands() {
         super("rconcommands", "Show a list of all RCON commands");
@@ -13,7 +14,7 @@ public class ShowRCONCommands extends ConsoleCommand {
     @Override
     public void handle(String[] args) throws Exception {
         for (String command : Emulator.getRconServer().getCommands()) {
-            log.info(command);
+            LOGGER.info(command);
         }
     }
 }

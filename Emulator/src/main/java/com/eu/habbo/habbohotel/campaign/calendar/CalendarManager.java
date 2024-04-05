@@ -5,7 +5,8 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.events.calendar.AdventCalendarProductComposer;
 import com.eu.habbo.plugin.events.users.calendar.UserClaimRewardEvent;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
@@ -13,15 +14,17 @@ import java.util.Date;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-@Slf4j
+
 public class CalendarManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CalendarCampaign.class);
+
     final private static Map<Integer, CalendarCampaign> calendarCampaigns = new THashMap<>();
     public static double HC_MODIFIER;
 
     public CalendarManager() {
         long millis = System.currentTimeMillis();
         this.reload();
-        log.info("Calendar Manager -> Loaded! ({} MS)", (System.currentTimeMillis() - millis));
+        LOGGER.info("Calendar Manager -> Loaded! ({} MS)", (System.currentTimeMillis() - millis));
     }
 
     public void dispose(){
@@ -37,7 +40,7 @@ public class CalendarManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
             return false;
         }
 
@@ -51,7 +54,7 @@ public class CalendarManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
             return false;
         }
 
@@ -82,7 +85,7 @@ public class CalendarManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         calendarCampaigns.put(campaign.getId(), campaign);
@@ -95,7 +98,7 @@ public class CalendarManager {
             statement.setInt(1, campaign.getId());
             return statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return false;
@@ -141,7 +144,7 @@ public class CalendarManager {
                         statement.setInt(5, Emulator.getIntUnixTimestamp());
                         statement.execute();
                     } catch (SQLException e) {
-                        log.error("Caught SQL exception", e);
+                        LOGGER.error("Caught SQL exception", e);
                     }
                 }
             }
