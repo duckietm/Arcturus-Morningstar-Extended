@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming;
 
 public class Incoming {
     public static final int WiredAddonSaveDataEvent = 8000;
+    public static final int ClickFurniEvent = 8001;
     public static final int PongEvent = 2596;
     public static final int ChangeNameCheckUsernameEvent = 3950;
     public static final int ConfirmChangeNameEvent = 2977;

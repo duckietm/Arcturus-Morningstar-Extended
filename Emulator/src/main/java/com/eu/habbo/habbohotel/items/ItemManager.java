@@ -265,7 +265,6 @@ public class ItemManager {
 
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
-        this.interactionsList.add(new ItemInteraction("wf_xtra_one_condition", WiredAddonOneCondition.class));
         this.interactionsList.add(new ItemInteraction("wf_blob", WiredBlob.class));
 
 
@@ -338,6 +337,11 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("totem_leg", InteractionTotemLegs.class));
         this.interactionsList.add(new ItemInteraction("totem_head", InteractionTotemHead.class));
         this.interactionsList.add(new ItemInteraction("totem_planet", InteractionTotemPlanet.class));
+
+        /* Habbo Wireds 2.0 */
+
+        this.interactionsList.add(new ItemInteraction("wf_trg_click_furni", WiredTriggerClickFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_one_condition", WiredAddonOneCondition.class));
     }
 
 
