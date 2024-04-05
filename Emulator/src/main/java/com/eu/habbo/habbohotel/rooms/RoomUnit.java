@@ -325,6 +325,11 @@ public class RoomUnit {
                 zHeight += room.getLayout().getHeightAtSquare(next.x, next.y);
             }
 
+            Optional<HabboItem> stackHelper = this.room.getItemsAt(next).stream().filter(itemS -> itemS instanceof InteractionTileWalkMagic).findAny();
+
+            if (stackHelper.isPresent()) {
+                zHeight = stackHelper.get().getZ();
+            }
 
             this.setPreviousLocation(this.getCurrentLocation());
 

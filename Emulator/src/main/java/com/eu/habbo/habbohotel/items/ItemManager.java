@@ -338,8 +338,9 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("totem_head", InteractionTotemHead.class));
         this.interactionsList.add(new ItemInteraction("totem_planet", InteractionTotemPlanet.class));
 
-        /* Habbo Wireds 2.0 */
+        /* Habbo 2.0 */
 
+        this.interactionsList.add(new ItemInteraction("tile_walk_magic", InteractionTileWalkMagic.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_click_furni", WiredTriggerClickFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_one_condition", WiredAddonOneCondition.class));
     }
