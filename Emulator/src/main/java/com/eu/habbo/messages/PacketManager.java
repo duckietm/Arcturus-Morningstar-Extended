@@ -65,10 +65,7 @@ import com.eu.habbo.messages.incoming.trading.*;
 import com.eu.habbo.messages.incoming.unknown.RequestResolutionEvent;
 import com.eu.habbo.messages.incoming.unknown.UnknownEvent1;
 import com.eu.habbo.messages.incoming.users.*;
-import com.eu.habbo.messages.incoming.wired.WiredApplySetConditionsEvent;
-import com.eu.habbo.messages.incoming.wired.WiredConditionSaveDataEvent;
-import com.eu.habbo.messages.incoming.wired.WiredEffectSaveDataEvent;
-import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
+import com.eu.habbo.messages.incoming.wired.*;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import gnu.trove.map.hash.THashMap;
@@ -581,6 +578,7 @@ public class PacketManager {
         this.registerHandler(Incoming.WiredEffectSaveDataEvent, WiredEffectSaveDataEvent.class);
         this.registerHandler(Incoming.WiredConditionSaveDataEvent, WiredConditionSaveDataEvent.class);
         this.registerHandler(Incoming.WiredApplySetConditionsEvent, WiredApplySetConditionsEvent.class);
+        this.registerHandler(Incoming.WiredAddonSaveDataEvent, WiredAddonSaveDataEvent.class);
     }
 
     void registerUnknown() throws Exception {

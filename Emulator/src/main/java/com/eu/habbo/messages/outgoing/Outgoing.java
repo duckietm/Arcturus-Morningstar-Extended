@@ -1,8 +1,8 @@
 package com.eu.habbo.messages.outgoing;
 
 public class Outgoing {
+    public static final int WiredAddonDataComposer = 5030;
     public static final int PetStatusUpdateComposer = 1907;//error 404
-
     public final static int CfhTopicsMessageComposer = 325;
     public final static int FavoriteRoomsCountComposer = 151;
     public final static int UserCurrencyComposer = 2018;
