@@ -8,14 +8,19 @@ import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.Incoming;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+
 public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoomChatMessage.class);
     private static final String QUERY = "INSERT INTO chatlogs_room (user_from_id, user_to_id, message, timestamp, room_id) VALUES (?, ?, ?, ?, ?)";
+
     private static final List<String> chatColors = Arrays.asList("@red@", "@cyan@", "@blue@", "@green@", "@purple@");
     public static int MAXIMUM_LENGTH = 100;
     //Configuration. Loaded from database & updated accordingly.
@@ -32,11 +37,10 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     private RoomChatMessageBubbles bubble;
     private Habbo targetHabbo;
     private byte emotion;
-    private String RoomChatColour; //Added ChatColor
-
+    private String RoomChatColour;
+    ; //Added ChatColor
 
     public RoomChatMessage(MessageHandler message) {
-
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {
             String data = message.packet.readString();
             this.targetHabbo = message.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(data.split(" ")[0]);
@@ -44,14 +48,13 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         } else {
             this.message = message.packet.readString();
         }
-
         try {
             this.bubble = RoomChatMessageBubbles.getBubble(message.packet.readInt());
         } catch (Exception e) {
             this.bubble = RoomChatMessageBubbles.NORMAL;
         }
 
-        this.RoomChatColour = message.packet.readString(); // Added for Room Chat Colour
+        this.RoomChatColour = message.packet.readString();
 
         if (!message.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
@@ -138,7 +141,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             try {
                 this.message = this.message.substring(0, RoomChatMessage.MAXIMUM_LENGTH - 1);
             } catch (Exception e) {
-              }
+                LOGGER.error("Caught exception", e);
+            }
         }
 
         Emulator.getDatabaseLogger().store(this);
@@ -174,8 +178,6 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
 
     @Override
     public void serialize(ServerMessage message) {
-
-
         if (this.habbo != null && this.bubble.isOverridable()) {
             if (!this.habbo.hasPermission(Permission.ACC_ANYCHATCOLOR)) {
                 for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
@@ -199,10 +201,10 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(this.getEmotion());
             message.appendInt(this.getBubble().getType());
             message.appendInt(0);
-            message.appendString(this.RoomChatColour); //Added packet for Room Chat Color
+            message.appendString(this.RoomChatColour); //Added packet for room chat
             message.appendInt(this.getMessage().length());
-
         } catch (Exception e) {
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -225,6 +227,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
                     if (muteTime > 0) {
                         this.habbo.mute(muteTime, false);
                     } else {
+                        LOGGER.error("Invalid hotel.wordfilter.automute defined in emulator_settings ({}).", muteTime);
                     }
                 }
 

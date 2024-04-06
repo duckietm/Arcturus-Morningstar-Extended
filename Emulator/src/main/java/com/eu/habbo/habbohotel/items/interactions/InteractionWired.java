@@ -16,11 +16,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public abstract class InteractionWired extends InteractionDefault {
     private static final Logger LOGGER = LoggerFactory.getLogger(InteractionWired.class);
     private long cooldown;
-    private TLongLongHashMap userExecutionCache = new TLongLongHashMap(3);
+    private final HashMap<Long,Long> userExecutionCache = new HashMap<>();
 
     InteractionWired(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -76,8 +77,10 @@ public abstract class InteractionWired extends InteractionDefault {
     }
 
     public void activateBox(Room room, RoomUnit roomUnit, long millis) {
-        this.setExtradata(this.getExtradata().equals("1") ? "0" : "1");
-        room.sendComposer(new ItemStateComposer(this).compose());
+        if(!room.isHideWired()) {
+            this.setExtradata(this.getExtradata().equals("1") ? "0" : "1");
+            room.sendComposer(new ItemStateComposer(this).compose());
+        }
         if (roomUnit != null) {
             this.addUserExecutionCache(roomUnit.getId(), millis);
         }
@@ -112,7 +115,7 @@ public abstract class InteractionWired extends InteractionDefault {
         } else {
             if (this.userExecutionCache.containsKey((long)roomUnitId)) {
                 long lastTimestamp = this.userExecutionCache.get((long)roomUnitId);
-                if (timestamp - lastTimestamp < 100L) {
+                if (timestamp - lastTimestamp < Math.max(100L, this.requiredCooldown())) {
                     return false;
                 }
             }

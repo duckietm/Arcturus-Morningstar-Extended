@@ -95,20 +95,15 @@ public class YoutubeManager {
                         final String playlistId = set.getString("playlist_id");
 
                         youtubeDataLoaderPool.submit(() -> {
-                            ArrayList<YoutubePlaylist> playlists = this.playlists.getOrDefault(itemId, new ArrayList<>());
-
                             YoutubePlaylist playlist;
-
                             try {
                                 playlist = this.getPlaylistDataById(playlistId);
                                 if (playlist != null) {
-                                    playlists.add(playlist);
+                                    this.addPlaylistToItem(itemId, playlist);
                                 }
                             } catch (IOException e) {
                                 LOGGER.error("Failed to load YouTube playlist {} ERROR: {}", playlistId, e);
                             }
-
-                            this.playlists.put(itemId, playlists);
                         });
                     }
                 }

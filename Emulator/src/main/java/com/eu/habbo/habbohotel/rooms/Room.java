@@ -213,6 +213,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     private TraxManager traxManager;
     private boolean cycleOdd;
     private long cycleTimestamp;
+    public Map<String, Long> repeatersLastTick = new HashMap<>();
 
     public Room(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

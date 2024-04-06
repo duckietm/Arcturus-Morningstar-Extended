@@ -294,6 +294,10 @@ public class RoomManager {
     public Room loadRoom(int id, boolean loadData) {
         Room room = null;
 
+        if(id == 0) {
+            return null;
+        }
+
         if (this.activeRooms.containsKey(id)) {
             room = this.activeRooms.get(id);
 
@@ -414,7 +418,7 @@ public class RoomManager {
 
     public RoomLayout loadLayout(String name, Room room) {
         RoomLayout layout = null;
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM room_models WHERE name LIKE ? LIMIT 1")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM room_models WHERE name = ? LIMIT 1")) {
             statement.setString(1, name);
             try (ResultSet set = statement.executeQuery()) {
                 if (set.next()) {

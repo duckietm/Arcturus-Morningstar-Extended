@@ -102,7 +102,7 @@ public class HabboStats implements Runnable {
     public THashSet<Subscription> subscriptions;
 
     private HabboStats(ResultSet set, HabboInfo habboInfo) throws SQLException {
-        this.cache = new THashMap<>(0);
+        this.cache = new THashMap<>(1000);
         this.achievementProgress = new THashMap<>(0);
         this.achievementCache = new THashMap<>(0);
         this.recentPurchases = new THashMap<>(0);

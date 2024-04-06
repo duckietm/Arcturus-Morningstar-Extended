@@ -234,7 +234,7 @@ public class WiredHandler {
             executed = true;
             if (!effect.requiresTriggeringUser() || (roomUnit != null && effect.requiresTriggeringUser())) {
                 Emulator.getThreading().run(() -> {
-                    if (room.isLoaded()) {
+                    if (room.isLoaded() && room.getHabbos().size() > 0) {
                         try {
                             if (!effect.execute(roomUnit, room, stuff)) return;
                             effect.setCooldown(millis);

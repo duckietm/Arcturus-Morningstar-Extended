@@ -275,7 +275,13 @@ public class RoomLayout {
 
         RoomTile doorTile = this.room.getLayout().getDoorTile();
 
+        long startMillis = System.currentTimeMillis();
+
         while (!openList.isEmpty()) {
+            if (System.currentTimeMillis() - startMillis > Emulator.getConfig().getInt("pathfinder.execution_time.milli", 25) && Emulator.getConfig().getBoolean("pathfinder.max_execution_time.enabled", false)) {
+                return null;
+            }
+
             RoomTile current = this.lowestFInOpen(openList);
             if (current.x == newTile.x && current.y == newTile.y) {
                 return this.calcPath(this.findTile(openList, oldTile.x, oldTile.y), current);

@@ -183,6 +183,10 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         return this.orderNumber;
     }
 
+    public void setNeedsUpdate(boolean needsUpdate) {
+        this.needsUpdate = needsUpdate;
+    }
+
     public synchronized void sellRare() {
         this.limitedSells++;
 

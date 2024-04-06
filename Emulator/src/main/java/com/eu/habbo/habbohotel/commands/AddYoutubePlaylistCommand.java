@@ -27,7 +27,7 @@ public class AddYoutubePlaylistCommand extends Command {
         int itemId;
 
         try {
-            itemId = Integer.valueOf(params[1]);
+            itemId = Integer.parseInt(params[1]);
         } catch (NumberFormatException e) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_add_youtube_playlist.no_base_item"));
             return true;
@@ -45,7 +45,7 @@ public class AddYoutubePlaylistCommand extends Command {
             return true;
         }
 
-        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(Integer.valueOf(params[1]), playlist);
+        Emulator.getGameEnvironment().getItemManager().getYoutubeManager().addPlaylistToItem(Integer.parseInt(params[1]), playlist);
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO `youtube_playlists` (`item_id`, `playlist_id`) VALUES (?, ?)")) {
             statement.setInt(1, itemId);

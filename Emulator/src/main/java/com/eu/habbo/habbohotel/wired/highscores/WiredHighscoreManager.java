@@ -154,6 +154,18 @@ public class WiredHighscoreManager {
         return false;
     }
 
+    public HashMap<Integer, List<WiredHighscoreDataEntry>> getData() {
+        return this.data;
+    }
+
+    public List<WiredHighscoreDataEntry> getEntriesForItemId(int itemId) {
+        return this.data.get(itemId);
+    }
+
+    public void setEntriesForItemId(int itemId, List<WiredHighscoreDataEntry> entries) {
+        this.data.put(itemId, entries);
+    }
+
     private long getTodayStartTimestamp() {
         return LocalDateTime.now().with(LocalTime.MIDNIGHT).atZone(zoneId).toEpochSecond();
     }
