@@ -139,6 +139,7 @@ public class Incoming {
     public static final int RequestAchievementsEvent = 219;
     public static final int GuildChangeColorsEvent = 1764;
     public static final int RequestInventoryBadgesEvent = 2769;
+    public static final int RequestInventoryItemsDelete = 10018;
     public static final int HotelViewInventoryEvent = 3500;
     public static final int RequestPetBreedsEvent = 1756;
     public static final int GuildChangeBadgeEvent = 1991;

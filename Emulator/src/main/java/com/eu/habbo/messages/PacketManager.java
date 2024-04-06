@@ -35,6 +35,7 @@ import com.eu.habbo.messages.incoming.helper.RequestTalentTrackEvent;
 import com.eu.habbo.messages.incoming.hotelview.*;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryBadgesEvent;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryBotsEvent;
+import com.eu.habbo.messages.incoming.inventory.RequestInventoryItemsDelete;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryItemsEvent;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryPetsEvent;
 import com.eu.habbo.messages.incoming.modtool.*;
@@ -366,6 +367,7 @@ public class PacketManager {
     private void registerInventory() throws Exception {
         this.registerHandler(Incoming.RequestInventoryBadgesEvent, RequestInventoryBadgesEvent.class);
         this.registerHandler(Incoming.RequestInventoryBotsEvent, RequestInventoryBotsEvent.class);
+        this.registerHandler(Incoming.RequestInventoryItemsDelete, RequestInventoryItemsDelete.class);
         this.registerHandler(Incoming.RequestInventoryItemsEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.HotelViewInventoryEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.RequestInventoryPetsEvent, RequestInventoryPetsEvent.class);
