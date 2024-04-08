@@ -3176,10 +3176,13 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 final boolean hasRights = this.hasRights(habbo);
 
                 if (floodRights || !hasRights) {
-                    if (this.chatProtection == 0) {
+                    this.floodMuteHabbo(habbo, muteTime);
+                    return;
+
+                    /*if (this.chatProtection == 0) {
                         this.floodMuteHabbo(habbo, muteTime);
                         return;
-                    } /* else if (this.chatProtection == 1 && chatCounter > 4) {
+                    } else if (this.chatProtection == 1 && chatCounter > 4) {
                         this.floodMuteHabbo(habbo, muteTime);
                         return;
                     } else if (this.chatProtection == 2 && chatCounter > 5) {
