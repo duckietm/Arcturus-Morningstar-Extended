@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -67,17 +68,14 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) {
-        packet.readInt();
-
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
         try {
-            this.respects = Integer.valueOf(packet.readString());
+            this.respects = Integer.parseInt(settings.getStringParam());
         } catch (Exception e) {
             return false;
         }
 
-        packet.readInt();
-        this.setDelay(packet.readInt());
+        this.setDelay(settings.getDelay());
 
         return true;
     }

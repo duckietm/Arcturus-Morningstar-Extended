@@ -2,12 +2,14 @@ package com.eu.habbo.core.consolecommands;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogManager;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 public class ConsoleInfoCommand extends ConsoleCommand {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleInfoCommand.class);
+
     public ConsoleInfoCommand() {
         super("info", "Show current statistics.");
     }
@@ -20,21 +22,21 @@ public class ConsoleInfoCommand extends ConsoleCommand {
         long minute = TimeUnit.SECONDS.toMinutes(seconds) - (TimeUnit.SECONDS.toHours(seconds) * 60);
         long second = TimeUnit.SECONDS.toSeconds(seconds) - (TimeUnit.SECONDS.toMinutes(seconds) * 60);
 
-        log.info("Emulator version: " + Emulator.version);
-        log.info("Emulator build: " + Emulator.build);
+        LOGGER.info("Emulator version: " + Emulator.version);
+        LOGGER.info("Emulator build: " + Emulator.build);
 
-        log.info("");
+        LOGGER.info("");
 
-        log.info("Hotel Statistics");
-        log.info("- Users: " + Emulator.getGameEnvironment().getHabboManager().getOnlineCount());
-        log.info("- Rooms: " + Emulator.getGameEnvironment().getRoomManager().getActiveRooms().size());
-        log.info("- Shop:  " + Emulator.getGameEnvironment().getCatalogManager().catalogPages.size() + " pages and " + CatalogManager.catalogItemAmount + " items.");
-        log.info("- Furni: " + Emulator.getGameEnvironment().getItemManager().getItems().size() + " items.");
-        log.info("");
-        log.info("Server Statistics");
-        log.info("- Uptime: " + day + (day > 1 ? " days, " : " day, ") + hours + (hours > 1 ? " hours, " : " hour, ") + minute + (minute > 1 ? " minutes, " : " minute, ") + second + (second > 1 ? " seconds!" : " second!"));
-        log.info("- RAM Usage: " + (Emulator.getRuntime().totalMemory() - Emulator.getRuntime().freeMemory()) / (1024 * 1024) + "/" + (Emulator.getRuntime().freeMemory()) / (1024 * 1024) + "MB");
-        log.info("- CPU Cores: " + Emulator.getRuntime().availableProcessors());
-        log.info("- Total Memory: " + Emulator.getRuntime().maxMemory() / (1024 * 1024) + "MB");
+        LOGGER.info("Hotel Statistics");
+        LOGGER.info("- Users: " + Emulator.getGameEnvironment().getHabboManager().getOnlineCount());
+        LOGGER.info("- Rooms: " + Emulator.getGameEnvironment().getRoomManager().getActiveRooms().size());
+        LOGGER.info("- Shop:  " + Emulator.getGameEnvironment().getCatalogManager().catalogPages.size() + " pages and " + CatalogManager.catalogItemAmount + " items.");
+        LOGGER.info("- Furni: " + Emulator.getGameEnvironment().getItemManager().getItems().size() + " items.");
+        LOGGER.info("");
+        LOGGER.info("Server Statistics");
+        LOGGER.info("- Uptime: " + day + (day > 1 ? " days, " : " day, ") + hours + (hours > 1 ? " hours, " : " hour, ") + minute + (minute > 1 ? " minutes, " : " minute, ") + second + (second > 1 ? " seconds!" : " second!"));
+        LOGGER.info("- RAM Usage: " + (Emulator.getRuntime().totalMemory() - Emulator.getRuntime().freeMemory()) / (1024 * 1024) + "/" + (Emulator.getRuntime().freeMemory()) / (1024 * 1024) + "MB");
+        LOGGER.info("- CPU Cores: " + Emulator.getRuntime().availableProcessors());
+        LOGGER.info("- Total Memory: " + Emulator.getRuntime().maxMemory() / (1024 * 1024) + "MB");
     }
 }

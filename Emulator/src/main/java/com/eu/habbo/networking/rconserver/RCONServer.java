@@ -9,22 +9,29 @@ import gnu.trove.map.hash.THashMap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Slf4j
 public class RCONServer extends Server {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RCONServer.class);
+
     private final THashMap<String, Class<? extends RCONMessage>> messages;
     private final GsonBuilder gsonBuilder;
     List<String> allowedAdresses = new ArrayList<>();
 
     public RCONServer(String host, int port) throws Exception {
         super("RCON Server", host, port, 1, 2);
+
         this.messages = new THashMap<>();
+
         this.gsonBuilder = new GsonBuilder();
         this.gsonBuilder.registerTypeAdapter(RCONMessage.class, new RCONMessage.RCONMessageSerializer());
+
         this.addRCONMessage("alertuser", AlertUser.class);
         this.addRCONMessage("disconnect", DisconnectUser.class);
         this.addRCONMessage("forwarduser", ForwardUser.class);
@@ -86,19 +93,19 @@ public class RCONServer extends Server {
                 RCONMessage rcon = message.getDeclaredConstructor().newInstance();
                 Gson gson = this.gsonBuilder.create();
                 rcon.handle(gson, gson.fromJson(body, rcon.type));
-                log.info("Handled RCON Message: {}", message.getSimpleName());
+                LOGGER.info("Handled RCON Message: {}", message.getSimpleName());
                 result = gson.toJson(rcon, RCONMessage.class);
 
                 if (Emulator.debugging) {
-                    log.debug("RCON Data {} RCON Result {}", body, result);
+                    LOGGER.debug("RCON Data {} RCON Result {}", body, result);
                 }
 
                 return result;
             } catch (Exception ex) {
-                log.error("Failed to handle RCONMessage", ex);
+                LOGGER.error("Failed to handle RCONMessage", ex);
             }
         } else {
-            log.error("Couldn't find: {}", key);
+            LOGGER.error("Couldn't find: {}", key);
         }
 
         throw new ArrayIndexOutOfBoundsException("Unhandled RCON Message");

@@ -3,10 +3,11 @@ package com.eu.habbo.database;
 import com.eu.habbo.core.ConfigurationManager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 class DatabasePool {
+    private final Logger log = LoggerFactory.getLogger(DatabasePool.class);
     private static final String DB_POOL_MAX_SIZE = "db.pool.maxsize";
     private static final String DB_POOL_MIN_SIZE = "db.pool.minsize";
     private static final String DB_HOSTNAME_KEY = "db.hostname";

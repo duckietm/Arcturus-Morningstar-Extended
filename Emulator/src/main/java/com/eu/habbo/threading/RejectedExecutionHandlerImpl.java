@@ -1,14 +1,16 @@
 package com.eu.habbo.threading;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@Slf4j
 public class RejectedExecutionHandlerImpl implements RejectedExecutionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RejectedExecutionHandlerImpl.class);
 
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-        log.error(r.toString() + " is rejected");
+        LOGGER.error(r.toString() + " is rejected");
     }
 }

@@ -1,18 +1,23 @@
 package com.eu.habbo.core;
 
 import com.eu.habbo.Emulator;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class ErrorLog implements DatabaseLoggable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ErrorLog.class);
     private static final String QUERY = "INSERT INTO emulator_errors (timestamp, version, build_hash, type, stacktrace) VALUES (?, ?, ?, ?, ?)";
+
     public final String version;
     public final String buildHash;
+
     public final int timeStamp;
     public final String type;
     public final String stackTrace;
@@ -33,7 +38,7 @@ public class ErrorLog implements DatabaseLoggable {
             pw.close();
             sw.close();
         } catch (IOException e1) {
-            log.error("Exception caught", e1);
+            LOGGER.error("Exception caught", e1);
         }
     }
 

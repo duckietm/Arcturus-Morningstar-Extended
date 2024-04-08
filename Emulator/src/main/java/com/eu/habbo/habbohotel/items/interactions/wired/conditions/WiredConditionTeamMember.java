@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 import com.eu.habbo.habbohotel.games.GameTeamColors;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -91,10 +92,9 @@ public class WiredConditionTeamMember extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-
-        this.teamColor = GameTeamColors.values()[packet.readInt()];
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 1) return false;
+        this.teamColor = GameTeamColors.values()[settings.getIntParams()[0]];
 
         return true;
     }

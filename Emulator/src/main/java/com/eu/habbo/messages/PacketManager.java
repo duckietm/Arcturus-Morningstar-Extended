@@ -35,9 +35,9 @@ import com.eu.habbo.messages.incoming.helper.RequestTalentTrackEvent;
 import com.eu.habbo.messages.incoming.hotelview.*;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryBadgesEvent;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryBotsEvent;
+import com.eu.habbo.messages.incoming.inventory.RequestInventoryItemsDelete;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryItemsEvent;
 import com.eu.habbo.messages.incoming.inventory.RequestInventoryPetsEvent;
-import com.eu.habbo.messages.incoming.inventory.RequestInventoryItemsDelete;
 import com.eu.habbo.messages.incoming.modtool.*;
 import com.eu.habbo.messages.incoming.navigator.*;
 import com.eu.habbo.messages.incoming.polls.AnswerPollEvent;
@@ -72,12 +72,16 @@ import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class PacketManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PacketManager.class);
+
     private static final List<Integer> logList = new ArrayList<>();
     public static boolean DEBUG_SHOW_PACKETS = false;
     public static boolean MULTI_THREADED_PACKET_HANDLING = false;
@@ -173,7 +177,7 @@ public class PacketManager {
 
                 if (client.getHabbo() == null && !handlerClass.isAnnotationPresent(NoAuthMessage.class)) {
                     if (DEBUG_SHOW_PACKETS) {
-                        log.warn("Client packet {} requires an authenticated session.", packet.getMessageId());
+                        LOGGER.warn("Client packet {} requires an authenticated session.", packet.getMessageId());
                     }
 
                     return;
@@ -184,7 +188,7 @@ public class PacketManager {
                 if (handler.getRatelimit() > 0) {
                     if (client.messageTimestamps.containsKey(handlerClass) && System.currentTimeMillis() - client.messageTimestamps.get(handlerClass) < handler.getRatelimit()) {
                         if (PacketManager.DEBUG_SHOW_PACKETS) {
-                            log.warn("Client packet {} was ratelimited.", packet.getMessageId());
+                            LOGGER.warn("Client packet {} was ratelimited.", packet.getMessageId());
                         }
 
                         return;
@@ -194,7 +198,7 @@ public class PacketManager {
                 }
 
                 if (logList.contains(packet.getMessageId()) && client.getHabbo() != null) {
-                    log.info("User {} sent packet {} with body {}", client.getHabbo().getHabboInfo().getUsername(), packet.getMessageId(), packet.getMessageBody());
+                    LOGGER.info("User {} sent packet {} with body {}", client.getHabbo().getHabboInfo().getUsername(), packet.getMessageId(), packet.getMessageBody());
                 }
 
                 handler.client = client;
@@ -211,7 +215,7 @@ public class PacketManager {
                 }
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 
@@ -283,7 +287,6 @@ public class PacketManager {
         this.registerHandler(Incoming.AcceptFriendRequest, AcceptFriendRequestEvent.class);
         this.registerHandler(Incoming.DeclineFriendRequest, DeclineFriendRequestEvent.class);
         this.registerHandler(Incoming.FriendPrivateMessageEvent, FriendPrivateMessageEvent.class);
-        this.registerHandler(Incoming.FriendListUpdateEvent, FriendListUpdateEvent.class);
         this.registerHandler(Incoming.RequestFriendRequestEvent, RequestFriendRequestsEvent.class);
         this.registerHandler(Incoming.StalkFriendEvent, StalkFriendEvent.class);
         this.registerHandler(Incoming.RequestInitFriendsEvent, RequestInitFriendsEvent.class);
@@ -310,7 +313,6 @@ public class PacketManager {
         this.registerHandler(Incoming.SaveIgnoreRoomInvitesEvent, SaveIgnoreRoomInvitesEvent.class);
         this.registerHandler(Incoming.SavePreferOldChatEvent, SavePreferOldChatEvent.class);
         this.registerHandler(Incoming.ActivateEffectEvent, ActivateEffectEvent.class);
-        this.registerHandler(Incoming.PerformanceLogMessageEvent, PerformanceLogMessageEvent.class);
         this.registerHandler(Incoming.EnableEffectEvent, EnableEffectEvent.class);
         this.registerHandler(Incoming.UserActivityEvent, UserActivityEvent.class);
         this.registerHandler(Incoming.UserNuxEvent, UserNuxEvent.class);
@@ -365,10 +367,10 @@ public class PacketManager {
     private void registerInventory() throws Exception {
         this.registerHandler(Incoming.RequestInventoryBadgesEvent, RequestInventoryBadgesEvent.class);
         this.registerHandler(Incoming.RequestInventoryBotsEvent, RequestInventoryBotsEvent.class);
+        this.registerHandler(Incoming.RequestInventoryItemsDelete, RequestInventoryItemsDelete.class);
         this.registerHandler(Incoming.RequestInventoryItemsEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.HotelViewInventoryEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.RequestInventoryPetsEvent, RequestInventoryPetsEvent.class);
-        this.registerHandler(Incoming.RequestInventoryItemsDelete, RequestInventoryItemsDelete.class);
     }
 
     void registerRooms() throws Exception {

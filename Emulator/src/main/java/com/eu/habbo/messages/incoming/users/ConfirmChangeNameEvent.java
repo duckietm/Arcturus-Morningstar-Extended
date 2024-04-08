@@ -10,7 +10,8 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserNameChangedComposer;
 import com.eu.habbo.messages.outgoing.users.ChangeNameCheckResultComposer;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.eu.habbo.plugin.events.users.UserNameChangedEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,8 +19,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class ConfirmChangeNameEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmChangeNameEvent.class);
 
     public static final List<String> changingUsernames = new ArrayList<>(2);
 
@@ -83,7 +84,7 @@ public class ConfirmChangeNameEvent extends MessageHandler {
                     statement.setInt(4, Emulator.getIntUnixTimestamp());
                     statement.execute();
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 }
             } else {
                 this.client.sendResponse(new ChangeNameCheckResultComposer(ChangeNameCheckResultComposer.TAKEN_WITH_SUGGESTIONS, name, new ArrayList<>()));

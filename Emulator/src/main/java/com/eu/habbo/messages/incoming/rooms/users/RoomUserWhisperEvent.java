@@ -6,10 +6,11 @@ import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
 import com.eu.habbo.habbohotel.rooms.RoomChatType;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.plugin.events.users.UserTalkEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RoomUserWhisperEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoomUserWhisperEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -34,7 +35,7 @@ public class RoomUserWhisperEvent extends MessageHandler {
         } else {
             String reportMessage = Emulator.getTexts().getValue("scripter.warning.chat.length").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%length%", chatMessage.getMessage().length() + "");
             ScripterManager.scripterDetected(this.client, reportMessage);
-            log.info(reportMessage);
+            LOGGER.info(reportMessage);
         }
     }
 }

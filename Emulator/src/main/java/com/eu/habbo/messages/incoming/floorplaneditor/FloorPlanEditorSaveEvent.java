@@ -15,8 +15,8 @@ import gnu.trove.set.hash.THashSet;
 import java.util.*;
 
 public class FloorPlanEditorSaveEvent extends MessageHandler {
-    public static int MAXIMUM_FLOORPLAN_WIDTH_LENGTH = 100;
-    public static int MAXIMUM_FLOORPLAN_SIZE = 100 * 100;
+    public static int MAXIMUM_FLOORPLAN_WIDTH_LENGTH = 64;
+    public static int MAXIMUM_FLOORPLAN_SIZE = 64 * 64;
 
     @Override
     public void handle() throws Exception {

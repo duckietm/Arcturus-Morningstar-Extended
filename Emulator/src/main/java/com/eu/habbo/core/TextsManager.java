@@ -1,13 +1,15 @@
 package com.eu.habbo.core;
 
 import com.eu.habbo.Emulator;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Properties;
 
-@Slf4j
 public class TextsManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextsManager.class);
 
     private final Properties texts;
 
@@ -19,7 +21,7 @@ public class TextsManager {
         try {
             this.reload();
 
-            log.info("Texts Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+            LOGGER.info("Texts Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -35,7 +37,7 @@ public class TextsManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -45,7 +47,7 @@ public class TextsManager {
 
     public String getValue(String key, String defaultValue) {
         if (!this.texts.containsKey(key)) {
-            log.error("Text key not found: {}", key);
+            LOGGER.error("Text key not found: {}", key);
         }
         return this.texts.getProperty(key, defaultValue);
     }
@@ -58,7 +60,7 @@ public class TextsManager {
         try {
             return (this.getValue(key, "0").equals("1")) || (this.getValue(key, "false").equals("true"));
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         return defaultValue;
     }
@@ -71,7 +73,7 @@ public class TextsManager {
         try {
             return Integer.parseInt(this.getValue(key, defaultValue.toString()));
         } catch (NumberFormatException e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         return defaultValue;
     }
@@ -89,7 +91,7 @@ public class TextsManager {
             statement.setString(2, value);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.update(key, value);

@@ -2,13 +2,16 @@ package com.eu.habbo.threading.runnables;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 class QueryDeleteHabboBadge implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryDeleteHabboBadge.class);
+
     private final String name;
     private final Habbo habbo;
 
@@ -24,7 +27,7 @@ class QueryDeleteHabboBadge implements Runnable {
             statement.setString(2, this.name);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 }

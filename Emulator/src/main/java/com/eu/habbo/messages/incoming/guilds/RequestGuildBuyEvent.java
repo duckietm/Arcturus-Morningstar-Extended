@@ -13,10 +13,12 @@ import com.eu.habbo.messages.outgoing.guilds.GuildBoughtComposer;
 import com.eu.habbo.messages.outgoing.guilds.GuildEditFailComposer;
 import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
 import com.eu.habbo.plugin.events.guilds.GuildPurchasedEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RequestGuildBuyEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestGuildBuyEvent.class);
+
     @Override
     public void handle() throws Exception {
         String name = this.packet.readString();
@@ -86,7 +88,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
                     }
                     Guild guild = Emulator.getGameEnvironment().getGuildManager().createGuild(this.client.getHabbo(), roomId, r.getName(), name, description, badge, colorOne, colorTwo);
 
-                    r.setGuildId(guild.getId());
+                    r.setGuild(guild.getId());
                     r.removeAllRights();
                     r.setNeedsUpdate(true);
 
@@ -108,7 +110,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
             } else {
                 String message = Emulator.getTexts().getValue("scripter.warning.guild.buy.owner").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%roomname%", r.getName().replace("%owner%", r.getOwnerName()));
                 ScripterManager.scripterDetected(this.client, message);
-                log.info(message);
+                LOGGER.info(message);
             }
         }
     }

@@ -22,7 +22,7 @@ public class FindNewFriendsEvent extends MessageHandler {
             if (!rooms.isEmpty()) {
                 Room room = rooms.get(0);
 
-                if (room.getUserCountWithoutInvisibleHabbos() > 0) {
+                if (room.getUserCount() > 0) {
                     this.client.sendResponse(new ForwardToRoomComposer(room.getId()));
                     return;
                 }

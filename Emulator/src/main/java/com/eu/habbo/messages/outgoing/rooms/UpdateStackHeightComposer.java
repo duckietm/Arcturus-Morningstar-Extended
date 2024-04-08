@@ -8,6 +8,8 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.set.hash.THashSet;
 
+import java.util.Objects;
+
 public class UpdateStackHeightComposer extends MessageComposer {
     private int x;
     private int y;
@@ -34,6 +36,7 @@ public class UpdateStackHeightComposer extends MessageComposer {
         //TODO: maybe do this another way? doesn't seem to be very clean but gets the job done
         this.response.init(Outgoing.UpdateStackHeightComposer);
         if (this.updateTiles != null) {
+            this.updateTiles.removeIf(Objects::isNull);
             // prevent overflow. Byte max value is 127
             if(this.updateTiles.size() > 127) {
                 RoomTile[] tiles = this.updateTiles.toArray(new RoomTile[updateTiles.size()]);

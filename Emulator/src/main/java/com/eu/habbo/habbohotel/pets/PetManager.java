@@ -19,15 +19,17 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.procedure.TIntObjectProcedure;
 import gnu.trove.set.hash.THashSet;
 import org.apache.commons.math3.distribution.NormalDistribution;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-@Slf4j
 public class PetManager {
     public static int MAXIMUM_PET_INVENTORY_SIZE = 25;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PetManager.class);
     public static final int[] experiences = new int[]{100, 200, 400, 600, 900, 1300, 1800, 2400, 3200, 4300, 5700, 7600, 10100, 13300, 17500, 23000, 30200, 39600, 51900};
     static int[] skins = new int[]{0, 1, 6, 7};
     public final THashMap<Integer, PetAction> petActions = new THashMap<Integer, PetAction>() {
@@ -81,7 +83,7 @@ public class PetManager {
 
         reloadPetData();
 
-        log.info("Pet Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Pet Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public static int getLevel(int experience) {
@@ -152,8 +154,8 @@ public class PetManager {
             this.loadPetCommands(connection);
             this.loadPetBreeding(connection);
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
-            log.error("Pet Manager -> Failed to load!");
+            LOGGER.error("Caught SQL exception", e);
+            LOGGER.error("Pet Manager -> Failed to load!");
         }
     }
 
@@ -168,7 +170,7 @@ public class PetManager {
                 this.petRaces.get(set.getInt("race")).add(new PetRace(set));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -178,7 +180,7 @@ public class PetManager {
                 this.petData.put(set.getInt("pet_type"), new PetData(set));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         this.loadPetItems(connection);
@@ -218,7 +220,7 @@ public class PetManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -232,10 +234,10 @@ public class PetManager {
                         if (petVocalsType != null) {
                             this.petData.get(set.getInt("pet_id")).petVocals.get(petVocalsType).add(new PetVocal(set.getString("message")));
                         } else {
-                            log.error("Unknown pet vocal type " + set.getString("type"));
+                            LOGGER.error("Unknown pet vocal type " + set.getString("type"));
                         }
                     } else {
-                        log.error("Missing pet_actions table entry for pet id " + set.getInt("pet_id"));
+                        LOGGER.error("Missing pet_actions table entry for pet id " + set.getInt("pet_id"));
                     }
                 } else {
                     if (!PetData.generalPetVocals.containsKey(PetVocalsType.valueOf(set.getString("type").toUpperCase())))
@@ -245,7 +247,7 @@ public class PetManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -256,7 +258,7 @@ public class PetManager {
                 commandsList.put(set.getInt("command_id"), new PetCommand(set, this.petActions.get(set.getInt("command_id"))));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM pet_commands ORDER BY pet_id ASC")) {
@@ -268,7 +270,7 @@ public class PetManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -278,7 +280,7 @@ public class PetManager {
                 this.breedingPetType.put(set.getInt("pet_id"), set.getInt("offspring_id"));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM pet_breeding_races")) {
@@ -295,13 +297,13 @@ public class PetManager {
                 this.breedingReward.get(reward.petType).get(reward.rarityLevel).add(reward);
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
     public THashSet<PetRace> getBreeds(String petName) {
         if (!petName.startsWith("a0 pet")) {
-            log.error("Pet " + petName + " not found. Make sure it matches the pattern \"a0 pet<pet_id>\"!");
+            LOGGER.error("Pet " + petName + " not found. Make sure it matches the pattern \"a0 pet<pet_id>\"!");
             return null;
         }
 
@@ -309,7 +311,7 @@ public class PetManager {
             int petId = Integer.valueOf(petName.split("t")[1]);
             return this.petRaces.get(petId);
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return null;
@@ -347,7 +349,7 @@ public class PetManager {
                 return this.petData.get(type);
             } else {
                 try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
-                    log.error("Missing petdata for type " + type + ". Adding this to the database...");
+                    LOGGER.error("Missing petdata for type " + type + ". Adding this to the database...");
                     try (PreparedStatement statement = connection.prepareStatement("INSERT INTO pet_actions (pet_type) VALUES (?)")) {
                         statement.setInt(1, type);
                         statement.execute();
@@ -359,13 +361,13 @@ public class PetManager {
                             if (set.next()) {
                                 PetData petData = new PetData(set);
                                 this.petData.put(type, petData);
-                                log.error("Missing petdata for type " + type + " added to the database!");
+                                LOGGER.error("Missing petdata for type " + type + " added to the database!");
                                 return petData;
                             }
                         }
                     }
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 }
             }
         }
@@ -512,7 +514,7 @@ public class PetManager {
             statement.setInt(1, pet.getId());
             return statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return false;

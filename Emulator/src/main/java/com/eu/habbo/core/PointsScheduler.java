@@ -2,11 +2,15 @@ package com.eu.habbo.core;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
-@Slf4j
 public class PointsScheduler extends Scheduler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PointsScheduler.class);
+
     public static boolean IGNORE_HOTEL_VIEW;
     public static boolean IGNORE_IDLED;
     public static double HC_MODIFIER;
@@ -51,7 +55,7 @@ public class PointsScheduler extends Scheduler {
                     habbo.givePoints((int)(habbo.getHabboInfo().getRank().getDiamondsTimerAmount() * (habbo.getHabboStats().hasActiveClub() ? HC_MODIFIER : 1.0)));
                 }
             } catch (Exception e) {
-                log.error("Caught exception", e);
+                LOGGER.error("Caught exception", e);
             }
         }
     }

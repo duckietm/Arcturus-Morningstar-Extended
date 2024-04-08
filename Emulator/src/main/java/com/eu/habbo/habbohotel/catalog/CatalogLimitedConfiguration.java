@@ -3,7 +3,8 @@ package com.eu.habbo.habbohotel.catalog;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,8 +12,9 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedList;
 
-@Slf4j
 public class CatalogLimitedConfiguration implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogLimitedConfiguration.class);
+
     private final int itemId;
     private final LinkedList<Integer> limitedNumbers;
     private int totalSet;
@@ -49,7 +51,7 @@ public class CatalogLimitedConfiguration implements Runnable {
                 statement.setInt(5, item.getLimitedSells());
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -67,7 +69,7 @@ public class CatalogLimitedConfiguration implements Runnable {
 
                 statement.executeBatch();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.totalSet += amount;
@@ -100,7 +102,7 @@ public class CatalogLimitedConfiguration implements Runnable {
             statement.setInt(3, this.itemId);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 }

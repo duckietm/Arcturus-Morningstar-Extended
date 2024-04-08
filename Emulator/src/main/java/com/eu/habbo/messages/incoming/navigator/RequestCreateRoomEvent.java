@@ -7,10 +7,13 @@ import com.eu.habbo.habbohotel.rooms.RoomManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.CanCreateRoomComposer;
 import com.eu.habbo.messages.outgoing.navigator.RoomCreatedComposer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class RequestCreateRoomEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestCreateRoomEvent.class);
+
+
     @Override
     public void handle() throws Exception {
         String name = this.packet.readString();
@@ -21,14 +24,14 @@ public class RequestCreateRoomEvent extends MessageHandler {
         int tradeType = this.packet.readInt();
 
         if (!Emulator.getGameEnvironment().getRoomManager().layoutExists(modelName)) {
-            log.error("[SCRIPTER] Incorrect layout name \"" + modelName + "\". " + this.client.getHabbo().getHabboInfo().getUsername());
+            LOGGER.error("[SCRIPTER] Incorrect layout name \"" + modelName + "\". " + this.client.getHabbo().getHabboInfo().getUsername());
             return;
         }
 
         RoomCategory category = Emulator.getGameEnvironment().getRoomManager().getCategory(categoryId);
 
         if (category == null || category.getMinRank() > this.client.getHabbo().getHabboInfo().getRank().getId()) {
-            log.error("[SCRIPTER] Incorrect rank or non existing category ID: \"" + categoryId + "\"." + this.client.getHabbo().getHabboInfo().getUsername());
+            LOGGER.error("[SCRIPTER] Incorrect rank or non existing category ID: \"" + categoryId + "\"." + this.client.getHabbo().getHabboInfo().getUsername());
             return;
         }
 

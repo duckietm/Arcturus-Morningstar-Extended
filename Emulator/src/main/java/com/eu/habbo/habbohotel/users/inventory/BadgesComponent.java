@@ -5,7 +5,8 @@ import com.eu.habbo.habbohotel.permissions.Rank;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboBadge;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,8 +16,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Set;
 
-@Slf4j
 public class BadgesComponent {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BadgesComponent.class);
 
     private final THashSet<HabboBadge> badges = new THashSet<>();
 
@@ -54,7 +55,7 @@ public class BadgesComponent {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return badgesList;
@@ -81,7 +82,7 @@ public class BadgesComponent {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
         return badgesList;
     }
@@ -99,7 +100,7 @@ public class BadgesComponent {
             statement.setString(2, badge);
             statement.execute();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 

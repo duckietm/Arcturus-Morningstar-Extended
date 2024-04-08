@@ -11,15 +11,18 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
 import com.eu.habbo.plugin.events.navigator.NavigatorRoomDeletedEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class RequestDeleteRoomEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestDeleteRoomEvent.class);
+
     @Override
     public void handle() throws Exception {
         int roomId = this.packet.readInt();
@@ -106,12 +109,12 @@ public class RequestDeleteRoomEvent extends MessageHandler {
                         filter.execute();
                     }
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 }
             } else {
                 String message = Emulator.getTexts().getValue("scripter.warning.room.delete").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%roomname%", room.getName()).replace("%roomowner%", room.getOwnerName());
                 ScripterManager.scripterDetected(this.client, message);
-                log.info(message);
+                LOGGER.info(message);
             }
         }
     }

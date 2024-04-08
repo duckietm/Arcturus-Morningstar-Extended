@@ -7,8 +7,6 @@ public class FurnitureRedeemedEvent extends FurnitureUserEvent {
     public static final int CREDITS = -1;
     public static final int PIXELS = 0;
     public static final int DIAMONDS = 5;
-    public static final int NFT = 4;
-
 
     public final int amount;
     public final int currencyID;

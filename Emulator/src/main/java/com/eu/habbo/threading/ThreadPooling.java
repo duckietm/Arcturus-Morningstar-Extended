@@ -2,25 +2,26 @@ package com.eu.habbo.threading;
 
 import com.eu.habbo.Emulator;
 import io.netty.util.concurrent.DefaultThreadFactory;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 public class ThreadPooling {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadPooling.class);
 
     public final int threads;
     private final ScheduledExecutorService scheduledPool;
     private volatile boolean canAdd;
 
-
     public ThreadPooling(Integer threads) {
         this.threads = threads;
         this.scheduledPool = new HabboExecutorService(this.threads, new DefaultThreadFactory("HabExec"));
         this.canAdd = true;
-        log.info("Thread Pool -> Loaded!");
+        LOGGER.info("Thread Pool -> Loaded!");
     }
 
     public ScheduledFuture run(Runnable run) {
@@ -33,7 +34,7 @@ public class ThreadPooling {
                 }
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return null;
@@ -46,12 +47,12 @@ public class ThreadPooling {
                     try {
                         run.run();
                     } catch (Exception e) {
-                        log.error("Caught exception", e);
+                        LOGGER.error("Caught exception", e);
                     }
                 }, delay, TimeUnit.MILLISECONDS);
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return null;
@@ -61,11 +62,11 @@ public class ThreadPooling {
         this.canAdd = false;
         this.scheduledPool.shutdownNow();
 
-        log.info("Threading -> Disposed!");
+        LOGGER.info("Threading -> Disposed!");
     }
 
     public void setCanAdd(boolean canAdd) {
-            this.canAdd = canAdd;
+        this.canAdd = canAdd;
     }
 
     public ScheduledExecutorService getService() {

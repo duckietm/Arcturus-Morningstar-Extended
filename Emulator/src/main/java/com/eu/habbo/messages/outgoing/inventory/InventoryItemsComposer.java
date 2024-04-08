@@ -8,12 +8,15 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.procedure.TIntObjectProcedure;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.List;
 
-@Slf4j
 public class InventoryItemsComposer extends MessageComposer implements TIntObjectProcedure<HabboItem> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryItemsComposer.class);
+
     private final int fragmentNumber;
     private final int totalFragments;
     private final TIntObjectMap<HabboItem> items;
@@ -35,7 +38,7 @@ public class InventoryItemsComposer extends MessageComposer implements TIntObjec
             this.items.forEachEntry(this);
             return this.response;
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
 
         return null;

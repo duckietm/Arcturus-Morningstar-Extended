@@ -13,7 +13,9 @@ import com.eu.habbo.messages.outgoing.rooms.pets.PetStatusUpdateComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetRespectComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import org.apache.commons.math3.util.Pair;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,8 +24,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Slf4j
 public class MonsterplantPet extends Pet implements IPetLook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonsterplantPet.class);
+
     public static final Map<Integer, Pair<String, Integer>> bodyRarity = new LinkedHashMap<Integer, Pair<String, Integer>>() {
         {
             this.put(1, new Pair<>("Blungon", 0));
@@ -139,7 +142,7 @@ public class MonsterplantPet extends Pet implements IPetLook {
                 statement.setInt(13, this.id);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }

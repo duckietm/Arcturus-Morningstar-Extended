@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
@@ -81,11 +82,9 @@ public class WiredConditionLessTimeElapsed extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-
-        this.cycles = packet.readInt();
-
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 1) return false;
+        this.cycles = settings.getIntParams()[0];
         return true;
     }
 

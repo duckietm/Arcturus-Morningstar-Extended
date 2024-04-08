@@ -9,8 +9,8 @@ import com.eu.habbo.plugin.events.users.UserTriggerWordFilterEvent;
 import gnu.trove.iterator.hash.TObjectHashIterator;
 import gnu.trove.set.hash.THashSet;
 import org.apache.commons.lang3.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,8 +19,8 @@ import java.sql.Statement;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
 
-@Slf4j
 public class WordFilter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WordFilter.class);
 
     private static final Pattern DIACRITICS_AND_FRIENDS = Pattern.compile("[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
     //Configuration. Loaded from database & updated accordingly.
@@ -33,7 +33,7 @@ public class WordFilter {
     public WordFilter() {
         long start = System.currentTimeMillis();
         this.reload();
-        log.info("WordFilter -> Loaded! (" + (System.currentTimeMillis() - start) + " MS)");
+        LOGGER.info("WordFilter -> Loaded! (" + (System.currentTimeMillis() - start) + " MS)");
     }
 
     private static String stripDiacritics(String str) {
@@ -58,7 +58,7 @@ public class WordFilter {
                     try {
                         word = new WordFilterWord(set);
                     } catch (SQLException e) {
-                        log.error("Caught SQL exception", e);
+                        LOGGER.error("Caught SQL exception", e);
                         continue;
                     }
 
@@ -71,7 +71,7 @@ public class WordFilter {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -150,7 +150,7 @@ public class WordFilter {
                     if (Emulator.getPluginManager().fireEvent(new UserTriggerWordFilterEvent(habbo, word)).isCancelled())
                         continue;
                 }
-                filteredMessage = filteredMessage.replaceAll("(?i)" + Pattern.quote(word.key), word.replacement);
+                filteredMessage = filteredMessage.replace("(?i)" + word.key, word.replacement);
                 foundShit = true;
 
                 if (habbo != null && word.muteTime > 0) {
@@ -184,7 +184,7 @@ public class WordFilter {
                         continue;
                 }
 
-                 message = message.replaceAll("(?i)" + Pattern.quote(word.key), word.replacement);
+                message = message.replace(word.key, word.replacement);
                 roomChatMessage.filtered = true;
             }
         }

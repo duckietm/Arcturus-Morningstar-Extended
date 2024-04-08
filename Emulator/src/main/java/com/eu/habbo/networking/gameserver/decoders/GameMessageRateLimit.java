@@ -8,12 +8,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class GameMessageRateLimit extends MessageToMessageDecoder<ClientMessage> {
+
     private static final int RESET_TIME = 1;
     private static final int MAX_COUNTER = 10;
-    private static final Logger logger = Logger.getLogger(GameMessageRateLimit.class.getName());
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ClientMessage message, List<Object> out) throws Exception {
@@ -23,22 +22,28 @@ public class GameMessageRateLimit extends MessageToMessageDecoder<ClientMessage>
             return;
         }
 
+        int count = 0;
+
+        // Check if reset time has passed.
         int timestamp = Emulator.getIntUnixTimestamp();
         if (timestamp - client.lastPacketCounterCleared > RESET_TIME) {
+            // Reset counter.
             client.incomingPacketCounter.clear();
             client.lastPacketCounterCleared = timestamp;
+        } else {
+            // Get stored count for message id.
+            count = client.incomingPacketCounter.getOrDefault(message.getMessageId(), 0);
         }
 
-        int count = client.incomingPacketCounter.getOrDefault(message.getMessageId(), 0);
-
+        // If we exceeded the counter, drop the packet.
         if (count > MAX_COUNTER) {
-            String userIP = ctx.channel().remoteAddress().toString();
-            logger.warning(String.format("User with IP %s exceeded the message rate limit for message ID %s", userIP, message.getMessageId()));
             return;
         }
 
-        client.incomingPacketCounter.put(message.getMessageId(), count + 1);
+        client.incomingPacketCounter.put(message.getMessageId(), ++count);
 
+        // Continue processing.
         out.add(message);
     }
+
 }

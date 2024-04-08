@@ -2,10 +2,10 @@ package com.eu.habbo.habbohotel.items.interactions;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.wired.WiredEffectDataComposer;
 
@@ -43,7 +43,7 @@ public abstract class InteractionWiredEffect extends InteractionWired {
         }
     }
 
-    public abstract boolean saveData(ClientMessage packet, GameClient gameClient) throws WiredSaveException;
+    public abstract boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException;
 
     public int getDelay() {
         return this.delay;

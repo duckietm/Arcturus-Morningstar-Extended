@@ -36,23 +36,21 @@ import com.eu.habbo.plugin.events.emulator.SSOAuthenticationEvent;
 import com.eu.habbo.plugin.events.users.UserExecuteCommandEvent;
 import com.eu.habbo.plugin.events.users.UserLoginEvent;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
 
 @NoAuthMessage
-@Slf4j
 public class SecureLoginEvent extends MessageHandler {
- 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecureLoginEvent.class);
+
+
+
     @Override
     public void handle() throws Exception {
         if (!this.client.getChannel().isOpen()) {
-            Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
-            return;
-        }
-
-        if (!this.client.didFinishReleaseEvent()) {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
             return;
         }
@@ -62,7 +60,7 @@ public class SecureLoginEvent extends MessageHandler {
 
         if (Emulator.getConfig().getBoolean("encryption.forced", false) && Emulator.getCrypto().isEnabled() && !this.client.isHandshakeFinished()) {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
-            log.warn("Encryption is forced and TLS Handshake isn't finished! Closed connection...");
+            LOGGER.warn("Encryption is forced and TLS Handshake isn't finished! Closed connection...");
             return;
         }
 
@@ -70,21 +68,20 @@ public class SecureLoginEvent extends MessageHandler {
 
         if (Emulator.getPluginManager().fireEvent(new SSOAuthenticationEvent(sso)).isCancelled()) {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
-            log.info("SSO Authentication is cancelled by a plugin. Closed connection...");
+            LOGGER.info("SSO Authentication is cancelled by a plugin. Closed connection...");
             return;
         }
 
         if (sso.isEmpty()) {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
-            log.debug("Client is trying to connect without SSO ticket! Closed connection...");
+            LOGGER.debug("Client is trying to connect without SSO ticket! Closed connection...");
             return;
         }
-		
+
         if (this.client.getHabbo() == null) {
             Habbo habbo = Emulator.getGameEnvironment().getHabboManager().loadHabbo(sso);
             if (habbo != null) {
                 try {
-
                     habbo.setClient(this.client);
                     this.client.setHabbo(habbo);
                     if(!this.client.getHabbo().connect()) {
@@ -104,7 +101,7 @@ public class SecureLoginEvent extends MessageHandler {
                     Emulator.getThreading().run(habbo);
                     Emulator.getGameEnvironment().getHabboManager().addHabbo(habbo);
                 } catch (Exception e) {
-                    log.error("Caught exception", e);
+                    LOGGER.error("Caught exception", e);
                     Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
                     return;
                 }
@@ -229,7 +226,7 @@ public class SecureLoginEvent extends MessageHandler {
                 }
             } else {
                 Emulator.getGameServer().getGameClientManager().disposeClient(this.client);
-                log.warn("Someone tried to login with a non-existing SSO token! Closed connection...");
+                LOGGER.warn("Someone tried to login with a non-existing SSO token! Closed connection...");
             }
         } else {
             Emulator.getGameServer().getGameClientManager().disposeClient(this.client);

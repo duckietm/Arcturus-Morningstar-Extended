@@ -2,8 +2,10 @@ package com.eu.habbo.habbohotel.items.interactions;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
 import gnu.trove.map.hash.TLongLongHashMap;
@@ -75,7 +77,7 @@ public abstract class InteractionWired extends InteractionDefault {
     }
 
     public void activateBox(Room room, RoomUnit roomUnit, long millis) {
-        if (!room.isHideWired()) {
+        if(!room.isHideWired()) {
             this.setExtradata(this.getExtradata().equals("1") ? "0" : "1");
             room.sendComposer(new ItemStateComposer(this).compose());
         }
@@ -128,5 +130,36 @@ public abstract class InteractionWired extends InteractionDefault {
 
     public void addUserExecutionCache(int roomUnitId, long timestamp) {
         this.userExecutionCache.put((long)roomUnitId, timestamp);
+    }
+
+    public static WiredSettings readSettings(ClientMessage packet, boolean isEffect)
+    {
+        int intParamCount = packet.readInt();
+        int[] intParams = new int[intParamCount];
+
+        for(int i = 0; i < intParamCount; i++)
+        {
+            intParams[i] = packet.readInt();
+        }
+
+        String stringParam = packet.readString();
+
+        int itemCount = packet.readInt();
+        int[] itemIds = new int[itemCount];
+
+        for(int i = 0; i < itemCount; i++)
+        {
+            itemIds[i] = packet.readInt();
+        }
+
+        WiredSettings settings = new WiredSettings(intParams, stringParam, itemIds, -1);
+
+        if(isEffect)
+        {
+            settings.setDelay(packet.readInt());
+        }
+
+        settings.setStuffTypeSelectionCode(packet.readInt());
+        return settings;
     }
 }

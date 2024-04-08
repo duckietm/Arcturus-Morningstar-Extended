@@ -15,7 +15,8 @@ import com.eu.habbo.messages.outgoing.generic.PickMonthlyClubGiftNotificationCom
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
 import com.eu.habbo.messages.outgoing.users.*;
 import gnu.trove.map.hash.THashMap;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,8 +27,11 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Slf4j
+/**
+ * @author Beny
+ */
 public class SubscriptionHabboClub extends Subscription {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionHabboClub.class);
 
     public static boolean HC_PAYDAY_ENABLED = false;
     public static int HC_PAYDAY_NEXT_DATE = Integer.MAX_VALUE; // yyyy-MM-dd HH:mm:ss
@@ -226,7 +230,7 @@ public class SubscriptionHabboClub extends Subscription {
                 }
 
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                SubscriptionManager.LOGGER.error("Caught SQL exception", e);
             }
 
             creditRewardForMonthlySpent = (int) Math.floor(totalCreditsSpent * HC_PAYDAY_KICKBACK_PERCENTAGE);
@@ -275,7 +279,7 @@ public class SubscriptionHabboClub extends Subscription {
                         stats.lastHCPayday = timestampNow;
                         Emulator.getThreading().run(stats);
                     } catch (Exception e) {
-                        log.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
+                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
                     }
                 }
             }
@@ -299,7 +303,7 @@ public class SubscriptionHabboClub extends Subscription {
             }
 
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            SubscriptionManager.LOGGER.error("Caught SQL exception", e);
         }
         isExecuting = false;
     }
@@ -336,13 +340,13 @@ public class SubscriptionHabboClub extends Subscription {
                             }
                         }
                     } catch (Exception e) {
-                        log.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
+                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
                     }
                 }
             }
 
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            SubscriptionManager.LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -394,7 +398,7 @@ public class SubscriptionHabboClub extends Subscription {
                     pointCurrency = Integer.parseInt(currency);
                 }
                 catch (NumberFormatException ex) {
-                    log.error("Couldn't convert the type point currency {} on HC PayDay. The number must be a integer and positive.", pointCurrency);
+                    LOGGER.error("Couldn't convert the type point currency {} on HC PayDay. The number must be a integer and positive.", pointCurrency);
                 }
 
                 if (pointCurrency >= 0) {

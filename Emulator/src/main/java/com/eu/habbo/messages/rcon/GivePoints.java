@@ -3,13 +3,17 @@ package com.eu.habbo.messages.rcon;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Slf4j
 public class GivePoints extends RCONMessage<GivePoints.JSONGivePoints> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GivePoints.class);
+
+
     public GivePoints() {
         super(JSONGivePoints.class);
     }
@@ -29,7 +33,7 @@ public class GivePoints extends RCONMessage<GivePoints.JSONGivePoints> {
                 statement.execute();
             } catch (SQLException e) {
                 this.status = RCONMessage.SYSTEM_ERROR;
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
 
             this.message = "offline";
@@ -37,8 +41,13 @@ public class GivePoints extends RCONMessage<GivePoints.JSONGivePoints> {
     }
 
     static class JSONGivePoints {
+
         public int user_id;
+
+
         public int points;
+
+
         public int type;
     }
 }

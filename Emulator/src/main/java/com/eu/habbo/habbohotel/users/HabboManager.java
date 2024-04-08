@@ -13,7 +13,9 @@ import com.eu.habbo.messages.outgoing.users.UserPerksComposer;
 import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
 import com.eu.habbo.plugin.events.users.UserRankChangedEvent;
 import com.eu.habbo.plugin.events.users.UserRegisteredEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,10 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 public class HabboManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HabboManager.class);
+
     //Configuration. Loaded from database & updated accordingly.
     public static String WELCOME_MESSAGE = "";
+    public static boolean NAMECHANGE_ENABLED = false;
 
     private final ConcurrentHashMap<Integer, Habbo> onlineHabbos;
 
@@ -36,7 +41,7 @@ public class HabboManager {
 
         this.onlineHabbos = new ConcurrentHashMap<>();
 
-        log.info("Habbo Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Habbo Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
     public static HabboInfo getOfflineHabboInfo(int id) {
@@ -49,7 +54,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return info;
@@ -67,7 +72,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return info;
@@ -110,7 +115,7 @@ public class HabboManager {
             }
             statement.close();
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         habbo = this.cloneCheck(userId);
@@ -125,6 +130,7 @@ public class HabboManager {
             return null;
         }
 
+
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE auth_ticket = ? LIMIT 1")) {
             statement.setString(1, sso);
@@ -137,22 +143,20 @@ public class HabboManager {
                     }
 
                     if (!Emulator.debugging) {
-
-                            try (PreparedStatement stmt = connection.prepareStatement("UPDATE users SET auth_ticket = ? WHERE id = ? LIMIT 1")) {
-                                stmt.setString(1, "");
-                                stmt.setInt(2, habbo.getHabboInfo().getId());
-                                stmt.execute();
-                            } catch (SQLException e) {
-                                log.error("Caught SQL exception", e);
-                            }
+                        try (PreparedStatement stmt = connection.prepareStatement("UPDATE users SET auth_ticket = ? WHERE id = ? LIMIT 1")) {
+                            stmt.setString(1, "");
+                            stmt.setInt(2, habbo.getHabboInfo().getId());
+                            stmt.execute();
+                        } catch (SQLException e) {
+                            LOGGER.error("Caught SQL exception", e);
+                        }
                     }
                 }
             }
-
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         } catch (Exception ex) {
-            log.error("Caught exception", ex);
+            LOGGER.error("Caught exception", ex);
         }
 
         return habbo;
@@ -193,7 +197,7 @@ public class HabboManager {
 //
 
 
-        log.info("Habbo Manager -> Disposed!");
+        LOGGER.info("Habbo Manager -> Disposed!");
     }
 
     public ArrayList<HabboInfo> getCloneAccounts(Habbo habbo, int limit) {
@@ -211,7 +215,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return habboInfo;
@@ -229,7 +233,7 @@ public class HabboManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return nameChanges;
@@ -283,7 +287,7 @@ public class HabboManager {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
 
@@ -300,7 +304,7 @@ public class HabboManager {
                 statement.setInt(2, userId);
                 statement.execute();
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }

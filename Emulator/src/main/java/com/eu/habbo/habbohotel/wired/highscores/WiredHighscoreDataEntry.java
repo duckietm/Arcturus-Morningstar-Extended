@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class WiredHighscoreDataEntry {
     private final int itemId;
     private final List<Integer> userIds;
-    private int score;
+    private final int score;
     private final boolean isWin;
     private final int timestamp;
 
@@ -39,10 +39,6 @@ public class WiredHighscoreDataEntry {
 
     public int getScore() {
         return score;
-    }
-
-    public void setScore(int score) {
-        this.score = score;
     }
 
     public boolean isWin() {

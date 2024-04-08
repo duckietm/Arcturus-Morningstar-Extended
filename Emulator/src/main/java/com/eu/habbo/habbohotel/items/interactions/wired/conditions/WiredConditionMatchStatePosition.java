@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.interfaces.InteractionWiredMatchFurniSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -69,28 +70,24 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        int count;
-        packet.readInt();
-
-        this.state = packet.readInt() == 1;
-        this.direction = packet.readInt() == 1;
-        this.position = packet.readInt() == 1;
-
-        packet.readString();
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 3) return false;
+        this.state = settings.getIntParams()[0] == 1;
+        this.direction = settings.getIntParams()[1] == 1;
+        this.position = settings.getIntParams()[2] == 1;
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
         if (room == null)
             return true;
 
-        count = packet.readInt();
+        int count = settings.getFurniIds().length;
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) return false;
 
         this.settings.clear();
 
         for (int i = 0; i < count; i++) {
-            int itemId = packet.readInt();
+            int itemId = settings.getFurniIds()[i];
             HabboItem item = room.getHabboItem(itemId);
 
             if (item != null)

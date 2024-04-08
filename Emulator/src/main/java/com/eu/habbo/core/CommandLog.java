@@ -14,13 +14,13 @@ public class CommandLog implements DatabaseLoggable {
     private final int timestamp = Emulator.getIntUnixTimestamp();
     private final Command command;
     private final String params;
-    private final boolean success;
+    private final boolean succes;
 
-    public CommandLog(int userId, Command command, String params, boolean success) {
+    public CommandLog(int userId, Command command, String params, boolean succes) {
         this.userId = userId;
         this.command = command;
         this.params = params;
-        this.success = success;
+        this.succes = succes;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class CommandLog implements DatabaseLoggable {
         statement.setInt(2, this.timestamp);
         statement.setString(3, this.command.getClass().getSimpleName());
         statement.setString(4, this.params);
-        statement.setString(5, this.success ? "yes" : "no");
+        statement.setString(5, this.succes ? "yes" : "no");
         statement.addBatch();
     }
 

@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.items.ICycleable;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -107,10 +108,9 @@ public class WiredTriggerRepeaterLong extends InteractionWiredTrigger implements
     }
 
     @Override
-    public boolean saveData(ClientMessage packet) {
-        packet.readInt();
-
-        this.repeatTime = packet.readInt() * 5000;
+    public boolean saveData(WiredSettings settings) {
+        if(settings.getIntParams().length < 1) return false;
+        this.repeatTime = settings.getIntParams()[0] * 5000;
         this.counter = 0;
         return true;
     }

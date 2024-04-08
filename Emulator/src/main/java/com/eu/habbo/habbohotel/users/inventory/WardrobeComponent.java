@@ -7,7 +7,8 @@ import gnu.trove.TIntCollection;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,9 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.regex.Pattern;
 
-@Slf4j
 public class WardrobeComponent {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(WardrobeComponent.class);
     private final THashMap<Integer, WardrobeItem> looks;
     private final TIntSet clothing;
     private final TIntSet clothingSets;
@@ -54,7 +54,7 @@ public class WardrobeComponent {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -82,7 +82,7 @@ public class WardrobeComponent {
         this.looks.clear();
     }
 
-public class WardrobeItem implements Runnable {
+    public class WardrobeItem implements Runnable {
         private int slotId;
         private HabboGender gender;
         private Habbo habbo;
@@ -165,7 +165,7 @@ public class WardrobeItem implements Runnable {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }

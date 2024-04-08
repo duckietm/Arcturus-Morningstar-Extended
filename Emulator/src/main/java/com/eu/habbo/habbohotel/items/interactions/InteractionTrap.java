@@ -24,9 +24,6 @@ public class InteractionTrap extends InteractionDefault {
     public void onWalkOn(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
         if (!this.getExtradata().equals("0")) {
             Habbo habbo = room.getHabbo(roomUnit);
-            if(habbo == null) {
-                return;
-            }
             int effect = habbo.getClient().getHabbo().getRoomUnit().getEffectId();
             roomUnit.stopWalking();
             super.onWalkOn(roomUnit, room, objects);

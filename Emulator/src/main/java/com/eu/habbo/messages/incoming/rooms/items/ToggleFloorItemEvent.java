@@ -15,10 +15,11 @@ import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.furniture.FurniturePickedUpEvent;
 import com.eu.habbo.plugin.events.furniture.FurnitureToggleEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class ToggleFloorItemEvent extends MessageHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToggleFloorItemEvent.class);
 
     @Override
     public void handle() throws Exception {
@@ -132,7 +133,7 @@ public class ToggleFloorItemEvent extends MessageHandler {
                 this.client.getHabbo().getRoomUnit().setGoalLocation(this.client.getHabbo().getRoomUnit().getCurrentLocation());
             }
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
     }
 }

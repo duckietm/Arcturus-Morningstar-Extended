@@ -17,8 +17,6 @@ import com.eu.habbo.plugin.events.emulator.EmulatorStartShutdownEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStoppedEvent;
 import com.eu.habbo.threading.ThreadPooling;
 import com.eu.habbo.util.imager.badges.BadgeImager;
-import io.netty.util.AttributeKey;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,16 +26,15 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Slf4j
 public final class Emulator {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Emulator.class);
     private static final String OS_NAME = (System.getProperty("os.name") != null ? System.getProperty("os.name") : "Unknown");
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
-    private static final SecureRandom secureRandom = new SecureRandom();
+
     public final static int MAJOR = 3;
     public final static int MINOR = 6;
     public final static int BUILD = 0;
@@ -52,11 +49,9 @@ public final class Emulator {
                     "██║╚██╔╝██║██║   ██║██╔══██╗██║╚██╗██║██║██║╚██╗██║██║   ██║╚════██║   ██║   ██╔══██║██╔══██╗\n" +
                     "██║ ╚═╝ ██║╚██████╔╝██║  ██║██║ ╚████║██║██║ ╚████║╚██████╔╝███████║   ██║   ██║  ██║██║  ██║\n" +
                     "╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝\n" +
-                    "                                                                               Extended version";
-
+                    "Still Rocking in 2024.\n";
 
     public static String build = "";
-    public static String debuglevel = "";
     public static boolean isReady = false;
     public static boolean isShuttingDown = false;
     public static boolean stopped = false;
@@ -76,7 +71,6 @@ public final class Emulator {
     private static GameEnvironment gameEnvironment;
     private static PluginManager pluginManager;
     private static BadgeImager badgeImager;
-    public static final AttributeKey<String> WS_IP = AttributeKey.valueOf("WS_IP");
 
     static {
         Thread hook = new Thread(new Runnable() {
@@ -86,6 +80,13 @@ public final class Emulator {
         });
         hook.setPriority(10);
         Runtime.getRuntime().addShutdownHook(hook);
+    }
+
+    public static void promptEnterKey(){
+        System.out.println("\n");
+        System.out.println("Press \"ENTER\" if you agree to the terms stated above...");
+        Scanner scanner = new Scanner(System.in);
+        scanner.nextLine();
     }
 
     public static void main(String[] args) throws Exception {
@@ -109,8 +110,18 @@ public final class Emulator {
 
             System.out.println(logo);
 
-            log.info("Version: {}", version);
-            log.info("Build: {}", build);
+            // Checks if this is a BETA build before allowing them to continue.
+            if (PREVIEW.toLowerCase().contains("beta")) {
+                System.out.println("Warning, this is a beta build, this means that there may be unintended consequences so make sure you take regular backups while using this build. If you notice any issues you should make an issue on the Krews Git.");
+                promptEnterKey();
+            }
+            System.out.println("");
+            LOGGER.warn("Arcturus Morningstar 3.x is no longer accepting merge requests. Please target MS4 branches if you wish to contribute.");
+            LOGGER.info("Follow our development at https://git.krews.org/morningstar/Arcturus-Community, ");
+            System.out.println("");
+            LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
+            LOGGER.info("Version: {}", version);
+            LOGGER.info("Build: {}", build);
 
             long startTime = System.nanoTime();
 
@@ -143,22 +154,16 @@ public final class Emulator {
             Emulator.rconServer.connect();
             Emulator.badgeImager = new BadgeImager();
 
-            log.info("Arcturus Morningstar has successfully loaded.");
-            log.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
-            log.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
+            LOGGER.info("Arcturus Morningstar has successfully loaded.");
+            LOGGER.info("System launched in: {}ms. Using {} threads!", (System.nanoTime() - startTime) / 1e6, Runtime.getRuntime().availableProcessors() * 2);
+            LOGGER.info("Memory: {}/{}MB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024), (runtime.freeMemory()) / (1024 * 1024));
 
             Emulator.debugging = Emulator.getConfig().getBoolean("debug.mode");
-            Emulator.debuglevel = Emulator.getConfig().getValue("debug.level", "DEBUG");
-            /* Debug level can be : INFO WARN DEBUG TRACE*/
 
             if (debugging) {
                 ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 root.setLevel(Level.DEBUG);
-                log.debug("Debugging enabled.");
-                Level logLevel = Level.toLevel(Emulator.debuglevel);
-                root.setLevel(logLevel);
-                log.info("Debugging enabled.");
-                log.info("The loaded debug mode is {}", Emulator.debuglevel);
+                LOGGER.debug("Debugging enabled.");
             }
 
             Emulator.getPluginManager().fireEvent(new EmulatorLoadedEvent());
@@ -166,7 +171,7 @@ public final class Emulator {
             Emulator.timeStarted = getIntUnixTimestamp();
 
             if (Emulator.getConfig().getInt("runtime.threads") < (Runtime.getRuntime().availableProcessors() * 2)) {
-                log.warn("Emulator settings runtime.threads ({}) can be increased to ({}) to possibly increase performance.",
+                LOGGER.warn("Emulator settings runtime.threads ({}) can be increased to ({}) to possibly increase performance.",
                         Emulator.getConfig().getInt("runtime.threads"),
                         Runtime.getRuntime().availableProcessors() * 2);
             }
@@ -189,7 +194,7 @@ public final class Emulator {
                         System.out.println("Waiting for command: ");
                     } catch (Exception e) {
                         if (!(e instanceof IOException && e.getMessage().equals("Bad file descriptor"))) {
-                            log.error("Error while reading command", e);
+                            LOGGER.error("Error while reading command", e);
                         }
                     }
                 }
@@ -231,7 +236,7 @@ public final class Emulator {
         Emulator.isShuttingDown = true;
         Emulator.isReady = false;
 
-        log.info("Stopping Arcturus Morningstar {}", version);
+        LOGGER.info("Stopping Arcturus Morningstar {}", version);
 
         try {
             if (Emulator.getPluginManager() != null)
@@ -282,7 +287,7 @@ public final class Emulator {
         } catch (Exception e) {
         }
 
-        log.info("Stopped Arcturus Morningstar {}", version);
+        LOGGER.info("Stopped Arcturus Morningstar {}", version);
 
         if (Emulator.database != null) {
             Emulator.getDatabase().dispose();
@@ -332,6 +337,9 @@ public final class Emulator {
         return rconServer;
     }
 
+    /**
+     * @deprecated Do not use. Please use LoggerFactory.getLogger(YourClass.class) to log.
+     */
     @Deprecated
     public static Logging getLogging() {
         return logging;
@@ -351,10 +359,6 @@ public final class Emulator {
 
     public static Random getRandom() {
         return ThreadLocalRandom.current();
-    }
-	
-	public static SecureRandom getRandomDice() {
-        return secureRandom;
     }
 
     public static BadgeImager getBadgeImager() {
@@ -456,7 +460,7 @@ public final class Emulator {
         try {
             res = format.parse(date);
         } catch (Exception e) {
-            log.error("Error parsing date", e);
+            LOGGER.error("Error parsing date", e);
         }
         return res;
     }

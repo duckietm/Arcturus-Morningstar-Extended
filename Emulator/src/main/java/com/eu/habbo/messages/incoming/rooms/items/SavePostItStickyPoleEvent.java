@@ -7,13 +7,14 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionPostIt;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 
-@Slf4j
 public class SavePostItStickyPoleEvent extends MessageHandler {
-   
+    private static final Logger LOGGER = LoggerFactory.getLogger(SavePostItStickyPoleEvent.class);
+
     @Override
     public void handle() throws Exception {
         int itemId = this.packet.readInt();
@@ -29,7 +30,7 @@ public class SavePostItStickyPoleEvent extends MessageHandler {
                     CommandHandler.handleCommand(this.client, command);
                 }
             } else {
-                log.info("Scripter Alert! " + this.client.getHabbo().getHabboInfo().getUsername() + " | " + this.packet.readString());
+                LOGGER.info("Scripter Alert! " + this.client.getHabbo().getHabboInfo().getUsername() + " | " + this.packet.readString());
             }
         } else {
             String text = this.packet.readString();

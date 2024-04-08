@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
@@ -15,6 +16,7 @@ import com.eu.habbo.habbohotel.wired.WiredGiveRewardItem;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
@@ -174,16 +176,16 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean saveData(ClientMessage packet, GameClient gameClient) {
+    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         if (gameClient.getHabbo().hasPermission(Permission.ACC_SUPERWIRED)) {
-            int argsLength = packet.readInt();
-            this.rewardTime = packet.readInt();
-            this.uniqueRewards = packet.readInt() == 1;
-            this.limit = packet.readInt();
-            this.limitationInterval = packet.readInt();
+            if(settings.getIntParams().length < 4) throw new WiredSaveException("Invalid data");
+            this.rewardTime = settings.getIntParams()[0];
+            this.uniqueRewards = settings.getIntParams()[1] == 1;
+            this.limit = settings.getIntParams()[2];
+            this.limitationInterval = settings.getIntParams()[3];
             this.given = 0;
 
-            String data = packet.readString();
+            String data = settings.getStringParam();
 
             String[] items = data.split(";");
 
@@ -204,8 +206,7 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
                 return false;
             }
 
-            packet.readInt();
-            this.setDelay(packet.readInt());
+            this.setDelay(settings.getDelay());
 
             WiredHandler.dropRewards(this.getId());
             return true;

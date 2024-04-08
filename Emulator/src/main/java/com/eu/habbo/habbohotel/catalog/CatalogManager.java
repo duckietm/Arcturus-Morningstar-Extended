@@ -41,14 +41,16 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class CatalogManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogManager.class);
 
     public static final THashMap<String, Class<? extends CatalogPage>> pageDefinitions = new THashMap<String, Class<? extends CatalogPage>>(CatalogPageLayouts.values().length) {
         {
@@ -219,7 +221,7 @@ public class CatalogManager {
 
         this.ecotronItem = Emulator.getGameEnvironment().getItemManager().getItem("ecotron_box");
 
-        log.info("Catalog Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Catalog Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
     }
 
 
@@ -258,7 +260,7 @@ public class CatalogManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         for (Map.Entry<Integer, LinkedList<Integer>> set : limiteds.entrySet()) {
@@ -278,7 +280,7 @@ public class CatalogManager {
                     Class<? extends CatalogPage> pageClazz = pageDefinitions.get(set.getString("page_layout"));
 
                     if (pageClazz == null) {
-                        log.info("Unknown Page Layout: " + set.getString("page_layout"));
+                        LOGGER.info("Unknown Page Layout: " + set.getString("page_layout"));
                         continue;
                     }
 
@@ -286,12 +288,12 @@ public class CatalogManager {
                         CatalogPage page = pageClazz.getConstructor(ResultSet.class).newInstance(set);
                         pages.put(page.getId(), page);
                     } catch (Exception e) {
-                        log.error("Failed to load layout: {}", set.getString("page_layout"));
+                        LOGGER.error("Failed to load layout: {}", set.getString("page_layout"));
                     }
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         pages.forEachValue((object) -> {
@@ -303,7 +305,7 @@ public class CatalogManager {
                 }
             } else {
                 if (object.parentId != -2) {
-                    log.info("Parent Page not found for " + object.getPageName() + " (ID: " + object.id + ", parent_id: " + object.parentId + ")");
+                    LOGGER.info("Parent Page not found for " + object.getPageName() + " (ID: " + object.id + ", parent_id: " + object.parentId + ")");
                 }
             }
             return true;
@@ -311,7 +313,7 @@ public class CatalogManager {
 
         this.catalogPages.putAll(pages);
 
-        log.info("Loaded " + this.catalogPages.size() + " Catalog Pages!");
+        LOGGER.info("Loaded " + this.catalogPages.size() + " Catalog Pages!");
     }
 
 
@@ -332,7 +334,7 @@ public class CatalogManager {
                 ));
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -376,7 +378,7 @@ public class CatalogManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         for (CatalogPage page : this.catalogPages.valueCollection()) {
@@ -401,7 +403,7 @@ public class CatalogManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
     }
 
@@ -417,7 +419,7 @@ public class CatalogManager {
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -432,7 +434,7 @@ public class CatalogManager {
                     this.vouchers.add(new Voucher(set));
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -452,11 +454,11 @@ public class CatalogManager {
 
                         this.prizes.get(set.getInt("rarity")).add(item);
                     } else {
-                        log.error("Cannot load item with ID: {} as recycler reward!", set.getInt("item_id"));
+                        LOGGER.error("Cannot load item with ID: {} as recycler reward!", set.getInt("item_id"));
                     }
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -481,7 +483,7 @@ public class CatalogManager {
                         }
                     }
                 } catch (SQLException e) {
-                    log.error("Caught SQL exception", e);
+                    LOGGER.error("Caught SQL exception", e);
                 }
             }
         }
@@ -496,7 +498,7 @@ public class CatalogManager {
                     this.clothing.put(set.getInt("id"), new ClothItem(set));
                 }
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -573,7 +575,7 @@ public class CatalogManager {
 
             return statement.executeUpdate() >= 1;
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         return false;
@@ -701,7 +703,7 @@ public class CatalogManager {
         if (this.prizes.containsKey(level) && !this.prizes.get(level).isEmpty()) {
             return (Item) this.prizes.get(level).toArray()[Emulator.getRandom().nextInt(this.prizes.get(level).size())];
         } else {
-            log.error("No rewards specified for rarity level {}", level);
+            LOGGER.error("No rewards specified for rarity level {}", level);
         }
 
         return null;
@@ -733,10 +735,10 @@ public class CatalogManager {
                                     try {
                                         catalogPage = pageClazz.getConstructor(ResultSet.class).newInstance(page);
                                     } catch (Exception e) {
-                                        log.error("Caught exception", e);
+                                        LOGGER.error("Caught exception", e);
                                     }
                                 } else {
-                                    log.error("Unknown page layout: {}", page.getString("page_layout"));
+                                    LOGGER.error("Unknown page layout: {}", page.getString("page_layout"));
                                 }
                             }
                         }
@@ -744,7 +746,7 @@ public class CatalogManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Caught SQL exception", e);
+            LOGGER.error("Caught SQL exception", e);
         }
 
         if (catalogPage != null) {
@@ -803,7 +805,7 @@ public class CatalogManager {
             }
         }
 
-        log.info("Catalog Manager -> Disposed!");
+        LOGGER.info("Catalog Manager -> Disposed!");
     }
 
 
@@ -872,7 +874,7 @@ public class CatalogManager {
                 if (amount > 1 && !CatalogItem.haveOffer(item)) {
                     String message = Emulator.getTexts().getValue("scripter.warning.catalog.amount").replace("%username%", habbo.getHabboInfo().getUsername()).replace("%itemname%", item.getName()).replace("%pagename%", page.getCaption());
                     ScripterManager.scripterDetected(habbo.getClient(), message);
-                    log.info(message);
+                    LOGGER.info(message);
                     habbo.getClient().sendResponse(new AlertPurchaseUnavailableComposer(AlertPurchaseUnavailableComposer.ILLEGAL));
                     return;
                 }
@@ -959,7 +961,7 @@ public class CatalogManager {
                                 try {
                                     pet = Emulator.getGameEnvironment().getPetManager().createPet(baseItem, data[0], data[1], data[2], habbo.getClient());
                                 } catch (Exception e) {
-                                    log.error("Caught exception", e);
+                                    LOGGER.error("Caught exception", e);
                                     habbo.getClient().sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
                                 }
 
@@ -1018,7 +1020,7 @@ public class CatalogManager {
                                     try {
                                         guildId = Integer.parseInt(extradata);
                                     } catch (Exception e) {
-                                        log.error("Caught exception", e);
+                                        LOGGER.error("Caught exception", e);
                                         habbo.getClient().sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
                                         return;
                                     }
@@ -1141,7 +1143,7 @@ public class CatalogManager {
                 }
 
             } catch (Exception e) {
-                log.error("Exception caught", e);
+                LOGGER.error("Exception caught", e);
                 habbo.getClient().sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR));
             }
         } finally {

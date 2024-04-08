@@ -6,12 +6,15 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.set.hash.THashSet;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Slf4j
 public class FriendsComposer extends MessageComposer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FriendsComposer.class);
+
     private final int totalPages;
     private final int pageIndex;
     private final Collection<MessengerBuddy> friends;
@@ -49,7 +52,7 @@ public class FriendsComposer extends MessageComposer {
             }
             return this.response;
         } catch (Exception e) {
-            log.error("Caught exception", e);
+            LOGGER.error("Caught exception", e);
         }
         return null;
     }

@@ -7,10 +7,13 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class CameraClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CameraClient.class);
+
     private static final String host = "google.com";
     private static final int port = 1232;
     public static ChannelFuture channelFuture;
@@ -48,10 +51,10 @@ public class CameraClient {
         if (CameraClient.channelFuture.isSuccess()) {
             CameraClient.attemptReconnect = false;
             CameraClient.channel = channelFuture.channel();
-            log.info("Connected to the Camera Server. Attempting to login.");
+            LOGGER.info("Connected to the Camera Server. Attempting to login.");
             this.sendMessage(new CameraLoginComposer());
         } else {
-            log.error("Failed to connect to the Camera Server. Server unreachable.");
+            LOGGER.error("Failed to connect to the Camera Server. Server unreachable.");
             CameraClient.channel = null;
             CameraClient.channelFuture.channel().close();
             CameraClient.channelFuture = null;
@@ -72,7 +75,7 @@ public class CameraClient {
         channel = null;
         isLoggedIn = false;
 
-        log.info("Disconnected from the camera server.");
+        LOGGER.info("Disconnected from the camera server.");
     }
 
     public void sendMessage(CameraOutgoingMessage outgoingMessage) {

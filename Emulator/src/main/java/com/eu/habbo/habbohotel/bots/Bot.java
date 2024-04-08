@@ -12,7 +12,8 @@ import com.eu.habbo.plugin.events.bots.BotShoutEvent;
 import com.eu.habbo.plugin.events.bots.BotTalkEvent;
 import com.eu.habbo.plugin.events.bots.BotWhisperEvent;
 import com.eu.habbo.threading.runnables.BotFollowHabbo;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,8 +22,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-@Slf4j
 public class Bot implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
+
     public static final String NO_CHAT_SET = "${bot.skill.chatter.configuration.text.placeholder}";
     public static String[] PLACEMENT_MESSAGES = "Yo!;Hello I'm a real party animal!;Hello!".split(";");
 
@@ -162,7 +164,7 @@ public class Bot implements Runnable {
                 statement.execute();
                 this.needsUpdate = false;
             } catch (SQLException e) {
-                log.error("Caught SQL exception", e);
+                LOGGER.error("Caught SQL exception", e);
             }
         }
     }
@@ -196,7 +198,7 @@ public class Bot implements Runnable {
                             .replace(Emulator.getTexts().getValue("wired.variable.item_count", "%item_count%"), this.room.itemCount() + "")
                             .replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), this.name)
                             .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), this.room.getName())
-                            .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), this.room.getUserCount() + ""); // TODO: Should getUserCount be replaced with getUsersWithoutInvisibleHabbos?
+                            .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), this.room.getUserCount() + "");
 
                     if(!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{ message })) {
                         this.talk(message);

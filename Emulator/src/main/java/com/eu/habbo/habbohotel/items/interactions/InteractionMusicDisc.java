@@ -5,13 +5,17 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 public class InteractionMusicDisc extends HabboItem {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InteractionMusicDisc.class);
+
     private int songId;
+
     public InteractionMusicDisc(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
 
@@ -21,7 +25,7 @@ public class InteractionMusicDisc extends HabboItem {
             try {
                 this.songId = Integer.valueOf(stuff[6]);
             } catch (Exception e) {
-                log.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
+                LOGGER.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
             }
         }
     }
@@ -35,7 +39,7 @@ public class InteractionMusicDisc extends HabboItem {
             try {
                 this.songId = Integer.valueOf(stuff[6]);
             } catch (Exception e) {
-                log.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
+                LOGGER.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
             }
         }
     }
