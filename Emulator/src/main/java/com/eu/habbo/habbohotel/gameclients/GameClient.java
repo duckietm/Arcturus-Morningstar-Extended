@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.gameclients;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.crypto.HabboEncryption;
+import com.eu.habbo.habbohotel.LatencyTracker;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
@@ -10,9 +11,6 @@ import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,7 +20,7 @@ public class GameClient {
 
     private final Channel channel;
     private final HabboEncryption encryption;
-
+    private final LatencyTracker latencyTracker;
     private Habbo habbo;
     private boolean handshakeFinished;
     private String machineId = "";
@@ -39,6 +37,7 @@ public class GameClient {
                     Emulator.getCrypto().getModulus(),
                     Emulator.getCrypto().getPrivateExponent())
                 : null;
+        this.latencyTracker = new LatencyTracker();
     }
 
     public Channel getChannel() {
@@ -48,6 +47,8 @@ public class GameClient {
     public HabboEncryption getEncryption() {
         return encryption;
     }
+
+    public LatencyTracker getLatencyTracker() { return latencyTracker; }
 
     public Habbo getHabbo() {
         return this.habbo;
