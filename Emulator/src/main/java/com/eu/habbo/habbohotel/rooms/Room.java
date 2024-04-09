@@ -1036,9 +1036,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             base = base | 8;
         }
 
+        if (this.isAllowPets()) {
+            base = base | 16;
+        }
 
         message.appendInt(base);
-
 
         if (this.getGuildId() > 0) {
             Guild g = Emulator.getGameEnvironment().getGuildManager().getGuild(this.getGuildId());
