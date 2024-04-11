@@ -6,7 +6,7 @@
 
     <groupId>com.skeletor</groupId>
     <artifactId>Javascript-Plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -24,8 +24,16 @@
         <dependency>
             <groupId>com.eu.habbo</groupId>
             <artifactId>Habbo</artifactId>
-            <version>3.0.0</version>
+            <version>3.5.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>20240325.1</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

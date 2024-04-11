@@ -5,6 +5,8 @@ import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import gnu.trove.map.hash.THashMap;
 import java.util.ArrayList;
 
+import static com.skeletor.plugin.javascript.utils.RegexUtility.sanitize;
+
 public class RoomPlaylist {
   private ArrayList<YoutubeVideo> playlist = new ArrayList<>();
   
@@ -38,19 +40,20 @@ public class RoomPlaylist {
   public void addSong(YoutubeVideo song) {
     this.playlist.add(song);
   }
-  
+
   public YoutubeVideo removeSong(int index) {
     YoutubeVideo res = null;
-    if (this.playlist.size() - 1 >= index)
-      res = this.playlist.remove(index); 
-    if (this.playlist.size() == 0)
-      setPlaying(false); 
-    if (index == getCurrentIndex()) {
-      if (index > this.playlist.size() - 1 && this.playlist.size() > 0)
-        this.current = this.playlist.size() - 1; 
-    } else if (index < getCurrentIndex() && getCurrentIndex() > 0) {
+    if(playlist.size() - 1 >= index)
+      res = this.playlist.remove(index);
+    if(playlist.isEmpty()) this.setPlaying(false);
+    if(index == this.getCurrentIndex()) {
+      if(index > this.playlist.size() - 1 && !this.playlist.isEmpty()) {
+        this.current = this.playlist.size() - 1;
+      }
+    }
+    else if(index < this.getCurrentIndex() && this.getCurrentIndex() > 0) {
       this.current--;
-    } 
+    }
     return res;
   }
   
@@ -79,12 +82,12 @@ public class RoomPlaylist {
       this.channel = channel;
     }
   }
-  
+
   public MessageComposer getNowPlayingBubbleAlert() {
-    THashMap<String, String> keys = new THashMap();
+    final THashMap<String, String> keys = new THashMap<>();
     keys.put("display", "BUBBLE");
-    keys.put("image", "${image.library.url}notifications/music.png");
-    keys.put("message", "Now playing " + (getCurrentSong()).name);
-    return (MessageComposer)new BubbleAlertComposer("", keys);
+    keys.put("image", ("${image.library.url}notifications/music.png"));
+    keys.put("message", "Now playing " + sanitize(this.getCurrentSong().name));
+    return new BubbleAlertComposer("", keys);
   }
 }
