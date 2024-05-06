@@ -384,6 +384,7 @@ public class PacketManager {
         this.registerHandler(Incoming.RotateMoveItemEvent, RotateMoveItemEvent.class);
         this.registerHandler(Incoming.MoveWallItemEvent, MoveWallItemEvent.class);
         this.registerHandler(Incoming.RoomPickupItemEvent, RoomPickupItemEvent.class);
+		this.registerHandler(Incoming.RoomPickupChooserEvent, RoomPickupChooserEvent.class);
         this.registerHandler(Incoming.RoomPlacePaintEvent, RoomPlacePaintEvent.class);
         this.registerHandler(Incoming.RoomUserStartTypingEvent, RoomUserStartTypingEvent.class);
         this.registerHandler(Incoming.RoomUserStopTypingEvent, RoomUserStopTypingEvent.class);

@@ -134,6 +134,7 @@ public class Incoming {
     public static final int BotSettingsEvent = 1986;
     public static final int StalkFriendEvent = 3997;
     public static final int RoomPickupItemEvent = 3456;
+	public static final int RoomPickupChooserEvent = 10017;
     public static final int RedeemItemEvent = 3115;
     public static final int RequestFriendsEvent = 1523;
     public static final int RequestAchievementsEvent = 219;
