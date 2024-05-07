@@ -10,7 +10,7 @@ and is developed for free by talented developers and is compatible with the foll
 [Latest compiled version](https://)
 
 ## Connection ##
-In this build the Websocket has been intregrated, so do not load the websocket plugin!
+Use the Websocket plugin!
 
 ### How do I connect to my emulator using Secure Websockets (wss)?
 You have several options to add WSS support to your websocket server. 
