@@ -43,11 +43,11 @@ public class Bot implements Runnable {
     private short chatDelay;
     private int chatTimeOut;
     private int chatTimestamp;
-    private short lastChatIndex;
+    private int lastChatIndex;
     private int bubble;
 
-
-    private String type;
+    
+    private final String type;
 
 
     private int effect;
@@ -187,9 +187,7 @@ public class Bot implements Runnable {
 
             if (!this.chatLines.isEmpty() && this.chatTimeOut <= Emulator.getIntUnixTimestamp() && this.chatAuto) {
                 if (this.room != null) {
-                    this.lastChatIndex = (this.chatRandom ? (short) Emulator.getRandom().nextInt(this.chatLines.size()) : (this.lastChatIndex == (this.chatLines.size() - 1) ? 0 : this.lastChatIndex++));
-
-                    if (this.lastChatIndex >= this.chatLines.size()) {
+                    if (this.lastChatIndex < 0 || this.lastChatIndex >= this.chatLines.size()) {
                         this.lastChatIndex = 0;
                     }
 
@@ -203,10 +201,20 @@ public class Bot implements Runnable {
                     if(!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{ message })) {
                         this.talk(message);
                     }
+                    
+                    if (this.chatRandom) {
+                        this.lastChatIndex = (short) Emulator.getRandom().nextInt(this.chatLines.size());
+                    } else {
+                        this.lastChatIndex++;
+                        if (this.lastChatIndex >= this.chatLines.size()) {
+                            this.lastChatIndex = 0; // start from scratch :-3
+                        }
+                    }
 
                     this.chatTimeOut = Emulator.getIntUnixTimestamp() + this.chatDelay;
                 }
             }
+            
         }
     }
 
@@ -419,7 +427,11 @@ public class Bot implements Runnable {
     public int getEffect() {
         return this.effect;
     }
-
+    
+    public void setBubble(int bubble) {
+        this.bubble = bubble;
+        this.needsUpdate = true;
+    }
     public void setEffect(int effect, int duration) {
         this.effect = effect;
         this.needsUpdate = true;
