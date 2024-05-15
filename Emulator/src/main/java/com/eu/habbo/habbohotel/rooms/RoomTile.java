@@ -205,8 +205,11 @@ public class RoomTile {
     }
 
     public boolean hasUnits() {
-        synchronized (this.units) {
-            return this.units.size() > 0;
+        synchronized(this.units) {
+            if (!this.units.isEmpty()) {
+                this.units.removeIf(unit -> !unit.getCurrentLocation().equals(this));
+            }
+            return !this.units.isEmpty();
         }
     }
 
