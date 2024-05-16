@@ -40,7 +40,21 @@ public enum RoomChatMessageBubbles {
     SANTA(36, "", true, false),
     AMBASSADOR(37, "acc_ambassador", false, true),
     RADIO(38, "", true, false),
-    UNKNOWN_X(-1, "", true, false);
+    UNKNOWN_39(39, "", true, false),
+    UNKNOWN_40(40, "", true, false),
+    UNKNOWN_41(41, "", true, false),
+    UNKNOWN_42(42, "", true, false),
+    UNKNOWN_43(43, "", true, false),
+    UNKNOWN_44(44, "", true, false),
+    UNKNOWN_45(45, "", true, false),
+    UNKNOWN_46(46, "", true, false),
+    UNKNOWN_47(47, "", true, false),
+    UNKNOWN_48(48, "", true, false),
+    UNKNOWN_49(49, "", true, false),
+    UNKNOWN_50(50, "", true, false),
+    UNKNOWN_51(51, "", true, false),
+    UNKNOWN_52(52, "", true, false),
+    UNKNOWN_53(53, "", true, false);
 
     private final int type;
     private final String permission;
@@ -55,13 +69,12 @@ public enum RoomChatMessageBubbles {
     }
 
     public static RoomChatMessageBubbles getBubble(int bubbleId) {
-        if (bubbleId >= 0 && bubbleId < UNKNOWN_X.type) {
+        try {
             return values()[bubbleId];
-        } else {
-            return UNKNOWN_X;
+        } catch (Exception e) {
+            return NORMAL;
         }
     }
-
 
     public int getType() {
         return this.type;
