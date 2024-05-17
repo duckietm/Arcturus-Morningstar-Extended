@@ -640,6 +640,12 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             result = overriddenState;
         }
 
+        Optional<HabboItem> stackHelper = this.getItemsAt(tile).stream().filter(itemS -> itemS instanceof InteractionTileWalkMagic).findAny();
+
+        if (stackHelper.isPresent()) {
+            result = RoomTileState.OPEN;
+        }
+
         return result;
     }
 
@@ -3657,6 +3663,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         boolean canStack = true;
 
         THashSet<HabboItem> stackHelpers = this.getItemsAt(InteractionStackHelper.class, x, y);
+        stackHelpers.addAll(this.getItemsAt(InteractionTileWalkMagic.class, x, y));
 
         if (stackHelpers.size() > 0) {
             for (HabboItem item : stackHelpers) {
@@ -4650,9 +4657,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             pluginHelper = event.hasPluginHelper();
         }
 
-        boolean magicTile = item instanceof InteractionStackHelper;
+        boolean magicTile = item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic;
 
-        Optional<HabboItem> stackHelper = this.getItemsAt(tile).stream().filter(i -> i instanceof InteractionStackHelper).findAny();
+        Optional<HabboItem> stackHelper = this.getItemsAt(tile).stream().filter(i -> i instanceof InteractionStackHelper || i instanceof InteractionTileWalkMagic).findAny();
 
         //Check if can be placed at new position
         THashSet<RoomTile> occupiedTiles = this.layout.getTilesAt(tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
@@ -4660,7 +4667,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
         HabboItem topItem = this.getTopItemAt(occupiedTiles, null);
 
-        if (!stackHelper.isPresent() && !pluginHelper) {
+        if ((stackHelper.isEmpty() && !pluginHelper)) {
             if (oldLocation != tile) {
                 for (RoomTile t : occupiedTiles) {
                     HabboItem tileTopItem = this.getTopItemAt(t.x, t.y);
