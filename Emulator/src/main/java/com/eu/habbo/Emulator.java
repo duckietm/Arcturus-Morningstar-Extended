@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -71,6 +72,7 @@ public final class Emulator {
     private static GameEnvironment gameEnvironment;
     private static PluginManager pluginManager;
     private static BadgeImager badgeImager;
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     static {
         Thread hook = new Thread(new Runnable() {
@@ -360,7 +362,9 @@ public final class Emulator {
     public static Random getRandom() {
         return ThreadLocalRandom.current();
     }
-
+    public static SecureRandom getRandomDice() {
+        return secureRandom;
+    }
     public static BadgeImager getBadgeImager() {
         return badgeImager;
     }

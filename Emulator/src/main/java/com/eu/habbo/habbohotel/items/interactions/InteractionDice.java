@@ -58,9 +58,9 @@ public class InteractionDice extends HabboItem {
                     Emulator.getThreading().run(this);
 
                     if (event.result > 0) {
-                        Emulator.getThreading().run(new RandomDiceNumber(room, this, event.result), 1500);
+                        Emulator.getThreading().run(new RandomDiceNumber(room, this, event.result), 2000);
                     } else {
-                        Emulator.getThreading().run(new RandomDiceNumber(this, room, this.getBaseItem().getStateCount()), 1500);
+                        Emulator.getThreading().run(new RandomDiceNumber(this, room, this.getBaseItem().getStateCount()), 2000);
                     }
                 }
             }

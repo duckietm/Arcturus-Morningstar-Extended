@@ -28,7 +28,7 @@ public class RandomDiceNumber implements Runnable {
     @Override
     public void run() {
         if (this.result <= 0)
-            this.result = (Emulator.getRandom().nextInt(this.maxNumber) + 1);
+            this.result = (Emulator.getRandomDice().nextInt(this.maxNumber) + 1);
 
         this.item.setExtradata(this.result + "");
         this.item.needsUpdate(true);
