@@ -531,6 +531,7 @@ public class RoomManager {
         }
 
         if (overrideChecks ||
+                habbo.roomBypass ||
                 room.isOwner(habbo) ||
                 room.getState() == RoomState.OPEN ||
                 habbo.hasPermission(Permission.ACC_ANYROOMOWNER) ||

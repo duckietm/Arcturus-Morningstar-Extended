@@ -79,6 +79,7 @@ public class RoomUnit {
     private Room room;
     private RoomRightLevels rightsLevel = RoomRightLevels.NONE;
     private THashSet<Integer> overridableTiles;
+    private boolean isGameSnow;
 
     public RoomUnit() {
         this.id = 0;
@@ -95,6 +96,7 @@ public class RoomUnit {
         this.isKicked = false;
         this.overridableTiles = new THashSet<>();
         this.timeInRoom = 0;
+        this.isGameSnow = false;
     }
 
     public void clearWalking() {
@@ -155,7 +157,12 @@ public class RoomUnit {
 
             if (this.status.remove(RoomUnitStatus.SIT) != null) this.statusUpdate = true;
             if (this.status.remove(RoomUnitStatus.MOVE) != null) this.statusUpdate = true;
+            if (this.status.remove(RoomUnitStatus.SNOWWAR_RUN) != null) this.statusUpdate = true;
             if (this.status.remove(RoomUnitStatus.LAY) != null) this.statusUpdate = true;
+
+            if (this.status.remove(RoomUnitStatus.SNOWWAR_PICK) != null) this.statusUpdate = true;
+            if (this.status.remove(RoomUnitStatus.SNOWWAR_DIE_BACK) != null) this.statusUpdate = true;
+            if (this.status.remove(RoomUnitStatus.SNOWWAR_DIE_FRONT) != null) this.statusUpdate = true;
 
             for (Map.Entry<RoomUnitStatus, String> set : this.status.entrySet()) {
                 if (set.getKey().removeWhenWalking) {
@@ -334,7 +341,18 @@ public class RoomUnit {
 
             this.setPreviousLocation(this.getCurrentLocation());
 
+            if(this.getIsGameSnow()){
+                this.setStatus(RoomUnitStatus.SNOWWAR_RUN, next.x + "," + next.y + "," + zHeight);
+            }
+
             this.setStatus(RoomUnitStatus.MOVE, next.x + "," + next.y + "," + zHeight);
+
+            if(this.getStatusMap().containsKey(RoomUnitStatus.SNOWWAR_RUN)){
+                this.removeStatus(RoomUnitStatus.MOVE);
+                this.removeStatus(RoomUnitStatus.SNOWWAR_RUN);
+                this.setStatus(RoomUnitStatus.SNOWWAR_RUN, next.x + "," + next.y + "," + zHeight);
+            }
+
             if (habbo != null) {
                 if (habbo.getHabboInfo().getRiding() != null) {
                     RoomUnit ridingUnit = habbo.getHabboInfo().getRiding().getRoomUnit();
@@ -694,6 +712,14 @@ public class RoomUnit {
             return;
         }
 
+        if (this.status.containsKey(RoomUnitStatus.SNOWWAR_DIE_BACK) || this.status.containsKey(RoomUnitStatus.SNOWWAR_DIE_FRONT)) {
+            return;
+        }
+
+        if (this.status.containsKey(RoomUnitStatus.SNOWWAR_PICK)) {
+            return;
+        }
+
         if (!this.status.containsKey(RoomUnitStatus.SIT)) {
             this.bodyRotation = (RoomUserRotation.values()[Rotation.Calculate(this.getX(), this.getY(), location.x, location.y)]);
         }
@@ -819,5 +845,12 @@ public class RoomUnit {
 
     public void setMoveBlockingTask(ScheduledFuture moveBlockingTask) {
         this.moveBlockingTask = moveBlockingTask;
+    }
+
+    public boolean getIsGameSnow() {
+        return isGameSnow;
+    }
+    public void setGameSnow(boolean gameSnow) {
+        isGameSnow = gameSnow;
     }
 }

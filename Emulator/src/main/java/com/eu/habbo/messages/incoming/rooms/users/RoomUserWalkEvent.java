@@ -98,7 +98,7 @@ public class RoomUserWalkEvent extends MessageHandler {
                         }
 
                         // Don't care
-                        if (habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY)) {
+                        if (habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY) || habbo.getRoomUnit().hasStatus(RoomUnitStatus.SNOWWAR_PICK) || habbo.getRoomUnit().hasStatus(RoomUnitStatus.SNOWWAR_DIE_FRONT) || habbo.getRoomUnit().hasStatus(RoomUnitStatus.SNOWWAR_DIE_BACK)) {
                             if (room.getLayout().getTilesInFront(habbo.getRoomUnit().getCurrentLocation(), habbo.getRoomUnit().getBodyRotation().getValue(), 2).contains(tile))
                                 return;
                         }

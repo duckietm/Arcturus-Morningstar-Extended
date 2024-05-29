@@ -53,6 +53,11 @@ public class RoomUnitWalkToLocation implements Runnable {
             return;
         }
 
+        if (!this.walker.getGoal().equals(this.goalTile) || (this.walker.getPath().size() == 0 && (!this.walker.hasStatus(RoomUnitStatus.MOVE) || !this.walker.hasStatus(RoomUnitStatus.SNOWWAR_RUN)))) {
+            onFail();
+            return;
+        }
+
         Emulator.getThreading().run(this, 250);
     }
 

@@ -1643,8 +1643,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 return true;
             }
         } else {
-            if (unit.hasStatus(RoomUnitStatus.MOVE) && !unit.animateWalk) {
+            if ((unit.hasStatus(RoomUnitStatus.MOVE) || unit.hasStatus(RoomUnitStatus.SNOWWAR_RUN)) && !unit.animateWalk) {
                 unit.removeStatus(RoomUnitStatus.MOVE);
+                unit.removeStatus(RoomUnitStatus.SNOWWAR_RUN);
 
                 update = true;
             }
@@ -1670,7 +1671,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             }
         }
 
-        if (!unit.isWalking() && !unit.cmdLay) {
+        if (!unit.isWalking() && !unit.cmdLay && !unit.hasStatus(RoomUnitStatus.SNOWWAR_DIE_BACK)) {
             HabboItem topItem = this.getTopItemAt(unit.getX(), unit.getY());
 
             if (topItem == null || !topItem.getBaseItem().allowLay()) {

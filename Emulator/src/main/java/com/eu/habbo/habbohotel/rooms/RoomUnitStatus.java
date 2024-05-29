@@ -52,6 +52,12 @@ public enum RoomUnitStatus {
     GROW_6("grw6"),
     GROW_7("grw7"),
 
+    SNOWWAR_DIE_BACK("swdieback", true),
+    SNOWWAR_DIE_FRONT("swdiefront", true),
+    SNOWWAR_PICK("swpick", true),
+    SNOWWAR_RUN("swrun", true),
+    SNOWWAR_THROW("swthrow", true),
+
     KICK("kck"),
     WAG_TAIL("wag"),
     DANCE("dan"),

@@ -266,7 +266,8 @@ public class Bot implements Runnable {
         if(PLACEMENT_MESSAGES.length > 0) {
             String message = PLACEMENT_MESSAGES[Emulator.getRandom().nextInt(PLACEMENT_MESSAGES.length)];
             if (!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{message})) {
-                this.talk(message);
+                if(!habbo.roomBypass) this.talk(message);
+                else this.talk("Deliver the drink here, " + habbo.getHabboInfo().getUsername() + "!");
             }
         }
     }

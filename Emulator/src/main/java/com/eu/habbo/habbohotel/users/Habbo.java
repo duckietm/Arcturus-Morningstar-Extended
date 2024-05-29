@@ -45,6 +45,7 @@ public class Habbo implements Runnable {
     private volatile boolean update;
     private volatile boolean disconnected = false;
     private volatile boolean disconnecting = false;
+    public boolean roomBypass = false;
 
     public Habbo(ResultSet set) {
         this.client = null;

@@ -285,6 +285,70 @@ public class PluginManager {
         }
     }
 
+    public void updatePluginByName(String name) {
+        File loc = new File("plugins");
+        HabboPlugin pluginReload = null;
+
+        for(HabboPlugin p : this.plugins){
+            if(p.configuration.name.equalsIgnoreCase(name)){
+                pluginReload = p;
+            }
+        }
+
+        if (!loc.exists()) {
+            if (loc.mkdirs()) {
+                LOGGER.info("Created plugins directory!");
+            }
+        }
+
+        for (File file : Objects.requireNonNull(loc.listFiles(file -> file.getPath().toLowerCase().endsWith(".jar")))) {
+            URLClassLoader urlClassLoader;
+            InputStream stream;
+            try {
+                urlClassLoader = URLClassLoader.newInstance(new URL[]{file.toURI().toURL()});
+                stream = urlClassLoader.getResourceAsStream("plugin.json");
+
+                if (stream == null) {
+                    throw new RuntimeException("Invalid Jar! Missing plugin.json in: " + file.getName());
+                }
+
+                byte[] content = new byte[stream.available()];
+
+                if (stream.read(content) > 0) {
+                    String body = new String(content);
+
+                    Gson gson = new GsonBuilder().create();
+                    HabboPluginConfiguration pluginConfigurtion = gson.fromJson(body, HabboPluginConfiguration.class);
+
+                    try {
+                        Class<?> clazz = urlClassLoader.loadClass(pluginConfigurtion.main);
+                        Class<? extends HabboPlugin> stackClazz = clazz.asSubclass(HabboPlugin.class);
+                        Constructor<? extends HabboPlugin> constructor = stackClazz.getConstructor();
+                        HabboPlugin plugin = constructor.newInstance();
+                        plugin.configuration = pluginConfigurtion;
+                        plugin.classLoader = urlClassLoader;
+                        plugin.stream = stream;
+
+                        if(plugin.configuration.name.equalsIgnoreCase(name) && pluginReload != null){
+                            if(this.plugins.contains(pluginReload) && this.plugins.remove(pluginReload)){
+                                this.plugins.add(plugin);
+                                plugin.onEnable();
+                                LOGGER.info("Plugin: " + plugin.configuration.name + " updated!");
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Could not load plugin {}!", pluginConfigurtion.name);
+                        LOGGER.error("Caught exception", e);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Caught exception", e);
+            }
+        }
+
+
+    }
+
     public void registerEvents(HabboPlugin plugin, EventListener listener) {
         synchronized (plugin.registeredEvents) {
             Method[] methods = listener.getClass().getMethods();

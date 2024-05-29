@@ -518,6 +518,20 @@ public class ItemManager {
         }
     }
 
+    public HabboItem createItemNoSql(int habboId, Item item, int limitedStack, int limitedSells, String extraData) {
+        Class<? extends HabboItem> itemClass = item.getInteractionType().getType();
+        int id = new Random().nextInt(10000000) + 1000000000;
+        if (itemClass != null) {
+            try {
+                return itemClass.getDeclaredConstructor(int.class, int.class, Item.class, String.class, int.class, int.class).newInstance(id, habboId, item, extraData, limitedStack, limitedSells);
+            } catch (Exception e) {
+                LOGGER.error("Caught exception", e);
+                return new InteractionDefault(id, habboId, item, extraData, limitedStack, limitedSells);
+            }
+        }
+        return null;
+    }
+
     public void addNewUserGift(NewUserGift gift) {
         this.newuserGifts.put(gift.getId(), gift);
     }

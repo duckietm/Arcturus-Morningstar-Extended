@@ -32,10 +32,19 @@ public class RoomUserLookAtPoint extends MessageHandler {
         if (!roomUnit.canWalk())
             return;
 
+        if (roomUnit.isWalking() || roomUnit.hasStatus(RoomUnitStatus.SNOWWAR_RUN))
+            return;
+
         if (roomUnit.isWalking() || roomUnit.hasStatus(RoomUnitStatus.MOVE))
             return;
 
         if (roomUnit.cmdLay || roomUnit.hasStatus(RoomUnitStatus.LAY))
+            return;
+
+        if (roomUnit.hasStatus(RoomUnitStatus.SNOWWAR_DIE_BACK) || roomUnit.hasStatus(RoomUnitStatus.SNOWWAR_DIE_FRONT))
+            return;
+
+        if (roomUnit.hasStatus(RoomUnitStatus.SNOWWAR_PICK))
             return;
 
         if (roomUnit.isIdle())
