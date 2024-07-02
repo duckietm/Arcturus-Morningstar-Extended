@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.games.tag.IceTagGame;
 import com.eu.habbo.habbohotel.games.tag.RollerskateGame;
 import com.eu.habbo.habbohotel.games.wired.WiredGame;
 import com.eu.habbo.habbohotel.guilds.Guild;
+import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.navigation.NavigatorFilterComparator;
@@ -804,20 +805,16 @@ public class RoomManager {
                 }
             }
 
-            allFloorItems.forEach(new TObjectProcedure<HabboItem>() {
-                @Override
-                public boolean execute(HabboItem object) {
-                    if (room.isHideWired() && object instanceof InteractionWired)
-                        return true;
-
-                    floorItems.add(object);
-                    if (floorItems.size() == 250) {
-                        habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
-                        floorItems.clear();
-                    }
-
+            allFloorItems.forEach(object ->  {
+                if (room.isHideWired() && object instanceof InteractionWired | object instanceof InteractionTileWalkMagic)
                     return true;
+
+                floorItems.add(object);
+                if (floorItems.size() == 250) {
+                    habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
+                    floorItems.clear();
                 }
+                return true;
             });
 
             habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
