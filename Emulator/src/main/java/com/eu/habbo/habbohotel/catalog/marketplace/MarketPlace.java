@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MarketPlace {
+public final class MarketPlace {
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketPlace.class);
 
     //Configuration. Loaded from database & updated accordingly.
@@ -143,10 +143,9 @@ public class MarketPlace {
             case 2:
                 query += " ORDER BY minPrice ASC";
                 break;
-            default:
             case 1:
+            default:
                 query += " ORDER BY minPrice DESC";
-                break;
         }
 
         query += ")";

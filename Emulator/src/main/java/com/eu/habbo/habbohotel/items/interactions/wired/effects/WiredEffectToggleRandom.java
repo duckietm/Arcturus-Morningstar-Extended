@@ -21,7 +21,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,45 +42,47 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
 
     private final THashSet<HabboItem> items = new THashSet<>();
 
-    private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES = new ArrayList<Class<? extends HabboItem>>() {
-        {
-            this.add(InteractionWired.class);
-            this.add(InteractionTeleport.class);
-            this.add(InteractionPushable.class);
-            this.add(InteractionTagPole.class);
-            this.add(InteractionTagField.class);
-            this.add(InteractionCrackable.class);
-            this.add(InteractionGameScoreboard.class);
-            this.add(InteractionGameGate.class);
-            this.add(InteractionFreezeTile.class);
-            this.add(InteractionFreezeBlock.class);
-            this.add(InteractionFreezeExitTile.class);
-            this.add(InteractionBattleBanzaiTeleporter.class);
-            this.add(InteractionBattleBanzaiTile.class);
-            this.add(InteractionMonsterPlantSeed.class);
-            this.add(InteractionPetBreedingNest.class);
-            this.add(InteractionPetDrink.class);
-            this.add(InteractionPetFood.class);
-            this.add(InteractionPetToy.class);
-            this.add(InteractionBadgeDisplay.class);
-            this.add(InteractionClothing.class);
-            this.add(InteractionVendingMachine.class);
-            this.add(InteractionGift.class);
-            this.add(InteractionPressurePlate.class);
-            this.add(InteractionMannequin.class);
-            this.add(InteractionGymEquipment.class);
-            this.add(InteractionHopper.class);
-            this.add(InteractionObstacle.class);
-            this.add(InteractionOneWayGate.class);
-            this.add(InteractionPuzzleBox.class);
-            this.add(InteractionRoller.class);
-            this.add(InteractionSwitch.class);
-            this.add(InteractionTent.class);
-            this.add(InteractionTrap.class);
-            this.add(InteractionTrophy.class);
-            this.add(InteractionWater.class);
-        }
-    };
+    private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES;
+
+    static {
+        FORBIDDEN_TYPES = new ArrayList<>(Arrays.asList(
+                InteractionWired.class,
+                InteractionTeleport.class,
+                InteractionPushable.class,
+                InteractionTagPole.class,
+                InteractionTagField.class,
+                InteractionCrackable.class,
+                InteractionGameScoreboard.class,
+                InteractionGameGate.class,
+                InteractionFreezeTile.class,
+                InteractionFreezeBlock.class,
+                InteractionFreezeExitTile.class,
+                InteractionBattleBanzaiTeleporter.class,
+                InteractionBattleBanzaiTile.class,
+                InteractionMonsterPlantSeed.class,
+                InteractionPetBreedingNest.class,
+                InteractionPetDrink.class,
+                InteractionPetFood.class,
+                InteractionPetToy.class,
+                InteractionBadgeDisplay.class,
+                InteractionClothing.class,
+                InteractionVendingMachine.class,
+                InteractionGift.class,
+                InteractionPressurePlate.class,
+                InteractionMannequin.class,
+                InteractionGymEquipment.class,
+                InteractionHopper.class,
+                InteractionObstacle.class,
+                InteractionOneWayGate.class,
+                InteractionPuzzleBox.class,
+                InteractionRoller.class,
+                InteractionSwitch.class,
+                InteractionTent.class,
+                InteractionTrap.class,
+                InteractionTrophy.class,
+                InteractionWater.class
+        ));
+    }
 
     public WiredEffectToggleRandom(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
