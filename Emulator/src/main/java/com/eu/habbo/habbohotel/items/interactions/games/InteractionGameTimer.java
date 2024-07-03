@@ -234,52 +234,47 @@ public class InteractionGameTimer extends HabboItem implements Runnable {
                 state = InteractionGameTimerAction.getByAction((int) objects[0]);
             }
 
-            switch (state) {
-                case START_STOP:
-                    if (this.isRunning) { // a game has been started
-                        this.isPaused = !this.isPaused;
-                        if (this.isPaused) {
-                            this.pause(room);
-                        } else {
-                            this.unpause(room);
-
-                            if (!this.threadActive) {
-                                this.threadActive = true;
-                                Emulator.getThreading().run(new GameTimer(this));
-                            }
-                        }
+            if (state == InteractionGameTimer.InteractionGameTimerAction.START_STOP) {
+                if (this.isRunning) { // a game has been started
+                    this.isPaused = !this.isPaused;
+                    if (this.isPaused) {
+                        this.pause(room);
                     } else {
-                        this.isPaused = false;
-                        this.isRunning = true;
-                        this.timeNow = this.baseTime;
-                        room.updateItem(this);
-
-                        this.createNewGame(room);
-                        WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{this});
+                        this.unpause(room);
 
                         if (!this.threadActive) {
                             this.threadActive = true;
-                            Emulator.getThreading().run(new GameTimer(this), 1000);
+                            Emulator.getThreading().run(new GameTimer(this));
                         }
                     }
+                } else {
+                    this.isPaused = false;
+                    this.isRunning = true;
+                    this.timeNow = this.baseTime;
+                    room.updateItem(this);
 
-                    break;
+                    this.createNewGame(room);
+                    WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{this});
 
-                case INCREASE_TIME:
-                    if (!this.isRunning) {
-                        this.increaseTimer(room);
-                    } else if (this.isPaused) {
-                        this.endGame(room);
-                        this.increaseTimer(room);
-                        WiredHandler.handle(WiredTriggerType.GAME_ENDS, null, room, new Object[]{});
+                    if (!this.threadActive) {
+                        this.threadActive = true;
+                        Emulator.getThreading().run(new GameTimer(this), 1000);
                     }
-
-                    break;
+                }
+            } else if (state == InteractionGameTimer.InteractionGameTimerAction.INCREASE_TIME) {
+                if (!this.isRunning) {
+                    this.increaseTimer(room);
+                } else if (this.isPaused) {
+                    this.endGame(room);
+                    this.increaseTimer(room);
+                    WiredHandler.handle(WiredTriggerType.GAME_ENDS, null, room, new Object[]{});
+                }
             }
         }
 
         super.onClick(client, room, objects);
     }
+
 
     @Override
     public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
