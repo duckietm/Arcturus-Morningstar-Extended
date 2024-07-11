@@ -2383,6 +2383,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 this.roomSpecialTypes.addCondition((InteractionWiredCondition) item);
             } else if (item instanceof InteractionWiredExtra) {
                 this.roomSpecialTypes.addExtra((InteractionWiredExtra) item);
+            } else if (item instanceof InteractionWiredHighscore) {
+                this.roomSpecialTypes.addHighscore((InteractionWiredHighscore) item);
             } else if (item instanceof InteractionBattleBanzaiTeleporter) {
                 this.roomSpecialTypes.addBanzaiTeleporter((InteractionBattleBanzaiTeleporter) item);
             } else if (item instanceof InteractionRoller) {
@@ -2428,8 +2430,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             } else if (item instanceof InteractionPetBreedingNest) {
                 this.roomSpecialTypes.addUndefined(item);
             } else if (item instanceof InteractionBlackHole) {
-                this.roomSpecialTypes.addUndefined(item);
-            } else if (item instanceof InteractionWiredHighscore) {
                 this.roomSpecialTypes.addUndefined(item);
             } else if (item instanceof InteractionStickyPole) {
                 this.roomSpecialTypes.addUndefined(item);

@@ -25,9 +25,7 @@ import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManage
 import com.eu.habbo.habbohotel.users.HabboInventory;
 import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
-import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionManager;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.messages.PacketManager;
 import com.eu.habbo.messages.incoming.camera.CameraPublishToWebEvent;
 import com.eu.habbo.messages.incoming.camera.CameraPurchaseEvent;
@@ -40,7 +38,6 @@ import com.eu.habbo.messages.outgoing.catalog.DiscountComposer;
 import com.eu.habbo.messages.outgoing.catalog.GiftConfigurationComposer;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorEventCategoriesComposer;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
-import com.eu.habbo.plugin.events.emulator.EmulatorLoadedEvent;
 import com.eu.habbo.plugin.events.roomunit.RoomUnitLookAtPointEvent;
 import com.eu.habbo.plugin.events.users.*;
 import com.eu.habbo.threading.runnables.RoomTrashing;
@@ -488,7 +485,6 @@ public class PluginManager {
             this.methods.add(InteractionFootballGate.class.getMethod("onUserExitRoomEvent", UserExitRoomEvent.class));
             this.methods.add(InteractionFootballGate.class.getMethod("onUserSavedLookEvent", UserSavedLookEvent.class));
             this.methods.add(PluginManager.class.getMethod("globalOnConfigurationUpdated", EmulatorConfigUpdatedEvent.class));
-            this.methods.add(WiredHighscoreManager.class.getMethod("onEmulatorLoaded", EmulatorLoadedEvent.class));
         } catch (NoSuchMethodException e) {
             LOGGER.info("Failed to define default events!");
             LOGGER.error("Caught exception", e);

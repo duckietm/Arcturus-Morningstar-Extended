@@ -44,7 +44,7 @@ public class RoomSpecialTypes {
     private final THashMap<WiredEffectType, THashSet<InteractionWiredEffect>> wiredEffects;
     private final THashMap<WiredConditionType, THashSet<InteractionWiredCondition>> wiredConditions;
     private final THashMap<Integer, InteractionWiredExtra> wiredExtras;
-
+    private final THashMap<Integer, InteractionWiredHighscore> wiredHighscore;
     private final THashMap<Integer, InteractionGameScoreboard> gameScoreboards;
     private final THashMap<Integer, InteractionGameGate> gameGates;
     private final THashMap<Integer, InteractionGameTimer> gameTimers;
@@ -65,6 +65,7 @@ public class RoomSpecialTypes {
         this.wiredEffects = new THashMap<>(0);
         this.wiredConditions = new THashMap<>(0);
         this.wiredExtras = new THashMap<>(0);
+        this.wiredHighscore = new THashMap<>(0);
 
         this.gameScoreboards = new THashMap<>(0);
         this.gameGates = new THashMap<>(0);
@@ -456,6 +457,24 @@ public class RoomSpecialTypes {
     public void removeExtra(InteractionWiredExtra extra) {
         synchronized (this.wiredExtras) {
             this.wiredExtras.remove(extra.getId());
+        }
+    }
+
+    public void addHighscore(InteractionWiredHighscore highscore) {
+        synchronized (this.wiredHighscore) {
+            this.wiredHighscore.put(highscore.getId(), highscore);
+        }
+    }
+
+    public THashSet<InteractionWiredHighscore> getWiredHighscores() {
+        synchronized (this.wiredHighscore) {
+            THashSet<InteractionWiredHighscore> highscores = new THashSet<>();
+
+            for (Map.Entry<Integer, InteractionWiredHighscore> map : this.wiredHighscore.entrySet()) {
+                highscores.add(map.getValue());
+            }
+
+            return highscores;
         }
     }
 

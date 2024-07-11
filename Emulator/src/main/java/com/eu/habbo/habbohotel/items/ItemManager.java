@@ -240,6 +240,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_act_alert", WiredEffectAlert.class));
         this.interactionsList.add(new ItemInteraction("wf_act_give_handitem", WiredEffectGiveHandItem.class));
         this.interactionsList.add(new ItemInteraction("wf_act_give_effect", WiredEffectGiveEffect.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_super_wired", WiredEffectSuper.class));
 
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_furni_on", WiredConditionFurniHaveFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_furnis_hv_avtrs", WiredConditionFurniHaveHabbo.class));
@@ -266,6 +267,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_handitem", WiredConditionHabboHasHandItem.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_date_rng_active", WiredConditionDateRangeActive.class));
 
+        this.interactionsList.add(new ItemInteraction("wf_cnd_super_wired", WiredConditionSuper.class));
 
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
@@ -793,7 +795,6 @@ public class ItemManager {
 
     public void dispose() {
         this.items.clear();
-        this.highscoreManager.dispose();
 
         LOGGER.info("Item Manager -> Disposed!");
     }
