@@ -50,14 +50,10 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
             return true;
 
         Collection<Habbo> habbos = room.getHabbos();
-        Collection<Bot> bots = room.getCurrentBots().valueCollection();
-        Collection<Pet> pets = room.getCurrentPets().valueCollection();
 
-        return this.items.stream().allMatch(item -> {
+        return this.items.stream().anyMatch(item -> {
             THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
-            return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    bots.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    pets.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
+            return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
         });
     }
 
