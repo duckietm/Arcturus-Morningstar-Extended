@@ -265,9 +265,15 @@ public class SubscriptionHabboClub extends Subscription {
 
             try (ResultSet set = statement.executeQuery()) {
                 while (set.next()) {
+                    int userId = set.getInt("user_id");
                     try {
-                        int userId = set.getInt("user_id");
                         HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
+
+                        if (habboInfo == null) {
+                            SubscriptionManager.LOGGER.error("HabboInfo is null for user #" + userId);
+                            continue;
+                        }
+
                         HabboStats stats = habboInfo.getHabboStats();
                         ClubCenterDataComposer calculated = calculatePayday(habboInfo);
                         int totalReward = (calculated.creditRewardForMonthlySpent + calculated.creditRewardForStreakBonus);
@@ -279,7 +285,7 @@ public class SubscriptionHabboClub extends Subscription {
                         stats.lastHCPayday = timestampNow;
                         Emulator.getThreading().run(stats);
                     } catch (Exception e) {
-                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
+                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + userId, e);
                     }
                 }
             }
@@ -307,6 +313,7 @@ public class SubscriptionHabboClub extends Subscription {
         }
         isExecuting = false;
     }
+
 
     /**
      * Called when a user logs in. Checks for any unclaimed HC Pay day rewards and issues rewards.
