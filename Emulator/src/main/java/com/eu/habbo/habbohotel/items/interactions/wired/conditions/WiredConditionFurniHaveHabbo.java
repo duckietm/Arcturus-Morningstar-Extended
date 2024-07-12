@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.FURNI_HAVE_HABBO;
     protected THashSet<HabboItem> items;
+    private boolean all;
 
     public WiredConditionFurniHaveHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -40,31 +41,44 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.all = false;
     }
+
 
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         this.refresh();
 
-        if (this.items.isEmpty())
+        if (this.items.isEmpty()) {
             return true;
+        }
 
         Collection<Habbo> habbos = room.getHabbos();
         Collection<Bot> bots = room.getCurrentBots().valueCollection();
         Collection<Pet> pets = room.getCurrentPets().valueCollection();
 
-        return this.items.stream().allMatch(item -> {
-            THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
-            return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    bots.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    pets.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
-        });
+        if (this.all) {
+            return this.items.stream().allMatch(item -> {
+                THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+                return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                        bots.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                        pets.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
+            });
+        } else {
+            return this.items.stream().anyMatch(item -> {
+                THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+                return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                        bots.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                        pets.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
+            });
+        }
     }
 
     @Override
     public String getWiredData() {
         this.refresh();
         return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+                this.all,
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -76,6 +90,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
 
         if (wiredData.startsWith("{")) {
             JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            this.all = data.all;
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -88,6 +103,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
             String[] data = wiredData.split(":");
 
             if (data.length >= 1) {
+                this.all = (data[0].equals("1"));
 
                 String[] items = data[1].split(";");
 
@@ -170,9 +186,11 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     }
 
     static class JsonData {
+        boolean all;
         List<Integer> itemIds;
 
-        public JsonData(List<Integer> itemIds) {
+        public JsonData(boolean all, List<Integer> itemIds) {
+            this.all = all;
             this.itemIds = itemIds;
         }
     }
