@@ -34,7 +34,7 @@ public class YoutubeRequestPlaylistChange extends MessageHandler {
 
         if (item == null || !(item instanceof  InteractionYoutubeTV)) return;
 
-        Optional<YoutubeManager.YoutubePlaylist> playlist = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(item.getBaseItem().getId()).stream().filter(p -> p.getId().equals(playlistId)).findAny();
+        Optional<YoutubeManager.YoutubePlaylist> playlist = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(itemId).stream().filter(p -> p.getId().equals(playlistId)).findAny();
 
         if (playlist.isPresent()) {
             YoutubeManager.YoutubeVideo video = playlist.get().getVideos().get(0);
