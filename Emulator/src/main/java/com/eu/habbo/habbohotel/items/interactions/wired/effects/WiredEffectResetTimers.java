@@ -83,7 +83,7 @@ public class WiredEffectResetTimers extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
-            this.delay
+                this.getDelay()
         ));
     }
 

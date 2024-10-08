@@ -503,7 +503,26 @@ public class GuildManager {
 
         return guilds;
     }
+    public List<Guild> getOwnedGuilds(int userId) {
+        List<Guild> guilds = new ArrayList<Guild>();
 
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT id FROM guilds WHERE user_id = ?")) {
+            statement.setInt(1, userId);
+            try (ResultSet set = statement.executeQuery()) {
+                while (set.next()) {
+                    Guild guild = getGuild(set.getInt("id"));
+
+                    if (guild != null) {
+                        guilds.add(guild);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        return guilds;
+    }
     public List<Guild> getAllGuilds() {
         List<Guild> guilds = new ArrayList<Guild>();
 

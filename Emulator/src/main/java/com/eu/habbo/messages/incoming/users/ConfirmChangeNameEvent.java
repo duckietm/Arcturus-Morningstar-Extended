@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.users;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboManager;
@@ -60,6 +61,10 @@ public class ConfirmChangeNameEvent extends MessageHandler {
                     room.setOwnerName(name);
                     room.setNeedsUpdate(true);
                     room.save();
+                }
+
+                for (Guild guild : Emulator.getGameEnvironment().getGuildManager().getOwnedGuilds(this.client.getHabbo().getHabboInfo().getId())) {
+                    guild.setOwnerName(name);
                 }
 
                 synchronized (changingUsernames) {
