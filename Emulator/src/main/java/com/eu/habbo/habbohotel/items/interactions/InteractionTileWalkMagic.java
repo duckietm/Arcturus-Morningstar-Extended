@@ -2,8 +2,6 @@ package com.eu.habbo.habbohotel.items.interactions;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
-import com.eu.habbo.habbohotel.rooms.RoomTile;
-import com.eu.habbo.habbohotel.rooms.RoomTileState;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
@@ -22,12 +20,17 @@ public class InteractionTileWalkMagic extends HabboItem {
 
     @Override
     public boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects) {
-        return true;
+        return false;
     }
 
     @Override
-    public RoomTileState getOverrideTileState(RoomTile tile, Room room) {
-        return RoomTileState.OPEN;
+    public boolean isWalkable() {
+        return false;
+    }
+
+    @Override
+    public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
+
     }
 
     @Override
@@ -39,17 +42,7 @@ public class InteractionTileWalkMagic extends HabboItem {
     }
 
     @Override
-    public boolean canOverrideTile(RoomUnit unit, Room room, RoomTile tile) {
+    public boolean isUsable() {
         return true;
-    }
-
-    @Override
-    public boolean isWalkable() {
-        return true;
-    }
-
-    @Override
-    public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
-
     }
 }

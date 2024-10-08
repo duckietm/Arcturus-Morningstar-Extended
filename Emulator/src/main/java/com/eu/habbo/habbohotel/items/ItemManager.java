@@ -344,9 +344,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("totem_head", InteractionTotemHead.class));
         this.interactionsList.add(new ItemInteraction("totem_planet", InteractionTotemPlanet.class));
 
-        /* Habbo 2.0 * By AlfreviD */
-
-        this.interactionsList.add(new ItemInteraction("tile_walk_magic", InteractionTileWalkMagic.class));
+        this.interactionsList.add(new ItemInteraction("tile_walkmagic", InteractionTileWalkMagic.class));
     }
 
 

@@ -53,12 +53,9 @@ public class SetStackHelperHeightEvent extends MessageHandler {
 
                 if (item instanceof InteractionTileWalkMagic) {
                     for (RoomTile t : tiles) {
-                        this.client.getHabbo().getHabboInfo().getCurrentRoom().updateHabbosAt(
-                                t.x,
-                                t.y,
-                                this.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbosAt(t.x, t.y)
-                        );
+                        this.client.getHabbo().getHabboInfo().getCurrentRoom().updateHabbosAt(t.x, t.y);
                         this.client.getHabbo().getHabboInfo().getCurrentRoom().updateBotsAt(t.x, t.y);
+                        this.client.getHabbo().getHabboInfo().getCurrentRoom().updatePetsAt(t.x, t.y);
                     }
                 }
 
