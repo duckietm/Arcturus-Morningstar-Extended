@@ -11,7 +11,7 @@ public class Rank {
     private final int id;
 
 
-    private final int level;
+    private int level;
     private final THashMap<String, Permission> permissions;
     private final THashMap<String, String> variables;
     private String name;
@@ -55,6 +55,7 @@ public class Rank {
         this.logCommands = set.getString("log_commands").equals("1");
         this.prefix = set.getString("prefix");
         this.prefixColor = set.getString("prefix_color");
+        this.level = set.getInt("level");
         this.diamondsTimerAmount = set.getInt("auto_points_amount");
         this.creditsTimerAmount = set.getInt("auto_credits_amount");
         this.pixelsTimerAmount = set.getInt("auto_pixels_amount");
