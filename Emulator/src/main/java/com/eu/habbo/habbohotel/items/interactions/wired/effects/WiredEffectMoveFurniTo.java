@@ -109,6 +109,10 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                                 tile = room.getLayout().getTileInFront(objectTile, this.direction, indexOffset);
                             }
 
+                            if(tile == null) {
+                                continue;
+                            }
+
                             room.sendComposer(new FloorItemOnRollerComposer((HabboItem) object, null, tile, tile.getStackHeight() - ((HabboItem) object).getZ(), room).compose());
                             refreshTiles.addAll(room.getLayout().getTilesAt(room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY()), ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation()));
                             room.updateTiles(refreshTiles);
