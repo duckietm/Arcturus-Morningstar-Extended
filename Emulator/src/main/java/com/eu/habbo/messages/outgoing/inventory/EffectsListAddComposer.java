@@ -22,4 +22,8 @@ public class EffectsListAddComposer extends MessageComposer {
         this.response.appendBoolean(effect.duration <= 0); //Is active
         return this.response;
     }
+
+    public EffectsComponent.HabboEffect getEffect() {
+        return effect;
+    }
 }

@@ -22,4 +22,8 @@ public class RoomUserTalkComposer extends MessageComposer {
         this.roomChatMessage.serialize(this.response);
         return this.response;
     }
+
+    public RoomChatMessage getRoomChatMessage() {
+        return roomChatMessage;
+    }
 }

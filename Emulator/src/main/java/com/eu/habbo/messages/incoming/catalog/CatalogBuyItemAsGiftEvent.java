@@ -61,7 +61,7 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
                 int itemId = this.packet.readInt();
                 String extraData = this.packet.readString();
                 String username = this.packet.readString();
-                String message = this.packet.readString();
+                String message = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
                 int spriteId = this.packet.readInt();
                 int color = this.packet.readInt();
                 int ribbonId = this.packet.readInt();

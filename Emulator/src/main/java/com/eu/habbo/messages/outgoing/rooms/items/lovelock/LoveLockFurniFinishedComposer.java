@@ -18,4 +18,8 @@ public class LoveLockFurniFinishedComposer extends MessageComposer {
         this.response.appendInt(this.loveLock.getId());
         return this.response;
     }
+
+    public InteractionLoveLock getLoveLock() {
+        return loveLock;
+    }
 }

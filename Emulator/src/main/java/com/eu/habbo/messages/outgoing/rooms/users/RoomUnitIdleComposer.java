@@ -19,4 +19,8 @@ public class RoomUnitIdleComposer extends MessageComposer {
         this.response.appendBoolean(this.roomUnit.isIdle());
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
 }

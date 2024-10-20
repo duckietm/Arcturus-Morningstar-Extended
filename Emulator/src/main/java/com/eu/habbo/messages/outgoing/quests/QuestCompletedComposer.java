@@ -58,5 +58,36 @@ public class QuestCompletedComposer extends MessageComposer {
             message.appendBoolean(this.easy);
         }
 
+        public int getActivityPointsType() {
+            return activityPointsType;
+        }
+
+        public boolean isAccepted() {
+            return accepted;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public int getSortOrder() {
+            return sortOrder;
+        }
+
+        public boolean isEasy() {
+            return easy;
+        }
+    }
+
+    public UnknownClass getUnknownClass() {
+        return unknownClass;
+    }
+
+    public boolean isUnknowbOolean() {
+        return unknowbOolean;
     }
 }

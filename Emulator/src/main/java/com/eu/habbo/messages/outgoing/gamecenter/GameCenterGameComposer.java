@@ -23,4 +23,12 @@ public class GameCenterGameComposer extends MessageComposer {
         this.response.appendInt(this.status);
         return this.response;
     }
+
+    public int getGameId() {
+        return gameId;
+    }
+
+    public int getStatus() {
+        return status;
+    }
 }

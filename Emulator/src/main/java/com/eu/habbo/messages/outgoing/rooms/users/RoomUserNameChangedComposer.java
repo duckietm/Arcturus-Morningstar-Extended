@@ -36,4 +36,16 @@ public class RoomUserNameChangedComposer extends MessageComposer {
         this.response.appendString(this.name);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

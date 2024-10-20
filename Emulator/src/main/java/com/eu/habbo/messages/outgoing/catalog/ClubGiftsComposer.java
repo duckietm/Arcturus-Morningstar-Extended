@@ -65,4 +65,16 @@ public class ClubGiftsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public int getDaysTillNextGift() {
+        return daysTillNextGift;
+    }
+
+    public int getAvailableGifts() {
+        return availableGifts;
+    }
+
+    public int getDaysAsHc() {
+        return daysAsHc;
+    }
 }

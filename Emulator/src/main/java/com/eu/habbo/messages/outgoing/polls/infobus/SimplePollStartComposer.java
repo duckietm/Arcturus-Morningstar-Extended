@@ -27,4 +27,12 @@ public class SimplePollStartComposer extends MessageComposer {
         this.response.appendString(this.question);
         return this.response;
     }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
 }

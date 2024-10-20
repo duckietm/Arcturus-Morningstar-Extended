@@ -30,4 +30,8 @@ public class PromoteOwnRoomsListComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
 }

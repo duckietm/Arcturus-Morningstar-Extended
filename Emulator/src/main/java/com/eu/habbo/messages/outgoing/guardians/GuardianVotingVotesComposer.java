@@ -32,4 +32,12 @@ public class GuardianVotingVotesComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public GuardianTicket getTicket() {
+        return ticket;
+    }
+
+    public Habbo getGuardian() {
+        return guardian;
+    }
 }

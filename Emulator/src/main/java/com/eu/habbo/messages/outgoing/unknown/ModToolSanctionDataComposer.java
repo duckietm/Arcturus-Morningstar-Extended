@@ -51,5 +51,41 @@ public class ModToolSanctionDataComposer extends MessageComposer {
             message.appendString(this.tradelockInfo);
             message.appendString(this.machineBanInfo);
         }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+        public int getUnknownInt1() {
+            return unknownInt1;
+        }
+
+        public boolean isAvatarOnly() {
+            return avatarOnly;
+        }
+
+        public String getTradelockInfo() {
+            return tradelockInfo;
+        }
+
+        public String getMachineBanInfo() {
+            return machineBanInfo;
+        }
+    }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public int getAccountId() {
+        return accountId;
+    }
+
+    public CFHSanction getSanction() {
+        return sanction;
     }
 }

@@ -51,27 +51,39 @@ public class UpdateFriendComposer extends MessageComposer {
 
         for(MessengerBuddy buddy : buddies){
 
-        if (buddy != null) {
-            this.response.appendInt(this.action); // -1 = removed friendId / 0 = updated friend / 1 = added friend 
-            this.response.appendInt(buddy.getId());
-            if (this.action == -1) {
-             continue;   
+            if (buddy != null) {
+                this.response.appendInt(this.action); // -1 = removed friendId / 0 = updated friend / 1 = added friend
+                this.response.appendInt(buddy.getId());
+                if (this.action == -1) {
+                 continue;
+                }
+                this.response.appendString(buddy.getUsername());
+                this.response.appendInt(buddy.getGender().equals(HabboGender.M) ? 0 : 1);
+                this.response.appendBoolean(buddy.getOnline() == 1);
+                this.response.appendBoolean(buddy.inRoom()); //In room
+                this.response.appendString(buddy.getLook());
+                this.response.appendInt(buddy.getCategoryId());
+                this.response.appendString(buddy.getMotto());
+                this.response.appendString(""); //Last seen as DATETIMESTRING
+                this.response.appendString(""); //Realname or Facebookame as String
+                this.response.appendBoolean(false); //Offline messaging.
+                this.response.appendBoolean(false);
+                this.response.appendBoolean(false);
+                this.response.appendShort(buddy.getRelation());
             }
-            this.response.appendString(buddy.getUsername());
-            this.response.appendInt(buddy.getGender().equals(HabboGender.M) ? 0 : 1);
-            this.response.appendBoolean(buddy.getOnline() == 1);
-            this.response.appendBoolean(buddy.inRoom()); //In room
-            this.response.appendString(buddy.getLook());
-            this.response.appendInt(buddy.getCategoryId());
-            this.response.appendString(buddy.getMotto());
-            this.response.appendString(""); //Last seen as DATETIMESTRING
-            this.response.appendString(""); //Realname or Facebookame as String
-            this.response.appendBoolean(false); //Offline messaging.
-            this.response.appendBoolean(false);
-            this.response.appendBoolean(false);
-            this.response.appendShort(buddy.getRelation());
         }
-    }
         return this.response;
+    }
+
+    public Collection<MessengerBuddy> getBuddies() {
+        return buddies;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public int getAction() {
+        return action;
     }
 }

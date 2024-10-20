@@ -59,4 +59,36 @@ public class GuildMembersComposer extends MessageComposer {
         this.response.appendString(this.searchValue);
         return this.response;
     }
+
+    public ArrayList<GuildMember> getMembers() {
+        return members;
+    }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public Habbo getSession() {
+        return session;
+    }
+
+    public int getPageId() {
+        return pageId;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public String getSearchValue() {
+        return searchValue;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public int getTotalCount() {
+        return totalCount;
+    }
 }

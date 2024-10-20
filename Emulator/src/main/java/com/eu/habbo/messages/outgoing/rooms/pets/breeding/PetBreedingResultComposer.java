@@ -108,5 +108,29 @@ public class PetBreedingResultComposer extends MessageComposer {
             message.appendString(this.pet.getColor());
             message.appendString(this.ownerName);
         }
+
+        public Pet getPet() {
+            return pet;
+        }
+
+        public String getOwnerName() {
+            return ownerName;
+        }
+    }
+
+    public int getBoxId() {
+        return boxId;
+    }
+
+    public int getPetType() {
+        return petType;
+    }
+
+    public PetBreedingPet getPetOne() {
+        return petOne;
+    }
+
+    public PetBreedingPet getPetTwo() {
+        return petTwo;
     }
 }

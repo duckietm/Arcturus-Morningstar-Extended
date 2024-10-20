@@ -20,4 +20,8 @@ public class EffectsListEffectEnableComposer extends MessageComposer {
         this.response.appendBoolean(this.effect.enabled); //activated
         return this.response;
     }
+
+    public EffectsComponent.HabboEffect getEffect() {
+        return effect;
+    }
 }

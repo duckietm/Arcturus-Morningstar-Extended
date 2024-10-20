@@ -17,4 +17,8 @@ public class RentableSpaceUnknownComposer extends MessageComposer {
         this.response.appendInt(this.itemId);
         return this.response;
     }
+
+    public int getItemId() {
+        return itemId;
+    }
 }

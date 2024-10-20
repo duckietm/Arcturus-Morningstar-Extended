@@ -36,4 +36,12 @@ public class ModToolUserRoomVisitsComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public HabboInfo getHabboInfo() {
+        return habboInfo;
+    }
+
+    public THashSet<ModToolRoomVisit> getRoomVisits() {
+        return roomVisits;
+    }
 }

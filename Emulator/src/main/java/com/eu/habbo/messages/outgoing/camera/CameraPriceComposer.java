@@ -23,4 +23,16 @@ public class CameraPriceComposer extends MessageComposer {
         this.response.appendInt(this.pointsType);
         return this.response;
     }
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public int getPointsType() {
+        return pointsType;
+    }
 }

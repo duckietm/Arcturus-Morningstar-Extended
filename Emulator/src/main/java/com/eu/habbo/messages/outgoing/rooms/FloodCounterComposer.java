@@ -17,4 +17,8 @@ public class FloodCounterComposer extends MessageComposer {
         this.response.appendInt(this.time);
         return this.response;
     }
+
+    public int getTime() {
+        return time;
+    }
 }

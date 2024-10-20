@@ -24,4 +24,12 @@ public class UserPermissionsComposer extends MessageComposer {
         this.response.appendBoolean(this.habbo.hasPermission(Permission.ACC_AMBASSADOR));
         return this.response;
     }
+
+    public int getClubLevel() {
+        return clubLevel;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

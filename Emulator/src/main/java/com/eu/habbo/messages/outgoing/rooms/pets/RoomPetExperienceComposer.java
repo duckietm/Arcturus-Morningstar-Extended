@@ -22,4 +22,12 @@ public class RoomPetExperienceComposer extends MessageComposer {
         this.response.appendInt(this.amount);
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
 }

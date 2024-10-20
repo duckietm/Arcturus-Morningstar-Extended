@@ -20,4 +20,12 @@ public class RoomInviteComposer extends MessageComposer {
         this.response.appendString(this.message);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

@@ -24,4 +24,16 @@ public class AvailabilityStatusMessageComposer extends MessageComposer {
         this.response.appendBoolean(isAuthenticHabbo);//isAuthenticHabbo
         return this.response;
     }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public boolean isShuttingDown() {
+        return isShuttingDown;
+    }
+
+    public boolean isAuthenticHabbo() {
+        return isAuthenticHabbo;
+    }
 }

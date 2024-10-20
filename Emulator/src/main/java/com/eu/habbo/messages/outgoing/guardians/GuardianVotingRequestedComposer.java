@@ -47,4 +47,8 @@ public class GuardianVotingRequestedComposer extends MessageComposer {
         //2015 10 17 14 24 30
         return this.response;
     }
+
+    public GuardianTicket getTicket() {
+        return ticket;
+    }
 }

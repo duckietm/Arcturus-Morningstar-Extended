@@ -22,4 +22,12 @@ public class HotelViewExpiringCatalogPageCommposer extends MessageComposer {
         this.response.appendString(this.image);
         return this.response;
     }
+
+    public CatalogPage getPage() {
+        return page;
+    }
+
+    public String getImage() {
+        return image;
+    }
 }

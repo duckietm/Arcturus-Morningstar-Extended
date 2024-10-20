@@ -19,4 +19,8 @@ public class GuildBoughtComposer extends MessageComposer {
         this.response.appendInt(this.guild.getId());
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
 }

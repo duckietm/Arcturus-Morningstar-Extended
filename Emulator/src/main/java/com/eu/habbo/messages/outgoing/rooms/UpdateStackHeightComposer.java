@@ -8,6 +8,8 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.set.hash.THashSet;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class UpdateStackHeightComposer extends MessageComposer {
@@ -33,39 +35,40 @@ public class UpdateStackHeightComposer extends MessageComposer {
 
     @Override
     protected ServerMessage composeInternal() {
-        //TODO: maybe do this another way? doesn't seem to be very clean but gets the job done
         this.response.init(Outgoing.UpdateStackHeightComposer);
+
         if (this.updateTiles != null) {
-            this.updateTiles.removeIf(Objects::isNull);
-            // prevent overflow. Byte max value is 127
-            if(this.updateTiles.size() > 127) {
-                RoomTile[] tiles = this.updateTiles.toArray(new RoomTile[updateTiles.size()]);
+            List<RoomTile> tilesCopy = new ArrayList<>(this.updateTiles);
+            tilesCopy.removeIf(Objects::isNull);
+
+            if (tilesCopy.size() > 127) {
                 this.response.appendByte(127);
-                for(int i = 0; i < 127; i++) {
-                    RoomTile t = tiles[i];
-                    updateTiles.remove(t); // remove it from the set
+                for (int i = 0; i < 127; i++) {
+                    RoomTile t = tilesCopy.get(i);
                     this.response.appendByte((int) t.x);
                     this.response.appendByte((int) t.y);
-                    if(Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
+                    if (Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
                         this.response.appendShort((short) (t.z * 256.0));
-                    }
-                    else {
+                    } else {
                         this.response.appendShort(t.relativeHeight());
                     }
                 }
-                //send the remaining tiles in a new message
-                this.room.sendComposer(new UpdateStackHeightComposer(this.room, updateTiles).compose());
+
+                List<RoomTile> remainingTiles = tilesCopy.subList(127, tilesCopy.size());
+                if (!remainingTiles.isEmpty()) {
+                    this.room.sendComposer(new UpdateStackHeightComposer(this.room, new THashSet<>(remainingTiles)).compose());
+                }
+
                 return this.response;
             }
 
-            this.response.appendByte(this.updateTiles.size());
-            for (RoomTile t : this.updateTiles) {
+            this.response.appendByte(tilesCopy.size());
+            for (RoomTile t : tilesCopy) {
                 this.response.appendByte((int) t.x);
                 this.response.appendByte((int) t.y);
-                if(Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
+                if (Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
                     this.response.appendShort((short) (t.z * 256.0));
-                }
-                else {
+                } else {
                     this.response.appendShort(t.relativeHeight());
                 }
             }
@@ -73,13 +76,37 @@ public class UpdateStackHeightComposer extends MessageComposer {
             this.response.appendByte(1);
             this.response.appendByte(this.x);
             this.response.appendByte(this.y);
-            if(Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
+            if (Emulator.getConfig().getBoolean("custom.stacking.enabled")) {
                 this.response.appendShort((short) (this.z * 256.0));
-            }
-            else {
+            } else {
                 this.response.appendShort((int) (this.height));
             }
         }
+
         return this.response;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public short getZ() {
+        return z;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public THashSet<RoomTile> getUpdateTiles() {
+        return updateTiles;
+    }
+
+    public Room getRoom() {
+        return room;
     }
 }

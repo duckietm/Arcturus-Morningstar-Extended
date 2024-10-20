@@ -135,7 +135,10 @@ public class Guild implements Runnable {
     public String getOwnerName() {
         return this.ownerName;
     }
-    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
 
     public String getName() {
         return this.name;

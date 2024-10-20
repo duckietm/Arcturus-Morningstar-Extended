@@ -23,4 +23,12 @@ public class HabboWayQuizComposer2 extends MessageComposer {
         }
         return this.response;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public int[] getItems() {
+        return items;
+    }
 }

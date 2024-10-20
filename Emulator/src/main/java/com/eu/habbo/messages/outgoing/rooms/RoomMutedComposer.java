@@ -18,4 +18,8 @@ public class RoomMutedComposer extends MessageComposer {
         this.response.appendBoolean(this.room.isMuted());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

@@ -29,4 +29,12 @@ public class ClubGiftReceivedComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public THashSet<Item> getItems() {
+        return items;
+    }
 }

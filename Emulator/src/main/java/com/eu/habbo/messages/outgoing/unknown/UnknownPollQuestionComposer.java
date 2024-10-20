@@ -26,4 +26,12 @@ public class UnknownPollQuestionComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getUnknownInt() {
+        return unknownInt;
+    }
+
+    public Map<String, Integer> getUnknownMap() {
+        return unknownMap;
+    }
 }

@@ -127,4 +127,12 @@ public class TalentTrackComposer extends MessageComposer {
             this.id = id;
         }
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public TalentTrackType getType() {
+        return type;
+    }
 }

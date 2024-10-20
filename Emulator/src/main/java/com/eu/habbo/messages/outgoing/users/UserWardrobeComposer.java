@@ -24,4 +24,8 @@ public class UserWardrobeComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public WardrobeComponent getWardrobeComponent() {
+        return wardrobeComponent;
+    }
 }

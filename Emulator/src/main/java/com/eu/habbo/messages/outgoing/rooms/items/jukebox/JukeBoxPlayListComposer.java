@@ -27,4 +27,12 @@ public class JukeBoxPlayListComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<InteractionMusicDisc> getSongs() {
+        return songs;
+    }
+
+    public int getTotalLength() {
+        return totalLength;
+    }
 }

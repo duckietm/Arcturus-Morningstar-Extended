@@ -26,4 +26,12 @@ public class GuildMemberUpdateComposer extends MessageComposer {
         this.response.appendString(this.guildMember.getRank().type != 0 ? this.guildMember.getJoinDate() + "" : "");
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public GuildMember getGuildMember() {
+        return guildMember;
+    }
 }

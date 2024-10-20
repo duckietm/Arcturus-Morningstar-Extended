@@ -19,4 +19,8 @@ public class AddUserBadgeComposer extends MessageComposer {
         this.response.appendString(this.badge.getCode());
         return this.response;
     }
+
+    public HabboBadge getBadge() {
+        return badge;
+    }
 }

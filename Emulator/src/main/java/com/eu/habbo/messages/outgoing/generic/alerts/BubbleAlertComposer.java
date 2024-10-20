@@ -38,4 +38,12 @@ public class BubbleAlertComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public String getErrorKey() {
+        return errorKey;
+    }
+
+    public THashMap<String, String> getKeys() {
+        return keys;
+    }
 }

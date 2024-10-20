@@ -21,4 +21,12 @@ public class RoomUserRemoveRightsComposer extends MessageComposer {
         this.response.appendInt(this.habboId);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getHabboId() {
+        return habboId;
+    }
 }

@@ -22,4 +22,8 @@ public class RoomChatSettingsComposer extends MessageComposer {
         this.response.appendInt(this.room.getChatProtection());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

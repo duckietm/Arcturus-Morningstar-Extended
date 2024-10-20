@@ -23,4 +23,8 @@ public class AddBotComposer extends MessageComposer {
         this.response.appendBoolean(true);
         return this.response;
     }
+
+    public Bot getBot() {
+        return bot;
+    }
 }

@@ -22,4 +22,11 @@ public class InitDiffieHandshakeComposer extends MessageComposer {
         return this.response;
     }
 
+    public String getSignedPrime() {
+        return signedPrime;
+    }
+
+    public String getSignedGenerator() {
+        return signedGenerator;
+    }
 }

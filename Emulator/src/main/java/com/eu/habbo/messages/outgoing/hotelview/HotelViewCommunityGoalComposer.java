@@ -57,4 +57,44 @@ public class HotelViewCommunityGoalComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public boolean isAchieved() {
+        return achieved;
+    }
+
+    public int getPersonalContributionScore() {
+        return personalContributionScore;
+    }
+
+    public int getPersonalRank() {
+        return personalRank;
+    }
+
+    public int getTotalAmount() {
+        return totalAmount;
+    }
+
+    public int getCommunityHighestAchievedLevel() {
+        return communityHighestAchievedLevel;
+    }
+
+    public int getScoreRemainingUntilNextLevel() {
+        return scoreRemainingUntilNextLevel;
+    }
+
+    public int getPercentCompletionTowardsNextLevel() {
+        return percentCompletionTowardsNextLevel;
+    }
+
+    public String getCompetitionName() {
+        return competitionName;
+    }
+
+    public int getTimeLeft() {
+        return timeLeft;
+    }
+
+    public int[] getRankData() {
+        return rankData;
+    }
 }

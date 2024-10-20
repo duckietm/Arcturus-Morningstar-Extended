@@ -42,4 +42,12 @@ public class UserClothesComposer extends MessageComposer {
         this.nameList.forEach(this.response::appendString);
         return this.response;
     }
+
+    public ArrayList<Integer> getIdList() {
+        return idList;
+    }
+
+    public ArrayList<String> getNameList() {
+        return nameList;
+    }
 }

@@ -21,4 +21,12 @@ public class MarketplaceCancelSaleComposer extends MessageComposer {
         this.response.appendBoolean(this.success);
         return this.response;
     }
+
+    public MarketPlaceOffer getOffer() {
+        return offer;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
 }

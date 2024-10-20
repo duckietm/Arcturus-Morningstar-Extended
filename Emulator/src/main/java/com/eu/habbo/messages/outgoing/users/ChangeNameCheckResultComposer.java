@@ -35,4 +35,16 @@ public class ChangeNameCheckResultComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<String> getSuggestions() {
+        return suggestions;
+    }
 }

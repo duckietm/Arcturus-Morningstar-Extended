@@ -25,4 +25,12 @@ public class UnknownHabboWayQuizComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public String getUnknownString() {
+        return unknownString;
+    }
+
+    public List<Integer> getUnknownIntegerList() {
+        return unknownIntegerList;
+    }
 }

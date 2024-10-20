@@ -19,4 +19,8 @@ public class WallItemUpdateComposer extends MessageComposer {
         this.response.appendString(this.item.getUserId() + "");
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

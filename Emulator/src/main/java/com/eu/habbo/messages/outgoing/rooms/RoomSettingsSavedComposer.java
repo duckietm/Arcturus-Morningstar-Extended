@@ -18,4 +18,8 @@ public class RoomSettingsSavedComposer extends MessageComposer {
         this.response.appendInt(this.room.getId());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

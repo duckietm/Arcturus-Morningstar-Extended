@@ -30,4 +30,16 @@ public class ConnectionErrorComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public int getMessageId() {
+        return messageId;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
 }

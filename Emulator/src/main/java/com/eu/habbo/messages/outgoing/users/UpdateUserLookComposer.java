@@ -19,4 +19,8 @@ public class UpdateUserLookComposer extends MessageComposer {
         this.response.appendString(this.habbo.getHabboInfo().getGender().name());
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

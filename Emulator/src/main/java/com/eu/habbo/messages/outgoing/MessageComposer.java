@@ -17,6 +17,11 @@ public abstract class MessageComposer {
     public ServerMessage compose() {
         if (this.composed == null) {
             this.composed = this.composeInternal();
+            if(this.composed != null) {
+                if(this.composed.getComposer() == null) {
+                    this.composed.setComposer(this);
+                }
+            }
         }
 
         return this.composed;

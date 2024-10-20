@@ -20,4 +20,8 @@ public class RoomHeightMapComposer extends MessageComposer {
         this.response.appendString(this.room.getLayout().getRelativeMap());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

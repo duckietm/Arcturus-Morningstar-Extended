@@ -56,4 +56,12 @@ public class AchievementProgressComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public Achievement getAchievement() {
+        return achievement;
+    }
 }

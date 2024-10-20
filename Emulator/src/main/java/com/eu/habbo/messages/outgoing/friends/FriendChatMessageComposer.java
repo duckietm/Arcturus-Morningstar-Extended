@@ -50,4 +50,16 @@ public class FriendChatMessageComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Message getMessage() {
+        return message;
+    }
+
+    public int getToId() {
+        return toId;
+    }
+
+    public int getFromId() {
+        return fromId;
+    }
 }

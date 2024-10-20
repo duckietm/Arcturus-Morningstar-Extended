@@ -23,4 +23,8 @@ public class GuideSessionStartedComposer extends MessageComposer {
         this.response.appendString(this.tour.getHelper().getHabboInfo().getLook());
         return this.response;
     }
+
+    public GuideTour getTour() {
+        return tour;
+    }
 }

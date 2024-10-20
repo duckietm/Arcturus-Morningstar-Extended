@@ -23,4 +23,12 @@ public class TargetedOfferComposer extends MessageComposer {
         this.offer.serialize(this.response, purchase);
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public TargetOffer getOffer() {
+        return offer;
+    }
 }

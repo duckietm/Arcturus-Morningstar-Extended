@@ -25,7 +25,7 @@ public class YoutubeRequestPlaylists extends MessageHandler {
             if (item instanceof InteractionYoutubeTV) {
                 InteractionYoutubeTV tv = (InteractionYoutubeTV) item;
 
-                ArrayList<YoutubeManager.YoutubePlaylist> playlists = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(itemId);
+                ArrayList<YoutubeManager.YoutubePlaylist> playlists = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(item.getBaseItem().getId());
 
                 if (playlists == null) {
                     LOGGER.error("No YouTube playlists set for base item #" + item.getBaseItem().getId());

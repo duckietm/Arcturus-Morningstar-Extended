@@ -20,4 +20,12 @@ public class ConvertedForwardToRoomComposer extends MessageComposer {
         this.response.appendInt(this.unknownInt1);
         return this.response;
     }
+
+    public String getUnknownString1() {
+        return unknownString1;
+    }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
 }

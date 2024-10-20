@@ -18,4 +18,8 @@ public class CatalogSearchResultComposer extends MessageComposer {
         this.item.serialize(this.response);
         return this.response;
     }
+
+    public CatalogItem getItem() {
+        return item;
+    }
 }

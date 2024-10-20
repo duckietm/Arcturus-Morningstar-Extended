@@ -59,4 +59,8 @@ public class GuildManageComposer extends MessageComposer {
         this.response.appendInt(this.guild.getMemberCount());
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
 }

@@ -24,4 +24,8 @@ public class RoomFilterWordsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

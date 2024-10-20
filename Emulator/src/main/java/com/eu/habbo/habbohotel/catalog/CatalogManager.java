@@ -470,15 +470,16 @@ public class CatalogManager {
                 this.giftWrappers.clear();
                 this.giftFurnis.clear();
 
-                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-                     Statement statement = connection.createStatement();
-                     ResultSet set =
-                             statement.executeQuery("SELECT * FROM gift_wrappers ORDER BY sprite_id DESC")) {
+                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM gift_wrappers ORDER BY sprite_id DESC")) {
                     while (set.next()) {
-                        if ("wrapper".equals(set.getString("type"))) {
-                            this.giftWrappers.put(set.getInt("sprite_id"), set.getInt("item_id"));
-                        } else if ("gift".equals(set.getString("type"))) {
-                            this.giftFurnis.put(set.getInt("sprite_id"), set.getInt("item_id"));
+                        switch (set.getString("type")) {
+                            case "wrapper":
+                                this.giftWrappers.put(set.getInt("sprite_id"), set.getInt("item_id"));
+                                break;
+
+                            case "gift":
+                                this.giftFurnis.put(set.getInt("sprite_id"), set.getInt("item_id"));
+                                break;
                         }
                     }
                 } catch (SQLException e) {
@@ -487,7 +488,6 @@ public class CatalogManager {
             }
         }
     }
-
 
     private void loadClothing() {
         synchronized (this.clothing) {

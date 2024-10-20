@@ -23,4 +23,8 @@ public class UnknownRoomViewerComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Map<Integer, String> getUnknownMap() {
+        return unknownMap;
+    }
 }

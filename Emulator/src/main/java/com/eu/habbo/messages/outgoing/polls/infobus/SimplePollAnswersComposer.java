@@ -24,4 +24,12 @@ public class SimplePollAnswersComposer extends MessageComposer {
         this.response.appendInt(this.yes);
         return this.response;
     }
+
+    public int getNo() {
+        return no;
+    }
+
+    public int getYes() {
+        return yes;
+    }
 }

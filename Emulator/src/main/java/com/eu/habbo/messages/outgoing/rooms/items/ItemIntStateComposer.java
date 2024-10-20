@@ -20,4 +20,12 @@ public class ItemIntStateComposer extends MessageComposer {
         this.response.appendInt(this.value);
         return this.response;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getValue() {
+        return value;
+    }
 }

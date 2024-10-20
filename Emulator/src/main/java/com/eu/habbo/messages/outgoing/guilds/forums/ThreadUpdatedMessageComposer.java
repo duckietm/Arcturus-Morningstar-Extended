@@ -35,4 +35,24 @@ public class ThreadUpdatedMessageComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public ForumThread getThread() {
+        return thread;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public boolean isPinned() {
+        return isPinned;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
 }

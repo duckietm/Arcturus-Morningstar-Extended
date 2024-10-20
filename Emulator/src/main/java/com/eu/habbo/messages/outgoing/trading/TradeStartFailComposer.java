@@ -31,4 +31,12 @@ public class TradeStartFailComposer extends MessageComposer {
         this.response.appendString(this.username);
         return this.response;
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public int getCode() {
+        return code;
+    }
 }

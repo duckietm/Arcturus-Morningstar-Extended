@@ -20,4 +20,12 @@ public class CraftingRecipesAvailableComposer extends MessageComposer {
         this.response.appendBoolean(this.found);
         return this.response;
     }
+
+    public int getCount() {
+        return count;
+    }
+
+    public boolean isFound() {
+        return found;
+    }
 }

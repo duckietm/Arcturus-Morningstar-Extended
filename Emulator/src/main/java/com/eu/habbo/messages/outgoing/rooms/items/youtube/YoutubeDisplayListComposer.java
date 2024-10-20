@@ -33,4 +33,16 @@ public class YoutubeDisplayListComposer extends MessageComposer {
         this.response.appendString(this.currentPlaylist == null ? "" : this.currentPlaylist.getId()); // current playlist ID
         return this.response;
     }
+
+    public int getItemId() {
+        return itemId;
+    }
+
+    public ArrayList<YoutubeManager.YoutubePlaylist> getPlaylists() {
+        return playlists;
+    }
+
+    public YoutubeManager.YoutubePlaylist getCurrentPlaylist() {
+        return currentPlaylist;
+    }
 }

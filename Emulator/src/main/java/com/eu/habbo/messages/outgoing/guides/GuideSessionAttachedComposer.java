@@ -25,4 +25,12 @@ public class GuideSessionAttachedComposer extends MessageComposer {
         this.response.appendInt(this.isHelper ? 60 : Emulator.getGameEnvironment().getGuideManager().getAverageWaitingTime());       //? Avarage Waiting Time (for noob) | Time left to pickup (For helper)
         return this.response;
     }
+
+    public GuideTour getTour() {
+        return tour;
+    }
+
+    public boolean isHelper() {
+        return isHelper;
+    }
 }

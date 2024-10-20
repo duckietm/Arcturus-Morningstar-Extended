@@ -503,6 +503,7 @@ public class GuildManager {
 
         return guilds;
     }
+
     public List<Guild> getOwnedGuilds(int userId) {
         List<Guild> guilds = new ArrayList<Guild>();
 
@@ -523,6 +524,7 @@ public class GuildManager {
 
         return guilds;
     }
+
     public List<Guild> getAllGuilds() {
         List<Guild> guilds = new ArrayList<Guild>();
 

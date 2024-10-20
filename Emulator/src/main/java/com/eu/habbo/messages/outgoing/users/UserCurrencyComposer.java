@@ -36,4 +36,8 @@ public class UserCurrencyComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

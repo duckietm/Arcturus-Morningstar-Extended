@@ -58,4 +58,12 @@ public class GuildForumThreadsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public int getIndex() {
+        return index;
+    }
 }

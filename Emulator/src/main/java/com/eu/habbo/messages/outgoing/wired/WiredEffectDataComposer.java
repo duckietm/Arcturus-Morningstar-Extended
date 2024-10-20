@@ -22,4 +22,12 @@ public class WiredEffectDataComposer extends MessageComposer {
         this.effect.needsUpdate(true);
         return this.response;
     }
+
+    public InteractionWiredEffect getEffect() {
+        return effect;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
 }

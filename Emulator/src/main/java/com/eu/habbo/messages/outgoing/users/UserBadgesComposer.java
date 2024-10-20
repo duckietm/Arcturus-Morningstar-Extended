@@ -29,4 +29,12 @@ public class UserBadgesComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public ArrayList<HabboBadge> getBadges() {
+        return badges;
+    }
+
+    public int getHabbo() {
+        return habbo;
+    }
 }

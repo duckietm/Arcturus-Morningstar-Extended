@@ -37,4 +37,8 @@ public class InventoryPetsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

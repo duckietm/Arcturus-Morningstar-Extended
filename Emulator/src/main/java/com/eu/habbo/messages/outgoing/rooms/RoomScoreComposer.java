@@ -20,4 +20,12 @@ public class RoomScoreComposer extends MessageComposer {
         this.response.appendBoolean(this.canVote);
         return this.response;
     }
+
+    public int getScore() {
+        return score;
+    }
+
+    public boolean isCanVote() {
+        return canVote;
+    }
 }

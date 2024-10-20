@@ -41,4 +41,12 @@ public class BullyReportRequestComposer extends MessageComposer {
         //:test 1917 i:1 i:3 i:1 b:0 s:1 s:1 s:1
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public int getErrorCodeType() {
+        return errorCodeType;
+    }
 }

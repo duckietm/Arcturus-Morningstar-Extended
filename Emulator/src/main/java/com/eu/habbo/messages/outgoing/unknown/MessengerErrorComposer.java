@@ -23,4 +23,8 @@ public class MessengerErrorComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Map<Integer, Integer> getErrors() {
+        return errors;
+    }
 }

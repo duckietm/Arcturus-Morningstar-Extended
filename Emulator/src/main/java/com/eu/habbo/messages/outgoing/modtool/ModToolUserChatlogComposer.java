@@ -49,4 +49,16 @@ public class ModToolUserChatlogComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public ArrayList<ModToolRoomVisit> getSet() {
+        return set;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
 }

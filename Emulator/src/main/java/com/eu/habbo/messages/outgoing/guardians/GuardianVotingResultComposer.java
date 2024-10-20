@@ -34,4 +34,12 @@ public class GuardianVotingResultComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public GuardianTicket getTicket() {
+        return ticket;
+    }
+
+    public GuardianVote getVote() {
+        return vote;
+    }
 }

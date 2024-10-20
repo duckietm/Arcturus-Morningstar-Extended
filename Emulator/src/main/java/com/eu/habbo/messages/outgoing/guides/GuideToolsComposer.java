@@ -21,4 +21,8 @@ public class GuideToolsComposer extends MessageComposer {
         this.response.appendInt(Emulator.getGameEnvironment().getGuideManager().getGuardiansCount()); //Guardians On Duty
         return this.response;
     }
+
+    public boolean isOnDuty() {
+        return onDuty;
+    }
 }

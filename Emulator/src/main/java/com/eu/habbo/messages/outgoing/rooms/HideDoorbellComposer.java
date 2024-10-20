@@ -17,4 +17,8 @@ public class HideDoorbellComposer extends MessageComposer {
         this.response.appendString(this.username);
         return this.response;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }

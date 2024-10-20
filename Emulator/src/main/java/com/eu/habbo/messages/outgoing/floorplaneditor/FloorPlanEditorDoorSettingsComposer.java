@@ -20,4 +20,8 @@ public class FloorPlanEditorDoorSettingsComposer extends MessageComposer {
         this.response.appendInt(this.room.getLayout().getDoorDirection());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

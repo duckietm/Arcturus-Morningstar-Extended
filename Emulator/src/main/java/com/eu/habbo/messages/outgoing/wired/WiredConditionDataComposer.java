@@ -22,4 +22,12 @@ public class WiredConditionDataComposer extends MessageComposer {
         this.condition.needsUpdate(true);
         return this.response;
     }
+
+    public InteractionWiredCondition getCondition() {
+        return condition;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
 }

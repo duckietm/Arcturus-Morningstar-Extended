@@ -20,4 +20,12 @@ public class PetBreedingFailedComposer extends MessageComposer {
         this.response.appendInt(this.anInt2);
         return this.response;
     }
+
+    public int getAnInt1() {
+        return anInt1;
+    }
+
+    public int getAnInt2() {
+        return anInt2;
+    }
 }

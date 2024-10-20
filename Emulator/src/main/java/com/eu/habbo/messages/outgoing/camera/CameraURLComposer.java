@@ -17,4 +17,8 @@ public class CameraURLComposer extends MessageComposer {
         this.response.appendString(this.URL);
         return this.response;
     }
+
+    public String getURL() {
+        return URL;
+    }
 }

@@ -19,4 +19,8 @@ public class LoveLockFurniStartComposer extends MessageComposer {
         this.response.appendBoolean(true);
         return this.response;
     }
+
+    public InteractionLoveLock getLoveLock() {
+        return loveLock;
+    }
 }

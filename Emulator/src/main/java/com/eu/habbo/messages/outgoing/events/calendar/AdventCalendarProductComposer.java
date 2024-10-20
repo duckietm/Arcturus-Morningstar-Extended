@@ -46,4 +46,16 @@ public class AdventCalendarProductComposer extends MessageComposer {
         
         return this.response;
     }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public CalendarRewardObject getRewardObject() {
+        return rewardObject;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

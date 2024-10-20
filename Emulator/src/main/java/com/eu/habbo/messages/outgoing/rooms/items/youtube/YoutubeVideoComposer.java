@@ -28,4 +28,20 @@ public class YoutubeVideoComposer extends MessageComposer {
         this.response.appendInt(this.playing ? 1 : 2);
         return this.response;
     }
+
+    public int getItemId() {
+        return itemId;
+    }
+
+    public YoutubeManager.YoutubeVideo getVideo() {
+        return video;
+    }
+
+    public boolean isPlaying() {
+        return playing;
+    }
+
+    public int getStartTime() {
+        return startTime;
+    }
 }

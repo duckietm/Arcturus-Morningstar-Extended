@@ -17,4 +17,8 @@ public class UnknownHintComposer extends MessageComposer {
         this.response.appendString(this.key);
         return this.response;
     }
+
+    public String getKey() {
+        return key;
+    }
 }

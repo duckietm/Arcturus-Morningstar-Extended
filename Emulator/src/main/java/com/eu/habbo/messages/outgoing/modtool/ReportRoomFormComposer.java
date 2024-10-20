@@ -26,4 +26,8 @@ public class ReportRoomFormComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<ModToolIssue> getPendingIssues() {
+        return pendingIssues;
+    }
 }

@@ -35,4 +35,12 @@ public class CraftableProductsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public List<CraftingRecipe> getRecipes() {
+        return recipes;
+    }
+
+    public Collection<Item> getIngredients() {
+        return ingredients;
+    }
 }

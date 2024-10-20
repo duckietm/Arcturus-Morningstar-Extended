@@ -20,4 +20,12 @@ public class FavoriteRoomChangedComposer extends MessageComposer {
         this.response.appendBoolean(this.favorite);
         return this.response;
     }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
 }

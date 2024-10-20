@@ -36,4 +36,12 @@ public class MessagesForYouComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String[] getMessages() {
+        return messages;
+    }
+
+    public List<String> getNewMessages() {
+        return newMessages;
+    }
 }

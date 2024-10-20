@@ -30,4 +30,8 @@ public class RemoveFriendComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public TIntArrayList getUnfriendIds() {
+        return unfriendIds;
+    }
 }

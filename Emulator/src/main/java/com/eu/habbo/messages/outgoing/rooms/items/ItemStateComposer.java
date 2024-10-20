@@ -25,4 +25,8 @@ public class ItemStateComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

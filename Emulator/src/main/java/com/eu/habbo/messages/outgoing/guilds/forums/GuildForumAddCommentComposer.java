@@ -20,4 +20,8 @@ public class GuildForumAddCommentComposer extends MessageComposer {
         this.comment.serialize(this.response); //Comment
         return this.response;
     }
+
+    public ForumThreadComment getComment() {
+        return comment;
+    }
 }

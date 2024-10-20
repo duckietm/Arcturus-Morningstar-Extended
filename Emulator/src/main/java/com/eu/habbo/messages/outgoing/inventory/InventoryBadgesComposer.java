@@ -41,4 +41,8 @@ public class InventoryBadgesComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

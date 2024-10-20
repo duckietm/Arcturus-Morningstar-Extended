@@ -35,4 +35,12 @@ public class RoomEnterErrorComposer extends MessageComposer {
         this.response.appendString(this.queError);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getQueError() {
+        return queError;
+    }
 }

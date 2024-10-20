@@ -19,4 +19,8 @@ public class GuildForumThreadMessagesComposer extends MessageComposer {
         this.thread.serialize(this.response);
         return this.response;
     }
+
+    public ForumThread getThread() {
+        return thread;
+    }
 }

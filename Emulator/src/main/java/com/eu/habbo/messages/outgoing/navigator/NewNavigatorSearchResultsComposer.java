@@ -33,5 +33,15 @@ public class NewNavigatorSearchResultsComposer extends MessageComposer {
         return this.response;
     }
 
+    public String getSearchCode() {
+        return searchCode;
+    }
 
+    public String getSearchQuery() {
+        return searchQuery;
+    }
+
+    public List<SearchResultList> getResultList() {
+        return resultList;
+    }
 }

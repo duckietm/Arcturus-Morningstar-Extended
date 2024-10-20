@@ -62,4 +62,8 @@ public class InventoryUpdateItemComposer extends MessageComposer {
         this.response.appendInt(100);
         return this.response;
     }
+
+    public HabboItem getHabboItem() {
+        return habboItem;
+    }
 }

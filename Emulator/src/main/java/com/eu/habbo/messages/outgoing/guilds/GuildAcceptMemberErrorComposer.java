@@ -24,4 +24,12 @@ public class GuildAcceptMemberErrorComposer extends MessageComposer {
         this.response.appendInt(this.errorCode);
         return this.response;
     }
+
+    public int getGuildId() {
+        return guildId;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
 }

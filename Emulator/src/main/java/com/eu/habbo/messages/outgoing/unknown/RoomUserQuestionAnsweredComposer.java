@@ -29,4 +29,16 @@ public class RoomUserQuestionAnsweredComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public Map<String, Integer> getUnknownMap() {
+        return unknownMap;
+    }
 }

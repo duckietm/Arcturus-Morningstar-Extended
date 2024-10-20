@@ -35,4 +35,16 @@ public class JukeBoxNowPlayingMessageComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public SoundTrack getTrack() {
+        return track;
+    }
+
+    public int getPlayListId() {
+        return playListId;
+    }
+
+    public int getMsPlayed() {
+        return msPlayed;
+    }
 }

@@ -28,4 +28,8 @@ public class NewUserGiftComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<List<NewUserGift>> getOptions() {
+        return options;
+    }
 }

@@ -51,4 +51,8 @@ public class RoomBannedUsersComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

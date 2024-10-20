@@ -20,4 +20,8 @@ public class RoomFloorThicknessUpdatedComposer extends MessageComposer {
         this.response.appendInt(this.room.getWallSize()); //Wall Thickness
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

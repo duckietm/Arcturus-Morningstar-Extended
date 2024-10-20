@@ -20,4 +20,12 @@ public class HotelViewCustomTimerComposer extends MessageComposer {
         this.response.appendInt(this.seconds);
         return this.response;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getSeconds() {
+        return seconds;
+    }
 }

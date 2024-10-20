@@ -24,4 +24,16 @@ public class PetBreedingStartComposer extends MessageComposer {
         this.response.appendInt(this.anInt2);
         return this.response;
     }
+
+    public int getState() {
+        return state;
+    }
+
+    public int getAnInt1() {
+        return anInt1;
+    }
+
+    public int getAnInt2() {
+        return anInt2;
+    }
 }

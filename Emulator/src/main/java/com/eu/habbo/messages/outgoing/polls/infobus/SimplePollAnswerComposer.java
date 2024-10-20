@@ -29,4 +29,20 @@ public class SimplePollAnswerComposer extends MessageComposer {
         this.response.appendInt(this.yes);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getChoice() {
+        return choice;
+    }
+
+    public int getNo() {
+        return no;
+    }
+
+    public int getYes() {
+        return yes;
+    }
 }

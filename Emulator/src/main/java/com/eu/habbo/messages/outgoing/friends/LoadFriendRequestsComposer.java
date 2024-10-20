@@ -30,4 +30,8 @@ public class LoadFriendRequestsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

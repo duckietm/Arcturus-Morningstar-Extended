@@ -107,4 +107,15 @@ public class InventoryItemsComposer extends MessageComposer implements TIntObjec
         this.response.appendString(habboItem.getExtradata());
     }
 
+    public int getFragmentNumber() {
+        return fragmentNumber;
+    }
+
+    public int getTotalFragments() {
+        return totalFragments;
+    }
+
+    public TIntObjectMap<HabboItem> getItems() {
+        return items;
+    }
 }

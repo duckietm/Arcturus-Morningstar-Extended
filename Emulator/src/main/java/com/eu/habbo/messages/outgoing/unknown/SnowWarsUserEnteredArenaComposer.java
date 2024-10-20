@@ -29,4 +29,8 @@ public class SnowWarsUserEnteredArenaComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getType() {
+        return type;
+    }
 }

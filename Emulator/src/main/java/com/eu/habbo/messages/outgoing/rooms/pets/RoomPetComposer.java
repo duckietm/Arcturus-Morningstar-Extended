@@ -59,4 +59,8 @@ public class RoomPetComposer extends MessageComposer implements TIntObjectProced
 
         return true;
     }
+
+    public TIntObjectMap<Pet> getPets() {
+        return pets;
+    }
 }

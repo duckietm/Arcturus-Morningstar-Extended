@@ -45,4 +45,8 @@ public class MarketplaceOffersComposer extends MessageComposer {
         this.response.appendInt(this.offers.size());
         return this.response;
     }
+
+    public List<MarketPlaceOffer> getOffers() {
+        return offers;
+    }
 }

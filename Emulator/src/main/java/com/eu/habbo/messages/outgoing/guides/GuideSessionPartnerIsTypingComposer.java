@@ -17,4 +17,8 @@ public class GuideSessionPartnerIsTypingComposer extends MessageComposer {
         this.response.appendBoolean(this.typing);
         return this.response;
     }
+
+    public boolean isTyping() {
+        return typing;
+    }
 }

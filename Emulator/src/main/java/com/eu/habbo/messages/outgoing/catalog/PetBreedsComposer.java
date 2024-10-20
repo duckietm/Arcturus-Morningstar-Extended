@@ -31,4 +31,12 @@ public class PetBreedsComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public String getPetName() {
+        return petName;
+    }
+
+    public THashSet<PetRace> getPetRaces() {
+        return petRaces;
+    }
 }

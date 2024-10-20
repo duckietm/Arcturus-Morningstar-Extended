@@ -18,4 +18,8 @@ public class MarketplaceItemInfoComposer extends MessageComposer {
         MarketPlace.serializeItemInfo(this.itemId, this.response);
         return this.response;
     }
+
+    public int getItemId() {
+        return itemId;
+    }
 }

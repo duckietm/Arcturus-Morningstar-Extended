@@ -28,4 +28,16 @@ public class PresentItemOpenedComposer extends MessageComposer {
         this.response.appendString(this.text);
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public boolean isUnknown() {
+        return unknown;
+    }
 }

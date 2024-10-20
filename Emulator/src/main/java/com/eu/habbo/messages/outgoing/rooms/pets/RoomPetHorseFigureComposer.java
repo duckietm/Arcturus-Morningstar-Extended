@@ -48,4 +48,8 @@ public class RoomPetHorseFigureComposer extends MessageComposer {
         this.response.appendBoolean(false); // this.pet.anyoneCanRide()
         return this.response;
     }
+
+    public HorsePet getPet() {
+        return pet;
+    }
 }

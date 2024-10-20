@@ -19,4 +19,8 @@ public class RoomModelComposer extends MessageComposer {
         this.response.appendInt(this.room.getId());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

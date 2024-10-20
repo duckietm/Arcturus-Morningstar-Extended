@@ -84,4 +84,8 @@ public class ModToolUserInfoComposer extends MessageComposer {
         }
         return null;
     }
+
+    public ResultSet getSet() {
+        return set;
+    }
 }

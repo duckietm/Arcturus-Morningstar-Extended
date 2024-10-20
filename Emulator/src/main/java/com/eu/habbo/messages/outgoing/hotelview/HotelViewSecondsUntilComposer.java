@@ -21,4 +21,12 @@ public class HotelViewSecondsUntilComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String getDateString() {
+        return dateString;
+    }
+
+    public int getSeconds() {
+        return seconds;
+    }
 }

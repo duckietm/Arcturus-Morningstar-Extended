@@ -24,4 +24,8 @@ public class GenericAlertComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String getMessage() {
+        return message;
+    }
 }

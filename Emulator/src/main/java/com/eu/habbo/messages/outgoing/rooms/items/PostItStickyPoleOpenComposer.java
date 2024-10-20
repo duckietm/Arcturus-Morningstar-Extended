@@ -19,4 +19,8 @@ public class PostItStickyPoleOpenComposer extends MessageComposer {
         this.response.appendString("");
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

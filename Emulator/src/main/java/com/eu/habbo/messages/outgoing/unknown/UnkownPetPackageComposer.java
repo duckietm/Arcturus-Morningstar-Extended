@@ -23,4 +23,8 @@ public class UnkownPetPackageComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Map<String, String> getUnknownMap() {
+        return unknownMap;
+    }
 }

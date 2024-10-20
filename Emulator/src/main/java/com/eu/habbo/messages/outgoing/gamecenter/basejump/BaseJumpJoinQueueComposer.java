@@ -17,4 +17,8 @@ public class BaseJumpJoinQueueComposer extends MessageComposer {
         this.response.appendInt(this.gameId);
         return this.response;
     }
+
+    public int getGameId() {
+        return gameId;
+    }
 }

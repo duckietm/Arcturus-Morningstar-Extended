@@ -27,4 +27,12 @@ public class RoomUserEffectComposer extends MessageComposer {
         this.response.appendInt(0);
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
+
+    public int getEffectId() {
+        return effectId;
+    }
 }

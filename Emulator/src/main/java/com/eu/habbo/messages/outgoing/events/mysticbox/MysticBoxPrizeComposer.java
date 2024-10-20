@@ -20,4 +20,12 @@ public class MysticBoxPrizeComposer extends MessageComposer {
         this.response.appendInt(this.itemId);
         return this.response;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public int getItemId() {
+        return itemId;
+    }
 }

@@ -17,4 +17,8 @@ public class MutedWhisperComposer extends MessageComposer {
         this.response.appendInt(this.seconds);
         return this.response;
     }
+
+    public int getSeconds() {
+        return seconds;
+    }
 }

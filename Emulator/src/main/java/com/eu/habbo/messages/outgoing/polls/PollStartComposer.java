@@ -21,4 +21,8 @@ public class PollStartComposer extends MessageComposer {
         this.response.appendString(this.poll.title);
         return this.response;
     }
+
+    public Poll getPoll() {
+        return poll;
+    }
 }

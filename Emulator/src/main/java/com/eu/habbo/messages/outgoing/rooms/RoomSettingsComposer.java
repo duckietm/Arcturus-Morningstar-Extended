@@ -54,4 +54,8 @@ public class RoomSettingsComposer extends MessageComposer {
         this.response.appendInt(this.room.getBanOption());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

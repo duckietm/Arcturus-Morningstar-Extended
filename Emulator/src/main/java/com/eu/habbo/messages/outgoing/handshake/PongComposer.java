@@ -17,4 +17,8 @@ public class PongComposer extends MessageComposer {
         this.response.appendInt(this.id);
         return this.response;
     }
+
+    public int getId() {
+        return id;
+    }
 }

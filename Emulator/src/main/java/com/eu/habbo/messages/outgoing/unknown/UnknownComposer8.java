@@ -23,4 +23,16 @@ public class UnknownComposer8 extends MessageComposer {
         this.response.appendInt(this.unknownInt2);
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public int getUnknownInt2() {
+        return unknownInt2;
+    }
 }

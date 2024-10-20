@@ -48,4 +48,12 @@ public class BaseJumpLoadGameComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public GameClient getClient() {
+        return client;
+    }
+
+    public int getGame() {
+        return game;
+    }
 }

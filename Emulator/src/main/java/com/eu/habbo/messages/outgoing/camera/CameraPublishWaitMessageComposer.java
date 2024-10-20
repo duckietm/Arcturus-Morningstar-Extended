@@ -28,4 +28,16 @@ public class CameraPublishWaitMessageComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public boolean isOk() {
+        return isOk;
+    }
+
+    public int getCooldownSeconds() {
+        return cooldownSeconds;
+    }
+
+    public String getExtraDataId() {
+        return extraDataId;
+    }
 }

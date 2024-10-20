@@ -34,4 +34,28 @@ public class ExtendClubMessageComposer extends MessageComposer {
         this.response.appendInt(this.daysRemaining);
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public ClubOffer getOffer() {
+        return offer;
+    }
+
+    public int getNormalCreditCost() {
+        return normalCreditCost;
+    }
+
+    public int getNormalPointsCost() {
+        return normalPointsCost;
+    }
+
+    public int getPointsType() {
+        return pointsType;
+    }
+
+    public int getDaysRemaining() {
+        return daysRemaining;
+    }
 }

@@ -21,4 +21,8 @@ public class JukeBoxPlayListAddSongComposer extends MessageComposer {
         this.response.appendString(this.track.getAuthor());
         return this.response;
     }
+
+    public SoundTrack getTrack() {
+        return track;
+    }
 }

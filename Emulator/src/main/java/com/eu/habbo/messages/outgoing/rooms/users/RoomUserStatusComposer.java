@@ -82,4 +82,16 @@ public class RoomUserStatusComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Collection<Habbo> getHabbos() {
+        return habbos;
+    }
+
+    public THashSet<RoomUnit> getRoomUnits() {
+        return roomUnits;
+    }
+
+    public double getOverrideZ() {
+        return overrideZ;
+    }
 }

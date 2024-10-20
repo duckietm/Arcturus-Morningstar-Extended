@@ -21,4 +21,8 @@ public class RecyclerCompleteComposer extends MessageComposer {
         this.response.appendInt(0); //prize ID.
         return this.response;
     }
+
+    public int getCode() {
+        return code;
+    }
 }

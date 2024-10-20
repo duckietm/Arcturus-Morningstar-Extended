@@ -22,4 +22,12 @@ public class RoomUserActionComposer extends MessageComposer {
         this.response.appendInt(this.action.getAction());
         return this.response;
     }
+
+    public RoomUserAction getAction() {
+        return action;
+    }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
 }

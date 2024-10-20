@@ -50,4 +50,12 @@ public class RoomPromotionMessageComposer extends MessageComposer {
         return this.response;
 
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public RoomPromotion getRoomPromotion() {
+        return roomPromotion;
+    }
 }

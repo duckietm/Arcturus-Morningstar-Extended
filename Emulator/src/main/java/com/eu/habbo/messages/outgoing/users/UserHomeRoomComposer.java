@@ -20,4 +20,12 @@ public class UserHomeRoomComposer extends MessageComposer {
         this.response.appendInt(this.roomToEnter);
         return this.response;
     }
+
+    public int getHomeRoom() {
+        return homeRoom;
+    }
+
+    public int getRoomToEnter() {
+        return roomToEnter;
+    }
 }

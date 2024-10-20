@@ -38,4 +38,12 @@ public class TalentLevelUpdateComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public TalentTrackType getTalentTrackType() {
+        return talentTrackType;
+    }
+
+    public TalentTrackLevel getTalentTrackLevel() {
+        return talentTrackLevel;
+    }
 }

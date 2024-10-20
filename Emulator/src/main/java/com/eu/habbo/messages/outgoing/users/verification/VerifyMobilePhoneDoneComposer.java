@@ -20,4 +20,12 @@ public class VerifyMobilePhoneDoneComposer extends MessageComposer {
         this.response.appendInt(this.unknownInt2);
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public int getUnknownInt2() {
+        return unknownInt2;
+    }
 }

@@ -17,4 +17,8 @@ public class UnknownGuildComposer3 extends MessageComposer {
         this.response.appendInt(this.userId);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
 }

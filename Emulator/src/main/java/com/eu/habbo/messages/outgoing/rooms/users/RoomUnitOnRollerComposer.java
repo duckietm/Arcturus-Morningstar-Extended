@@ -121,4 +121,44 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
+
+    public HabboItem getRoller() {
+        return roller;
+    }
+
+    public RoomTile getOldLocation() {
+        return oldLocation;
+    }
+
+    public double getOldZ() {
+        return oldZ;
+    }
+
+    public RoomTile getNewLocation() {
+        return newLocation;
+    }
+
+    public double getNewZ() {
+        return newZ;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public HabboItem getOldTopItem() {
+        return oldTopItem;
+    }
 }

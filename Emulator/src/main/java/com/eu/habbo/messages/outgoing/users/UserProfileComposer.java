@@ -114,4 +114,16 @@ public class UserProfileComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public HabboInfo getHabboInfo() {
+        return habboInfo;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public GameClient getViewer() {
+        return viewer;
+    }
 }

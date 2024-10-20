@@ -61,4 +61,28 @@ public class AdventCalendarDataComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public String getCampaignImage() {
+        return campaignImage;
+    }
+
+    public int getTotalDays() {
+        return totalDays;
+    }
+
+    public int getCurrentDay() {
+        return currentDay;
+    }
+
+    public ArrayList<CalendarRewardClaimed> getUnlocked() {
+        return unlocked;
+    }
+
+    public boolean isLockExpired() {
+        return lockExpired;
+    }
 }

@@ -26,4 +26,16 @@ public class PostUpdateMessageComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public int getGuildId() {
+        return guildId;
+    }
+
+    public int getThreadId() {
+        return threadId;
+    }
+
+    public ForumThreadComment getComment() {
+        return comment;
+    }
 }

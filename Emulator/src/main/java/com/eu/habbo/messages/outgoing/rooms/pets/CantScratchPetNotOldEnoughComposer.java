@@ -20,4 +20,12 @@ public class CantScratchPetNotOldEnoughComposer extends MessageComposer {
         this.response.appendInt(this.requiredAge);
         return this.response;
     }
+
+    public int getCurrentAge() {
+        return currentAge;
+    }
+
+    public int getRequiredAge() {
+        return requiredAge;
+    }
 }

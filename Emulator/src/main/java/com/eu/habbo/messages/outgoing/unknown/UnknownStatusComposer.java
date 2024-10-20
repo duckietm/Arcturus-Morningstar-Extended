@@ -20,4 +20,8 @@ public class UnknownStatusComposer extends MessageComposer {
         this.response.appendInt(this.status);
         return this.response;
     }
+
+    public int getStatus() {
+        return status;
+    }
 }

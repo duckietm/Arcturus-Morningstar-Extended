@@ -29,4 +29,12 @@ public class TradeStartComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public RoomTrade getRoomTrade() {
+        return roomTrade;
+    }
+
+    public int getState() {
+        return state;
+    }
 }

@@ -17,4 +17,8 @@ public class RoomAccessDeniedComposer extends MessageComposer {
         this.response.appendString(this.habbo);
         return this.response;
     }
+
+    public String getHabbo() {
+        return habbo;
+    }
 }

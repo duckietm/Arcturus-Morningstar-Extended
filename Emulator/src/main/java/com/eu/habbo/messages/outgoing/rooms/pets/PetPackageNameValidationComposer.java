@@ -29,4 +29,16 @@ public class PetPackageNameValidationComposer extends MessageComposer {
         this.response.appendString(this.errorString);
         return this.response;
     }
+
+    public int getItemId() {
+        return itemId;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorString() {
+        return errorString;
+    }
 }

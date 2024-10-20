@@ -21,4 +21,12 @@ public class RoomPaneComposer extends MessageComposer {
         this.response.appendBoolean(this.roomOwner);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public boolean isRoomOwner() {
+        return roomOwner;
+    }
 }

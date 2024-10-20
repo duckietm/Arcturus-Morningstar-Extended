@@ -32,4 +32,28 @@ public class NewYearResolutionProgressComposer extends MessageComposer {
         this.response.appendInt(this.timeLeft);
         return this.response;
     }
+
+    public int getStuffId() {
+        return stuffId;
+    }
+
+    public int getAchievementId() {
+        return achievementId;
+    }
+
+    public String getAchievementName() {
+        return achievementName;
+    }
+
+    public int getCurrentProgress() {
+        return currentProgress;
+    }
+
+    public int getProgressNeeded() {
+        return progressNeeded;
+    }
+
+    public int getTimeLeft() {
+        return timeLeft;
+    }
 }

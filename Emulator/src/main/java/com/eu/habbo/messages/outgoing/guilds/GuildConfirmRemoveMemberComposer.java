@@ -20,4 +20,12 @@ public class GuildConfirmRemoveMemberComposer extends MessageComposer {
         this.response.appendInt(this.furniCount);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public int getFurniCount() {
+        return furniCount;
+    }
 }

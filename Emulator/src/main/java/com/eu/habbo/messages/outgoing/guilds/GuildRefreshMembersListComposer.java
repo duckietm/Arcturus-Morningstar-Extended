@@ -19,4 +19,8 @@ public class GuildRefreshMembersListComposer extends MessageComposer {
         this.response.appendInt(0);
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
 }

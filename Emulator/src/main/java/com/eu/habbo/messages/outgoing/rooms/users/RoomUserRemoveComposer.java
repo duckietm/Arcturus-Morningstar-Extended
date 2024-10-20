@@ -18,4 +18,8 @@ public class RoomUserRemoveComposer extends MessageComposer {
         this.response.appendString(this.roomUnit.getId() + "");
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
 }

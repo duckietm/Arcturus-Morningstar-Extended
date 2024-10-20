@@ -24,4 +24,12 @@ public class GuildFavoriteRoomUserUpdateComposer extends MessageComposer {
         this.response.appendString(this.guild != null ? this.guild.getName() : "");
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
+
+    public Guild getGuild() {
+        return guild;
+    }
 }

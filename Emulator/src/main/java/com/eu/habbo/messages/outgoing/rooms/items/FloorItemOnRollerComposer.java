@@ -77,4 +77,36 @@ public class FloorItemOnRollerComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public HabboItem getRoller() {
+        return roller;
+    }
+
+    public RoomTile getOldLocation() {
+        return oldLocation;
+    }
+
+    public RoomTile getNewLocation() {
+        return newLocation;
+    }
+
+    public double getHeightOffset() {
+        return heightOffset;
+    }
+
+    public double getOldZ() {
+        return oldZ;
+    }
+
+    public double getNewZ() {
+        return newZ;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
 }

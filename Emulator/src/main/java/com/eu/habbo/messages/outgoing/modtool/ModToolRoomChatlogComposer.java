@@ -43,4 +43,12 @@ public class ModToolRoomChatlogComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public ArrayList<ModToolChatLog> getChatlog() {
+        return chatlog;
+    }
 }

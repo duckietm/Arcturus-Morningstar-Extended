@@ -21,4 +21,12 @@ public class UnknownFurniModelComposer extends MessageComposer {
         this.response.appendInt(this.unknownInt);
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public int getUnknownInt() {
+        return unknownInt;
+    }
 }

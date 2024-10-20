@@ -34,8 +34,13 @@ public class RoomUnitTeleport implements Runnable {
 
     @Override
     public void run() {
-        if (roomUnit == null || roomUnit.getRoom() == null || room.getLayout() == null || roomUnit.isLeavingTeleporter)
+        if (roomUnit == null || roomUnit.getRoom() == null || room.getLayout() == null)
             return;
+
+        if (roomUnit.isLeavingTeleporter) {
+            roomUnit.isWiredTeleporting = false;
+            return;
+        }
 
         RoomTile lastLocation = this.roomUnit.getCurrentLocation();
         RoomTile newLocation = this.room.getLayout().getTile((short) this.x, (short) this.y);

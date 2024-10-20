@@ -19,4 +19,8 @@ public class TradeAcceptedComposer extends MessageComposer {
         this.response.appendInt(this.tradeUser.getAccepted());
         return this.response;
     }
+
+    public RoomTradeUser getTradeUser() {
+        return tradeUser;
+    }
 }

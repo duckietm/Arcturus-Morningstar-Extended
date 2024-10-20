@@ -1,7 +1,6 @@
 package com.eu.habbo.messages.outgoing.rooms.items;
 
-import com.eu.habbo.habbohotel.items.interactions.InteractionGift;
-import com.eu.habbo.habbohotel.items.interactions.InteractionMusicDisc;
+import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
@@ -45,9 +44,17 @@ public class RoomFloorItemsComposer extends MessageComposer {
             this.response.appendInt(item instanceof InteractionGift ? ((((InteractionGift) item).getColorId() * 1000) + ((InteractionGift) item).getRibbonId()) : (item instanceof InteractionMusicDisc ? ((InteractionMusicDisc) item).getSongId() : 1));
             item.serializeExtradata(this.response);
             this.response.appendInt(-1);
-            this.response.appendInt(item.isUsable() ? 1 : 0);
+            this.response.appendInt(item instanceof InteractionTeleport || item instanceof InteractionSwitch || item instanceof InteractionSwitchRemoteControl || item instanceof InteractionVendingMachine || item instanceof InteractionInformationTerminal || item instanceof InteractionPostIt || item instanceof InteractionPuzzleBox ? 2 : item.isUsable() ? 1 : 0);
             this.response.appendInt(item.getUserId());
         }
         return this.response;
+    }
+
+    public TIntObjectMap<String> getFurniOwnerNames() {
+        return furniOwnerNames;
+    }
+
+    public THashSet<? extends HabboItem> getItems() {
+        return items;
     }
 }

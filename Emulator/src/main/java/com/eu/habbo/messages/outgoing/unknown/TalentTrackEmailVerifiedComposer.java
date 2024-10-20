@@ -23,4 +23,16 @@ public class TalentTrackEmailVerifiedComposer extends MessageComposer {
         this.response.appendBoolean(this.unknownB2);
         return this.response;
     }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public boolean isUnknownB1() {
+        return unknownB1;
+    }
+
+    public boolean isUnknownB2() {
+        return unknownB2;
+    }
 }

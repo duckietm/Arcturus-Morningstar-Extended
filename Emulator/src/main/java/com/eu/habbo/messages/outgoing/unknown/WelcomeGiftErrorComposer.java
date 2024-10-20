@@ -22,4 +22,8 @@ public class WelcomeGiftErrorComposer extends MessageComposer {
         this.response.appendInt(this.error);
         return this.response;
     }
+
+    public int getError() {
+        return error;
+    }
 }

@@ -21,8 +21,8 @@ public class RequestGuildBuyEvent extends MessageHandler {
 
     @Override
     public void handle() throws Exception {
-        String name = this.packet.readString();
-        String description = this.packet.readString();
+        String name = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+        String description = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
 
         if(name.length() > 29 || description.length() > 254)
             return;

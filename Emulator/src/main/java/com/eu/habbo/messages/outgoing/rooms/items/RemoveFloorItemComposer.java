@@ -30,4 +30,12 @@ public class RemoveFloorItemComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public boolean isNoUser() {
+        return noUser;
+    }
 }

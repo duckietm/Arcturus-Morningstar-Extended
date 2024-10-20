@@ -21,4 +21,12 @@ public class UnknownCatalogPageOfferComposer extends MessageComposer {
         this.catalogItem.serialize(this.response);
         return this.response;
     }
+
+    public int getPageId() {
+        return pageId;
+    }
+
+    public CatalogItem getCatalogItem() {
+        return catalogItem;
+    }
 }

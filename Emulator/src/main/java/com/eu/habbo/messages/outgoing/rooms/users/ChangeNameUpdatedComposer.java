@@ -20,4 +20,8 @@ public class ChangeNameUpdatedComposer extends MessageComposer {
         this.response.appendInt(0);
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

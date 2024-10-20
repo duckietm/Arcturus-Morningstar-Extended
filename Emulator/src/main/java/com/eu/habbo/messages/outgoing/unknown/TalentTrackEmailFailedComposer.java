@@ -17,4 +17,8 @@ public class TalentTrackEmailFailedComposer extends MessageComposer {
         this.response.appendInt(this.result);
         return this.response;
     }
+
+    public int getResult() {
+        return result;
+    }
 }

@@ -23,4 +23,16 @@ public class VerifyMobilePhoneWindowComposer extends MessageComposer {
         this.response.appendInt(this.unknownInt3);
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public int getUnknownInt2() {
+        return unknownInt2;
+    }
+
+    public int getUnknownInt3() {
+        return unknownInt3;
+    }
 }

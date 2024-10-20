@@ -34,4 +34,12 @@ public class ClubDataComposer extends MessageComposer {
         this.response.appendInt(this.windowId);
         return this.response;
     }
+
+    public int getWindowId() {
+        return windowId;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

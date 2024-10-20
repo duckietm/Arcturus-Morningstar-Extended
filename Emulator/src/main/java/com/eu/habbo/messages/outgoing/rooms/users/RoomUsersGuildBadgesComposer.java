@@ -28,4 +28,8 @@ public class RoomUsersGuildBadgesComposer extends MessageComposer {
         });
         return this.response;
     }
+
+    public THashMap<Integer, String> getGuildBadges() {
+        return guildBadges;
+    }
 }

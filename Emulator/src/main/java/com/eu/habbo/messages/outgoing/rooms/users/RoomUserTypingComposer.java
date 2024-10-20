@@ -21,4 +21,12 @@ public class RoomUserTypingComposer extends MessageComposer {
         this.response.appendInt(this.typing ? 1 : 0);
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
+
+    public boolean isTyping() {
+        return typing;
+    }
 }

@@ -20,4 +20,12 @@ public class CameraCompetitionStatusComposer extends MessageComposer {
         this.response.appendString(this.unknownString);
         return this.response;
     }
+
+    public boolean isUnknownBoolean() {
+        return unknownBoolean;
+    }
+
+    public String getUnknownString() {
+        return unknownString;
+    }
 }

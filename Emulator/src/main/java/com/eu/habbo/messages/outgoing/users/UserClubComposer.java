@@ -160,4 +160,16 @@ public class UserClubComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public String getSubscriptionType() {
+        return subscriptionType;
+    }
+
+    public int getResponseType() {
+        return responseType;
+    }
 }

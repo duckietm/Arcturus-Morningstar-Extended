@@ -28,4 +28,8 @@ public class PollQuestionsComposer extends MessageComposer {
         this.response.appendBoolean(true);
         return this.response;
     }
+
+    public Poll getPoll() {
+        return poll;
+    }
 }

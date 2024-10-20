@@ -29,4 +29,8 @@ public class NewNavigatorSavedSearchesComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public List<NavigatorSavedSearch> getSearches() {
+        return searches;
+    }
 }

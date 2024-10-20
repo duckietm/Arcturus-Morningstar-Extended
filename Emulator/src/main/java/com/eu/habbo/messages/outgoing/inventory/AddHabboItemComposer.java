@@ -94,4 +94,24 @@ public class AddHabboItemComposer extends MessageComposer {
             this.number = number;
         }
     }
+
+    public THashSet<HabboItem> getItemsList() {
+        return itemsList;
+    }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public int[] getIds() {
+        return ids;
+    }
+
+    public AddHabboItemCategory getCategory() {
+        return category;
+    }
+
+    public Map<AddHabboItemCategory, List<Integer>> getEntries() {
+        return entries;
+    }
 }

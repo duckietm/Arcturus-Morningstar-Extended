@@ -27,4 +27,16 @@ public class MarketplaceSellItemComposer extends MessageComposer {
         this.response.appendInt(this.valueB);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public int getValueA() {
+        return valueA;
+    }
+
+    public int getValueB() {
+        return valueB;
+    }
 }

@@ -18,4 +18,8 @@ public class SnowWarsLoadingArenaComposer extends MessageComposer {
         //this.response.appendInt(1); //ItemID to dispose?
         return this.response;
     }
+
+    public int getCount() {
+        return count;
+    }
 }

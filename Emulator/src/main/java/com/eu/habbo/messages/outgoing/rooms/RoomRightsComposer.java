@@ -18,4 +18,8 @@ public class RoomRightsComposer extends MessageComposer {
         this.response.appendInt(this.type.level);
         return this.response;
     }
+
+    public RoomRightLevels getType() {
+        return type;
+    }
 }

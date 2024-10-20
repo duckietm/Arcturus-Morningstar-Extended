@@ -22,4 +22,8 @@ public class MarketplaceItemPostedComposer extends MessageComposer {
         this.response.appendInt(this.code);
         return this.response;
     }
+
+    public int getCode() {
+        return code;
+    }
 }

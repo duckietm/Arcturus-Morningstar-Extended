@@ -50,5 +50,39 @@ public class ClubCenterDataComposer extends MessageComposer {
         return this.response;
     }
 
+    public int getCurrentHcStreak() {
+        return currentHcStreak;
+    }
 
+    public String getFirstSubDate() {
+        return firstSubDate;
+    }
+
+    public double getKickbackPercentage() {
+        return kickbackPercentage;
+    }
+
+    public int getTotalCreditsMissed() {
+        return totalCreditsMissed;
+    }
+
+    public int getTotalCreditsRewarded() {
+        return totalCreditsRewarded;
+    }
+
+    public int getTotalCreditsSpent() {
+        return totalCreditsSpent;
+    }
+
+    public int getCreditRewardForStreakBonus() {
+        return creditRewardForStreakBonus;
+    }
+
+    public int getCreditRewardForMonthlySpent() {
+        return creditRewardForMonthlySpent;
+    }
+
+    public int getTimeUntilPayday() {
+        return timeUntilPayday;
+    }
 }

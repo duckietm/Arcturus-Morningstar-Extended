@@ -37,4 +37,8 @@ public class RoomCategoriesComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public List<RoomCategory> getCategories() {
+        return categories;
+    }
 }

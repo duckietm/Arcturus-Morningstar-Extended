@@ -20,4 +20,12 @@ public class PetBreedingCompleted extends MessageComposer {
         this.response.appendInt(this.race);
         return this.response;
     }
+
+    public int getType() {
+        return type;
+    }
+
+    public int getRace() {
+        return race;
+    }
 }

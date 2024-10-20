@@ -19,4 +19,8 @@ public class RoomEntryInfoComposer extends MessageComposer {
         this.response.appendString(this.room.getOwnerName());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

@@ -23,4 +23,8 @@ public class CustomNotificationComposer extends MessageComposer {
         this.response.appendInt(this.type);
         return this.response;
     }
+
+    public int getType() {
+        return type;
+    }
 }

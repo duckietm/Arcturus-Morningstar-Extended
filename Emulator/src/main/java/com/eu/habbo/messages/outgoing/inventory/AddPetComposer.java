@@ -19,4 +19,8 @@ public class AddPetComposer extends MessageComposer {
         this.response.appendBoolean(false);
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
 }

@@ -23,4 +23,12 @@ public class TradeClosedComposer extends MessageComposer {
         this.response.appendInt(this.errorCode);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
 }

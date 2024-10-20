@@ -75,4 +75,17 @@ public class CatalogPagesListComposer extends MessageComposer {
             this.append(page);
         }
     }
+
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public boolean isHasPermission() {
+        return hasPermission;
+    }
 }

@@ -18,4 +18,8 @@ public class UserCreditsComposer extends MessageComposer {
         this.response.appendString(this.habbo.getHabboInfo().getCredits() + ".0");
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

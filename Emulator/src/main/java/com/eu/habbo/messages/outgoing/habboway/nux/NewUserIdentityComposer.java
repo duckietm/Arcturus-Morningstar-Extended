@@ -18,4 +18,8 @@ public class NewUserIdentityComposer extends MessageComposer {
         this.response.appendInt(this.habbo.noobStatus());
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

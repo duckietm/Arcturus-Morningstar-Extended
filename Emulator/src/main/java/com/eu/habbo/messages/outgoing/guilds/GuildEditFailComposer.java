@@ -22,4 +22,8 @@ public class GuildEditFailComposer extends MessageComposer {
         this.response.appendInt(this.errorCode);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
 }

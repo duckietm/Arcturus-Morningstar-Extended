@@ -28,4 +28,8 @@ public class JukeBoxMySongsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public List<InteractionMusicDisc> getItems() {
+        return items;
+    }
 }

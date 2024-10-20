@@ -20,4 +20,12 @@ public class RoomPaintComposer extends MessageComposer {
         this.response.appendString(this.value);
         return this.response;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

@@ -30,4 +30,8 @@ public class JukeBoxTrackDataComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public List<SoundTrack> getTracks() {
+        return tracks;
+    }
 }

@@ -51,4 +51,16 @@ public class RentableSpaceInfoComposer extends MessageComposer {
         this.response.appendInt(((InteractionRentableSpace) this.item).rentCost()); //Price
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
 }

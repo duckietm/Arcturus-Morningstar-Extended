@@ -22,4 +22,8 @@ public class RoomUserWhisperComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public RoomChatMessage getRoomChatMessage() {
+        return roomChatMessage;
+    }
 }

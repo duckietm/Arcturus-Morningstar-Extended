@@ -23,4 +23,16 @@ public class UnknownMessengerErrorComposer extends MessageComposer {
         this.response.appendString(this.message);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

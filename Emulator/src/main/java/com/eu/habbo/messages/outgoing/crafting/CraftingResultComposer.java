@@ -32,4 +32,12 @@ public class CraftingResultComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public CraftingRecipe getRecipe() {
+        return recipe;
+    }
+
+    public boolean isSucces() {
+        return succes;
+    }
 }

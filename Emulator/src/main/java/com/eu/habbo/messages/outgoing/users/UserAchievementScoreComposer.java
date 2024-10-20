@@ -18,4 +18,8 @@ public class UserAchievementScoreComposer extends MessageComposer {
         this.response.appendInt(this.habbo.getHabboStats().getAchievementScore());
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

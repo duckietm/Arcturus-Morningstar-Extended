@@ -23,4 +23,16 @@ public class HotelClosesAndWillOpenAtComposer extends MessageComposer {
         this.response.appendBoolean(this.disconnected);
         return this.response;
     }
+
+    public int getHour() {
+        return hour;
+    }
+
+    public int getMinute() {
+        return minute;
+    }
+
+    public boolean isDisconnected() {
+        return disconnected;
+    }
 }

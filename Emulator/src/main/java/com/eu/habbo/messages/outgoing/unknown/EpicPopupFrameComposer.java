@@ -18,4 +18,8 @@ public class EpicPopupFrameComposer extends MessageComposer {
         this.response.appendString(this.assetURI);
         return this.response;
     }
+
+    public String getAssetURI() {
+        return assetURI;
+    }
 }

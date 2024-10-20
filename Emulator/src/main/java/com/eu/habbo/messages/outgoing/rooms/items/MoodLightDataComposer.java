@@ -52,4 +52,8 @@ public class MoodLightDataComposer extends MessageComposer {
         //:test 2780 i:1 i:1 i:1 i:2 s:#FF00FF i:255
         return this.response;
     }
+
+    public TIntObjectMap<RoomMoodlightData> getMoodLightData() {
+        return moodLightData;
+    }
 }

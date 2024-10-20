@@ -77,4 +77,16 @@ public class UserSearchResultComposer extends MessageComposer {
 
         return false;
     }
+
+    public THashSet<MessengerBuddy> getUsers() {
+        return users;
+    }
+
+    public THashSet<MessengerBuddy> getFriends() {
+        return friends;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

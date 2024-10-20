@@ -27,4 +27,8 @@ public class ItemsDataUpdateComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Set<HabboItem> getItems() {
+        return items;
+    }
 }

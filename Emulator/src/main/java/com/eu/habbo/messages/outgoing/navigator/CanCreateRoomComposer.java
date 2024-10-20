@@ -22,4 +22,12 @@ public class CanCreateRoomComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public int getCount() {
+        return count;
+    }
+
+    public int getMax() {
+        return max;
+    }
 }

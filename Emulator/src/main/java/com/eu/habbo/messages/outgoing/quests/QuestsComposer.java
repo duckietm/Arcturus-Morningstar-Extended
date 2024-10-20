@@ -83,5 +83,77 @@ public class QuestsComposer extends MessageComposer {
             message.appendString(this.chainCode);
             message.appendBoolean(this.easy);
         }
+
+        public String getCampaignCode() {
+            return campaignCode;
+        }
+
+        public int getCompletedQuestsInCampaign() {
+            return completedQuestsInCampaign;
+        }
+
+        public int getQuestCountInCampaign() {
+            return questCountInCampaign;
+        }
+
+        public int getActivityPointType() {
+            return activityPointType;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public boolean isAccepted() {
+            return accepted;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getImageVersion() {
+            return imageVersion;
+        }
+
+        public int getRewardCurrencyAmount() {
+            return rewardCurrencyAmount;
+        }
+
+        public String getLocalizationCode() {
+            return localizationCode;
+        }
+
+        public int getCompletedSteps() {
+            return completedSteps;
+        }
+
+        public int getTotalSteps() {
+            return totalSteps;
+        }
+
+        public int getSortOrder() {
+            return sortOrder;
+        }
+
+        public String getCatalogPageName() {
+            return catalogPageName;
+        }
+
+        public String getChainCode() {
+            return chainCode;
+        }
+
+        public boolean isEasy() {
+            return easy;
+        }
+    }
+
+    public List<Quest> getQuests() {
+        return quests;
+    }
+
+    public boolean isUnknownBoolean() {
+        return unknownBoolean;
     }
 }

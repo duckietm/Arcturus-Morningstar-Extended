@@ -26,4 +26,8 @@ public class CraftingRecipeComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public CraftingRecipe getRecipe() {
+        return recipe;
+    }
 }

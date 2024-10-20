@@ -19,4 +19,8 @@ public class RoomUserHandItemComposer extends MessageComposer {
         this.response.appendInt(this.roomUnit.getHandItem());
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
 }

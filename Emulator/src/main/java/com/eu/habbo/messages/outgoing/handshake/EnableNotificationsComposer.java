@@ -17,4 +17,8 @@ public class EnableNotificationsComposer extends MessageComposer {
         this.response.appendBoolean(this.enabled);
         return this.response;
     }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
 }

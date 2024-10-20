@@ -20,4 +20,12 @@ public class RoomAdErrorComposer extends MessageComposer {
         this.response.appendString(this.unknownString);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getUnknownString() {
+        return unknownString;
+    }
 }

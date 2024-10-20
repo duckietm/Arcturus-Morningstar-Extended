@@ -17,4 +17,8 @@ public class ForwardToRoomComposer extends MessageComposer {
         this.response.appendInt(this.roomId);
         return this.response;
     }
+
+    public int getRoomId() {
+        return roomId;
+    }
 }

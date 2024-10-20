@@ -17,4 +17,8 @@ public class UpdateFailedComposer extends MessageComposer {
         this.response.appendString(this.message);
         return this.response;
     }
+
+    public String getMessage() {
+        return message;
+    }
 }

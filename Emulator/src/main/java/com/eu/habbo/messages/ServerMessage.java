@@ -1,5 +1,6 @@
 package com.eu.habbo.messages;
 
+import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.util.PacketUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -19,6 +20,7 @@ public class ServerMessage {
     private AtomicInteger refs;
     private ByteBufOutputStream stream;
     private ByteBuf channelBuffer;
+    private MessageComposer composer;
 
     public ServerMessage() {
 
@@ -38,6 +40,7 @@ public class ServerMessage {
         this.refs = new AtomicInteger(0);
         this.channelBuffer = Unpooled.buffer();
         this.stream = new ByteBufOutputStream(this.channelBuffer);
+        this.composer = null;
 
         try {
             this.stream.writeInt(0);
@@ -183,6 +186,14 @@ public class ServerMessage {
         this.channelBuffer.setInt(0, this.channelBuffer.writerIndex() - 4);
 
         return this.channelBuffer.copy();
+    }
+
+    public MessageComposer getComposer() {
+        return composer;
+    }
+
+    public void setComposer(MessageComposer composer) {
+        this.composer = composer;
     }
 
 }

@@ -21,4 +21,12 @@ public class YoutubeStateChangeComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public int getFurniId() {
+        return furniId;
+    }
+
+    public int getState() {
+        return state;
+    }
 }

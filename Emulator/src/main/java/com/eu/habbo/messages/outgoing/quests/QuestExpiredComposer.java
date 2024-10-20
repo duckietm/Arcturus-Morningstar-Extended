@@ -17,4 +17,8 @@ public class QuestExpiredComposer extends MessageComposer {
         this.response.appendBoolean(this.expired);
         return this.response;
     }
+
+    public boolean isExpired() {
+        return expired;
+    }
 }

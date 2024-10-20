@@ -27,6 +27,8 @@ public class Bot implements Runnable {
 
     public static final String NO_CHAT_SET = "${bot.skill.chatter.configuration.text.placeholder}";
     public static String[] PLACEMENT_MESSAGES = "Yo!;Hello I'm a real party animal!;Hello!".split(";");
+    public static boolean BOT_LIMIT_WALKING_DISTANCE = true;
+    public static int BOT_WALKING_DISTANCE_RADIUS = 5;
 
     private final ArrayList<String> chatLines;
     private transient int id;
@@ -137,30 +139,26 @@ public class Bot implements Runnable {
     @Override
     public void run() {
         if (this.needsUpdate) {
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE bots SET name = ?, motto = ?, figure = ?, gender = ?, user_id = ?, room_id = ?, x = ?, y = ?, z = ?, rot = ?, dance = ?, freeroam = ?, chat_lines = ?, chat_auto = ?, chat_random = ?, chat_delay = ?, effect = ?, bubble_id = ? WHERE id = ?")) {
+            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE bots SET name = ?, motto = ?, figure = ?, gender = ?, user_id = ?, room_id = ?, dance = ?, freeroam = ?, chat_lines = ?, chat_auto = ?, chat_random = ?, chat_delay = ?, effect = ?, bubble_id = ? WHERE id = ?")) {
                 statement.setString(1, this.name);
                 statement.setString(2, this.motto);
                 statement.setString(3, this.figure);
                 statement.setString(4, this.gender.toString());
                 statement.setInt(5, this.ownerId);
                 statement.setInt(6, this.room == null ? 0 : this.room.getId());
-                statement.setInt(7, this.roomUnit == null ? 0 : this.roomUnit.getX());
-                statement.setInt(8, this.roomUnit == null ? 0 : this.roomUnit.getY());
-                statement.setDouble(9, this.roomUnit == null ? 0 : this.roomUnit.getZ());
-                statement.setInt(10, this.roomUnit == null ? 0 : this.roomUnit.getBodyRotation().getValue());
-                statement.setInt(11, this.roomUnit == null ? 0 : this.roomUnit.getDanceType().getType());
-                statement.setString(12, this.canWalk ? "1" : "0");
+                statement.setInt(7, this.roomUnit == null ? 0 : this.roomUnit.getDanceType().getType());
+                statement.setString(8, this.canWalk ? "1" : "0");
                 StringBuilder text = new StringBuilder();
                 for (String s : this.chatLines) {
                     text.append(s).append("\r");
                 }
-                statement.setString(13, text.toString());
-                statement.setString(14, this.chatAuto ? "1" : "0");
-                statement.setString(15, this.chatRandom ? "1" : "0");
-                statement.setInt(16, this.chatDelay);
-                statement.setInt(17, this.effect);
-                statement.setInt(18, this.bubble);
-                statement.setInt(19, this.id);
+                statement.setString(9, text.toString());
+                statement.setString(10, this.chatAuto ? "1" : "0");
+                statement.setString(11, this.chatRandom ? "1" : "0");
+                statement.setInt(12, this.chatDelay);
+                statement.setInt(13, this.effect);
+                statement.setInt(14, this.bubble);
+                statement.setInt(15, this.id);
                 statement.execute();
                 this.needsUpdate = false;
             } catch (SQLException e) {
@@ -174,7 +172,15 @@ public class Bot implements Runnable {
             if (allowBotsWalk && this.canWalk) {
                 if (!this.roomUnit.isWalking()) {
                     if (this.roomUnit.getWalkTimeOut() < Emulator.getIntUnixTimestamp() && this.followingHabboId == 0) {
-                        this.roomUnit.setGoalLocation(this.room.getRandomWalkableTile());
+                        this.roomUnit.setGoalLocation(
+                                Bot.BOT_LIMIT_WALKING_DISTANCE
+                                        ? this.room.getRandomWalkableTilesAround(
+                                        this.getRoomUnit(),
+                                        this.room.getLayout().getTile(this.roomUnit.getX(), this.roomUnit.getY()),
+                                        Bot.BOT_WALKING_DISTANCE_RADIUS)
+                                        : this.room.getRandomWalkableTile()
+                        );
+
                         int timeOut = Emulator.getRandom().nextInt(20) * 2;
                         this.roomUnit.setWalkTimeOut((timeOut < 10 ? 5 : timeOut) + Emulator.getIntUnixTimestamp());
                     }
@@ -207,13 +213,14 @@ public class Bot implements Runnable {
                     } else {
                         this.lastChatIndex++;
                         if (this.lastChatIndex >= this.chatLines.size()) {
-                            this.lastChatIndex = 0;
+                            this.lastChatIndex = 0; // start from scratch :-3
                         }
                     }
 
                     this.chatTimeOut = Emulator.getIntUnixTimestamp() + this.chatDelay;
                 }
             }
+
         }
     }
 
@@ -266,8 +273,7 @@ public class Bot implements Runnable {
         if(PLACEMENT_MESSAGES.length > 0) {
             String message = PLACEMENT_MESSAGES[Emulator.getRandom().nextInt(PLACEMENT_MESSAGES.length)];
             if (!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{message})) {
-                if(!habbo.roomBypass) this.talk(message);
-                else this.talk("Deliver the drink here, " + habbo.getHabboInfo().getUsername() + "!");
+                this.talk(message);
             }
         }
     }
@@ -432,6 +438,7 @@ public class Bot implements Runnable {
         this.bubble = bubble;
         this.needsUpdate = true;
     }
+
     public void setEffect(int effect, int duration) {
         this.effect = effect;
         this.needsUpdate = true;
@@ -495,5 +502,37 @@ public class Bot implements Runnable {
         this.roomUnit.lookAtPoint(tile);
         this.roomUnit.statusUpdate(true);
     }
+
+    public void onPlaceUpdate() {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE bots SET name = ?, motto = ?, figure = ?, gender = ?, user_id = ?, room_id = ?, x = ?, y = ?, z = ?, rot = ?, dance = ?, freeroam = ?, chat_lines = ?, chat_auto = ?, chat_random = ?, chat_delay = ?, effect = ?, bubble_id = ? WHERE id = ?")) {
+            statement.setString(1, this.name);
+            statement.setString(2, this.motto);
+            statement.setString(3, this.figure);
+            statement.setString(4, this.gender.toString());
+            statement.setInt(5, this.ownerId);
+            statement.setInt(6, this.room == null ? 0 : this.room.getId());
+            statement.setInt(7, this.roomUnit == null ? 0 : this.roomUnit.getX());
+            statement.setInt(8, this.roomUnit == null ? 0 : this.roomUnit.getY());
+            statement.setDouble(9, this.roomUnit == null ? 0 : this.roomUnit.getZ());
+            statement.setInt(10, this.roomUnit == null ? 0 : this.roomUnit.getBodyRotation().getValue());
+            statement.setInt(11, this.roomUnit == null ? 0 : this.roomUnit.getDanceType().getType());
+            statement.setString(12, this.canWalk ? "1" : "0");
+            StringBuilder text = new StringBuilder();
+            for (String s : this.chatLines) {
+                text.append(s).append("\r");
+            }
+            statement.setString(13, text.toString());
+            statement.setString(14, this.chatAuto ? "1" : "0");
+            statement.setString(15, this.chatRandom ? "1" : "0");
+            statement.setInt(16, this.chatDelay);
+            statement.setInt(17, this.effect);
+            statement.setInt(18, this.bubble);
+            statement.setInt(19, this.id);
+            statement.execute();
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+    }
+
 
 }

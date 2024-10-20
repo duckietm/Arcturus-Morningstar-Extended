@@ -24,4 +24,12 @@ public class ModToolReportReceivedAlertComposer extends MessageComposer {
         this.response.appendString(this.message);
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

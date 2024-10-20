@@ -35,4 +35,8 @@ public class JukeBoxPlayListUpdatedComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public THashSet<SoundTrack> getTracks() {
+        return tracks;
+    }
 }

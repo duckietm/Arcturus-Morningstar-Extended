@@ -18,4 +18,8 @@ public class RemoveBotComposer extends MessageComposer {
         this.response.appendInt(this.bot.getId());
         return this.response;
     }
+
+    public Bot getBot() {
+        return bot;
+    }
 }

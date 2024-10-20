@@ -46,4 +46,8 @@ public class PetTrainingPanelComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
 }

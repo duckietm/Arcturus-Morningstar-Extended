@@ -38,4 +38,24 @@ public class CompetitionEntrySubmitResultComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public String getUnknownString1() {
+        return unknownString1;
+    }
+
+    public int getResult() {
+        return result;
+    }
+
+    public List<String> getUnknownStringList1() {
+        return unknownStringList1;
+    }
+
+    public List<String> getUnknownStringList2() {
+        return unknownStringList2;
+    }
 }

@@ -19,4 +19,8 @@ public class RemoveWallItemComposer extends MessageComposer {
         this.response.appendInt(this.item.getUserId());
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

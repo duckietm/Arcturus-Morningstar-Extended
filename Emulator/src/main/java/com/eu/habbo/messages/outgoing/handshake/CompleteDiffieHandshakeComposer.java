@@ -26,4 +26,11 @@ public class CompleteDiffieHandshakeComposer extends MessageComposer {
         return this.response;
     }
 
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public boolean isClientEncryption() {
+        return clientEncryption;
+    }
 }

@@ -26,4 +26,8 @@ public class NewNavigatorCategoryUserCountComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<RoomCategory> getRoomCategories() {
+        return roomCategories;
+    }
 }

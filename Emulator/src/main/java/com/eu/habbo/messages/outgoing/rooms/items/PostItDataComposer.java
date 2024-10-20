@@ -23,4 +23,8 @@ public class PostItDataComposer extends MessageComposer {
         this.response.appendString(this.postIt.getExtradata());
         return this.response;
     }
+
+    public InteractionPostIt getPostIt() {
+        return postIt;
+    }
 }

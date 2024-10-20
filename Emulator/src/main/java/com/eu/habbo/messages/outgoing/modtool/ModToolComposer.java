@@ -94,4 +94,8 @@ public class ModToolComposer extends MessageComposer implements TObjectProcedure
 
         return true;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

@@ -18,4 +18,8 @@ public class PetPackageComposer extends MessageComposer {
         this.response.appendInt(this.item.getId());
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

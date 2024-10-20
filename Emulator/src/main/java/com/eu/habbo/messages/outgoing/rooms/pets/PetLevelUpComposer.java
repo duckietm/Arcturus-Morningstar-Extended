@@ -27,4 +27,8 @@ public class PetLevelUpComposer extends MessageComposer {
         //:test 2329  i:0 s:a i:3 i:1 i:1 s:FF00FF i:0 i:0
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
 }

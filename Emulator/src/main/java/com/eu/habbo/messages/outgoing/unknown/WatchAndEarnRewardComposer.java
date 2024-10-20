@@ -21,4 +21,8 @@ public class WatchAndEarnRewardComposer extends MessageComposer {
         this.response.appendString(this.item.getFullName());
         return this.response;
     }
+
+    public Item getItem() {
+        return item;
+    }
 }

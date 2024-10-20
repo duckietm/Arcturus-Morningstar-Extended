@@ -19,4 +19,8 @@ public class RoomUserDanceComposer extends MessageComposer {
         this.response.appendInt(this.roomUnit.getDanceType().getType());
         return this.response;
     }
+
+    public RoomUnit getRoomUnit() {
+        return roomUnit;
+    }
 }

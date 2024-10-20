@@ -31,4 +31,16 @@ public class RoomEditSettingsErrorComposer extends MessageComposer {
         this.response.appendString(this.info);
         return this.response;
     }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getInfo() {
+        return info;
+    }
 }

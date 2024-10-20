@@ -19,4 +19,7 @@ public class MachineIDComposer extends MessageComposer {
         return this.response;
     }
 
+    public String getMachineId() {
+        return machineId;
+    }
 }

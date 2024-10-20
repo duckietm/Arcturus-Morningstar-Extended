@@ -20,4 +20,8 @@ public class PetLevelUpdatedComposer extends MessageComposer {
         this.response.appendInt(this.pet.getLevel());
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
 }

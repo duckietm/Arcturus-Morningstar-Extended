@@ -20,4 +20,12 @@ public class HotelViewBadgeButtonConfigComposer extends MessageComposer {
         this.response.appendBoolean(this.enabled);
         return this.response;
     }
+
+    public String getBadge() {
+        return badge;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
 }

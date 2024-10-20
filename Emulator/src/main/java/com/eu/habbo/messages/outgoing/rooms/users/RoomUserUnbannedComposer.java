@@ -21,4 +21,12 @@ public class RoomUserUnbannedComposer extends MessageComposer {
         this.response.appendInt(this.userId);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
 }

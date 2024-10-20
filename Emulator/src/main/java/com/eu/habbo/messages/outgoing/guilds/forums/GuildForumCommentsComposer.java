@@ -34,4 +34,20 @@ public class GuildForumCommentsComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getGuildId() {
+        return guildId;
+    }
+
+    public int getThreadId() {
+        return threadId;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public Collection<ForumThreadComment> getGuildForumCommentList() {
+        return guildForumCommentList;
+    }
 }

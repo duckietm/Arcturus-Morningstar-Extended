@@ -18,4 +18,8 @@ public class EffectsListRemoveComposer extends MessageComposer {
         this.response.appendInt(this.effect.effect);
         return this.response;
     }
+
+    public EffectsComponent.HabboEffect getEffect() {
+        return effect;
+    }
 }

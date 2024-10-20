@@ -20,4 +20,12 @@ public class StaffAlertWIthLinkAndOpenHabboWayComposer extends MessageComposer {
         this.response.appendString(this.link);
         return this.response;
     }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getLink() {
+        return link;
+    }
 }

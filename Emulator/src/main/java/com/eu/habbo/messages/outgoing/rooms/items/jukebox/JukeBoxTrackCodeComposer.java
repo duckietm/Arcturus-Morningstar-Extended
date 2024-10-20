@@ -19,4 +19,8 @@ public class JukeBoxTrackCodeComposer extends MessageComposer {
         this.response.appendInt(this.track.getId());
         return this.response;
     }
+
+    public SoundTrack getTrack() {
+        return track;
+    }
 }

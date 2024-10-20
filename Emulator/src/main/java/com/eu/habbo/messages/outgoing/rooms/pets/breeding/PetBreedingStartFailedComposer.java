@@ -25,4 +25,8 @@ public class PetBreedingStartFailedComposer extends MessageComposer {
         this.response.appendInt(this.reason);
         return this.response;
     }
+
+    public int getReason() {
+        return reason;
+    }
 }

@@ -20,4 +20,8 @@ public class RoomUsersAddGuildBadgeComposer extends MessageComposer {
         this.response.appendString(this.guild.getBadge());
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
 }

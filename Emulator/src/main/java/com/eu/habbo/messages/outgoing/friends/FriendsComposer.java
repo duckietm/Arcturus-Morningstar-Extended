@@ -80,4 +80,16 @@ public class FriendsComposer extends MessageComposer {
 
         return messages;
     }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public int getPageIndex() {
+        return pageIndex;
+    }
+
+    public Collection<MessengerBuddy> getFriends() {
+        return friends;
+    }
 }

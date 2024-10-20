@@ -68,4 +68,20 @@ public class CatalogPageComposer extends MessageComposer {
             page.serialize(message);
         }
     }
+
+    public CatalogPage getPage() {
+        return page;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public int getOfferId() {
+        return offerId;
+    }
+
+    public String getMode() {
+        return mode;
+    }
 }

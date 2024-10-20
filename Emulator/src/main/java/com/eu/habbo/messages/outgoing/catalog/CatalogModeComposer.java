@@ -17,4 +17,8 @@ public class CatalogModeComposer extends MessageComposer {
         this.response.appendInt(this.mode);
         return this.response;
     }
+
+    public int getMode() {
+        return mode;
+    }
 }

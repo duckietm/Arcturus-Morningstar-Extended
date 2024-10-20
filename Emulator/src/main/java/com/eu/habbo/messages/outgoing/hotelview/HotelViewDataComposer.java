@@ -22,4 +22,12 @@ public class HotelViewDataComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public String getData() {
+        return data;
+    }
+
+    public String getKey() {
+        return key;
+    }
 }

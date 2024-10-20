@@ -25,4 +25,8 @@ public class PetStatusUpdateComposer extends MessageComposer {
         this.response.appendBoolean(this.pet instanceof MonsterplantPet && ((MonsterplantPet) this.pet).isPubliclyBreedable());
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
 }

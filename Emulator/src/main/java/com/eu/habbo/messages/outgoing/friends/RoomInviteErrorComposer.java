@@ -30,4 +30,12 @@ public class RoomInviteErrorComposer extends MessageComposer {
         });
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public THashSet<MessengerBuddy> getBuddies() {
+        return buddies;
+    }
 }

@@ -59,4 +59,12 @@ public class BotSettingsComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Bot getBot() {
+        return bot;
+    }
+
+    public int getSettingId() {
+        return settingId;
+    }
 }

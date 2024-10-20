@@ -17,4 +17,8 @@ public class RoomCategoryUpdateMessageComposer extends MessageComposer {
         this.response.appendInt(this.unknownInt1);
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
 }

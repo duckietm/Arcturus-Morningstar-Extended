@@ -108,4 +108,20 @@ public class ProfileFriendsComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<MessengerBuddy> getLovers() {
+        return lovers;
+    }
+
+    public List<MessengerBuddy> getFriends() {
+        return friends;
+    }
+
+    public List<MessengerBuddy> getHaters() {
+        return haters;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
 }

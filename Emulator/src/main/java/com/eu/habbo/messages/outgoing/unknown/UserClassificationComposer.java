@@ -25,4 +25,8 @@ public class UserClassificationComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public List<Pair<Integer, Pair<String, String>>> getInfo() {
+        return info;
+    }
 }

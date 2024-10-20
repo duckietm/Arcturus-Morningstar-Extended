@@ -17,4 +17,8 @@ public class UnknownAdManagerComposer extends MessageComposer {
         this.response.appendBoolean(this.unknownBoolean);
         return this.response;
     }
+
+    public boolean isUnknownBoolean() {
+        return unknownBoolean;
+    }
 }

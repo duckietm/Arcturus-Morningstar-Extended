@@ -27,4 +27,8 @@ public class TagsComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Set<String> getTags() {
+        return tags;
+    }
 }

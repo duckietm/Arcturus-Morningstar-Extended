@@ -22,4 +22,12 @@ public class RoomMessagesPostedCountComposer extends MessageComposer {
         this.response.appendInt(this.count);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getCount() {
+        return count;
+    }
 }

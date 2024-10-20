@@ -19,4 +19,8 @@ public class FreezeLivesComposer extends MessageComposer {
         this.response.appendInt(this.gamePlayer.getLives());
         return this.response;
     }
+
+    public FreezeGamePlayer getGamePlayer() {
+        return gamePlayer;
+    }
 }

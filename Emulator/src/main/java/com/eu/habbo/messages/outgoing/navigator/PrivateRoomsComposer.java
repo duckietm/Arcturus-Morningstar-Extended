@@ -49,4 +49,8 @@ public class PrivateRoomsComposer extends MessageComposer {
         }
         return null;
     }
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
 }

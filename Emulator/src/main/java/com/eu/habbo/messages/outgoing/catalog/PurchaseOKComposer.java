@@ -40,4 +40,8 @@ public class PurchaseOKComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public CatalogItem getCatalogItem() {
+        return catalogItem;
+    }
 }

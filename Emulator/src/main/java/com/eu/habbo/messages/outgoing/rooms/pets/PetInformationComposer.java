@@ -67,4 +67,16 @@ public class PetInformationComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public Habbo getRequestingHabbo() {
+        return requestingHabbo;
+    }
 }

@@ -31,4 +31,20 @@ public class MarketplaceBuyErrorComposer extends MessageComposer {
         this.response.appendInt(this.price); //requestedOfferId
         return this.response;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public int getUnknown() {
+        return unknown;
+    }
+
+    public int getOfferId() {
+        return offerId;
+    }
+
+    public int getPrice() {
+        return price;
+    }
 }

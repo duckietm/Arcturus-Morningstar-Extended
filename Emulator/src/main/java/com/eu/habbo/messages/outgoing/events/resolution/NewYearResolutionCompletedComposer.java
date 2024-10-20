@@ -18,4 +18,8 @@ public class NewYearResolutionCompletedComposer extends MessageComposer {
         this.response.appendString(this.badge);
         return this.response;
     }
+
+    public String getBadge() {
+        return badge;
+    }
 }

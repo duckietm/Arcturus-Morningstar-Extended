@@ -29,4 +29,12 @@ public class ModToolIssueHandledComposer extends MessageComposer {
         this.response.appendString(this.message);
         return this.response;
     }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

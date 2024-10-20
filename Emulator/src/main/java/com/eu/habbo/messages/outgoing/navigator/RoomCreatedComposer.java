@@ -19,4 +19,8 @@ public class RoomCreatedComposer extends MessageComposer {
         this.response.appendString(this.room.getName());
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

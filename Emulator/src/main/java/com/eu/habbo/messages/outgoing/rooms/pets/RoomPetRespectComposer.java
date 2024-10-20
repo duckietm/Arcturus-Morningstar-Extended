@@ -30,4 +30,12 @@ public class RoomPetRespectComposer extends MessageComposer {
         this.pet.serialize(this.response);
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
+
+    public int getType() {
+        return type;
+    }
 }

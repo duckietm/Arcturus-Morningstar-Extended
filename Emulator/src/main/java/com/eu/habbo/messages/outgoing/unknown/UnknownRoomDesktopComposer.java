@@ -26,4 +26,12 @@ public class UnknownRoomDesktopComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public int getUnknownInt1() {
+        return unknownInt1;
+    }
+
+    public Map<Integer, String> getUnknownMap() {
+        return unknownMap;
+    }
 }

@@ -25,4 +25,8 @@ public class MeMenuSettingsComposer extends MessageComposer {
         this.response.appendInt(this.habbo.getHabboStats().chatColor.getType());
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

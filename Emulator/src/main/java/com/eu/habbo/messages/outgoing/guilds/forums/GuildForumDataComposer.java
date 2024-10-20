@@ -166,4 +166,12 @@ public class GuildForumDataComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

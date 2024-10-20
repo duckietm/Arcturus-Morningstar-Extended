@@ -17,4 +17,8 @@ public class BotForceOpenContextMenuComposer extends MessageComposer {
         this.response.appendInt(this.botId);
         return this.response;
     }
+
+    public int getBotId() {
+        return botId;
+    }
 }

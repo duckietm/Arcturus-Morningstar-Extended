@@ -18,4 +18,8 @@ public class GuideSessionRequesterRoomComposer extends MessageComposer {
         this.response.appendInt(this.room != null ? this.room.getId() : 0);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

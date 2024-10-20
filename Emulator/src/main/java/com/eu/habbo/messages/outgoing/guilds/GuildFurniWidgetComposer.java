@@ -30,4 +30,16 @@ public class GuildFurniWidgetComposer extends MessageComposer {
         this.response.appendBoolean(this.guild.hasForum()); //Has Forum.
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

@@ -19,4 +19,8 @@ public class UserCitizinShipComposer extends MessageComposer {
         this.response.appendInt(4);
         return this.response;
     }
+
+    public String getName() {
+        return name;
+    }
 }

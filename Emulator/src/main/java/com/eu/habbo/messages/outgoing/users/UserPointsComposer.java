@@ -23,4 +23,16 @@ public class UserPointsComposer extends MessageComposer {
         this.response.appendInt(this.type);
         return this.response;
     }
+
+    public int getCurrentAmount() {
+        return currentAmount;
+    }
+
+    public int getAmountAdded() {
+        return amountAdded;
+    }
+
+    public int getType() {
+        return type;
+    }
 }

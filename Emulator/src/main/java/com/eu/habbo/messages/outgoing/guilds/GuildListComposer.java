@@ -33,4 +33,12 @@ public class GuildListComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public THashSet<Guild> getGuilds() {
+        return guilds;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

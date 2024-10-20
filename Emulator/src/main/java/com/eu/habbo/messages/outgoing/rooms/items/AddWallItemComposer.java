@@ -21,4 +21,12 @@ public class AddWallItemComposer extends MessageComposer {
         this.response.appendString(this.itemOwnerName);
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public String getItemOwnerName() {
+        return itemOwnerName;
+    }
 }

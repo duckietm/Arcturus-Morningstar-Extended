@@ -20,4 +20,8 @@ public class GuideSessionInvitedToGuideRoomComposer extends MessageComposer {
         this.response.appendString(this.room != null ? this.room.getName() : "");
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
 }

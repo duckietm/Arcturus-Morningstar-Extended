@@ -112,4 +112,20 @@ public class RoomDataComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public boolean isRoomForward() {
+        return roomForward;
+    }
+
+    public boolean isEnterRoom() {
+        return enterRoom;
+    }
 }

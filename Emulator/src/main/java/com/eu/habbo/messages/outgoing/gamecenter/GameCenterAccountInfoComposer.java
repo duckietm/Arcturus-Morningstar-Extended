@@ -21,4 +21,12 @@ public class GameCenterAccountInfoComposer extends MessageComposer {
         this.response.appendInt(1);
         return this.response;
     }
+
+    public int getGameId() {
+        return gameId;
+    }
+
+    public int getGamesLeft() {
+        return gamesLeft;
+    }
 }

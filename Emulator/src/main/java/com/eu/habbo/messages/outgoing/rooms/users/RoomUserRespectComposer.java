@@ -19,4 +19,8 @@ public class RoomUserRespectComposer extends MessageComposer {
         this.response.appendInt(this.habbo.getHabboStats().respectPointsReceived);
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

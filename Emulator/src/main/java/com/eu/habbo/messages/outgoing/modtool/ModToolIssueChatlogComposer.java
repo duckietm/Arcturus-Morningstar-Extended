@@ -98,4 +98,20 @@ public class ModToolIssueChatlogComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public ModToolIssue getIssue() {
+        return issue;
+    }
+
+    public List<ModToolChatLog> getChatlog() {
+        return chatlog;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public ModToolIssueChatlogType getType() {
+        return type;
+    }
 }

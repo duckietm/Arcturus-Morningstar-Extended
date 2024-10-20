@@ -35,4 +35,12 @@ public class AchievementUnlockedComposer extends MessageComposer {
         this.response.appendBoolean(true);
         return this.response;
     }
+
+    public Achievement getAchievement() {
+        return achievement;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }

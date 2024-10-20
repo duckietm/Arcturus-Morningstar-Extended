@@ -18,4 +18,8 @@ public class RemovePetComposer extends MessageComposer {
         this.response.appendInt(this.petId);
         return this.response;
     }
+
+    public int getPetId() {
+        return petId;
+    }
 }

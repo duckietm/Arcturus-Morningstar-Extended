@@ -19,4 +19,8 @@ public class ItemExtraDataComposer extends MessageComposer {
         this.item.serializeExtradata(this.response);
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
 }

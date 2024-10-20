@@ -18,4 +18,8 @@ public class ModToolIssueInfoComposer extends MessageComposer {
         this.issue.serialize(this.response);
         return this.response;
     }
+
+    public ModToolIssue getIssue() {
+        return issue;
+    }
 }

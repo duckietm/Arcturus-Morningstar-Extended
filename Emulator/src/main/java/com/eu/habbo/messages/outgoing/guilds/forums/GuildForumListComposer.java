@@ -52,4 +52,20 @@ public class GuildForumListComposer extends MessageComposer {
 
         return this.response;
     }
+
+    public Set<Guild> getGuilds() {
+        return guilds;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public int getMode() {
+        return mode;
+    }
+
+    public int getIndex() {
+        return index;
+    }
 }

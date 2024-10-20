@@ -49,4 +49,8 @@ public class GuildBuyRoomsComposer extends MessageComposer {
         this.response.appendInt(0);
         return this.response;
     }
+
+    public THashSet<Room> getRooms() {
+        return rooms;
+    }
 }

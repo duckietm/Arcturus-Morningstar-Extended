@@ -22,4 +22,12 @@ public class WiredTriggerDataComposer extends MessageComposer {
         this.trigger.needsUpdate(true);
         return this.response;
     }
+
+    public InteractionWiredTrigger getTrigger() {
+        return trigger;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
 }

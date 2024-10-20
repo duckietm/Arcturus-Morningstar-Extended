@@ -31,4 +31,16 @@ public class FriendNotificationComposer extends MessageComposer {
         this.response.appendString(this.data);
         return this.response;
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public String getData() {
+        return data;
+    }
 }

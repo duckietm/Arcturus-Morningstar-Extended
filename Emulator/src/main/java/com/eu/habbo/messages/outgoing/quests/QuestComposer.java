@@ -17,4 +17,8 @@ public class QuestComposer extends MessageComposer {
         this.response.append(this.quest);
         return this.response;
     }
+
+    public QuestsComposer.Quest getQuest() {
+        return quest;
+    }
 }

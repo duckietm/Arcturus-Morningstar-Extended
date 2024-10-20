@@ -24,4 +24,16 @@ public class RoomAddRightsListComposer extends MessageComposer {
         this.response.appendString(this.userName);
         return this.response;
     }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
 }

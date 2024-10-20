@@ -22,4 +22,12 @@ public class UpdateStackHeightTileHeightComposer extends MessageComposer {
         this.response.appendInt(this.height);
         return this.response;
     }
+
+    public HabboItem getItem() {
+        return item;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 }

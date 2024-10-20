@@ -19,4 +19,8 @@ public class GuideSessionMessageComposer extends MessageComposer {
         this.response.appendInt(this.message.userId);   //Sender ID
         return this.response;
     }
+
+    public GuideChatMessage getMessage() {
+        return message;
+    }
 }

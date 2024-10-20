@@ -21,4 +21,12 @@ public class PetBoughtNotificationComposer extends MessageComposer {
         this.pet.serialize(this.response);
         return this.response;
     }
+
+    public Pet getPet() {
+        return pet;
+    }
+
+    public boolean isGift() {
+        return gift;
+    }
 }

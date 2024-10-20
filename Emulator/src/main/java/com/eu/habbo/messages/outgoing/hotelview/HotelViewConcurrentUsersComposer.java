@@ -27,4 +27,16 @@ public class HotelViewConcurrentUsersComposer extends MessageComposer {
         this.response.appendInt(this.goal);
         return this.response;
     }
+
+    public int getState() {
+        return state;
+    }
+
+    public int getUserCount() {
+        return userCount;
+    }
+
+    public int getGoal() {
+        return goal;
+    }
 }

@@ -17,4 +17,8 @@ public class GuideSessionPartnerIsPlayingComposer extends MessageComposer {
         this.response.appendBoolean(this.isPlaying);
         return this.response;
     }
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
 }

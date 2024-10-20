@@ -29,4 +29,24 @@ public class WelcomeGiftComposer extends MessageComposer {
         this.response.appendBoolean(this.unknownB3);
         return this.response;
     }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public boolean isUnknownB1() {
+        return unknownB1;
+    }
+
+    public boolean isUnknownB2() {
+        return unknownB2;
+    }
+
+    public int getFurniId() {
+        return furniId;
+    }
+
+    public boolean isUnknownB3() {
+        return unknownB3;
+    }
 }

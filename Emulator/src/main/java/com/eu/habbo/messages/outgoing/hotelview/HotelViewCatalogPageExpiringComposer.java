@@ -23,4 +23,16 @@ public class HotelViewCatalogPageExpiringComposer extends MessageComposer {
         this.response.appendString(this.image);
         return this.response;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getTime() {
+        return time;
+    }
+
+    public String getImage() {
+        return image;
+    }
 }

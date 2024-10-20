@@ -20,4 +20,8 @@ public class RedeemVoucherErrorComposer extends MessageComposer {
         this.response.appendString(this.code + "");
         return this.response;
     }
+
+    public int getCode() {
+        return code;
+    }
 }

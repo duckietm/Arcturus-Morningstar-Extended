@@ -20,4 +20,12 @@ public class HotelClosedAndOpensComposer extends MessageComposer {
         this.response.appendInt(this.minute);
         return this.response;
     }
+
+    public int getHour() {
+        return hour;
+    }
+
+    public int getMinute() {
+        return minute;
+    }
 }

@@ -17,4 +17,8 @@ public class HotelWillCloseInMinutesComposer extends MessageComposer {
         this.response.appendInt(this.minutes);
         return this.response;
     }
+
+    public int getMinutes() {
+        return minutes;
+    }
 }

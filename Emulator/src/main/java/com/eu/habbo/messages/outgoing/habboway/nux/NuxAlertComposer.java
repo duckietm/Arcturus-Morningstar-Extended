@@ -17,4 +17,8 @@ public class NuxAlertComposer extends MessageComposer {
         this.response.appendString(this.link);
         return this.response;
     }
+
+    public String getLink() {
+        return link;
+    }
 }

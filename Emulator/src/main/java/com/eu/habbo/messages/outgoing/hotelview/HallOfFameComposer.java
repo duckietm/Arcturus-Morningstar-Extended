@@ -37,4 +37,8 @@ public class HallOfFameComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public HallOfFame getHallOfFame() {
+        return hallOfFame;
+    }
 }

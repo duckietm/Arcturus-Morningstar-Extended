@@ -17,4 +17,8 @@ public class GuildForumsUnreadMessagesCountComposer extends MessageComposer {
         this.response.appendInt(this.count);
         return this.response;
     }
+
+    public int getCount() {
+        return count;
+    }
 }

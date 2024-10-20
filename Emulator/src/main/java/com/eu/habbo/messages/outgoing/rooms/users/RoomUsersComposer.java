@@ -150,4 +150,20 @@ public class RoomUsersComposer extends MessageComposer {
         }
         return this.response;
     }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
+
+    public Collection<Habbo> getHabbos() {
+        return habbos;
+    }
+
+    public Bot getBot() {
+        return bot;
+    }
+
+    public Collection<Bot> getBots() {
+        return bots;
+    }
 }
