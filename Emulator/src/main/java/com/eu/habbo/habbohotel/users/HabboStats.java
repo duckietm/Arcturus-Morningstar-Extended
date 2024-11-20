@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.achievements.Achievement;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.achievements.TalentTrackType;
 import com.eu.habbo.habbohotel.catalog.CatalogItem;
+import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.rooms.RoomTrade;
 import com.eu.habbo.habbohotel.users.cache.HabboOfferPurchase;
@@ -741,16 +742,10 @@ public class HabboStats implements Runnable {
     public boolean ignoreUser(GameClient gameClient, int userId) {
         final Habbo target = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
 
-        if (!Emulator.getConfig().getBoolean("hotel.allow.ignore.staffs")) {
-            final int ownRank = gameClient.getHabbo().getHabboInfo().getRank().getId();
-            final int targetRank = target.getHabboInfo().getRank().getId();
-
-            if (targetRank >= ownRank) {
-                gameClient.getHabbo().whisper(Emulator.getTexts().getValue("generic.error.ignore_higher_rank"), RoomChatMessageBubbles.ALERT);
-                return false;
-            }
+        if (!Emulator.getConfig().getBoolean("hotel.allow.ignore.staffs") && target.hasPermission(Permission.ACC_UNIGNORABLE)) {
+            gameClient.getHabbo().whisper(Emulator.getTexts().getValue("generic.error.ignore_higher_rank"), RoomChatMessageBubbles.ALERT);
+            return false;
         }
-
         if (!this.userIgnored(userId)) {
             this.ignoredUsers.add(userId);
 

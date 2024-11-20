@@ -43,6 +43,7 @@ public class Permission {
     public static String ACC_HELPER_GIVE_GUIDE_TOURS = "acc_helper_give_guide_tours";
     public static String ACC_HELPER_JUDGE_CHAT_REVIEWS = "acc_helper_judge_chat_reviews";
     public static String ACC_FLOORPLAN_EDITOR = "acc_floorplan_editor";
+    public static String ACC_UNIGNORABLE = "acc_unignorable";
     public final String key;
     public final PermissionSetting setting;
     public Permission(String key, PermissionSetting setting) {
