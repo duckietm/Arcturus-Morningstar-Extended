@@ -203,6 +203,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     private volatile boolean loaded;
     private volatile boolean preLoaded;
     private int idleCycles;
+    private int idleHostingCycles;
     private volatile int unitCounter;
     private volatile int rollerSpeed;
     private final int muteTime = Emulator.getConfig().getInt("hotel.flood.mute.time", 30);
@@ -368,6 +369,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 }
 
                 this.idleCycles = 0;
+                this.idleHostingCycles = 0;
                 this.loaded = true;
 
                 this.roomCycleTask = Emulator.getThreading().getService().scheduleAtFixedRate(this, 500, 500, TimeUnit.MILLISECONDS);
@@ -1211,6 +1213,19 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 task.cycle(this);
             }
 
+            if (Emulator.getConfig().getBoolean("hotel.rooms.deco_hosting")) {
+                if (this.idleHostingCycles < 120) {
+                    this.idleHostingCycles++;
+                } else {
+                    this.idleHostingCycles = 0;
+
+                    int amount = (int) this.currentHabbos.values().stream().filter(habbo -> habbo.getHabboInfo().getId() != this.ownerId).count();
+                    if (amount > 0) {
+                        AchievementManager.progressAchievement(this.ownerId, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RoomDecoHosting"), amount);
+                    }
+                }
+            }
+
             if (!this.currentHabbos.isEmpty()) {
                 this.idleCycles = 0;
 
@@ -1264,19 +1279,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 if (!event.isCancelled()) {
                                     toKick.add(habbo);
                                 }
-                            }
-                        }
-                    }
-
-                    if (Emulator.getConfig().getBoolean("hotel.rooms.deco_hosting")) {
-                        //Check if the user isn't the owner id
-                        if (this.ownerId != habbo.getHabboInfo().getId()) {
-                            //Check if the time already have 1 minute (120 / 2 = 60s) 
-                            if (habbo.getRoomUnit().getTimeInRoom() >= 120) {
-                                AchievementManager.progressAchievement(this.ownerId, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RoomDecoHosting"));
-                                habbo.getRoomUnit().resetTimeInRoom();
-                            } else {
-                                habbo.getRoomUnit().increaseTimeInRoom();
                             }
                         }
                     }

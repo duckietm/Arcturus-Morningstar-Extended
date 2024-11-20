@@ -73,7 +73,6 @@ public class RoomUnit {
     private int effectId;
     private int effectEndTimestamp;
     private ScheduledFuture moveBlockingTask;
-    private int timeInRoom;
 
     private int idleTimer;
     private Room room;
@@ -95,7 +94,6 @@ public class RoomUnit {
         this.effectId = 0;
         this.isKicked = false;
         this.overridableTiles = new THashSet<>();
-        this.timeInRoom = 0;
         this.isGameSnow = false;
     }
 
@@ -661,18 +659,6 @@ public class RoomUnit {
 
     public void setWalkTimeOut(int walkTimeOut) {
         this.walkTimeOut = walkTimeOut;
-    }
-
-    public void increaseTimeInRoom() {
-        this.timeInRoom++;
-    }
-
-    public int getTimeInRoom() {
-        return this.timeInRoom;
-    }
-
-    public void resetTimeInRoom() {
-        this.timeInRoom = 0;
     }
 
     public void increaseIdleTimer() {
