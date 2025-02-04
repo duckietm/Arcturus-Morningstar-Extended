@@ -1126,7 +1126,7 @@ public class RoomManager {
 
         for (Room room : this.activeRooms.values()) {
             for (String s : room.getTags().split(";")) {
-                if (s.toLowerCase().equals(tag.toLowerCase())) {
+                if (s.equalsIgnoreCase(tag)) {
                     rooms.add(room);
                     break;
                 }
@@ -1137,6 +1137,7 @@ public class RoomManager {
 
         return rooms;
     }
+
 
     public ArrayList<Room> getGroupRoomsWithName(String name) {
         ArrayList<Room> rooms = new ArrayList<>();

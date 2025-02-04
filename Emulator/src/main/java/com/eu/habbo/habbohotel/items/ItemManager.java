@@ -770,7 +770,7 @@ public class ItemManager {
         for (int i = this.items.size(); i-- > 0; ) {
             try {
                 item.advance();
-                if (item.value().getName().toLowerCase().equals(itemName.toLowerCase())) {
+                if (item.value().getName().equalsIgnoreCase(itemName)) {
                     return item.value();
                 }
             } catch (NoSuchElementException e) {
@@ -780,6 +780,7 @@ public class ItemManager {
 
         return null;
     }
+
 
     public YoutubeManager getYoutubeManager() {
         return this.youtubeManager;

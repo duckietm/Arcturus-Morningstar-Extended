@@ -39,7 +39,7 @@ public class CommandHandler {
     public CommandHandler() {
         long millis = System.currentTimeMillis();
         this.reloadCommands();
-        LOGGER.info("Command Handler -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Command Handler -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public static void addCommand(Command command) {
@@ -71,7 +71,7 @@ public class CommandHandler {
                 if (parts.length >= 1) {
                     for (Command command : commands.values()) {
                         for (String s : command.keys) {
-                            if (s.toLowerCase().equals(parts[0].toLowerCase())) {
+                            if (s.equalsIgnoreCase(parts[0])) {
                                 boolean succes = false;
                                 if (command.permission == null || gameClient.getHabbo().hasPermission(command.permission, gameClient.getHabbo().getHabboInfo().getCurrentRoom() != null && (gameClient.getHabbo().getHabboInfo().getCurrentRoom().hasRights(gameClient.getHabbo())) || gameClient.getHabbo().hasPermission(Permission.ACC_PLACEFURNI) || (gameClient.getHabbo().getHabboInfo().getCurrentRoom() != null && gameClient.getHabbo().getHabboInfo().getCurrentRoom().getGuildId() > 0 && gameClient.getHabbo().getHabboInfo().getCurrentRoom().getGuildRightLevel(gameClient.getHabbo()).isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS)))) {
                                     try {

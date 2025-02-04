@@ -42,7 +42,7 @@ public class GuildChangeBadgeEvent extends MessageHandler {
                     base += 3;
                 }
 
-                if (guild.getBadge().toLowerCase().equals(badge.toLowerCase()))
+                if (guild.getBadge().equalsIgnoreCase(badge))
                     return;
 
                 GuildChangedBadgeEvent badgeEvent = new GuildChangedBadgeEvent(guild, badge);

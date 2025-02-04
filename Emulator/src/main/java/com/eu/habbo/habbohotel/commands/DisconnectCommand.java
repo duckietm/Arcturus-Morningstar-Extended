@@ -17,7 +17,7 @@ public class DisconnectCommand extends Command {
             return true;
         }
 
-        if (params[1].toLowerCase().equals(gameClient.getHabbo().getHabboInfo().getUsername().toLowerCase())) {
+        if (params[1].equalsIgnoreCase(gameClient.getHabbo().getHabboInfo().getUsername())) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_disconnect.disconnect_self"), RoomChatMessageBubbles.ALERT);
             return true;
         }
