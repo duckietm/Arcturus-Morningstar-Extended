@@ -147,11 +147,10 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             Object[] newStuff = new Object[stuff.length + 1];
             System.arraycopy(stuff, 0, newStuff, 0, stuff.length);
             newStuff[newStuff.length - 1] = this;
-            WiredHandler.executeEffectsAtTiles(usedTiles, roomUnit, room, stuff);
+            WiredHandler.executeEffectsAtTiles(usedTiles, roomUnit, room, newStuff);
 
             return true;
         }
-
 
     @Override
     public String getWiredData() {
