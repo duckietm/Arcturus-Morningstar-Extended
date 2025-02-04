@@ -1033,7 +1033,7 @@ public class RoomManager {
 
         Collections.sort(rooms);
 
-        return new ArrayList<>(rooms.subList(0, (rooms.size() < count ? rooms.size() : count)));
+        return new ArrayList<>(rooms.subList(0, (Math.min(rooms.size(), count))));
     }
 
     public ArrayList<Room> getPopularRooms(int count, int category) {
@@ -1051,7 +1051,7 @@ public class RoomManager {
 
         Collections.sort(rooms);
 
-        return new ArrayList<>(rooms.subList(0, (rooms.size() < count ? rooms.size() : count)));
+        return new ArrayList<>(rooms.subList(0, (Math.min(rooms.size(), count))));
     }
 
     public Map<Integer, List<Room>> getPopularRoomsByCategory(int count) {
@@ -1075,7 +1075,7 @@ public class RoomManager {
 
             Collections.sort(set.getValue());
 
-            result.put(set.getKey(), new ArrayList<>(set.getValue().subList(0, (set.getValue().size() < count ? set.getValue().size() : count))));
+            result.put(set.getKey(), new ArrayList<>(set.getValue().subList(0, (Math.min(set.getValue().size(), count)))));
         }
 
         return result;
@@ -1292,7 +1292,7 @@ public class RoomManager {
 
         Collections.sort(rooms);
 
-        return rooms.subList(0, (rooms.size() > limit ? limit : rooms.size()));
+        return rooms.subList(0, (Math.min(rooms.size(), limit)));
     }
 
     public ArrayList<Room> getRoomsWithRights(Habbo habbo) {

@@ -202,10 +202,7 @@ public class InteractionTeleport extends HabboItem {
         if (unit == null)
             return false;
 
-        if (habbo.getHabboInfo().getRiding() != null)
-            return false;
-
-        return true;
+        return habbo.getHabboInfo().getRiding() == null;
     }
 
     public void startTeleport(Room room, Habbo habbo) {

@@ -122,10 +122,7 @@ public class FreezeGamePlayer extends GamePlayer {
     }
 
     public boolean canGetFrozen() {
-        if (this.isFrozen() || this.isProtected())
-            return false;
-
-        return true;
+        return !this.isFrozen() && !this.isProtected();
     }
 
     public void addProtection() {

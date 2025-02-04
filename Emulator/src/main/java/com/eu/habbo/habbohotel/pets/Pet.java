@@ -390,9 +390,7 @@ public class Pet implements ISerialize, Runnable {
             keys.put(RoomUnitStatus.GESTURE, this.roomUnit.getStatus(RoomUnitStatus.GESTURE));
 
         if (this.task == null) {
-            boolean isDead = false;
-            if (this.roomUnit.hasStatus(RoomUnitStatus.RIP))
-                isDead = true;
+            boolean isDead = this.roomUnit.hasStatus(RoomUnitStatus.RIP);
 
             this.roomUnit.clearStatus();
 

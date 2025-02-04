@@ -81,7 +81,7 @@ public class InteractionWiredHighscore extends HabboItem {
 
     @Override
     public void onClick(GameClient client, Room room, Object[] objects) throws Exception {
-        if (!((client != null && room != null && room.hasRights(client.getHabbo())) || (objects.length >= 2 && objects[1] instanceof WiredEffectType)))
+        if (room == null || !((client != null && room.hasRights(client.getHabbo())) || (objects.length >= 2 && objects[1] instanceof WiredEffectType)))
             return;
 
         if (this.getExtradata() == null || this.getExtradata().isEmpty() || this.getExtradata().length() == 0) {

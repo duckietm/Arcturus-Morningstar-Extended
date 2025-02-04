@@ -114,9 +114,7 @@ public abstract class InteractionWired extends InteractionDefault {
         } else {
             if (this.userExecutionCache.containsKey((long)roomUnitId)) {
                 long lastTimestamp = this.userExecutionCache.get((long)roomUnitId);
-                if (timestamp - lastTimestamp < Math.max(100L, this.requiredCooldown())) {
-                    return false;
-                }
+                return timestamp - lastTimestamp >= Math.max(100L, this.requiredCooldown());
             }
 
             return true;

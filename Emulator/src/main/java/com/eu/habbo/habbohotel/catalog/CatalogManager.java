@@ -629,12 +629,7 @@ public class CatalogManager {
 
                 boolean isVisiblePage = object.visible;
                 boolean hasRightRank = object.getRank() <= habbo.getHabboInfo().getRank().getId();
-
-                boolean clubRightsOkay = true;
-
-                if(object.isClubOnly() && !habbo.getHabboInfo().getHabboStats().hasActiveClub()) {
-                    clubRightsOkay = false;
-                }
+                boolean clubRightsOkay = !object.isClubOnly() || habbo.getHabboInfo().getHabboStats().hasActiveClub();
 
                 if (isVisiblePage && hasRightRank && clubRightsOkay) {
                     pages.add(object);

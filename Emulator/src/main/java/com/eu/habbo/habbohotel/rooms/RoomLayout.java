@@ -59,10 +59,7 @@ public class RoomLayout {
         if (outerSquare.x + outerSquare.width < innerSquare.x + innerSquare.width)
             return false;
 
-        if (outerSquare.y + outerSquare.height < innerSquare.y + innerSquare.height)
-            return false;
-
-        return true;
+        return outerSquare.y + outerSquare.height >= innerSquare.y + innerSquare.height;
     }
 
     public static boolean tileInSquare(Rectangle square, RoomTile tile) {

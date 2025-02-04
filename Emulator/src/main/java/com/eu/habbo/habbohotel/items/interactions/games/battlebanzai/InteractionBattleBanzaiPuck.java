@@ -63,8 +63,7 @@ public class InteractionBattleBanzaiPuck extends InteractionPushable {
 
     @Override
     public int getNextRollDelay(int currentStep, int totalSteps) {
-        int t = 2500;
-        return (totalSteps == 1) ? 500 : 100 * ((t = t / t - 1) * t * t * t * t + 1) + (currentStep * 100);
+        return (totalSteps == 1) ? 500 : 100 + (currentStep * 100);
     }
 
     @Override

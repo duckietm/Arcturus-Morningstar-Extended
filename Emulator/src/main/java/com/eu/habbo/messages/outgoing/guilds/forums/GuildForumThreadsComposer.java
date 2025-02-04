@@ -35,7 +35,7 @@ public class GuildForumThreadsComposer extends MessageComposer {
         Collections.reverse(threads);
 
         Iterator<ForumThread> it = threads.iterator();
-        int count = threads.size() > 20 ? 20 : threads.size();
+        int count = Math.min(threads.size(), 20);
 
         this.response.init(Outgoing.GuildForumThreadsComposer);
         this.response.appendInt(this.guild.getId());

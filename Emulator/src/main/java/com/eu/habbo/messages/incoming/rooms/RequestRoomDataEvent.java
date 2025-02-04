@@ -13,13 +13,8 @@ public class RequestRoomDataEvent extends MessageHandler {
         int something = this.packet.readInt();
         int something2 = this.packet.readInt();
         if (room != null) {
-            boolean unknown = true;
+            boolean unknown = something != 0 || something2 != 1;
 
-            if (something == 0 && something2 == 1) {
-                unknown = false;
-            }
-
-            //this.client.getHabbo().getHabboInfo().getCurrentRoom() != room
             this.client.sendResponse(new RoomDataComposer(room, this.client.getHabbo(), true, unknown));
         }
     }

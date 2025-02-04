@@ -630,11 +630,7 @@ public class RoomSpecialTypes {
     }
 
     public InteractionFreezeExitTile getFreezeExitTile() {
-        for (InteractionFreezeExitTile t : this.freezeExitTile.values()) {
-            return t;
-        }
-
-        return null;
+        return this.freezeExitTile.values().stream().findFirst().orElse(null);
     }
 
     public InteractionFreezeExitTile getRandomFreezeExitTile() {

@@ -20,10 +20,7 @@ public class RequestOffersEvent extends MessageHandler {
         String query = this.packet.readString();
         int type = this.packet.readInt();
 
-        boolean tryCache = false;
-        if (min == -1 && max == -1 && query.isEmpty()) {
-            tryCache = true;
-        }
+        boolean tryCache = min == -1 && max == -1 && query.isEmpty();
 
         if (tryCache) {
             ServerMessage message = cachedResults.get(type);

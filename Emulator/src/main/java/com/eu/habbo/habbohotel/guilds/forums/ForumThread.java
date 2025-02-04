@@ -123,7 +123,7 @@ public class ForumThread implements Runnable, ISerialize {
         THashSet<ForumThread> threads = null;
 
         if (guildThreadsCache.containsKey(guildId)) {
-            guildThreadsCache.get(guildId);
+            threads = guildThreadsCache.get(guildId);
         }
 
         if (threads != null)
@@ -141,8 +141,8 @@ public class ForumThread implements Runnable, ISerialize {
                 "WHERE `id` IN (" +
                 "SELECT MAX(id) " +
                 "FROM `guilds_forums_comments` B " +
-                "GROUP BY `thread_id` " +
-                "ORDER BY B.`id` ASC " +
+                "GROUP BY `thread_id` AND B.`id` " +
+                "ORDER BY B.`id` " +
                 ") " +
                 "ORDER BY `id` DESC " +
                 ") B ON A.`id` = B.`thread_id` " +
@@ -182,8 +182,8 @@ public class ForumThread implements Runnable, ISerialize {
                         "WHERE `id` IN (" +
                         "SELECT MAX(id) " +
                         "FROM `guilds_forums_comments` B " +
-                        "GROUP BY `thread_id` " +
-                        "ORDER BY B.`id` ASC " +
+                        "GROUP BY `thread_id` AND b.`id`" +
+                        "ORDER BY B.`id` " +
                         ") " +
                         "ORDER BY `id` DESC " +
                         ") B ON A.`id` = B.`thread_id` " +
@@ -219,10 +219,7 @@ public class ForumThread implements Runnable, ISerialize {
                 guildThreadsCache.put(thread.guildId, guildThreads);
             }
         }
-
-        synchronized (guildThreads) {
-            guildThreads.add(thread);
-        }
+        guildThreads.add(thread);
     }
 
     public static void clearCache() {

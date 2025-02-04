@@ -32,7 +32,7 @@ public class GuildForumListComposer extends MessageComposer {
         this.response.appendInt(this.index);
 
         Iterator<Guild> it = guilds.iterator();
-        int count = guilds.size() > 20 ? 20 : guilds.size();
+        int count = Math.min(guilds.size(), 20);
 
         this.response.appendInt(count);
 
