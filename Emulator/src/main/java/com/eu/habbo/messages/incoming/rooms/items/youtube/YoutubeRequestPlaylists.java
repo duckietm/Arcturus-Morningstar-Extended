@@ -28,7 +28,7 @@ public class YoutubeRequestPlaylists extends MessageHandler {
                 ArrayList<YoutubeManager.YoutubePlaylist> playlists = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(itemId);
 
                 if (playlists == null) {
-                    LOGGER.error("No YouTube playlists set for base item #" + item.getBaseItem().getId());
+                    LOGGER.error("No YouTube playlists set for base item #{}", item.getBaseItem().getId());
                     this.client.sendResponse(new ConnectionErrorComposer(1000));
                     return;
                 }

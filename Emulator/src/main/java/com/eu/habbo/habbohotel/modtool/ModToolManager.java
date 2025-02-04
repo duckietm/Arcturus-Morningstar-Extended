@@ -45,7 +45,7 @@ public class ModToolManager {
         this.tickets = new THashMap<>();
         this.cfhCategories = new TIntObjectHashMap<>();
         this.loadModTool();
-        LOGGER.info("ModTool Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("ModTool Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public static void requestUserInfo(GameClient client, ClientMessage packet) {

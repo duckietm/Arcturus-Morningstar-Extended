@@ -30,7 +30,7 @@ public class SavePostItStickyPoleEvent extends MessageHandler {
                     CommandHandler.handleCommand(this.client, command);
                 }
             } else {
-                LOGGER.info("Scripter Alert! " + this.client.getHabbo().getHabboInfo().getUsername() + " | " + this.packet.readString());
+                LOGGER.info("Scripter Alert! {} | {}", this.client.getHabbo().getHabboInfo().getUsername(), this.packet.readString());
             }
         } else {
             String text = this.packet.readString();

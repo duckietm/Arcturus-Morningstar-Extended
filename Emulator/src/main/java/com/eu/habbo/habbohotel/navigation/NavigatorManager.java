@@ -38,7 +38,7 @@ public class NavigatorManager {
         this.filters.put(NavigatorUserFilter.name, new NavigatorUserFilter());
         this.filters.put(NavigatorFavoriteFilter.name, new NavigatorFavoriteFilter());
 
-        LOGGER.info("Navigator Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Navigator Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public void loadNavigator() {

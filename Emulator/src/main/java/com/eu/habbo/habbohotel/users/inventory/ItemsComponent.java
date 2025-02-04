@@ -50,7 +50,7 @@ public class ItemsComponent {
                         if (item != null) {
                             itemsList.put(set.getInt("id"), item);
                         } else {
-                            LOGGER.error("Failed to load HabboItem: " + set.getInt("id"));
+                            LOGGER.error("Failed to load HabboItem: {}", set.getInt("id"));
                         }
                     } catch (SQLException e) {
                         LOGGER.error("Caught SQL exception", e);

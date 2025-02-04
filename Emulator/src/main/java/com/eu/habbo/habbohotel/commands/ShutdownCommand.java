@@ -44,7 +44,7 @@ public class ShutdownCommand extends Command {
         }
         RoomTrade.TRADING_ENABLED = false;
         ShutdownEmulator.timestamp = Emulator.getIntUnixTimestamp() + (60 * minutes);
-        Emulator.getThreading().run(new ShutdownEmulator(message), minutes * 60 * 1000);
+        Emulator.getThreading().run(new ShutdownEmulator(message), (long) minutes * 60 * 1000);
         return true;
     }
 }

@@ -28,6 +28,6 @@ public class YoutubeAdvanceVideo implements Runnable {
         room.updateItem(this.tv);
         room.sendComposer(new YoutubeVideoComposer(tv.getId(), tv.currentVideo, true, 0).compose());
 
-        tv.autoAdvance = Emulator.getThreading().run(new YoutubeAdvanceVideo(this.tv), tv.currentVideo.getDuration() * 1000);
+        tv.autoAdvance = Emulator.getThreading().run(new YoutubeAdvanceVideo(this.tv), tv.currentVideo.getDuration() * 1000L);
     }
 }

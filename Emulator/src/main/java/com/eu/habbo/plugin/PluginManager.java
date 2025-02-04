@@ -471,7 +471,7 @@ public class PluginManager {
 
         this.loadPlugins();
 
-        LOGGER.info("Plugin Manager -> Loaded! " + this.plugins.size() + " plugins! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Plugin Manager -> Loaded! {} plugins! ({} MS)", this.plugins.size(), System.currentTimeMillis() - millis);
 
         this.registerDefaultEvents();
     }

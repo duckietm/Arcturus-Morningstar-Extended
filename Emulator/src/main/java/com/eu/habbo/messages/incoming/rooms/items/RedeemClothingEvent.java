@@ -61,7 +61,7 @@ public class RedeemClothingEvent extends MessageHandler {
                             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FIGURESET_OWNED_ALREADY.key));
                         }
                     } else {
-                        LOGGER.error("[Catalog] No definition in catalog_clothing found for clothing name " + item.getBaseItem().getName() + ". Could not redeem clothing!");
+                        LOGGER.error("[Catalog] No definition in catalog_clothing found for clothing name {}. Could not redeem clothing!", item.getBaseItem().getName());
                     }
                 }
             }

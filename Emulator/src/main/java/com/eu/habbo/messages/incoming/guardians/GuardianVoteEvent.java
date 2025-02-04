@@ -26,7 +26,7 @@ public class GuardianVoteEvent extends MessageHandler {
             } else if (voteType == 2) {
                 type = GuardianVoteType.AWFULLY;
             } else {
-                LOGGER.error("Uknown vote type: " + voteType);
+                LOGGER.error("Uknown vote type: {}", voteType);
             }
 
             ticket.vote(this.client.getHabbo(), type);

@@ -56,7 +56,7 @@ public class CraftingManager {
                                 recipe.addIngredient(ingredientItem, set.getInt("crafting_recipes_ingredients.amount"));
                                 altar.addIngredient(ingredientItem);
                             } else {
-                                LOGGER.error("Unknown ingredient item " + set.getInt("crafting_recipes_ingredients.item_id"));
+                                LOGGER.error("Unknown ingredient item {}", set.getInt("crafting_recipes_ingredients.item_id"));
                             }
                         }
                     }

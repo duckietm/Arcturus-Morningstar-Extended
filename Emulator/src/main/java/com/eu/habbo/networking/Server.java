@@ -55,15 +55,15 @@ public abstract class Server {
         }
 
         if (!channelFuture.isSuccess()) {
-            LOGGER.info("Failed to connect to the host (" + this.host + ":" + this.port + ")@" + this.name);
+            LOGGER.info("Failed to connect to the host ({}:{})@{}", this.host, this.port, this.name);
             System.exit(0);
         } else {
-            LOGGER.info("Started GameServer on " + this.host + ":" + this.port + "@" + this.name);
+            LOGGER.info("Started GameServer on {}:{}@{}", this.host, this.port, this.name);
         }
     }
 
     public void stop() {
-        LOGGER.info("Stopping " + this.name);
+        LOGGER.info("Stopping {}", this.name);
         try {
             this.workerGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
             this.bossGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();

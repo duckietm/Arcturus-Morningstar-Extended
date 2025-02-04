@@ -40,7 +40,7 @@ public class HorseRemoveSaddleEvent extends MessageHandler {
                     if (set.next()) {
                         saddleItemId = set.getInt("id");
                     } else {
-                        LOGGER.error("There is no viable fallback saddle item for old horses with no saddle item ID. Horse pet ID: " + horse.getId());
+                        LOGGER.error("There is no viable fallback saddle item for old horses with no saddle item ID. Horse pet ID: {}", horse.getId());
                         return;
                     }
                 }

@@ -47,7 +47,7 @@ public class YoutubeRequestPlaylistChange extends MessageHandler {
 
             room.updateItem(item);
             room.sendComposer(new YoutubeVideoComposer(itemId, video, true, 0).compose());
-            ((InteractionYoutubeTV) item).autoAdvance = Emulator.getThreading().run(new YoutubeAdvanceVideo((InteractionYoutubeTV) item), video.getDuration() * 1000);
+            ((InteractionYoutubeTV) item).autoAdvance = Emulator.getThreading().run(new YoutubeAdvanceVideo((InteractionYoutubeTV) item), video.getDuration() * 1000L);
 
             item.needsUpdate(true);
         }

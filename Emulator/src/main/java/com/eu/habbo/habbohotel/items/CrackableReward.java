@@ -48,7 +48,7 @@ public class CrackableReward {
                     itemId = Integer.parseInt(prize.split(":")[0]);
                     chance = Integer.parseInt(prize.split(":")[1]);
                 } else if (prize.contains(":")) {
-                    LOGGER.error("Invalid configuration of crackable prizes (item id: " + this.itemId + "). '" + prize + "' format should be itemId:chance.");
+                    LOGGER.error("Invalid configuration of crackable prizes (item id: {}). '{}' format should be itemId:chance.", this.itemId, prize);
                 } else {
                     itemId = Integer.parseInt(prize.replace(":", ""));
                 }

@@ -97,7 +97,7 @@ public class YouAreAPirate implements Runnable {
                 return;
             }
 
-            Emulator.getThreading().run(this, iamapirate[this.index - 1].length() * 100);
+            Emulator.getThreading().run(this, iamapirate[this.index - 1].length() * 100L);
         }
     }
 }

@@ -29,7 +29,7 @@ public class PermissionsManager {
 
         this.reload();
 
-        LOGGER.info("Permissions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Permissions Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public void reload() {

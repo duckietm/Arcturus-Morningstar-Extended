@@ -38,7 +38,7 @@ public final class Emulator {
 
     public final static int MAJOR = 3;
     public final static int MINOR = 6;
-    public final static int BUILD = 0;
+    public final static int BUILD = 1;
     public final static String PREVIEW = "";
 
     public static final String version = "Arcturus Morningstar" + " " + MAJOR + "." + MINOR + "." + BUILD + " " + PREVIEW;
@@ -84,13 +84,6 @@ public final class Emulator {
         Runtime.getRuntime().addShutdownHook(hook);
     }
 
-    public static void promptEnterKey(){
-        System.out.println("\n");
-        System.out.println("Press \"ENTER\" if you agree to the terms stated above...");
-        Scanner scanner = new Scanner(System.in);
-        scanner.nextLine();
-    }
-
     public static void main(String[] args) throws Exception {
         try {
             // Check if running on Windows and not in IntelliJ.
@@ -112,11 +105,6 @@ public final class Emulator {
 
             System.out.println(logo);
 
-            // Checks if this is a BETA build before allowing them to continue.
-            if (PREVIEW.toLowerCase().contains("beta")) {
-                System.out.println("Warning, this is a beta build, this means that there may be unintended consequences so make sure you take regular backups while using this build. If you notice any issues you should make an issue on the Krews Git.");
-                promptEnterKey();
-            }
             System.out.println("");
             LOGGER.warn("Arcturus Morningstar 3.x is no longer accepting merge requests. Please target MS4 branches if you wish to contribute.");
             LOGGER.info("Follow our development at https://git.krews.org/morningstar/Arcturus-Community, ");

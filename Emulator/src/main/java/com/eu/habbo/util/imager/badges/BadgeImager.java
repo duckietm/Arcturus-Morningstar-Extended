@@ -15,6 +15,7 @@ import java.awt.image.ColorConvertOp;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 
 public class BadgeImager {
@@ -126,21 +127,16 @@ public class BadgeImager {
             for (Map.Entry<GuildPartType, THashMap<Integer, GuildPart>> set : Emulator.getGameEnvironment().getGuildManager().getGuildParts().entrySet()) {
                 if (set.getKey() == GuildPartType.SYMBOL || set.getKey() == GuildPartType.BASE) {
                     for (Map.Entry<Integer, GuildPart> map : set.getValue().entrySet()) {
-                        if (!map.getValue().valueA.isEmpty()) {
-                            try {
-                                this.cachedImages.put(map.getValue().valueA, ImageIO.read(new File(Emulator.getConfig().getValue("imager.location.badgeparts"), "badgepart_" + map.getValue().valueA.replace(".gif", ".png"))));
-                            } catch (Exception e) {
-                                LOGGER.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueA.replace(".gif", ".png")));
+                        for (String part : Arrays.asList(map.getValue().valueA, map.getValue().valueB)) {
+                            if (!part.isEmpty()) {
+                                try {
+                                    this.cachedImages.put(part, ImageIO.read(new File(Emulator.getConfig().getValue("imager.location.badgeparts"), "badgepart_" + part.replace(".gif", ".png"))));
+                                } catch (Exception e) {
+                                    LOGGER.info("[Badge Imager] Missing Badge Part: {}/badgepart_{}", Emulator.getConfig().getValue("imager.location.badgeparts"), part.replace(".gif", ".png"));
+                                }
                             }
                         }
 
-                        if (!map.getValue().valueB.isEmpty()) {
-                            try {
-                                this.cachedImages.put(map.getValue().valueB, ImageIO.read(new File(Emulator.getConfig().getValue("imager.location.badgeparts"), "badgepart_" + map.getValue().valueB.replace(".gif", ".png"))));
-                            } catch (Exception e) {
-                                LOGGER.info(("[Badge Imager] Missing Badge Part: " + Emulator.getConfig().getValue("imager.location.badgeparts") + "/badgepart_" + map.getValue().valueB.replace(".gif", ".png")));
-                            }
-                        }
                     }
                 }
             }
@@ -150,6 +146,7 @@ public class BadgeImager {
         }
 
         return true;
+
     }
 
     public void generate(Guild guild) {

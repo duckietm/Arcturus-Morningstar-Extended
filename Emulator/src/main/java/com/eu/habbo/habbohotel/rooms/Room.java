@@ -2257,7 +2257,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 game = gameType.getDeclaredConstructor(Room.class).newInstance(this);
                 this.addGame(game);
             } catch (Exception e) {
-                LOGGER.error("Error getting game " + gameType.getName(), e);
+                LOGGER.error("Error getting game {}", gameType.getName(), e);
             }
         }
 

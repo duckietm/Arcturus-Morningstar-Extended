@@ -271,7 +271,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                     statement.execute();
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
-                    LOGGER.error("SQLException trying to save HabboItem: " + this.toString());
+                    LOGGER.error("SQLException trying to save HabboItem: {}", this.toString());
                 }
 
                 this.needsUpdate = false;

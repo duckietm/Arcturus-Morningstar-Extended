@@ -26,7 +26,7 @@ public class ModToolSanctions {
         this.sanctionLevelsHashmap = new THashMap<>();
         this.loadModSanctions();
 
-        LOGGER.info("Sanctions Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Sanctions Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public synchronized void loadModSanctions() {

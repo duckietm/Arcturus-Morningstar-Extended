@@ -25,7 +25,7 @@ public class RandomStateParams {
                     this.delay = Integer.parseInt(keyValue[1]);
                     break;
                 default:
-                    LOGGER.warn("RandomStateParams: unknown key: " + keyValue[0]);
+                    LOGGER.warn("RandomStateParams: unknown key: {}", keyValue[0]);
                     break;
             }
         });

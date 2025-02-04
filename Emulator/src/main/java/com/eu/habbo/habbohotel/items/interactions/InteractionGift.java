@@ -32,7 +32,7 @@ public class InteractionGift extends HabboItem {
         try {
             this.loadData();
         } catch (Exception e) {
-            LOGGER.warn("Incorrect extradata for gift with ID " + this.getId());
+            LOGGER.warn("Incorrect extradata for gift with ID {}", this.getId());
         }
     }
 
@@ -42,7 +42,7 @@ public class InteractionGift extends HabboItem {
         try {
             this.loadData();
         } catch (Exception e) {
-            LOGGER.warn("Incorrect extradata for gift with ID " + this.getId());
+            LOGGER.warn("Incorrect extradata for gift with ID {}", this.getId());
         }
     }
 

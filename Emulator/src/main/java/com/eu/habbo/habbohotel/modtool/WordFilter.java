@@ -33,7 +33,7 @@ public class WordFilter {
     public WordFilter() {
         long start = System.currentTimeMillis();
         this.reload();
-        LOGGER.info("WordFilter -> Loaded! (" + (System.currentTimeMillis() - start) + " MS)");
+        LOGGER.info("WordFilter -> Loaded! ({} MS)", System.currentTimeMillis() - start);
     }
 
     private static String stripDiacritics(String str) {

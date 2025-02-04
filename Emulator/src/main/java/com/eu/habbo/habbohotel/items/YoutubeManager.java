@@ -118,7 +118,7 @@ public class YoutubeManager {
                 e.printStackTrace();
             }
 
-            LOGGER.info("YouTube Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+            LOGGER.info("YouTube Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
         });
     }
 

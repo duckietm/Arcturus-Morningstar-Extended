@@ -347,7 +347,7 @@ public class SubscriptionHabboClub extends Subscription {
                             }
                         }
                     } catch (Exception e) {
-                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + set.getInt("user_id"), e);
+                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #{}", set.getInt("user_id"), e);
                     }
                 }
             }

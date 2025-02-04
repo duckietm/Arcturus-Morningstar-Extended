@@ -24,14 +24,14 @@ public class RequestCreateRoomEvent extends MessageHandler {
         int tradeType = this.packet.readInt();
 
         if (!Emulator.getGameEnvironment().getRoomManager().layoutExists(modelName)) {
-            LOGGER.error("[SCRIPTER] Incorrect layout name \"" + modelName + "\". " + this.client.getHabbo().getHabboInfo().getUsername());
+            LOGGER.error("[SCRIPTER] Incorrect layout name \"{}\". {}", modelName, this.client.getHabbo().getHabboInfo().getUsername());
             return;
         }
 
         RoomCategory category = Emulator.getGameEnvironment().getRoomManager().getCategory(categoryId);
 
         if (category == null || category.getMinRank() > this.client.getHabbo().getHabboInfo().getRank().getId()) {
-            LOGGER.error("[SCRIPTER] Incorrect rank or non existing category ID: \"" + categoryId + "\"." + this.client.getHabbo().getHabboInfo().getUsername());
+            LOGGER.error("[SCRIPTER] Incorrect rank or non existing category ID: \"{}\".{}", categoryId, this.client.getHabbo().getHabboInfo().getUsername());
             return;
         }
 

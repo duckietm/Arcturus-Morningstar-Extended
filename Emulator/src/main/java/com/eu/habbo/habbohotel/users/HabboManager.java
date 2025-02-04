@@ -41,7 +41,7 @@ public class HabboManager {
 
         this.onlineHabbos = new ConcurrentHashMap<>();
 
-        LOGGER.info("Habbo Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Habbo Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public static HabboInfo getOfflineHabboInfo(int id) {

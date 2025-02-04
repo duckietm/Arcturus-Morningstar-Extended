@@ -38,7 +38,7 @@ public class GuildManager {
         this.loadGuildParts();
         this.loadGuildViews();
 
-        LOGGER.info("Guild Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Guild Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
 

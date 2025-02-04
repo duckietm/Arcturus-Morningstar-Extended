@@ -72,8 +72,8 @@ public class HabboInfo implements Runnable {
             this.rank = Emulator.getGameEnvironment().getPermissionsManager().getRank(set.getInt("rank"));
 
             if (this.rank == null) {
-                LOGGER.error("No existing rank found with id " + set.getInt("rank") + ". Make sure an entry in the permissions table exists.");
-                LOGGER.warn(this.username + " has an invalid rank with id " + set.getInt("rank") + ". Make sure an entry in the permissions table exists.");
+                LOGGER.error("No existing rank found with id {}. Make sure an entry in the permissions table exists.", set.getInt("rank"));
+                LOGGER.warn("{} has an invalid rank with id {}. Make sure an entry in the permissions table exists.", this.username, set.getInt("rank"));
                 this.rank = Emulator.getGameEnvironment().getPermissionsManager().getRank(1);
             }
 

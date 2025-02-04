@@ -105,7 +105,7 @@ public class ItemManager {
         this.highscoreManager.load();
         this.loadNewUserGifts();
 
-        LOGGER.info("Item Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Item Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     protected void loadItemInteractions() {

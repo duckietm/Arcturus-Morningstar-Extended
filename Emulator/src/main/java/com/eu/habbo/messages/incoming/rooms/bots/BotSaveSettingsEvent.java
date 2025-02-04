@@ -102,7 +102,7 @@ public class BotSaveSettingsEvent extends MessageHandler {
                         //Invalid chatspeed. Use 7.
                     }
 
-                    BotSavedChatEvent chatEvent = new BotSavedChatEvent(bot, Boolean.valueOf(data[data.length - 3]), Boolean.valueOf(data[data.length - 1]), chatSpeed, chat);
+                    BotSavedChatEvent chatEvent = new BotSavedChatEvent(bot, Boolean.parseBoolean(data[data.length - 3]), Boolean.parseBoolean(data[data.length - 1]), chatSpeed, chat);
                     Emulator.getPluginManager().fireEvent(chatEvent);
 
                     if (chatEvent.isCancelled())
