@@ -21,7 +21,7 @@ public class PointsCommand extends Command {
 
                     if (params.length == 4) {
                         try {
-                            type = Integer.valueOf(params[3]);
+                            type = Integer.parseInt(params[3]);
                         } catch (Exception e) {
                             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_points.invalid_type").replace("%types%", Emulator.getConfig().getValue("seasonal.types").replace(";", ", ")), RoomChatMessageBubbles.ALERT);
                             return true;
@@ -31,7 +31,7 @@ public class PointsCommand extends Command {
                     int amount;
 
                     try {
-                        amount = Integer.valueOf(params[2]);
+                        amount = Integer.parseInt(params[2]);
                     } catch (Exception e) {
                         gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_points.invalid_amount"), RoomChatMessageBubbles.ALERT);
                         return true;

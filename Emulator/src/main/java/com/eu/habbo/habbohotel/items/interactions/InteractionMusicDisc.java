@@ -23,7 +23,7 @@ public class InteractionMusicDisc extends HabboItem {
 
         if (stuff.length >= 7 && !stuff[6].isEmpty()) {
             try {
-                this.songId = Integer.valueOf(stuff[6]);
+                this.songId = Integer.parseInt(stuff[6]);
             } catch (Exception e) {
                 LOGGER.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
             }
@@ -37,7 +37,7 @@ public class InteractionMusicDisc extends HabboItem {
 
         if (stuff.length >= 7 && !stuff[6].isEmpty()) {
             try {
-                this.songId = Integer.valueOf(stuff[6]);
+                this.songId = Integer.parseInt(stuff[6]);
             } catch (Exception e) {
                 LOGGER.error("Warning: Item " + this.getId() + " has an invalid song id set for its music disk!");
             }

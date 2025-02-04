@@ -138,7 +138,7 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
             String[] data = wiredData.split(((char) 9) + "");
 
             if (data.length == 3) {
-                this.setDelay(Integer.valueOf(data[0]));
+                this.setDelay(Integer.parseInt(data[0]));
                 this.mode = (data[1].equalsIgnoreCase("1") ? 1 : 0);
                 this.botName = data[2];
             }

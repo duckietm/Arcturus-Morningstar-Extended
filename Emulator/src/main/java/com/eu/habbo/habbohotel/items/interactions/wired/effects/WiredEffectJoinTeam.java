@@ -78,10 +78,10 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
             String[] data = set.getString("wired_data").split("\t");
 
             if (data.length >= 1) {
-                this.setDelay(Integer.valueOf(data[0]));
+                this.setDelay(Integer.parseInt(data[0]));
 
                 if (data.length >= 2) {
-                    this.teamColor = GameTeamColors.values()[Integer.valueOf(data[1])];
+                    this.teamColor = GameTeamColors.values()[Integer.parseInt(data[1])];
                 }
             }
 

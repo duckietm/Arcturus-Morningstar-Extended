@@ -116,9 +116,9 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             String[] data = wiredData.split(";");
 
             if (data.length == 3) {
-                this.score = Integer.valueOf(data[0]);
-                this.count = Integer.valueOf(data[1]);
-                this.setDelay(Integer.valueOf(data[2]));
+                this.score = Integer.parseInt(data[0]);
+                this.count = Integer.parseInt(data[1]);
+                this.setDelay(Integer.parseInt(data[2]));
             }
 
             this.needsUpdate(true);

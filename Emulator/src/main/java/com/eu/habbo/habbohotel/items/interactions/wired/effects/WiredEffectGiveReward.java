@@ -81,12 +81,12 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
         else {
             String[] data = wiredData.split(":");
             if (data.length > 0) {
-                this.limit = Integer.valueOf(data[0]);
-                this.given = Integer.valueOf(data[1]);
-                this.rewardTime = Integer.valueOf(data[2]);
+                this.limit = Integer.parseInt(data[0]);
+                this.given = Integer.parseInt(data[1]);
+                this.rewardTime = Integer.parseInt(data[2]);
                 this.uniqueRewards = data[3].equals("1");
-                this.limitationInterval = Integer.valueOf(data[4]);
-                this.setDelay(Integer.valueOf(data[5]));
+                this.limitationInterval = Integer.parseInt(data[4]);
+                this.setDelay(Integer.parseInt(data[5]));
 
                 if (data.length > 6) {
                     if (!data[6].equalsIgnoreCase("\t")) {
@@ -197,7 +197,7 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
 
                 if (d.length == 3) {
                     if (!(d[1].contains(":") || d[1].contains(";"))) {
-                        this.rewardItems.add(new WiredGiveRewardItem(i, d[0].equalsIgnoreCase("0"), d[1], Integer.valueOf(d[2])));
+                        this.rewardItems.add(new WiredGiveRewardItem(i, d[0].equalsIgnoreCase("0"), d[1], Integer.parseInt(d[2])));
                         continue;
                     }
                 }

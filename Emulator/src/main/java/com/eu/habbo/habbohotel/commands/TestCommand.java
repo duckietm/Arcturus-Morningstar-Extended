@@ -15,7 +15,7 @@ public class TestCommand extends Command {
         if (gameClient.getHabbo() != null || !gameClient.getHabbo().hasPermission(Permission.ACC_SUPPORTTOOL) || !Emulator.debugging)
             return false;
 
-        int header = Integer.valueOf(params[1]);
+        int header = Integer.parseInt(params[1]);
 
         ServerMessage message = new ServerMessage(header);
 
@@ -31,11 +31,11 @@ public class TestCommand extends Command {
                     message.appendString("");
                 }
             } else if (data[0].equals("i")) {
-                message.appendInt(Integer.valueOf(data[1]));
+                message.appendInt(Integer.parseInt(data[1]));
             } else if (data[0].equalsIgnoreCase("by")) {
-                message.appendByte(Integer.valueOf(data[1]));
+                message.appendByte(Integer.parseInt(data[1]));
             } else if (data[0].equalsIgnoreCase("sh")) {
-                message.appendShort(Integer.valueOf(data[1]));
+                message.appendShort(Integer.parseInt(data[1]));
             }
         }
 

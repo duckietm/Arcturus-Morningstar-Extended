@@ -57,7 +57,7 @@ public class InteractionBattleBanzaiTile extends HabboItem {
         if (this.getExtradata().isEmpty())
             this.setExtradata("0");
 
-        int state = Integer.valueOf(this.getExtradata());
+        int state = Integer.parseInt(this.getExtradata());
 
         if (state % 3 == 2)
             return;
@@ -88,7 +88,7 @@ public class InteractionBattleBanzaiTile extends HabboItem {
         if (this.getExtradata().isEmpty())
             return false;
 
-        return Integer.valueOf(this.getExtradata()) % 3 == 2;
+        return Integer.parseInt(this.getExtradata()) % 3 == 2;
     }
 
     @Override

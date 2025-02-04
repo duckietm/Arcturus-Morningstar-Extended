@@ -18,7 +18,7 @@ public class MassPixelsCommand extends Command {
             int amount;
 
             try {
-                amount = Integer.valueOf(params[1]);
+                amount = Integer.parseInt(params[1]);
             } catch (Exception e) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_massduckets.invalid_amount"), RoomChatMessageBubbles.ALERT);
                 return true;

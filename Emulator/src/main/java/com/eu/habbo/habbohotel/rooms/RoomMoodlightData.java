@@ -19,7 +19,7 @@ public class RoomMoodlightData {
         String[] data = s.split(",");
 
         if (data.length == 5) {
-            return new RoomMoodlightData(Integer.valueOf(data[1]), data[0].equalsIgnoreCase("2"), data[2].equalsIgnoreCase("2"), data[3], Integer.valueOf(data[4]));
+            return new RoomMoodlightData(Integer.parseInt(data[1]), data[0].equalsIgnoreCase("2"), data[2].equalsIgnoreCase("2"), data[3], Integer.parseInt(data[4]));
         } else {
             return new RoomMoodlightData(1, true, true, "#000000", 255);
         }

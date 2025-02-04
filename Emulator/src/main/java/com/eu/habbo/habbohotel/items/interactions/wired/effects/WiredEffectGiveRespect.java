@@ -117,10 +117,10 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
             this.respects = 0;
 
             if (data.length >= 2) {
-                super.setDelay(Integer.valueOf(data[0]));
+                super.setDelay(Integer.parseInt(data[0]));
 
                 try {
-                    this.respects = Integer.valueOf(data[1]);
+                    this.respects = Integer.parseInt(data[1]);
                 } catch (Exception e) {
                 }
             }

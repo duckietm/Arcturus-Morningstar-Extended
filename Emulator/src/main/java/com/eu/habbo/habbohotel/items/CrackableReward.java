@@ -45,12 +45,12 @@ public class CrackableReward {
                 int chance = 100;
 
                 if (prize.contains(":") && prize.split(":").length == 2) {
-                    itemId = Integer.valueOf(prize.split(":")[0]);
-                    chance = Integer.valueOf(prize.split(":")[1]);
+                    itemId = Integer.parseInt(prize.split(":")[0]);
+                    chance = Integer.parseInt(prize.split(":")[1]);
                 } else if (prize.contains(":")) {
                     LOGGER.error("Invalid configuration of crackable prizes (item id: " + this.itemId + "). '" + prize + "' format should be itemId:chance.");
                 } else {
-                    itemId = Integer.valueOf(prize.replace(":", ""));
+                    itemId = Integer.parseInt(prize.replace(":", ""));
                 }
 
                 this.prizes.put(itemId, new AbstractMap.SimpleEntry<>(this.totalChance, this.totalChance + chance));

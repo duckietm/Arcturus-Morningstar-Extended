@@ -17,7 +17,7 @@ public class ChatTypeCommand extends Command {
         if (params.length >= 2) {
             int chatColor;
             try {
-                chatColor = Integer.valueOf(params[1]);
+                chatColor = Integer.parseInt(params[1]);
             } catch (Exception e) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_chatcolor.numbers"), RoomChatMessageBubbles.ALERT);
                 return true;
@@ -34,7 +34,7 @@ public class ChatTypeCommand extends Command {
 
             if (!gameClient.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
                 for (String s : Emulator.getConfig().getValue("commands.cmd_chatcolor.banned_numbers").split(";")) {
-                    if (Integer.valueOf(s) == chatColor) {
+                    if (Integer.parseInt(s) == chatColor) {
                         gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_chatcolor.banned"), RoomChatMessageBubbles.ALERT);
                         return true;
                     }

@@ -16,10 +16,10 @@ public class WiredGiveRewardItem {
     public WiredGiveRewardItem(String dataString) {
         String[] data = dataString.split(",");
 
-        this.id = Integer.valueOf(data[0]);
+        this.id = Integer.parseInt(data[0]);
         this.badge = data[1].equalsIgnoreCase("0");
         this.data = data[2];
-        this.probability = Integer.valueOf(data[3]);
+        this.probability = Integer.parseInt(data[3]);
     }
 
     @Override

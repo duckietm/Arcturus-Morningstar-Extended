@@ -25,7 +25,7 @@ public class GiftCommand extends Command {
             int itemId;
 
             try {
-                itemId = Integer.valueOf(params[2]);
+                itemId = Integer.parseInt(params[2]);
             } catch (Exception e) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_gift.not_a_number"), RoomChatMessageBubbles.ALERT);
                 return true;

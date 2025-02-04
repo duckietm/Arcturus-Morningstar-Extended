@@ -97,12 +97,12 @@ public class ToggleFloorItemEvent extends MessageHandler {
 
                 boolean isRare = item.getBaseItem().getName().contains("rare");
 
-                if ((!item.getExtradata().isEmpty() && Integer.valueOf(item.getExtradata()) - 1 < 0) || item.getExtradata().isEmpty()) {
+                if ((!item.getExtradata().isEmpty() && Integer.parseInt(item.getExtradata()) - 1 < 0) || item.getExtradata().isEmpty()) {
                     rarity = isRare ? InteractionMonsterPlantSeed.randomGoldenRarityLevel() : InteractionMonsterPlantSeed.randomRarityLevel();
                 }
                 else {
                     try {
-                        rarity = Integer.valueOf(item.getExtradata()) - 1;
+                        rarity = Integer.parseInt(item.getExtradata()) - 1;
                     } catch (Exception e) {
                     }
                 }

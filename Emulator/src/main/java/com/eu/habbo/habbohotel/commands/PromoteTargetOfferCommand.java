@@ -47,7 +47,7 @@ public class PromoteTargetOfferCommand extends Command {
         } else {
             int offerId = 0;
             try {
-                offerId = Integer.valueOf(offerKey);
+                offerId = Integer.parseInt(offerKey);
             } catch (Exception e) {
             }
 

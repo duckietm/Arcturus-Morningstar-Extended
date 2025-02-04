@@ -71,7 +71,7 @@ public abstract class CatalogPage implements Comparable<CatalogPage>, ISerialize
         if (!set.getString("includes").isEmpty()) {
             for (String id : set.getString("includes").split(";")) {
                 try {
-                    this.included.add(Integer.valueOf(id));
+                    this.included.add(Integer.parseInt(id));
                 } catch (Exception e) {
                     LOGGER.error("Caught exception", e);
                     LOGGER.error("Failed to parse includes column value of (" + id + ") for catalog page (" + this.id + ")");

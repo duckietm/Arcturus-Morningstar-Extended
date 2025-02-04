@@ -12,7 +12,7 @@ public class ChangeChatBubbleEvent extends MessageHandler {
 
         if (!this.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (String s : Emulator.getConfig().getValue("commands.cmd_chatcolor.banned_numbers").split(";")) {
-                if (Integer.valueOf(s) == chatBubble) {
+                if (Integer.parseInt(s) == chatBubble) {
                     return;
                 }
             }

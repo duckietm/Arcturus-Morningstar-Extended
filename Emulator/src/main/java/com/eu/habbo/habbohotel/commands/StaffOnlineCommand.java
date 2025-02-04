@@ -20,7 +20,7 @@ public class StaffOnlineCommand extends Command {
 
         if (params.length >= 2) {
             try {
-                int i = Integer.valueOf(params[1]);
+                int i = Integer.parseInt(params[1]);
 
                 if (i < 1) {
                     gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_staffonline.positive_only"), RoomChatMessageBubbles.ALERT);

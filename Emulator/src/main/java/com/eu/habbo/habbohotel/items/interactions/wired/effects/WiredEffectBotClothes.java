@@ -107,7 +107,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
             String[] data = wiredData.split(((char) 9) + "");
 
             if (data.length >= 3) {
-                this.setDelay(Integer.valueOf(data[0]));
+                this.setDelay(Integer.parseInt(data[0]));
                 this.botName = data[1];
                 this.botLook = data[2];
             }

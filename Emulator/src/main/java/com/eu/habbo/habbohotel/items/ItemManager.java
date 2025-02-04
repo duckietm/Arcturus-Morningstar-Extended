@@ -569,7 +569,7 @@ public class ItemManager {
                 try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO items_presents VALUES (?, ?)")) {
                     while (set.next() && item == null) {
                         preparedStatement.setInt(1, set.getInt(1));
-                        preparedStatement.setInt(2, Integer.valueOf(itemId));
+                        preparedStatement.setInt(2, Integer.parseInt(itemId));
                         preparedStatement.addBatch();
                         item = new InteractionDefault(set.getInt(1), habbo.getHabboInfo().getId(), Emulator.getGameEnvironment().getCatalogManager().ecotronItem, extradata, 0, 0);
                     }

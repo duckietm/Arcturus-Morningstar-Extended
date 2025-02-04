@@ -152,8 +152,8 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
             String[] data = wiredData.split(((char) 9) + "");
 
             if (data.length == 3) {
-                this.setDelay(Integer.valueOf(data[0]));
-                this.itemId = Integer.valueOf(data[1]);
+                this.setDelay(Integer.parseInt(data[0]));
+                this.itemId = Integer.parseInt(data[1]);
                 this.botName = data[2];
             }
 

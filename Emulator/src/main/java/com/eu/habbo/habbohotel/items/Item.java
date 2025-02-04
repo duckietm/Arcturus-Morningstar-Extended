@@ -55,7 +55,7 @@ public class Item implements ISerialize {
             }
 
             try {
-                int index = Integer.valueOf(item.getExtradata()) % (item.getBaseItem().getMultiHeights().length);
+                int index = Integer.parseInt(item.getExtradata()) % (item.getBaseItem().getMultiHeights().length);
                 return item.getBaseItem().getMultiHeights()[(item.getExtradata().isEmpty() ? 0 : index)];
             } catch (NumberFormatException e) {
 
@@ -103,7 +103,7 @@ public class Item implements ISerialize {
             this.vendingItems = new TIntArrayList();
             String[] vendingIds = set.getString("vending_ids").replace(";", ",").split(",");
             for (String s : vendingIds) {
-                this.vendingItems.add(Integer.valueOf(s.replace(" ", "")));
+                this.vendingItems.add(Integer.parseInt(s.replace(" ", "")));
             }
         }
 

@@ -36,7 +36,7 @@ public class InteractionWiredHighscore extends HabboItem {
 
         try {
             String name = this.getBaseItem().getName().split("_")[1].toUpperCase().split("\\*")[0];
-            int ctype = Integer.valueOf(this.getBaseItem().getName().split("\\*")[1]) - 1;
+            int ctype = Integer.parseInt(this.getBaseItem().getName().split("\\*")[1]) - 1;
             this.scoreType = WiredHighscoreScoreType.valueOf(name);
             this.clearType = WiredHighscoreClearType.values()[ctype];
         } catch (Exception e) {
@@ -54,7 +54,7 @@ public class InteractionWiredHighscore extends HabboItem {
 
         try {
             String name = this.getBaseItem().getName().split("_")[1].toUpperCase().split("\\*")[0];
-            int ctype = Integer.valueOf(this.getBaseItem().getName().split("\\*")[1]) - 1;
+            int ctype = Integer.parseInt(this.getBaseItem().getName().split("\\*")[1]) - 1;
             this.scoreType = WiredHighscoreScoreType.valueOf(name);
             this.clearType = WiredHighscoreClearType.values()[ctype];
         } catch (Exception e) {
@@ -89,7 +89,7 @@ public class InteractionWiredHighscore extends HabboItem {
         }
 
         try {
-            int state = Integer.valueOf(this.getExtradata());
+            int state = Integer.parseInt(this.getExtradata());
             this.setExtradata(Math.abs(state - 1) + "");
             room.updateItem(this);
         } catch (Exception e) {

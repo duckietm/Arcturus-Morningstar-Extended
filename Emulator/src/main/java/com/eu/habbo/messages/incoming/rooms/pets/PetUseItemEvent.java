@@ -34,7 +34,7 @@ public class PetUseItemEvent extends MessageHandler {
 
         if (pet instanceof HorsePet) {
             if (item.getBaseItem().getName().toLowerCase().startsWith("horse_dye")) {
-                int race = Integer.valueOf(item.getBaseItem().getName().split("_")[2]);
+                int race = Integer.parseInt(item.getBaseItem().getName().split("_")[2]);
                 int raceType = (race * 4) - 2;
 
                 if (race >= 13 && race <= 17)
@@ -46,7 +46,7 @@ public class PetUseItemEvent extends MessageHandler {
                 pet.setRace(raceType);
                 ((HorsePet) pet).needsUpdate = true;
             } else if (item.getBaseItem().getName().toLowerCase().startsWith("horse_hairdye")) {
-                int splittedHairdye = Integer.valueOf(item.getBaseItem().getName().toLowerCase().split("_")[2]);
+                int splittedHairdye = Integer.parseInt(item.getBaseItem().getName().toLowerCase().split("_")[2]);
                 int newHairdye = 48;
 
                 if (splittedHairdye == 0) {
@@ -62,7 +62,7 @@ public class PetUseItemEvent extends MessageHandler {
                 ((HorsePet) pet).setHairColor(newHairdye);
                 ((HorsePet) pet).needsUpdate = true;
             } else if (item.getBaseItem().getName().toLowerCase().startsWith("horse_hairstyle")) {
-                int splittedHairstyle = Integer.valueOf(item.getBaseItem().getName().toLowerCase().split("_")[2]);
+                int splittedHairstyle = Integer.parseInt(item.getBaseItem().getName().toLowerCase().split("_")[2]);
                 int newHairstyle = 100;
 
                 if (splittedHairstyle == 0) {

@@ -33,7 +33,7 @@ public class MuteCommand extends Command {
 
             if (params.length == 3) {
                 try {
-                    duration = Integer.valueOf(params[2]);
+                    duration = Integer.parseInt(params[2]);
 
                     if (duration <= 0)
                         throw new Exception("");

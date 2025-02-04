@@ -20,11 +20,11 @@ public class PixelCommand extends Command {
                     if (Integer.parseInt(params[2]) != 0) {
                         habbo.givePixels(Integer.parseInt(params[2]));
                         if (habbo.getHabboInfo().getCurrentRoom() != null)
-                            habbo.whisper(Emulator.getTexts().getValue("commands.generic.cmd_duckets.received").replace("%amount%", Integer.valueOf(params[2]) + ""), RoomChatMessageBubbles.ALERT);
+                            habbo.whisper(Emulator.getTexts().getValue("commands.generic.cmd_duckets.received").replace("%amount%", Integer.parseInt(params[2]) + ""), RoomChatMessageBubbles.ALERT);
                         else
-                            habbo.alert(Emulator.getTexts().getValue("commands.generic.cmd_duckets.received").replace("%amount%", Integer.valueOf(params[2]) + ""));
+                            habbo.alert(Emulator.getTexts().getValue("commands.generic.cmd_duckets.received").replace("%amount%", Integer.parseInt(params[2]) + ""));
 
-                        gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_duckets.send").replace("%amount%", Integer.valueOf(params[2]) + "").replace("%user%", params[1]), RoomChatMessageBubbles.ALERT);
+                        gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_duckets.send").replace("%amount%", Integer.parseInt(params[2]) + "").replace("%user%", params[1]), RoomChatMessageBubbles.ALERT);
 
                     } else {
                         gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_duckets.invalid_amount"), RoomChatMessageBubbles.ALERT);

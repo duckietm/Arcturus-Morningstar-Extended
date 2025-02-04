@@ -191,9 +191,9 @@ public class BadgeImager {
                 continue;
 
             String type = s.charAt(0) + "";
-            int id = Integer.valueOf(s.substring(1, 4));
-            int c = Integer.valueOf(s.substring(4, 6));
-            int position = Integer.valueOf(s.substring(6));
+            int id = Integer.parseInt(s.substring(1, 4));
+            int c = Integer.parseInt(s.substring(4, 6));
+            int position = Integer.parseInt(s.substring(6));
 
             GuildPart part;
             GuildPart color = Emulator.getGameEnvironment().getGuildManager().getPart(GuildPartType.BASE_COLOR, c);

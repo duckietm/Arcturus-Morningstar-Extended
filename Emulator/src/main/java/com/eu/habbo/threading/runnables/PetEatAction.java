@@ -22,12 +22,12 @@ public class PetEatAction implements Runnable {
     @Override
     public void run() {
         if (this.pet.getRoomUnit() != null && this.pet.getRoom() != null) {
-            if (this.pet.levelHunger >= 20 && this.food != null && Integer.valueOf(this.food.getExtradata()) < this.food.getBaseItem().getStateCount()) {
+            if (this.pet.levelHunger >= 20 && this.food != null && Integer.parseInt(this.food.getExtradata()) < this.food.getBaseItem().getStateCount()) {
                 this.pet.addHunger(-20);
                 this.pet.setTask(PetTasks.EAT);
                 this.pet.getRoomUnit().setCanWalk(false);
 
-                this.food.setExtradata(Integer.valueOf(this.food.getExtradata()) + 1 + "");
+                this.food.setExtradata(Integer.parseInt(this.food.getExtradata()) + 1 + "");
                 this.pet.getRoom().updateItem(this.food);
 
                 if (this.pet instanceof GnomePet) {
@@ -42,7 +42,7 @@ public class PetEatAction implements Runnable {
 
                 Emulator.getThreading().run(this, 1000);
             } else {
-                if (this.food != null && Integer.valueOf(this.food.getExtradata()) == this.food.getBaseItem().getStateCount()) {
+                if (this.food != null && Integer.parseInt(this.food.getExtradata()) == this.food.getBaseItem().getStateCount()) {
                     Emulator.getThreading().run(new QueryDeleteHabboItem(this.food.getId()), 500);
                     if (this.pet.getRoom() != null) {
                         this.pet.getRoom().removeHabboItem(this.food);

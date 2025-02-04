@@ -94,16 +94,16 @@ public class InteractionGift extends HabboItem {
             data = this.getExtradata().split("\t");
 
         if (data != null && data.length >= 5) {
-            int count = Integer.valueOf(data[0]);
+            int count = Integer.parseInt(data[0]);
 
             this.itemId = new int[count];
 
             for (int i = 0; i < count; i++) {
-                this.itemId[i] = Integer.valueOf(data[i + 1]);
+                this.itemId[i] = Integer.parseInt(data[i + 1]);
             }
 
-            this.colorId = Integer.valueOf(data[count + 1]);
-            this.ribbonId = Integer.valueOf(data[count + 2]);
+            this.colorId = Integer.parseInt(data[count + 1]);
+            this.ribbonId = Integer.parseInt(data[count + 2]);
             this.showSender = data[count + 3].equalsIgnoreCase("1");
             this.message = data[count + 4];
 

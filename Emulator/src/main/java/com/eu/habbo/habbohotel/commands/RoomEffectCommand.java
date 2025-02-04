@@ -19,7 +19,7 @@ public class RoomEffectCommand extends Command {
         }
 
         try {
-            int effectId = Integer.valueOf(params[1]);
+            int effectId = Integer.parseInt(params[1]);
 
             if (effectId >= 0) {
                 Room room = gameClient.getHabbo().getHabboInfo().getCurrentRoom();

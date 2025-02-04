@@ -220,14 +220,14 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             String[] wiredDataSplit = set.getString("wired_data").split("\t");
 
             if (wiredDataSplit.length >= 2) {
-                this.setDelay(Integer.valueOf(wiredDataSplit[0]));
+                this.setDelay(Integer.parseInt(wiredDataSplit[0]));
                 String[] data = wiredDataSplit[1].split(";");
 
                 if (data.length > 1) {
                     this.botName = data[0];
 
                     for (int i = 1; i < data.length; i++) {
-                        HabboItem item = room.getHabboItem(Integer.valueOf(data[i]));
+                        HabboItem item = room.getHabboItem(Integer.parseInt(data[i]));
 
                         if (item != null)
                             this.items.add(item);

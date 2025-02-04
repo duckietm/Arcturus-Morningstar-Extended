@@ -20,7 +20,7 @@ public class SetSpeedCommand extends Command {
                 int newSpeed;
 
                 try {
-                    newSpeed = Integer.valueOf(params[1]);
+                    newSpeed = Integer.parseInt(params[1]);
                 } catch (Exception e) {
                     gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_setspeed.invalid_amount"), RoomChatMessageBubbles.ALERT);
                     return true;

@@ -36,8 +36,8 @@ public class MarketPlaceOffer implements Runnable {
         this.itemId = set.getInt("item_id");
 
         if (!set.getString("ltd_data").split(":")[1].equals("0")) {
-            this.limitedStack = Integer.valueOf(set.getString("ltd_data").split(":")[0]);
-            this.limitedNumber = Integer.valueOf(set.getString("ltd_data").split(":")[1]);
+            this.limitedStack = Integer.parseInt(set.getString("ltd_data").split(":")[0]);
+            this.limitedNumber = Integer.parseInt(set.getString("ltd_data").split(":")[1]);
         }
 
         if (!privateOffer) {

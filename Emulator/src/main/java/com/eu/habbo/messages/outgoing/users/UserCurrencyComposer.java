@@ -25,7 +25,7 @@ public class UserCurrencyComposer extends MessageComposer {
         for (String s : pointsTypes) {
             int type;
             try {
-                type = Integer.valueOf(s);
+                type = Integer.parseInt(s);
             } catch (Exception e) {
                 LOGGER.error("Caught exception", e);
                 return null;

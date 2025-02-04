@@ -104,8 +104,8 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
 
             if (data.length >= 3) {
                 try {
-                    this.setDelay(Integer.valueOf(data[0]));
-                    this.length = Integer.valueOf(data[1]);
+                    this.setDelay(Integer.parseInt(data[0]));
+                    this.length = Integer.parseInt(data[1]);
                     this.message = data[2];
                 } catch (Exception e) {
                 }

@@ -19,7 +19,7 @@ public class MassPointsCommand extends Command {
         if (params.length == 3) {
             amountString = params[1];
             try {
-                type = Integer.valueOf(params[2]);
+                type = Integer.parseInt(params[2]);
             } catch (Exception e) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_masspoints.invalid_type").replace("%types%", Emulator.getConfig().getValue("seasonal.types").replace(";", ", ")), RoomChatMessageBubbles.ALERT);
                 return true;
@@ -48,7 +48,7 @@ public class MassPointsCommand extends Command {
         int amount;
 
         try {
-            amount = Integer.valueOf(amountString);
+            amount = Integer.parseInt(amountString);
         } catch (Exception e) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_masspoints.invalid_amount"), RoomChatMessageBubbles.ALERT);
             return true;

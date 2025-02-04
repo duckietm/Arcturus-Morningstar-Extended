@@ -132,7 +132,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
             this.message = "";
 
             if (wiredData.split("\t").length >= 2) {
-                super.setDelay(Integer.valueOf(wiredData.split("\t")[0]));
+                super.setDelay(Integer.parseInt(wiredData.split("\t")[0]));
                 this.message = wiredData.split("\t")[1];
             }
 

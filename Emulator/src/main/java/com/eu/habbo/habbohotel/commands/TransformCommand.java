@@ -40,7 +40,7 @@ public class TransformCommand extends Command {
 
             if (params.length >= 3) {
                 try {
-                    race = Integer.valueOf(params[2]);
+                    race = Integer.parseInt(params[2]);
                 } catch (Exception e) {
                     return true;
                 }

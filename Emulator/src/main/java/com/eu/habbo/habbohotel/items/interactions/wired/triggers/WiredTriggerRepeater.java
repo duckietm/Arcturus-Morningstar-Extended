@@ -56,7 +56,7 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICy
             this.repeatTime = data.repeatTime;
         } else {
             if (wiredData.length() >= 1) {
-                this.repeatTime = (Integer.valueOf(wiredData));
+                this.repeatTime = (Integer.parseInt(wiredData));
             }
         }
 

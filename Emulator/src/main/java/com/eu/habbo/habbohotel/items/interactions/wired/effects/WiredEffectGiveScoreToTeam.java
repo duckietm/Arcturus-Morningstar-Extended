@@ -79,10 +79,10 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
             String[] data = set.getString("wired_data").split(";");
 
             if (data.length == 4) {
-                this.points = Integer.valueOf(data[0]);
-                this.count = Integer.valueOf(data[1]);
-                this.teamColor = GameTeamColors.values()[Integer.valueOf(data[2])];
-                this.setDelay(Integer.valueOf(data[3]));
+                this.points = Integer.parseInt(data[0]);
+                this.count = Integer.parseInt(data[1]);
+                this.teamColor = GameTeamColors.values()[Integer.parseInt(data[2])];
+                this.setDelay(Integer.parseInt(data[3]));
             }
 
             this.needsUpdate(true);

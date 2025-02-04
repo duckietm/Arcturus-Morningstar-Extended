@@ -103,7 +103,7 @@ public class InteractionFreezeBlock extends HabboItem {
 
         int powerUp;
         try {
-            powerUp = Integer.valueOf(this.getExtradata()) / 1000;
+            powerUp = Integer.parseInt(this.getExtradata()) / 1000;
         } catch (NumberFormatException e) {
             powerUp = 0;
         }

@@ -18,7 +18,7 @@ public class EventCategory {
 
         if (parts.length != 3) throw new Exception("A serialized event category should contain 3 fields");
 
-        this.id = Integer.valueOf(parts[0]);
+        this.id = Integer.parseInt(parts[0]);
         this.caption = parts[1];
         this.visible = parts[2].equalsIgnoreCase("true");
     }

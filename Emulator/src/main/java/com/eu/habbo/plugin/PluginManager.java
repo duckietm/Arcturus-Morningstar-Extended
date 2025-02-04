@@ -127,7 +127,7 @@ public class PluginManager {
         RoomChatMessage.BANNED_BUBBLES = new int[bannedBubbles.length];
         for (int i = 0; i < RoomChatMessage.BANNED_BUBBLES.length; i++) {
             try {
-                RoomChatMessage.BANNED_BUBBLES[i] = Integer.valueOf(bannedBubbles[i]);
+                RoomChatMessage.BANNED_BUBBLES[i] = Integer.parseInt(bannedBubbles[i]);
             } catch (Exception e) {
                 LOGGER.error("Caught exception", e);
             }

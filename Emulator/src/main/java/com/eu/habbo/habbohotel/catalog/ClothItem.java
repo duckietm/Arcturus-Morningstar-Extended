@@ -20,7 +20,7 @@ public class ClothItem {
 
         this.setId = new int[parts.length];
         for (int i = 0; i < this.setId.length; i++) {
-            this.setId[i] = Integer.valueOf(parts[i]);
+            this.setId[i] = Integer.parseInt(parts[i]);
         }
     }
 }

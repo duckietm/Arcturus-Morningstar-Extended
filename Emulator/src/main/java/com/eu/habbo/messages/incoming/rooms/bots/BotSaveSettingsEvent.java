@@ -94,7 +94,7 @@ public class BotSaveSettingsEvent extends MessageHandler {
                     int chatSpeed = 7;
 
                     try {
-                        chatSpeed = Integer.valueOf(data[data.length - 2]);
+                        chatSpeed = Integer.parseInt(data[data.length - 2]);
                         if (chatSpeed < BotManager.MINIMUM_CHAT_SPEED) {
                             chatSpeed = BotManager.MINIMUM_CHAT_SPEED;
                         }

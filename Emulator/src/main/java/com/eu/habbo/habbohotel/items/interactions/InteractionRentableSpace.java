@@ -36,8 +36,8 @@ public class InteractionRentableSpace extends HabboItem {
         this.renterName = "Unknown";
 
         if (data.length == 2) {
-            this.renterId = Integer.valueOf(data[0]);
-            this.endTimestamp = Integer.valueOf(data[1]);
+            this.renterId = Integer.parseInt(data[0]);
+            this.endTimestamp = Integer.parseInt(data[1]);
 
             if (this.renterId > 0) {
                 if (this.isRented()) {
@@ -233,8 +233,8 @@ public class InteractionRentableSpace extends HabboItem {
         String[] data = this.getBaseItem().getName().replace("hblooza_spacerent", "").split("x");
 
         if (data.length == 2) {
-            int x = Integer.valueOf(data[0]);
-            int y = Integer.valueOf(data[1]);
+            int x = Integer.parseInt(data[0]);
+            int y = Integer.parseInt(data[1]);
 
             return 10 * (x * y);
         }

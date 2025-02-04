@@ -25,7 +25,7 @@ public class ShutdownCommand extends Command {
         } else {
             if (params.length == 2) {
                 try {
-                    minutes = Integer.valueOf(params[1]);
+                    minutes = Integer.parseInt(params[1]);
                 } catch (Exception e) {
                     reason = new StringBuilder(params[1]);
                 }

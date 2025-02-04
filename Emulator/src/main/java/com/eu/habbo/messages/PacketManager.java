@@ -130,7 +130,7 @@ public class PacketManager {
 
         for (String s : Emulator.getConfig().getValue("debug.show.headers").split(";")) {
             try {
-                logList.add(Integer.valueOf(s));
+                logList.add(Integer.parseInt(s));
             } catch (NumberFormatException e) {
 
             }

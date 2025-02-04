@@ -36,10 +36,10 @@ public class RoomBundleCommand extends Command {
             return true;
         }
 
-        parentId = Integer.valueOf(params[1]);
-        credits = Integer.valueOf(params[2]);
-        points = Integer.valueOf(params[3]);
-        pointsType = Integer.valueOf(params[4]);
+        parentId = Integer.parseInt(params[1]);
+        credits = Integer.parseInt(params[2]);
+        points = Integer.parseInt(params[3]);
+        pointsType = Integer.parseInt(params[4]);
 
         CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().createCatalogPage("Room Bundle: " + gameClient.getHabbo().getHabboInfo().getCurrentRoom().getName(), "room_bundle_" + gameClient.getHabbo().getHabboInfo().getCurrentRoom().getId(), gameClient.getHabbo().getHabboInfo().getCurrentRoom().getId(), 0, CatalogPageLayouts.room_bundle, gameClient.getHabbo().getHabboInfo().getRank().getId(), parentId);
 

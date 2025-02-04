@@ -270,7 +270,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
             }
         } else {
             try {
-                Item item = Emulator.getGameEnvironment().getItemManager().getItem(Integer.valueOf(this.itemId));
+                Item item = Emulator.getGameEnvironment().getItemManager().getItem(Integer.parseInt(this.itemId));
 
                 if (item != null) {
                     this.allowGift = item.allowGift();

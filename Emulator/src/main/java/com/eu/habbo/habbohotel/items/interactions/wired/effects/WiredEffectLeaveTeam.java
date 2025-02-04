@@ -69,7 +69,7 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
             this.setDelay(data.delay);
         }
         else {
-            this.setDelay(Integer.valueOf(wiredData));
+            this.setDelay(Integer.parseInt(wiredData));
         }
     }
 

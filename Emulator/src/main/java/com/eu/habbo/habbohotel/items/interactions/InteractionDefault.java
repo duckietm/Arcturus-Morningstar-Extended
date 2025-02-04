@@ -77,7 +77,7 @@ public class InteractionDefault extends HabboItem {
                         int currentState = 0;
 
                         try {
-                            currentState = Integer.valueOf(this.getExtradata());
+                            currentState = Integer.parseInt(this.getExtradata());
                         } catch (NumberFormatException e) {
                             LOGGER.error("Incorrect extradata (" + this.getExtradata() + ") for item ID (" + this.getId() + ") of type (" + this.getBaseItem().getName() + ")");
                         }

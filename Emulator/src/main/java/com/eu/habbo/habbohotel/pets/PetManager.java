@@ -308,7 +308,7 @@ public class PetManager {
         }
 
         try {
-            int petId = Integer.valueOf(petName.split("t")[1]);
+            int petId = Integer.parseInt(petName.split("t")[1]);
             return this.petRaces.get(petId);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
@@ -392,17 +392,17 @@ public class PetManager {
     }
 
     public Pet createPet(Item item, String name, String race, String color, GameClient client) {
-        int type = Integer.valueOf(item.getName().toLowerCase().replace("a0 pet", ""));
+        int type = Integer.parseInt(item.getName().toLowerCase().replace("a0 pet", ""));
 
         if (this.petData.containsKey(type)) {
             Pet pet;
             if (type == 15)
-                pet = new HorsePet(type, Integer.valueOf(race), color, name, client.getHabbo().getHabboInfo().getId());
+                pet = new HorsePet(type, Integer.parseInt(race), color, name, client.getHabbo().getHabboInfo().getId());
             else if (type == 16)
                 pet = this.createMonsterplant(null, client.getHabbo(), false, null, 0);
             else
                 pet = new Pet(type,
-                        Integer.valueOf(race),
+                        Integer.parseInt(race),
                         color,
                         name,
                         client.getHabbo().getHabboInfo().getId()

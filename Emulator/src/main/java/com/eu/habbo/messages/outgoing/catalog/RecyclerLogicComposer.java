@@ -16,7 +16,7 @@ public class RecyclerLogicComposer extends MessageComposer {
         this.response.appendInt(Emulator.getGameEnvironment().getCatalogManager().prizes.size());
         for (Map.Entry<Integer, THashSet<Item>> map : Emulator.getGameEnvironment().getCatalogManager().prizes.entrySet()) {
             this.response.appendInt(map.getKey());
-            this.response.appendInt(Integer.valueOf(Emulator.getConfig().getValue("hotel.ecotron.rarity.chance." + map.getKey())));
+            this.response.appendInt(Integer.parseInt(Emulator.getConfig().getValue("hotel.ecotron.rarity.chance." + map.getKey())));
             this.response.appendInt(map.getValue().size());
             for (Item item : map.getValue()) {
                 this.response.appendString(item.getName());

@@ -17,7 +17,7 @@ public class ItemStateComposer extends MessageComposer {
         this.response.init(Outgoing.ItemStateComposer);
         this.response.appendInt(this.item.getId());
         try {
-            int state = Integer.valueOf(this.item.getExtradata());
+            int state = Integer.parseInt(this.item.getExtradata());
             this.response.appendInt(state);
         } catch (Exception e) {
             this.response.appendInt(0);

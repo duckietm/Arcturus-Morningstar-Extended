@@ -18,7 +18,7 @@ public class RoomDanceCommand extends Command {
             int danceId;
 
             try {
-                danceId = Integer.valueOf(params[1]);
+                danceId = Integer.parseInt(params[1]);
             } catch (Exception e) {
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_danceall.invalid_dance"), RoomChatMessageBubbles.ALERT);
                 return true;

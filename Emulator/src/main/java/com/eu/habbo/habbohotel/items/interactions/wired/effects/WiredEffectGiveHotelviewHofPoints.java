@@ -117,10 +117,10 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
             this.amount = 0;
 
             if (wiredData.split("\t").length >= 2) {
-                super.setDelay(Integer.valueOf(wiredData.split("\t")[0]));
+                super.setDelay(Integer.parseInt(wiredData.split("\t")[0]));
 
                 try {
-                    this.amount = Integer.valueOf(this.getWiredData().split("\t")[1]);
+                    this.amount = Integer.parseInt(this.getWiredData().split("\t")[1]);
                 } catch (Exception e) {
                 }
             }

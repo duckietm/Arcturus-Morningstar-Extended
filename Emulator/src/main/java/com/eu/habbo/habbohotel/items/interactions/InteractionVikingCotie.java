@@ -26,7 +26,7 @@ public class InteractionVikingCotie extends InteractionDefault {
 
         if (client != null && client.getHabbo().getHabboInfo().getId() == this.getUserId()) {
             if (client.getHabbo().getRoomUnit().getEffectId() == 172 || client.getHabbo().getRoomUnit().getEffectId() == 173) {
-                int state = Integer.valueOf(this.getExtradata());
+                int state = Integer.parseInt(this.getExtradata());
 
                 if (state < 5) {
                     state++;

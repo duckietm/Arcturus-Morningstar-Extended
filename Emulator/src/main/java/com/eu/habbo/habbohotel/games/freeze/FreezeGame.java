@@ -255,7 +255,7 @@ public class FreezeGame extends Game {
                         scoreboard.setExtradata("0");
                     }
 
-                    int oldScore = Integer.valueOf(scoreboard.getExtradata());
+                    int oldScore = Integer.parseInt(scoreboard.getExtradata());
 
                     if (oldScore == totalScore)
                         continue;

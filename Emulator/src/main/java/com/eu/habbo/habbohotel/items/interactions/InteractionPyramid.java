@@ -25,7 +25,7 @@ public class InteractionPyramid extends InteractionGate {
 
         if (room != null) {
             if (room.getHabbosAt(this.getX(), this.getY()).isEmpty()) {
-                int state = Integer.valueOf(this.getExtradata());
+                int state = Integer.parseInt(this.getExtradata());
                 state = Math.abs(state - 1);
 
                 this.setExtradata(state + "");

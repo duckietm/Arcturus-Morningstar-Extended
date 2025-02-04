@@ -28,7 +28,7 @@ public class GiveRankCommand extends Command {
 
         if (params.length == 3) {
             if (StringUtils.isNumeric(params[2])) {
-                int rankId = Integer.valueOf(params[2]);
+                int rankId = Integer.parseInt(params[2]);
                 if (Emulator.getGameEnvironment().getPermissionsManager().rankExists(rankId))
                     rank = Emulator.getGameEnvironment().getPermissionsManager().getRank(rankId);
             } else {

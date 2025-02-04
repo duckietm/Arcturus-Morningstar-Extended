@@ -33,7 +33,7 @@ public class FigureUtil {
             String[] pieces = set.split("-");
 
             try {
-                if (pieces.length >= 2 && blacklist.contains(Integer.valueOf(pieces[1]))) {
+                if (pieces.length >= 2 && blacklist.contains(Integer.parseInt(pieces[1]))) {
                     return true;
                 }
             } catch (NumberFormatException ignored) {

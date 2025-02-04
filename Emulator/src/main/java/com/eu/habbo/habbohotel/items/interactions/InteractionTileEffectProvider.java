@@ -38,7 +38,7 @@ public class InteractionTileEffectProvider extends InteractionCustomValues {
     public void onWalkOn(RoomUnit roomUnit, final Room room, Object[] objects) throws Exception {
         super.onWalkOn(roomUnit, room, objects);
 
-        int effectId = Integer.valueOf(this.values.get("effectId"));
+        int effectId = Integer.parseInt(this.values.get("effectId"));
 
         if (roomUnit.getEffectId() == effectId) {
             effectId = 0;
