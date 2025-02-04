@@ -31,6 +31,6 @@ public class Scheduler implements Runnable {
         if (this.disposed)
             return;
 
-        Emulator.getThreading().run(this, this.interval * 1000);
+        Emulator.getThreading().run(this, this.interval * 1000L);
     }
 }

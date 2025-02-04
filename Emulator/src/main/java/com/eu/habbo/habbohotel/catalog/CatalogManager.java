@@ -221,7 +221,7 @@ public class CatalogManager {
 
         this.ecotronItem = Emulator.getGameEnvironment().getItemManager().getItem("ecotron_box");
 
-        LOGGER.info("Catalog Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Catalog Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
 
@@ -280,7 +280,7 @@ public class CatalogManager {
                     Class<? extends CatalogPage> pageClazz = pageDefinitions.get(set.getString("page_layout"));
 
                     if (pageClazz == null) {
-                        LOGGER.info("Unknown Page Layout: " + set.getString("page_layout"));
+                        LOGGER.info("Unknown Page Layout: {}", set.getString("page_layout"));
                         continue;
                     }
 
@@ -305,7 +305,7 @@ public class CatalogManager {
                 }
             } else {
                 if (object.parentId != -2) {
-                    LOGGER.info("Parent Page not found for " + object.getPageName() + " (ID: " + object.id + ", parent_id: " + object.parentId + ")");
+                    LOGGER.info("Parent Page not found for {} (ID: {}, parent_id: {})", object.getPageName(), object.id, object.parentId);
                 }
             }
             return true;
@@ -313,7 +313,7 @@ public class CatalogManager {
 
         this.catalogPages.putAll(pages);
 
-        LOGGER.info("Loaded " + this.catalogPages.size() + " Catalog Pages!");
+        LOGGER.info("Loaded {} Catalog Pages!", this.catalogPages.size());
     }
 
 

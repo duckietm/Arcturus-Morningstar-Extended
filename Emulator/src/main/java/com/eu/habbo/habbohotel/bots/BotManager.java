@@ -45,7 +45,7 @@ public class BotManager {
 
         this.reload();
 
-        LOGGER.info("Bot Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Bot Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public static void addBotDefinition(String type, Class<? extends Bot> botClazz) throws Exception {
@@ -60,10 +60,10 @@ public class BotManager {
                 m.setAccessible(true);
                 m.invoke(null);
             } catch (NoSuchMethodException e) {
-                LOGGER.info("Bot Manager -> Failed to execute initialise method upon bot type '" + set.getKey() + "'. No Such Method!");
+                LOGGER.info("Bot Manager -> Failed to execute initialise method upon bot type '{}'. No Such Method!", set.getKey());
                 return false;
             } catch (Exception e) {
-                LOGGER.info("Bot Manager -> Failed to execute initialise method upon bot type '" + set.getKey() + "'. Error: " + e.getMessage());
+                LOGGER.info("Bot Manager -> Failed to execute initialise method upon bot type '{}'. Error: {}", set.getKey(), e.getMessage());
                 return false;
             }
         }
@@ -209,7 +209,7 @@ public class BotManager {
             if (botClazz != null)
                 return botClazz.getDeclaredConstructor(ResultSet.class).newInstance(set);
             else
-                LOGGER.error("Unknown Bot Type: " + type);
+                LOGGER.error("Unknown Bot Type: {}", type);
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {
@@ -237,9 +237,9 @@ public class BotManager {
                 m.setAccessible(true);
                 m.invoke(null);
             } catch (NoSuchMethodException e) {
-                LOGGER.info("Bot Manager -> Failed to execute dispose method upon bot type '" + set.getKey() + "'. No Such Method!");
+                LOGGER.info("Bot Manager -> Failed to execute dispose method upon bot type '{}'. No Such Method!", set.getKey());
             } catch (Exception e) {
-                LOGGER.info("Bot Manager -> Failed to execute dispose method upon bot type '" + set.getKey() + "'. Error: " + e.getMessage());
+                LOGGER.info("Bot Manager -> Failed to execute dispose method upon bot type '{}'. Error: {}", set.getKey(), e.getMessage());
             }
         }
     }

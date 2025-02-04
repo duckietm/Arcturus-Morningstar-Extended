@@ -48,11 +48,11 @@ public abstract class ConsoleCommand {
                     LOGGER.error("Caught exception", e);
                 }
             } else {
-                LOGGER.info("Unknown Console Command " + message[0]);
-                LOGGER.info("Commands Available (" + commands.size() + "): ");
+                LOGGER.info("Unknown Console Command {}", message[0]);
+                LOGGER.info("Commands Available ({}): ", commands.size());
 
                 for (ConsoleCommand c : commands.values()) {
-                    LOGGER.info(c.key + " - " + c.usage);
+                    LOGGER.info("{} - {}", c.key, c.usage);
                 }
             }
         }
@@ -61,5 +61,4 @@ public abstract class ConsoleCommand {
     }
 
     public abstract void handle(String[] args) throws Exception;
-
 }

@@ -39,7 +39,7 @@ public class TalentTrackLevel {
                 if (achievement != null) {
                     this.achievements.put(achievement, Integer.parseInt(achievementLevels[i]));
                 } else {
-                    LOGGER.error("Could not find achievement with ID " + achievements[i] + " for talenttrack level " + this.level + " of type " + this.type);
+                    LOGGER.error("Could not find achievement with ID {} for talenttrack level {} of type {}", achievements[i], this.level, this.type);
                 }
             }
         }
@@ -50,7 +50,7 @@ public class TalentTrackLevel {
             if (item != null) {
                 this.items.add(item);
             } else {
-                LOGGER.error("Incorrect reward furni (ID: " + s + ") for talent track level " + this.level);
+                LOGGER.error("Incorrect reward furni (ID: {}) for talent track level {}", s, this.level);
             }
         }
 

@@ -92,7 +92,7 @@ public class ClubOffer implements ISerialize {
         message.appendInt(this.pointsType);
         message.appendBoolean(this.vip);
 
-        long seconds = this.days * 86400;
+        long seconds = this.days * 86400L;
 
         long secondsTotal = seconds;
 
@@ -103,7 +103,7 @@ public class ClubOffer implements ISerialize {
         seconds -= totalMonths * (86400 * 31);
 
         int totalDays = (int) Math.floor((int) seconds / 86400.0);
-        seconds -= totalDays * 86400;
+        seconds -= totalDays * 86400L;
 
         message.appendInt((int) secondsTotal / 86400 / 31);
         message.appendInt((int) seconds);

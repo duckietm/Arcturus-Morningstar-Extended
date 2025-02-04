@@ -92,7 +92,7 @@ public class ConfigurationManager {
                 String envValue = System.getenv(entry.getValue());
 
                 if (envValue == null || envValue.length() == 0) {
-                    LOGGER.info("Cannot find environment-value for variable `" + entry.getValue() + "`");
+                    LOGGER.info("Cannot find environment-value for variable `{}`", entry.getValue());
                 } else {
                     this.properties.setProperty(entry.getKey(), envValue);
                 }
@@ -127,7 +127,7 @@ public class ConfigurationManager {
             LOGGER.error("Caught SQL exception", e);
         }
 
-        LOGGER.info("Configuration -> loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Configuration -> loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public void saveToDatabase() {

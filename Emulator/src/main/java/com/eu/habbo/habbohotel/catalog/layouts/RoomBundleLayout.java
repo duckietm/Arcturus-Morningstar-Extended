@@ -48,7 +48,7 @@ public class RoomBundleLayout extends SingleBundle {
                 if (this.room != null)
                     this.room.preventUnloading = true;
             } else {
-                LOGGER.error("No room id specified for room bundle " + this.getPageName() + "(" + this.getId() + ")");
+                LOGGER.error("No room id specified for room bundle {}({})", this.getPageName(), this.getId());
             }
         }
 

@@ -288,7 +288,7 @@ public class AchievementManager {
             }
         }
 
-        LOGGER.info("Achievement Manager -> Loaded! (" + (System.currentTimeMillis() - millis) + " MS)");
+        LOGGER.info("Achievement Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public Achievement getAchievement(String name) {
