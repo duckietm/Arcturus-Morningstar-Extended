@@ -18,7 +18,7 @@ public class ActionWave extends PetAction {
     @Override
     public boolean apply(Pet pet, Habbo habbo, String[] data) {
         //WAV
-        if (pet.getHappyness() > 65) {
+        if (pet.getHappiness() > 65) {
             pet.getRoomUnit().setStatus(RoomUnitStatus.WAVE, "0");
 
             Emulator.getThreading().run(new PetClearPosture(pet, RoomUnitStatus.WAVE, null, false), 2000);

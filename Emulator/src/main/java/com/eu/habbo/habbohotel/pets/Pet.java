@@ -36,7 +36,7 @@ public class Pet implements ISerialize, Runnable {
     protected PetData petData;
     protected int race;
     protected String color;
-    protected int happyness;
+    protected int happiness;
     protected int experience;
     protected int energy;
     protected int respect;
@@ -45,7 +45,7 @@ public class Pet implements ISerialize, Runnable {
     RoomUnit roomUnit;
     private int chatTimeout;
     private int tickTimeout = Emulator.getIntUnixTimestamp();
-    private int happynessDelay = Emulator.getIntUnixTimestamp();
+    private int happinessDelay = Emulator.getIntUnixTimestamp();
     private int gestureTickTimeout = Emulator.getIntUnixTimestamp();
     private int randomActionTickTimeout = Emulator.getIntUnixTimestamp();
     private int postureTimeout = Emulator.getIntUnixTimestamp();
@@ -65,12 +65,12 @@ public class Pet implements ISerialize, Runnable {
         this.name = set.getString("name");
         this.petData = Emulator.getGameEnvironment().getPetManager().getPetData(set.getInt("type"));
         if (this.petData == null) {
-            LOGGER.error("WARNING! Missing pet data for type: " + set.getInt("type") + "! Insert a new entry into the pet_actions table for this type!");
+            LOGGER.error("WARNING! Missing pet data for type: {}! Insert a new entry into the pet_actions table for this type!", set.getInt("type"));
             this.petData = Emulator.getGameEnvironment().getPetManager().getPetData(0);
         }
         this.race = set.getInt("race");
         this.experience = set.getInt("experience");
-        this.happyness = set.getInt("happyness");
+        this.happiness = set.getInt("happiness");
         this.energy = set.getInt("energy");
         this.respect = set.getInt("respect");
         this.created = set.getInt("created");
@@ -88,13 +88,13 @@ public class Pet implements ISerialize, Runnable {
         this.petData = Emulator.getGameEnvironment().getPetManager().getPetData(type);
 
         if (this.petData == null) {
-            LOGGER.warn("Missing pet data for type: " + type + "! Insert a new entry into the pet_actions table for this type!");
+            LOGGER.warn("Missing pet data for type: {}! Insert a new entry into the pet_actions table for this type!", type);
         }
 
         this.race = race;
         this.color = color;
         this.experience = 0;
-        this.happyness = 100;
+        this.happiness = 100;
         this.energy = 100;
         this.respect = 0;
         this.levelThirst = 0;
@@ -132,14 +132,14 @@ public class Pet implements ISerialize, Runnable {
     }
 
 
-    public void addHappyness(int amount) {
-        this.happyness += amount;
+    public void addHappiness(int amount) {
+        this.happiness += amount;
 
-        if (this.happyness > 100)
-            this.happyness = 100;
+        if (this.happiness > 100)
+            this.happiness = 100;
 
-        if (this.happyness < 0)
-            this.happyness = 0;
+        if (this.happiness < 0)
+            this.happiness = 0;
     }
 
     public int getRespect() {
@@ -169,7 +169,7 @@ public class Pet implements ISerialize, Runnable {
         if (this.needsUpdate) {
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
                 if (this.id > 0) {
-                    try (PreparedStatement statement = connection.prepareStatement("UPDATE users_pets SET room_id = ?, experience = ?, energy = ?, respect = ?, x = ?, y = ?, z = ?, rot = ?, hunger = ?, thirst = ?, happyness = ?, created = ? WHERE id = ?")) {
+                    try (PreparedStatement statement = connection.prepareStatement("UPDATE users_pets SET room_id = ?, experience = ?, energy = ?, respect = ?, x = ?, y = ?, z = ?, rot = ?, hunger = ?, thirst = ?, happiness = ?, created = ? WHERE id = ?")) {
                         statement.setInt(1, (this.room == null ? 0 : this.room.getId()));
                         statement.setInt(2, this.experience);
                         statement.setInt(3, this.energy);
@@ -180,7 +180,7 @@ public class Pet implements ISerialize, Runnable {
                         statement.setInt(8, this.roomUnit != null ? this.roomUnit.getBodyRotation().getValue() : 0);
                         statement.setInt(9, this.levelHunger);
                         statement.setInt(10, this.levelThirst);
-                        statement.setInt(11, this.happyness);
+                        statement.setInt(11, this.happiness);
                         statement.setInt(12, this.created);
                         statement.setInt(13, this.id);
                         statement.execute();
@@ -256,7 +256,7 @@ public class Pet implements ISerialize, Runnable {
 
                     this.addEnergy(5);
 
-                    this.addHappyness(1);
+                    this.addHappiness(1);
 
                     if (this.energy == PetManager.maxEnergy(this.level)) {
                         this.roomUnit.removeStatus(RoomUnitStatus.LAY);
@@ -296,9 +296,9 @@ public class Pet implements ISerialize, Runnable {
                 if (this.levelThirst < 100)
                     this.levelThirst++;
 
-                if (this.happyness > 0 && time - this.happynessDelay >= 30) {
-                    this.happyness--;
-                    this.happynessDelay = time;
+                if (this.happiness > 0 && time - this.happinessDelay >= 30) {
+                    this.happiness--;
+                    this.happinessDelay = time;
                 }
             }
 
@@ -315,9 +315,9 @@ public class Pet implements ISerialize, Runnable {
                         this.say(this.petData.randomVocal(PetVocalsType.TIRED));
                         if (this.energy <= 10)
                             this.findNest();
-                    } else if (this.happyness > 85) {
+                    } else if (this.happiness > 85) {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_HAPPY));
-                    } else if (this.happyness < 15) {
+                    } else if (this.happiness < 15) {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_SAD));
                     } else if (this.levelHunger > 50) {
                         this.say(this.petData.randomVocal(PetVocalsType.HUNGRY));
@@ -408,12 +408,12 @@ public class Pet implements ISerialize, Runnable {
         if (this.energy < 30) {
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.TIRED.getKey());
             this.findNest();
-        } else if (this.happyness == 100) {
+        } else if (this.happiness == 100) {
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.LOVE.getKey());
-        } else if (this.happyness >= 90) {
+        } else if (this.happiness >= 90) {
             this.randomHappyAction();
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.HAPPY.getKey());
-        } else if (this.happyness <= 5) {
+        } else if (this.happiness <= 5) {
             this.randomSadAction();
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.SAD.getKey());
         } else if (this.levelHunger > 80) {
@@ -533,7 +533,7 @@ public class Pet implements ISerialize, Runnable {
             }
             this.level++;
             this.say(this.petData.randomVocal(PetVocalsType.LEVEL_UP));
-            this.addHappyness(100);
+            this.addHappiness(100);
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, "exp");
             this.gestureTickTimeout = Emulator.getIntUnixTimestamp();
             AchievementManager.progressAchievement(Emulator.getGameEnvironment().getHabboManager().getHabbo(this.userId), Emulator.getGameEnvironment().getAchievementManager().getAchievement("PetLevelUp"));
@@ -573,7 +573,7 @@ public class Pet implements ISerialize, Runnable {
 
 
     public void scratched(Habbo habbo) {
-        this.addHappyness(10);
+        this.addHappiness(10);
         this.addExperience(10);
         this.addRespect();
         this.needsUpdate = true;
@@ -641,12 +641,12 @@ public class Pet implements ISerialize, Runnable {
         this.color = color;
     }
 
-    public int getHappyness() {
-        return this.happyness;
+    public int getHappiness() {
+        return this.happiness;
     }
 
-    public void setHappyness(int happyness) {
-        this.happyness = happyness;
+    public void setHappiness(int happiness) {
+        this.happiness = happiness;
     }
 
     public int getExperience() {

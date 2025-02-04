@@ -14,9 +14,9 @@ public class ActionRelax extends PetAction {
     @Override
     public boolean apply(Pet pet, Habbo habbo, String[] data) {
         //Relax
-        if (pet.getHappyness() > 75)
+        if (pet.getHappiness() > 75)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_HAPPY));
-        else if (pet.getHappyness() < 30)
+        else if (pet.getHappiness() < 30)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_SAD));
         else
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_NEUTRAL));

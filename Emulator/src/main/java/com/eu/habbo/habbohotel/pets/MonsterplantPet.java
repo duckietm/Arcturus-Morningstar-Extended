@@ -385,7 +385,7 @@ public class MonsterplantPet extends Pet implements IPetLook {
         if (this.mayScratch()) {
             AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("MonsterPlantTreater"), 5);
             this.setDeathTimestamp(Emulator.getIntUnixTimestamp() + MonsterplantPet.timeToLive);
-            this.addHappyness(10);
+            this.addHappiness(10);
             this.addExperience(10);
             this.room.sendComposer(new PetStatusUpdateComposer(this).compose());
             this.room.sendComposer(new RoomPetRespectComposer(this, RoomPetRespectComposer.PET_TREATED).compose());

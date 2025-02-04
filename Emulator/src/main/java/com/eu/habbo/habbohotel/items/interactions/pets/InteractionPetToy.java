@@ -46,7 +46,7 @@ public class InteractionPetToy extends InteractionDefault {
             pet.packetUpdate = true;
             HabboItem item = this;
             Emulator.getThreading().run(() -> {
-                pet.addHappyness(25);
+                pet.addHappiness(25);
                 item.setExtradata("0");
                 room.updateItem(item);
                 new PetClearPosture(pet, RoomUnitStatus.PLAY, null, true).run();

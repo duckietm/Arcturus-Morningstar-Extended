@@ -21,9 +21,9 @@ public class ActionSpeak extends PetAction {
         pet.setMuted(false);
         Emulator.getThreading().run(new PetClearPosture(pet, RoomUnitStatus.SPEAK, null, false), 2000);
 
-        if (pet.getHappyness() > 70)
+        if (pet.getHappiness() > 70)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_HAPPY));
-        else if (pet.getHappyness() < 30)
+        else if (pet.getHappiness() < 30)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_SAD));
         else if (pet.getLevelHunger() > 65)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.HUNGRY));

@@ -18,7 +18,7 @@ public class ActionTorch extends PetAction {
 
     @Override
     public boolean apply(Pet pet, Habbo habbo, String[] data) {
-        if (pet.getHappyness() < 30) {
+        if (pet.getHappiness() < 30) {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.DISOBEY));
             return false;
         }

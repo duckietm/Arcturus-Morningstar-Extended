@@ -24,7 +24,7 @@ public class PetCommand implements Comparable<PetCommand> {
     public final int energyCost;
 
 
-    public final int happynessCost;
+    public final int happinessCost;
 
 
     public final PetAction action;
@@ -35,7 +35,7 @@ public class PetCommand implements Comparable<PetCommand> {
         this.level = set.getInt("required_level");
         this.xp = set.getInt("reward_xp");
         this.energyCost = set.getInt("cost_energy");
-        this.happynessCost = set.getInt("cost_happyness");
+        this.happinessCost = set.getInt("cost_happiness");
         this.action = action;
     }
 
@@ -67,7 +67,7 @@ public class PetCommand implements Comparable<PetCommand> {
                     pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, this.action.gestureToSet);
 
                     pet.addEnergy(-this.energyCost);
-                    pet.addHappyness(-this.happynessCost);
+                    pet.addHappiness(-this.happinessCost);
                     pet.addExperience(this.xp);
                 }
             }

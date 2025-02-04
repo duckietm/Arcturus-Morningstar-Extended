@@ -34,7 +34,7 @@ public class PetInfoCommand extends Command {
                                 Emulator.getTexts().getValue("commands.generic.cmd_pet_info.stats") + "\r\n" +
                                 Emulator.getTexts().getValue("generic.pet.scratches") + ": " + pet.getRespect() + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.energy") + ": " + pet.getEnergy() + "/" + PetManager.maxEnergy(pet.getLevel()) + "\r" +
-                                Emulator.getTexts().getValue("generic.pet.happyness") + ": " + pet.getHappyness() + "\r" +
+                                Emulator.getTexts().getValue("generic.pet.happiness") + ": " + pet.getHappiness() + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.level.thirst") + ": " + pet.levelThirst + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.level.hunger") + ": " + pet.levelHunger + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.current_action") + ": " + (pet.getTask() == null ? Emulator.getTexts().getValue("generic.nothing") : pet.getTask().name()) + "\r" +

@@ -19,7 +19,7 @@ public class ActionBreatheFire extends PetAction {
     public boolean apply(Pet pet, Habbo habbo, String[] data) {
         Emulator.getThreading().run(new PetClearPosture(pet, RoomUnitStatus.FLAME, null, false), this.minimumActionDuration);
 
-        if (pet.getHappyness() > 50)
+        if (pet.getHappiness() > 50)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
 
         return true;

@@ -17,7 +17,7 @@ public class ActionSit extends PetAction {
         if (pet.getTask() != PetTasks.SIT && !pet.getRoomUnit().hasStatus(RoomUnitStatus.SIT)) {
             pet.getRoomUnit().setStatus(RoomUnitStatus.SIT, pet.getRoom().getStackHeight(pet.getRoomUnit().getX(), pet.getRoomUnit().getY(), false) - 0.50 + "");
 
-            if (pet.getHappyness() > 75)
+            if (pet.getHappiness() > 75)
                 pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
             else
                 pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_NEUTRAL));
