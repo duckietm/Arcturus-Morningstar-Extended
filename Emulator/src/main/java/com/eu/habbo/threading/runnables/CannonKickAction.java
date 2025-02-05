@@ -26,15 +26,16 @@ public class CannonKickAction implements Runnable {
 
     @Override
     public void run() {
-        if (this.client != null) {
+        if (this.client != null)
             this.client.getHabbo().getRoomUnit().setCanWalk(true);
-        }
+
         THashMap<String, String> dater = new THashMap<>();
         dater.put("title", "${notification.room.kick.cannonball.title}");
         dater.put("message", "${notification.room.kick.cannonball.message}");
 
-        int rotation = this.cannon.getRotation();
-        List<RoomTile> tiles = this.room.getLayout().getTilesInFront(this.room.getLayout().getTile(this.cannon.getX(), this.cannon.getY()), rotation + 6, 3);
+        int rotation = ((this.cannon.getRotation() - 2) + 8) % 8;
+        int amount = (rotation == 2 || rotation == 4) ? 4 : 3;
+        List<RoomTile> tiles = this.room.getLayout().getTilesInFront(this.room.getLayout().getTile(this.cannon.getX(), this.cannon.getY()), rotation, amount);
 
         ServerMessage message = new BubbleAlertComposer("cannon.png", dater).compose();
 
@@ -42,7 +43,7 @@ public class CannonKickAction implements Runnable {
             for (Habbo habbo : this.room.getHabbosAt(t.x, t.y)) {
                 if (!habbo.hasPermission(Permission.ACC_UNKICKABLE) && !this.room.isOwner(habbo)) {
                     Emulator.getGameEnvironment().getRoomManager().leaveRoom(habbo, this.room);
-                    habbo.getClient().sendResponse(message); //kicked composer
+                    habbo.getClient().sendResponse(message);
                 }
             }
         }
