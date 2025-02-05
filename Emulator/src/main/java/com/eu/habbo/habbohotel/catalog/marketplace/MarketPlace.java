@@ -366,15 +366,13 @@ public final class MarketPlace {
         THashSet<MarketPlaceOffer> offers = new THashSet<>();
         offers.addAll(client.getHabbo().getInventory().getMarketplaceItems());
 
-        synchronized (client.getHabbo().getInventory()) {
-            for (MarketPlaceOffer offer : offers) {
-                if (offer.getState().equals(MarketPlaceState.SOLD)) {
-                    client.getHabbo().getInventory().removeMarketplaceOffer(offer);
-                    credits += offer.getPrice();
-                    removeUser(offer);
-                    offer.needsUpdate(true);
-                    Emulator.getThreading().run(offer);
-                }
+        for (MarketPlaceOffer offer : offers) {
+            if (offer.getState().equals(MarketPlaceState.SOLD)) {
+                client.getHabbo().getInventory().removeMarketplaceOffer(offer);
+                credits += offer.getPrice();
+                removeUser(offer);
+                offer.needsUpdate(true);
+                Emulator.getThreading().run(offer);
             }
         }
 

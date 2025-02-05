@@ -330,7 +330,7 @@ public class RoomUnit {
                 zHeight += room.getLayout().getHeightAtSquare(next.x, next.y);
             }
 
-            Optional<HabboItem> stackHelper = this.room.getItemsAt(next).stream().filter(i -> i instanceof InteractionTileWalkMagic).findAny();
+            Optional<HabboItem> stackHelper = room.getItemsAt(next).stream().filter(i -> i instanceof InteractionTileWalkMagic).findAny();
             if (stackHelper.isPresent()) {
                 zHeight = stackHelper.get().getZ();
             }
