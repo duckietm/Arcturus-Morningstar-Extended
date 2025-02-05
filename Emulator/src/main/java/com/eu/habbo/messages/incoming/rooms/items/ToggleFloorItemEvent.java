@@ -1,7 +1,6 @@
 package com.eu.habbo.messages.incoming.rooms.items;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.items.interactions.InteractionCannon;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDice;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionMonsterPlantSeed;
@@ -19,8 +18,14 @@ import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+
 public class ToggleFloorItemEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToggleFloorItemEvent.class);
+
+    private static HashSet<String> PET_BOXES = new HashSet<>(Arrays.asList("val11_present", "gnome_box", "leprechaun_box", "velociraptor_egg", "pterosaur_egg", "petbox_epic"));
 
     @Override
     public void handle() throws Exception {
@@ -35,7 +40,7 @@ public class ToggleFloorItemEvent extends MessageHandler {
 
             HabboItem item = room.getHabboItem(itemId);
 
-            if (item == null || (item instanceof InteractionDice && !(item instanceof InteractionCannon)))
+            if (item == null || item instanceof InteractionDice)
                 return;
 
             Event furnitureToggleEvent = new FurnitureToggleEvent(item, this.client.getHabbo(), state);
@@ -91,17 +96,16 @@ public class ToggleFloorItemEvent extends MessageHandler {
                 }
             }*/
 
-            //Do not move to onClick(). Wired could trigger it.
+            // Do not move to onClick(). Wired could trigger it.
             if (item instanceof InteractionMonsterPlantSeed) {
                 Emulator.getThreading().run(new QueryDeleteHabboItem(item.getId()));
-                int rarity = 0;
 
                 boolean isRare = item.getBaseItem().getName().contains("rare");
+                int rarity = 0;
 
-                if ((!item.getExtradata().isEmpty() && Integer.parseInt(item.getExtradata()) - 1 < 0) || item.getExtradata().isEmpty()) {
+                if (item.getExtradata().isEmpty() || Integer.parseInt(item.getExtradata()) - 1 < 0) {
                     rarity = isRare ? InteractionMonsterPlantSeed.randomGoldenRarityLevel() : InteractionMonsterPlantSeed.randomRarityLevel();
-                }
-                else {
+                } else {
                     try {
                         rarity = Integer.parseInt(item.getExtradata()) - 1;
                     } catch (Exception e) {
@@ -117,22 +121,12 @@ public class ToggleFloorItemEvent extends MessageHandler {
                 return;
             }
 
-            if (
-                    (item.getBaseItem().getName().equalsIgnoreCase("val11_present") ||
-                            item.getBaseItem().getName().equalsIgnoreCase("gnome_box") ||
-                            item.getBaseItem().getName().equalsIgnoreCase("leprechaun_box") ||
-                            item.getBaseItem().getName().equalsIgnoreCase("velociraptor_egg") ||
-                            item.getBaseItem().getName().equalsIgnoreCase("pterosaur_egg") ||
-                            item.getBaseItem().getName().equalsIgnoreCase("petbox_epic")) && room.getCurrentPets().size() < Room.MAXIMUM_PETS) {
+            if (PET_BOXES.contains(item.getBaseItem().getName()) && room.getCurrentPets().size() < Room.MAXIMUM_PETS) {
                 this.client.sendResponse(new PetPackageComposer(item));
                 return;
             }
 
             item.onClick(this.client, room, new Object[]{state});
-
-            if (item instanceof InteractionWired) {
-                this.client.getHabbo().getRoomUnit().setGoalLocation(this.client.getHabbo().getRoomUnit().getCurrentLocation());
-            }
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }
