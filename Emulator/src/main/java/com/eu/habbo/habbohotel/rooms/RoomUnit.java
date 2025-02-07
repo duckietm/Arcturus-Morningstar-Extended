@@ -116,31 +116,28 @@ public class RoomUnit {
 
     public boolean cycle(Room room) {
         try {
-            Habbo rider = null;
+            Habbo rider;
             if (this.getRoomUnitType() == RoomUnitType.PET) {
                 Pet pet = room.getPet(this);
                 if (pet instanceof RideablePet) {
                     rider = ((RideablePet) pet).getRider();
+
+                    if (rider != null) {
+                        if (this.status.containsKey(RoomUnitStatus.MOVE) && !rider.getRoomUnit().getStatusMap().containsKey(RoomUnitStatus.MOVE))
+                            this.status.remove(RoomUnitStatus.MOVE);
+
+                        if (rider.getRoomUnit().getCurrentLocation().x != this.getX() || rider.getRoomUnit().getCurrentLocation().y != this.getY()) {
+                            this.status.put(RoomUnitStatus.MOVE, rider.getRoomUnit().getCurrentLocation().x + "," + rider.getRoomUnit().getCurrentLocation().y + "," + (rider.getRoomUnit().getCurrentLocation().getStackHeight()));
+                            this.setPreviousLocation(rider.getRoomUnit().getPreviousLocation());
+                            this.setPreviousLocationZ(rider.getRoomUnit().getPreviousLocation().getStackHeight());
+                            this.setCurrentLocation(rider.getRoomUnit().getCurrentLocation());
+                            this.setZ(rider.getRoomUnit().getCurrentLocation().getStackHeight());
+                        }
+
+                        return this.statusUpdate;
+                    }
                 }
             }
-
-            if (rider != null) {
-                // copy things from rider
-                if (this.status.containsKey(RoomUnitStatus.MOVE) && !rider.getRoomUnit().getStatusMap().containsKey(RoomUnitStatus.MOVE)) {
-                    this.status.remove(RoomUnitStatus.MOVE);
-                }
-
-                if (rider.getRoomUnit().getCurrentLocation().x != this.getX() || rider.getRoomUnit().getCurrentLocation().y != this.getY()) {
-                    this.status.put(RoomUnitStatus.MOVE, rider.getRoomUnit().getCurrentLocation().x + "," + rider.getRoomUnit().getCurrentLocation().y + "," + (rider.getRoomUnit().getCurrentLocation().getStackHeight()));
-                    this.setPreviousLocation(rider.getRoomUnit().getPreviousLocation());
-                    this.setPreviousLocationZ(rider.getRoomUnit().getPreviousLocation().getStackHeight());
-                    this.setCurrentLocation(rider.getRoomUnit().getCurrentLocation());
-                    this.setZ(rider.getRoomUnit().getCurrentLocation().getStackHeight());
-                }
-
-                return this.statusUpdate;
-            }
-
 
             if (!this.isWalking() && !this.isKicked) {
                 if (this.status.remove(RoomUnitStatus.MOVE) == null) {
@@ -248,7 +245,8 @@ public class RoomUnit {
             //if(!(this.path.size() == 0 && canSitNextTile))
             {
                 double height = next.getStackHeight() - this.currentLocation.getStackHeight();
-                if (!room.tileWalkable(next) || (!RoomLayout.ALLOW_FALLING && height < -RoomLayout.MAXIMUM_STEP_HEIGHT) || (next.state == RoomTileState.OPEN && height > RoomLayout.MAXIMUM_STEP_HEIGHT)) {
+                if (!room.tileWalkable(next) || (!RoomLayout.ALLOW_FALLING && height < -RoomLayout.MAXIMUM_STEP_HEIGHT) ||
+                        (next.state == RoomTileState.OPEN && height > RoomLayout.MAXIMUM_STEP_HEIGHT)) {
                     this.room = room;
                     this.path.clear();
                     this.findPath();
@@ -257,8 +255,7 @@ public class RoomUnit {
                         this.status.remove(RoomUnitStatus.MOVE);
                         return false;
                     }
-                    next = (RoomTile)this.path.pop();
-
+                    next = this.path.pop();
                 }
             }
 
@@ -330,7 +327,7 @@ public class RoomUnit {
                 zHeight += room.getLayout().getHeightAtSquare(next.x, next.y);
             }
 
-            Optional<HabboItem> stackHelper = room.getItemsAt(next).stream().filter(i -> i instanceof InteractionTileWalkMagic).findAny();
+            Optional<HabboItem> stackHelper = this.room.getItemsAt(next).stream().filter(i -> i instanceof InteractionTileWalkMagic).findAny();
             if (stackHelper.isPresent()) {
                 zHeight = stackHelper.get().getZ();
             }
@@ -511,10 +508,10 @@ public class RoomUnit {
 
     public void setGoalLocation(RoomTile goalLocation) {
         if (goalLocation != null) {
-      //      if (goalLocation.state != RoomTileState.INVALID) {
-                this.setGoalLocation(goalLocation, false);
-            }
-    //}
+            //      if (goalLocation.state != RoomTileState.INVALID) {
+            this.setGoalLocation(goalLocation, false);
+        }
+        //}
     }
 
     public void setGoalLocation(RoomTile goalLocation, boolean noReset) {
@@ -817,9 +814,9 @@ public class RoomUnit {
 
         return this.getClosestTile(
                 rotations.stream()
-                    .map(rotation -> room.getLayout().getTileInFront(baseTile, rotation))
-                    .filter(t -> t != null && t.isWalkable() && (this.getCurrentLocation().equals(t) || !room.hasHabbosAt(t.x, t.y)))
-                    .collect(Collectors.toList())
+                        .map(rotation -> room.getLayout().getTileInFront(baseTile, rotation))
+                        .filter(t -> t != null && t.isWalkable() && (this.getCurrentLocation().equals(t) || !room.hasHabbosAt(t.x, t.y)))
+                        .collect(Collectors.toList())
         );
     }
 

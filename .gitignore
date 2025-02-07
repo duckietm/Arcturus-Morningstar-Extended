@@ -13,3 +13,4 @@ config.ini
 *.zip
 .DS_Store
 
+/Emulator/plugins
