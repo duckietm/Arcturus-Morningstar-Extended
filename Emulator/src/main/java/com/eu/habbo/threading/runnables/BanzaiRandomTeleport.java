@@ -4,7 +4,6 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.pets.Pet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +46,7 @@ public class BanzaiRandomTeleport implements Runnable {
         // Determine if the user is riding a pet
         final boolean isRiding = isUserRiding();
         final Habbo rider = isRiding ? room.getHabbo(roomUnit) : null;
-        final RoomUnit petUnit;
-
-        if (rider != null && rider.getHabboInfo().getRiding() != null) {
-            petUnit = rider.getHabboInfo().getRiding().getRoomUnit();
-        } else {
-            petUnit = null;
-        }
+        final RoomUnit petUnit = isRiding && rider != null ? rider.getHabboInfo().getRiding().getRoomUnit() : null;
 
         // Move the pet onto the teleport tile before teleporting
         if (petUnit != null) {
@@ -70,7 +63,7 @@ public class BanzaiRandomTeleport implements Runnable {
             // Get correct Z-height
             final double baseZ = targetTeleporter.getZ();
             final double finalPetZ = baseZ;
-            final double finalRiderZ = baseZ + (isRiding ? 1 : 0); // Rider stays above pet if riding
+            final double finalRiderZ = baseZ + 1; // Rider stays above pet if riding
 
             // Delay to ensure the pet has reached the teleport tile
             Emulator.getThreading().run(() -> {
@@ -86,24 +79,9 @@ public class BanzaiRandomTeleport implements Runnable {
                 petUnit.setHeadRotation(roomUnit.getHeadRotation());
 
                 // Re-enable walking after teleportation
-                Emulator.getThreading().run(() -> {
-                    roomUnit.setCanWalk(true);
-                    petUnit.setCanWalk(true);
-
-                    // Update teleporter states
-                    if ("1".equals(initialTeleporter.getExtradata())) {
-                        initialTeleporter.setExtradata("0");
-                        room.updateItemState(initialTeleporter);
-                    }
-
-                    if ("1".equals(targetTeleporter.getExtradata())) {
-                        targetTeleporter.setExtradata("0");
-                        room.updateItemState(targetTeleporter);
-                    }
-                }, 650); // Delay to ensure smooth transition
+                enableWalkingAndUpdateTeleporters(roomUnit, petUnit, 650);
             }, 1000); // Increased delay to ensure pet reaches the teleport tile
         } else {
-
             // If not riding, proceed with teleportation for the rider only
             roomUnit.setRotation(this.newRotation);
 
@@ -114,20 +92,7 @@ public class BanzaiRandomTeleport implements Runnable {
                 room.teleportRoomUnitToLocation(roomUnit, newLocation.x, newLocation.y, finalRiderZ);
                 roomUnit.setZ(finalRiderZ);
 
-                Emulator.getThreading().run(() -> {
-                    roomUnit.setCanWalk(true);
-
-                    // Update teleporter states
-                    if ("1".equals(initialTeleporter.getExtradata())) {
-                        initialTeleporter.setExtradata("0");
-                        room.updateItemState(initialTeleporter);
-                    }
-
-                    if ("1".equals(targetTeleporter.getExtradata())) {
-                        targetTeleporter.setExtradata("0");
-                        room.updateItemState(targetTeleporter);
-                    }
-                }, 650); // Delay to ensure smooth transition
+                enableWalkingAndUpdateTeleporters(roomUnit, null, 650);
             }, 700); // Standard delay for non-ridden teleportation
         }
     }
@@ -138,5 +103,25 @@ public class BanzaiRandomTeleport implements Runnable {
         }
         Habbo habbo = room.getHabbo(roomUnit);
         return habbo != null && habbo.getHabboInfo().getRiding() != null;
+    }
+
+    private void enableWalkingAndUpdateTeleporters(RoomUnit roomUnit, RoomUnit petUnit, int delay) {
+        Emulator.getThreading().run(() -> {
+            roomUnit.setCanWalk(true);
+            if (petUnit != null) {
+                petUnit.setCanWalk(true);
+            }
+
+            // Update teleporter states
+            if ("1".equals(initialTeleporter.getExtradata())) {
+                initialTeleporter.setExtradata("0");
+                room.updateItemState(initialTeleporter);
+            }
+
+            if ("1".equals(targetTeleporter.getExtradata())) {
+                targetTeleporter.setExtradata("0");
+                room.updateItemState(targetTeleporter);
+            }
+        }, delay);
     }
 }
