@@ -62,7 +62,6 @@ public class BanzaiRandomTeleport implements Runnable {
             petUnit.setGoalLocation(teleporterTile); // Set the goal location
             petUnit.setCurrentLocation(teleporterTile); // Force the pet to the teleport tile
             petUnit.setZ(teleporterTile.getStackHeight()); // Set the correct Z-height
-            LOGGER.info("Pet {} moved onto teleporter tile at ({}, {})", petUnit.getId(), teleporterTile.x, teleporterTile.y);
 
             // Ensure both pet and rider face the same direction
             roomUnit.setRotation(this.newRotation);
@@ -77,11 +76,9 @@ public class BanzaiRandomTeleport implements Runnable {
             Emulator.getThreading().run(() -> {
                 room.teleportRoomUnitToLocation(petUnit, newLocation.x, newLocation.y, finalPetZ);
                 petUnit.setZ(finalPetZ);
-                LOGGER.info("Pet {} teleported to ({}, {}), Z = {}", petUnit.getId(), newLocation.x, newLocation.y, finalPetZ);
 
                 room.teleportRoomUnitToLocation(roomUnit, newLocation.x, newLocation.y, finalRiderZ);
                 roomUnit.setZ(finalRiderZ);
-                LOGGER.info("Rider {} teleported to ({}, {}), Z = {}", roomUnit.getId(), newLocation.x, newLocation.y, finalRiderZ);
 
                 // Synchronize rotations after teleportation
                 petUnit.setRotation(roomUnit.getBodyRotation());
@@ -106,6 +103,7 @@ public class BanzaiRandomTeleport implements Runnable {
                 }, 650); // Delay to ensure smooth transition
             }, 1000); // Increased delay to ensure pet reaches the teleport tile
         } else {
+
             // If not riding, proceed with teleportation for the rider only
             roomUnit.setRotation(this.newRotation);
 
@@ -115,7 +113,6 @@ public class BanzaiRandomTeleport implements Runnable {
             Emulator.getThreading().run(() -> {
                 room.teleportRoomUnitToLocation(roomUnit, newLocation.x, newLocation.y, finalRiderZ);
                 roomUnit.setZ(finalRiderZ);
-                LOGGER.info("Rider {} teleported to ({}, {}), Z = {}", roomUnit.getId(), newLocation.x, newLocation.y, finalRiderZ);
 
                 Emulator.getThreading().run(() -> {
                     roomUnit.setCanWalk(true);
