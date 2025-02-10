@@ -1,1 +1,1 @@
-INSERT INTO emulator_settings (`key`, `value`) VALUES ('pathfinder.diagonale.enabled', '1');
+INSERT INTO emulator_settings (`key`, `value`) VALUES ('pathfinder.diagonal.enabled', '1');
