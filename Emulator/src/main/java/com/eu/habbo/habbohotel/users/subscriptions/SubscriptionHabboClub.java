@@ -270,7 +270,18 @@ public class SubscriptionHabboClub extends Subscription {
                         HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
 
                         if (habboInfo == null) {
-                            SubscriptionManager.LOGGER.error("HabboInfo is null for user #" + userId);
+                            SubscriptionManager.LOGGER.error("HabboInfo is null for user #" + userId + ". Removing subscription.");
+
+                            // Remove subscription from the database
+                            try (PreparedStatement removeStatement = connection.prepareStatement(
+                                    "DELETE FROM users_subscriptions WHERE user_id = ? AND subscription_type = ?")) {
+                                removeStatement.setInt(1, userId);
+                                removeStatement.setString(2, Subscription.HABBO_CLUB);
+                                removeStatement.executeUpdate();
+                            } catch (SQLException e) {
+                                SubscriptionManager.LOGGER.error("SQL exception when trying to remove subscription for user #" + userId, e);
+                            }
+
                             continue;
                         }
 
