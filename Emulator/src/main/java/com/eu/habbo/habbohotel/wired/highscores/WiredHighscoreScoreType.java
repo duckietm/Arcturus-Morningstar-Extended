@@ -3,7 +3,8 @@ package com.eu.habbo.habbohotel.wired.highscores;
 public enum WiredHighscoreScoreType {
     PERTEAM(0),
     MOSTWIN(1),
-    CLASSIC(2);
+    CLASSIC(2),
+    LONGESTTIME(3);
 
     public final int type;
 

@@ -26,14 +26,27 @@ public class SetSpeedCommand extends Command {
                     return true;
                 }
 
-                if (newSpeed < -1 || newSpeed > Emulator.getConfig().getInt("hotel.rollers.speed.maximum")) {
+                // First check against the config bounds
+                int configMax = Emulator.getConfig().getInt("hotel.rollers.speed.maximum");
+                if (newSpeed < -1 || newSpeed > configMax) {
                     gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_setspeed.bounds"), RoomChatMessageBubbles.ALERT);
                     return true;
                 }
 
+                // Enforce maximum speed of 10 regardless of config.
+                if (newSpeed > 10) {
+                    newSpeed = 10;
+                    gameClient.getHabbo().whisper("Speed cannot be set above 10. Setting speed to 10.", RoomChatMessageBubbles.ALERT);
+                }
+
                 room.setRollerSpeed(newSpeed);
 
-                gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_setspeed").replace("%oldspeed%", oldSpeed + "").replace("%newspeed%", newSpeed + ""), RoomChatMessageBubbles.ALERT);
+                gameClient.getHabbo().whisper(
+                        Emulator.getTexts().getValue("commands.succes.cmd_setspeed")
+                                .replace("%oldspeed%", oldSpeed + "")
+                                .replace("%newspeed%", newSpeed + ""),
+                        RoomChatMessageBubbles.ALERT
+                );
                 return true;
             }
         }

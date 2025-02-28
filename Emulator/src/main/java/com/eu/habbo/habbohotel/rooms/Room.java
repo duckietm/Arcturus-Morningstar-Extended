@@ -1237,6 +1237,32 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 final long millis = System.currentTimeMillis();
 
                 for (Habbo habbo : this.currentHabbos.values()) {
+                    RoomUnit unit = habbo.getRoomUnit();
+                    // Only run loop detection if the unit is on a roller.
+                    if (!unit.hasStatus(RoomUnitStatus.MOVE) && isOnRoller(unit)) {
+                        double curX = unit.getX();
+                        double curY = unit.getY();
+                        double curZ = unit.getZ();
+
+                        // Get or create a loop tracker for this unit.
+                        LoopTracker tracker = loopTrackers.computeIfAbsent(unit, u -> new LoopTracker(curX, curY, curZ));
+
+                        if (tracker.isSamePosition(curX, curY, curZ)) {
+                            tracker.counter++;
+                            // Compute threshold based on roller speed (max speed = 10).
+                            int loopThreshold = Math.max(10, 3 + this.getRollerSpeed());
+                            if (tracker.counter >= loopThreshold) {
+                                LOGGER.warn("Loop detected for unit id " + unit.getId() +
+                                        " at position: x=" + curX + ", y=" + curY + ", z=" + curZ);
+                                // Teleport unit back to the door tile.
+                                RoomTile doorTile = this.getLayout().getDoorTile();
+                                this.teleportRoomUnitToLocation(unit, doorTile.x, doorTile.y, doorTile.z);
+                                tracker.counter = 0;
+                            }
+                        } else {
+                            tracker.update(curX, curY, curZ);
+                        }
+                    }
                     if (!foundRightHolder[0]) {
                         foundRightHolder[0] = habbo.getRoomUnit().getRightsLevel() != RoomRightLevels.NONE;
                     }
@@ -1368,6 +1394,26 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     }
                 }
 
+                List<InteractionRoller> rollers = new ArrayList<>(this.roomSpecialTypes.getRollers().values());
+
+                // Sort rollers using a custom comparator that uses a projection of the roller's position
+                rollers.sort((r1, r2) -> {
+                    // Convert the roller's rotation into an angle in radians.
+                    double angle1 = Math.toRadians(r1.getRotation() * 45);
+                    double angle2 = Math.toRadians(r2.getRotation() * 45);
+
+                    // Compute the movement vector for each roller (a unit vector in its direction)
+                    double vx1 = Math.cos(angle1);
+                    double vy1 = Math.sin(angle1);
+                    double vx2 = Math.cos(angle2);
+                    double vy2 = Math.sin(angle2);
+
+                    // Calculate the projection of the roller's position along its movement vector
+                    double proj1 = r1.getX() * vx1 + r1.getY() * vy1;
+                    double proj2 = r2.getX() * vx2 + r2.getY() * vy2;
+
+                    return Double.compare(proj1, proj2);
+                });
                 if (this.rollerSpeed != -1 && this.rollerCycle >= this.rollerSpeed) {
                     this.rollerCycle = 0;
 
@@ -4980,4 +5026,42 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         THashSet<RoomUnit> roomUnits = getRoomUnits();
         return roomUnits.stream().filter(unit -> unit.getCurrentLocation() == tile).collect(Collectors.toSet());
     }
+
+    private static class LoopTracker {
+        double x, y, z;
+        int counter;
+
+        public LoopTracker(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.counter = 0;
+        }
+
+        public boolean isSamePosition(double newX, double newY, double newZ) {
+            // Use an epsilon for double comparison if necessary.
+            final double EPSILON = 0.001;
+            return Math.abs(newX - x) < EPSILON && Math.abs(newY - y) < EPSILON && Math.abs(newZ - z) < EPSILON;
+        }
+
+        public void update(double newX, double newY, double newZ) {
+            this.x = newX;
+            this.y = newY;
+            this.z = newZ;
+            this.counter = 0;
+        }
+    }
+
+    private boolean isOnRoller(RoomUnit unit) {
+        RoomTile currentTile = unit.getCurrentLocation();
+        // Iterate over all rollers in the room.
+        for (HabboItem roller : this.roomSpecialTypes.getRollers().values()) {
+            if (roller.getX() == currentTile.x && roller.getY() == currentTile.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private final Map<RoomUnit, LoopTracker> loopTrackers = new ConcurrentHashMap<>();
 }

@@ -136,6 +136,19 @@ public class WiredHighscoreManager {
                     .collect(Collectors.toList());
         }
 
+        if (scoreType == WiredHighscoreScoreType.LONGESTTIME) {
+            return highscores
+                    .collect(Collectors.groupingBy(h -> h.getUsers().hashCode()))
+                    .entrySet()
+                    .stream()
+                    .map(e -> e.getValue().stream()
+                            .max(Comparator.comparingInt(WiredHighscoreRow::getValue))
+                            .orElse(null))
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.comparingInt(WiredHighscoreRow::getValue).reversed())
+                    .collect(Collectors.toList());
+        }
+
         return null;
     }
 
