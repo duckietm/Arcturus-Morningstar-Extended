@@ -44,8 +44,8 @@ public class WiredHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredHandler.class);
 
     //Configuration. Loaded from database & updated accordingly.
-    public static int MAXIMUM_FURNI_SELECTION = 5;
-    public static int TELEPORT_DELAY = 500;
+    public static int MAXIMUM_FURNI_SELECTION = Emulator.getConfig().getInt("hotel.wired.furni.selection.count", 5);
+    public static int TELEPORT_DELAY = Emulator.getConfig().getInt("wired.effect.teleport.delay", 500);;
 
     private static GsonBuilder gsonBuilder = null;
 
