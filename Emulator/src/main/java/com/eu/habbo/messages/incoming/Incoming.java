@@ -353,6 +353,7 @@ public class Incoming {
 
     public static final int TradeCancelEvent = 2341;
     public static final int ChangeChatBubbleEvent = 1030;
+    public static final int ChangeInfostandBgEvent = 1031;
     public static final int LoveLockStartConfirmEvent = 3775;
 
     public static final int HotelViewRequestLTDAvailabilityEvent = 410;

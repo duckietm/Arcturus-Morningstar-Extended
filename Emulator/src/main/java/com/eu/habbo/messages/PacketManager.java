@@ -320,6 +320,7 @@ public class PacketManager {
         this.registerHandler(Incoming.ChangeNameCheckUsernameEvent, ChangeNameCheckUsernameEvent.class);
         this.registerHandler(Incoming.ConfirmChangeNameEvent, ConfirmChangeNameEvent.class);
         this.registerHandler(Incoming.ChangeChatBubbleEvent, ChangeChatBubbleEvent.class);
+        this.registerHandler(Incoming.ChangeInfostandBgEvent, ChangeInfostandBgEvent.class);
         this.registerHandler(Incoming.UpdateUIFlagsEvent, UpdateUIFlagsEvent.class);
     }
 

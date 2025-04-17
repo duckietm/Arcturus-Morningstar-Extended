@@ -42,6 +42,9 @@ public class HabboInfo implements Runnable {
     private int lastOnline;
     private int homeRoom;
     private boolean online;
+    private int InfostandBg;
+    private int InfostandStand;
+    private int InfostandOverlay;
     private int loadingRoom;
     private Room currentRoom;
     private int roomQueueId;
@@ -72,8 +75,8 @@ public class HabboInfo implements Runnable {
             this.rank = Emulator.getGameEnvironment().getPermissionsManager().getRank(set.getInt("rank"));
 
             if (this.rank == null) {
-                LOGGER.error("No existing rank found with id {}. Make sure an entry in the permissions table exists.", set.getInt("rank"));
-                LOGGER.warn("{} has an invalid rank with id {}. Make sure an entry in the permissions table exists.", this.username, set.getInt("rank"));
+                LOGGER.error("No existing rank found with id " + set.getInt("rank") + ". Make sure an entry in the permissions table exists.");
+                LOGGER.warn(this.username + " has an invalid rank with id " + set.getInt("rank") + ". Make sure an entry in the permissions table exists.");
                 this.rank = Emulator.getGameEnvironment().getPermissionsManager().getRank(1);
             }
 
@@ -83,6 +86,9 @@ public class HabboInfo implements Runnable {
             this.lastOnline = set.getInt("last_online");
             this.machineID = set.getString("machine_id");
             this.online = false;
+            this.InfostandBg = set.getInt("background_id");
+            this.InfostandStand = set.getInt("background_stand_id");
+            this.InfostandOverlay = set.getInt("background_overlay_id");
             this.currentRoom = null;
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
@@ -270,6 +276,29 @@ public class HabboInfo implements Runnable {
         this.motto = motto;
     }
 
+    public int getInfostandBg() {
+        return InfostandBg;
+    }
+
+    public void setInfostandBg(int infostandBg) {
+        InfostandBg = infostandBg;
+    }
+
+    public int getInfostandStand() {
+        return InfostandStand;
+    }
+
+    public void setInfostandStand(int infostandStand) {
+        InfostandStand = infostandStand;
+    }
+
+    public int getInfostandOverlay() {
+        return InfostandOverlay;
+    }
+
+    public void setInfostandOverlay(int infostandOverlay) {
+        InfostandOverlay = infostandOverlay;
+    }
     public Rank getRank() {
         return this.rank;
     }
@@ -537,7 +566,7 @@ public class HabboInfo implements Runnable {
     public void run() {
         this.saveCurrencies();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ? WHERE id = ?")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ?, background_id = ?, background_stand_id = ?, background_overlay_id = ? WHERE id = ?")) {
             statement.setString(1, this.motto);
             statement.setString(2, this.online ? "1" : "0");
             statement.setString(3, this.look);
@@ -550,7 +579,10 @@ public class HabboInfo implements Runnable {
             statement.setInt(10, this.rank != null ? this.rank.getId() : 1);
             statement.setString(11, this.machineID);
             statement.setString(12, this.username);
-            statement.setInt(13, this.id);
+            statement.setInt(13, this.InfostandBg);
+            statement.setInt(14, this.InfostandStand);
+            statement.setInt(15, this.InfostandOverlay);
+            statement.setInt(16, this.id);
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);

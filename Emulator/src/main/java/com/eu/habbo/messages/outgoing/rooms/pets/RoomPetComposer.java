@@ -33,6 +33,9 @@ public class RoomPetComposer extends MessageComposer implements TIntObjectProced
         this.response.appendInt(pet.getId());
         this.response.appendString(pet.getName());
         this.response.appendString("");
+        this.response.appendInt(0);
+        this.response.appendInt(0);
+        this.response.appendInt(0);
         if (pet instanceof IPetLook) {
             this.response.appendString(((IPetLook) pet).getLook());
         } else {
@@ -58,9 +61,5 @@ public class RoomPetComposer extends MessageComposer implements TIntObjectProced
         this.response.appendString("");
 
         return true;
-    }
-
-    public TIntObjectMap<Pet> getPets() {
-        return pets;
     }
 }
