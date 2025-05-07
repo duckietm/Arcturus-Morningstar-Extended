@@ -81,7 +81,7 @@ The robust Plugin System included in the original Arcturus release is also inclu
 	   - ArpyAge
 	   - Mikkel
 	   - Rodolfo
-	   - Rasmus
+	   - Rasmus - for selling me the banners and height code
 	   - Kitt Mustang
 	   - Snaiker
 	   - nttzx
