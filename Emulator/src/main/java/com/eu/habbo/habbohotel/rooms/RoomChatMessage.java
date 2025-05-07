@@ -48,10 +48,22 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         } else {
             this.message = message.packet.readString();
         }
+
+        this.habbo = message.client.getHabbo();
+        this.roomUnitId = this.habbo.getRoomUnit().getId();
+
+        RoomChatMessageBubbles userBubble = this.habbo.getHabboStats().chatColor;
+
+        int bubbleId = message.packet.readInt();
+
         try {
-            this.bubble = RoomChatMessageBubbles.getBubble(message.packet.readInt());
+            this.bubble = RoomChatMessageBubbles.getBubble(bubbleId);
         } catch (Exception e) {
             this.bubble = RoomChatMessageBubbles.NORMAL;
+        }
+
+        if (userBubble != null && this.bubble.isOverridable()) {
+            this.bubble = userBubble;
         }
 
         this.RoomChatColour = message.packet.readString();
@@ -65,13 +77,9 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             }
         }
 
-        this.habbo = message.client.getHabbo();
-        this.roomUnitId = this.habbo.getRoomUnit().getId();
         this.unfilteredMessage = this.message;
         this.timestamp = Emulator.getIntUnixTimestamp();
-
         this.checkEmotion();
-
         this.filter();
     }
 
