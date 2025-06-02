@@ -7,7 +7,7 @@ and is developed for free by talented developers and is compatible with the foll
 | ------------- | ------------- |
 
 ## Download ##
-[Latest compiled version](https://github.com/duckietm/Arcturus-Morningstar-Extended/tree/main/Latest_Compiled_Version)
+[Latest compiled version](https://git.camwijs.eu/duckietm/Arcturus-Morningstar-Extended/src/branch/main/Latest_Compiled_Version)
 
 ## Connection ##
 Use the Websocket plugin!
