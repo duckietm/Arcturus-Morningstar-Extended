@@ -700,7 +700,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                     }
                 }
             }
-			
             this.sendComposer(new UpdateStackHeightComposer(this, updatedTiles).compose());
             this.updateTiles(updatedTiles);
             for (RoomTile tile : updatedTiles) {
@@ -1235,7 +1234,6 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         this.cycleTimestamp = System.currentTimeMillis();
         final boolean[] foundRightHolder = {false};
 
-
         boolean loaded;
         synchronized (this.loadLock) {
             loaded = this.loaded;
@@ -1280,11 +1278,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                 for (Habbo habbo : this.currentHabbos.values()) {
                     RoomUnit unit = habbo.getRoomUnit();
+                    // Only run loop detection if the unit is on a roller.
                     if (!unit.hasStatus(RoomUnitStatus.MOVE) && isOnRoller(unit)) {
+                        // Get the current coordinates of the unit on the roller:
                         double curX = unit.getX();
                         double curY = unit.getY();
                         double curZ = unit.getZ();
 
+                        // Get or create a loop tracker for this unit.
                         LoopTracker tracker = loopTrackers.computeIfAbsent(unit, u -> {
                             RoomTile nextTile = null;
                             for (InteractionRoller roller : this.roomSpecialTypes.getRollers().values()) {
@@ -1292,13 +1293,15 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 RoomTile potentialNextTile = this.getLayout().getTileInFront(rollerTile, roller.getRotation());
                                 if (potentialNextTile != null) {
                                     nextTile = potentialNextTile;
-                                    break;
+                                    break; // use the first valid next tile found
                                 }
                             }
                             return new LoopTracker(curX, curY, curZ, nextTile);
                         });
 
+                        // Check if the unit’s current position is the same as last cycle.
                         if (tracker.isSamePosition(curX, curY, curZ)) {
+                            // Find the roller that is on the current tile.
                             InteractionRoller currentRoller = null;
                             RoomTile currentTile = this.getLayout().getTile((short) curX, (short) curY);
                             for (InteractionRoller roller : this.roomSpecialTypes.getRollers().values()) {
@@ -1308,12 +1311,16 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 }
                             }
 
+                            // Calculate the next tile using the current roller.
                             RoomTile currentCalculatedNextTile = null;
                             if (currentRoller != null) {
                                 RoomTile rollerTile = this.getLayout().getTile((short) currentRoller.getX(), (short) currentRoller.getY());
                                 currentCalculatedNextTile = this.getLayout().getTileInFront(rollerTile, currentRoller.getRotation());
                             }
 
+                            // Here we add a check:
+                            // If the unit's goal is either on the roller itself or is within a small distance (epsilon) of the roller tile,
+                            // then we assume the habbo is "almost there" and do not increment the loop counter.
                             if (currentTile != null && unit.getGoal() != null) {
                                 double distanceToGoal = Math.hypot(unit.getGoal().x - currentTile.x, unit.getGoal().y - currentTile.y);
                                 final double ACCEPTABLE_DISTANCE = 0.5; // adjust as needed
@@ -1324,6 +1331,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 }
                             }
 
+                            // Otherwise, use your normal loop detection logic:
+                            // (for example, checking if the next tile contains a roller, etc.)
                             boolean nextTileHasRoller = false;
                             if (currentCalculatedNextTile != null) {
                                 for (InteractionRoller roller : this.roomSpecialTypes.getRollers().values()) {
@@ -1354,6 +1363,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                                 }
                             }
                         } else {
+                            // Unit has moved; update tracker accordingly.
                             InteractionRoller currentRoller = null;
                             RoomTile currentTile = this.getLayout().getTile((short) curX, (short) curY);
                             for (InteractionRoller roller : this.roomSpecialTypes.getRollers().values()) {
@@ -1371,7 +1381,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                         }
                     }
 
-                    if (!foundRightHolder[0]) {
+                if (!foundRightHolder[0]) {
                         foundRightHolder[0] = habbo.getRoomUnit().getRightsLevel() != RoomRightLevels.NONE;
                     }
 
@@ -1422,6 +1432,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                         this.sendComposer(new RoomUserIgnoredComposer(habbo, RoomUserIgnoredComposer.UNIGNORED).compose());
                     }
 
+                    // Substract 1 from the chatCounter every odd cycle, which is every (500ms * 2).
                     if (this.cycleOdd && habbo.getHabboStats().chatCounter.get() > 0) {
                         habbo.getHabboStats().chatCounter.decrementAndGet();
                     }
@@ -1503,15 +1514,19 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
                 List<InteractionRoller> rollers = new ArrayList<>(this.roomSpecialTypes.getRollers().values());
 
+                // Sort rollers using a custom comparator that uses a projection of the roller's position
                 rollers.sort((r1, r2) -> {
+                    // Convert the roller's rotation into an angle in radians.
                     double angle1 = Math.toRadians(r1.getRotation() * 45);
                     double angle2 = Math.toRadians(r2.getRotation() * 45);
 
+                    // Compute the movement vector for each roller (a unit vector in its direction)
                     double vx1 = Math.cos(angle1);
                     double vy1 = Math.sin(angle1);
                     double vx2 = Math.cos(angle2);
                     double vy2 = Math.sin(angle2);
 
+                    // Calculate the projection of the roller's position along its movement vector
                     double proj1 = r1.getX() * vx1 + r1.getY() * vy1;
                     double proj2 = r2.getX() * vx2 + r2.getY() * vy2;
 
@@ -1545,12 +1560,17 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                             }
                         }
 
+                        // itemsOnRoller.addAll(this.getItemsAt(rollerTile));
                         itemsOnRoller.remove(roller);
 
                         if (!rollerTile.hasUnits() && itemsOnRoller.isEmpty())
                             return true;
 
+                        // RoomTile currentTile = Room.this.layout.getTile(roller.getX(), roller.getY());
                         RoomTile tileInFront = Room.this.layout.getTileInFront(Room.this.layout.getTile(roller.getX(), roller.getY()), roller.getRotation());
+
+                        // LOGGER.debug("Roller at: (" + roller.getX() + ", " + roller.getY() + "), Rotation: " + roller.getRotation());
+                        // LOGGER.debug("Next tile calculated: (" + (tileInFront != null ? tileInFront.x : "NULL") + ", " + (tileInFront != null ? tileInFront.y : "NULL") + ")");
 
                         if (tileInFront == null)
                             return true;
@@ -1808,6 +1828,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             this.scheduledComposers.clear();
         }
     }
+
 
     private boolean cycleRoomUnit(RoomUnit unit, RoomUnitType type) {
         boolean update = unit.needsStatusUpdate();
@@ -3235,7 +3256,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             roomUnit.setZ(z);
             roomUnit.setPreviousLocationZ(z);
             this.updateRoomUnit(roomUnit);
-			
+
+
         }
     }
 
@@ -5053,32 +5075,44 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         return FurnitureMovementError.NONE;
     }
 
-    public FurnitureMovementError slideFurniTo(HabboItem item, RoomTile tile, int rotation) {
-
+    public FurnitureMovementError moveFurniTo(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor, boolean sendUpdates, boolean checkForUnits) {
+        if (tile == null) {
+            return FurnitureMovementError.INVALID_MOVE;
+        }
         RoomTile oldLocation = this.layout.getTile(item.getX(), item.getY());
+        boolean pluginHelper = false;
 
-        HabboItem topItem = this.getTopItemAt(tile.x, tile.y);
 
-        boolean magicTile = item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic;
-
-        Optional<HabboItem> stackHelper = this.getItemsAt(tile).stream().filter(i -> i instanceof InteractionStackHelper).findAny();THashSet<RoomTile> occupiedTiles = this.layout.getTilesAt(tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
-
-        List<Pair<RoomTile, THashSet<HabboItem>>> tileFurniList = new ArrayList<>();
-        for (RoomTile t : occupiedTiles) {
-            tileFurniList.add(Pair.create(t, this.getItemsAt(t)));
+        if (Emulator.getPluginManager().isRegistered(FurnitureMovedEvent.class, true)) {
+            FurnitureMovedEvent event = Emulator.getPluginManager().fireEvent(new FurnitureMovedEvent(item, actor, oldLocation, tile));
+            if(event.isCancelled()) {
+                return FurnitureMovementError.CANCEL_PLUGIN_MOVE;
+            }
+            pluginHelper = event.hasPluginHelper();
         }
 
-        if (!magicTile && !item.canStackAt(this, tileFurniList)) {
-            return FurnitureMovementError.CANT_STACK;
-        }
+        boolean magicTile = item instanceof InteractionStackHelper;
 
+        THashSet<RoomTile> occupiedTiles = this.layout.getTilesAt(tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
         THashSet<RoomTile> oldOccupiedTiles = this.layout.getTilesAt(this.layout.getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
 
-        int oldRotation = item.getRotation();
-        item.setRotation(rotation);
+        if (item.getRotation() != rotation) {
+            item.setRotation(rotation);
+        }
 
-        //Place at new position
+        if(z > MAXIMUM_FURNI_HEIGHT) return FurnitureMovementError.CANT_STACK;
+        if(z < this.getLayout().getHeightAtSquare(tile.x, tile.y)) return FurnitureMovementError.CANT_STACK; //prevent furni going under the floor
 
+        if (Emulator.getPluginManager().isRegistered(FurnitureBuildheightEvent.class, true)) {
+            FurnitureBuildheightEvent event = Emulator.getPluginManager().fireEvent(new FurnitureBuildheightEvent(item, actor, 0.00, z));
+            if (event.hasChangedHeight()) {
+                z = event.getUpdatedHeight();
+            }
+        }
+
+        item.setX(tile.x);
+        item.setY(tile.y);
+        item.setZ(z);
         if (magicTile) {
             item.setZ(tile.z);
             item.setExtradata("" + item.getZ() * 100);
@@ -5086,12 +5120,31 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         if (item.getZ() > MAXIMUM_FURNI_HEIGHT) {
             item.setZ(MAXIMUM_FURNI_HEIGHT);
         }
-        double offset = this.getStackHeight(tile.x, tile.y, false, item) - item.getZ();
-        this.sendComposer(new FloorItemOnRollerComposer(item, null, tile, offset, this).compose());
+
+        //Update Furniture
+        item.onMove(this, oldLocation, tile);
+        item.needsUpdate(true);
+        Emulator.getThreading().run(item);
+
+        if(sendUpdates) {
+            this.sendComposer(new FloorItemUpdateComposer(item).compose());
+        }
+
+        //Update old & new tiles
+        occupiedTiles.removeAll(oldOccupiedTiles);
+        occupiedTiles.addAll(oldOccupiedTiles);
+        this.updateTiles(occupiedTiles);
 
         //Update Habbos at old position
         for (RoomTile t : occupiedTiles) {
-            this.updateHabbosAt(t.x, t.y);
+            this.updateHabbosAt(
+                    t.x,
+                    t.y,
+                    this.getHabbosAt(t.x, t.y)
+                            /*.stream()
+                            .filter(h -> !h.getRoomUnit().hasStatus(RoomUnitStatus.MOVE) || h.getRoomUnit().getGoal() == t)
+                            .collect(Collectors.toCollection(THashSet::new))*/
+            );
             this.updateBotsAt(t.x, t.y);
         }
         return FurnitureMovementError.NONE;
