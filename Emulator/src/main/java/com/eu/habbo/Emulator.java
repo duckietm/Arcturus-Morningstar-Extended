@@ -140,6 +140,7 @@ public final class Emulator {
             Emulator.gameEnvironment.load();
             Emulator.gameServer.initializePipeline();
             Emulator.gameServer.connect();
+            Emulator.getGameServer().getGameClientManager().CFKeepAlive();
             Emulator.rconServer.initializePipeline();
             Emulator.rconServer.connect();
             Emulator.badgeImager = new BadgeImager();

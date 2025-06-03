@@ -1,5 +1,6 @@
 package com.eu.habbo.habbohotel.gameclients;
 
+import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
@@ -161,5 +162,16 @@ public class GameClientManager {
                 }
             }
         }
+    }
+
+    public void CFKeepAlive() {
+        Emulator.getThreading().run(() -> {
+            for (GameClient client : this.clients.values()) {
+                if (client != null && client.getChannel().isActive()) {
+                    client.sendKeepAlive();
+                }
+            }
+            CFKeepAlive();
+        }, 30000);
     }
 }

@@ -107,6 +107,12 @@ public class GameClient {
         }
     }
 
+    public void sendKeepAlive() {
+        if (this.channel != null && this.channel.isOpen()) {
+            this.channel.writeAndFlush(new ServerMessage(-1));
+        }
+    }
+
     public void dispose() {
         try {
             this.channel.close();
