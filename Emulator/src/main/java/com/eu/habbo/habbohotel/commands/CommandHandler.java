@@ -191,6 +191,7 @@ public class CommandHandler {
         addCommand(new ControlCommand());
         addCommand(new CoordsCommand());
         addCommand(new CreditsCommand());
+        addCommand(new DanceCommand());
         addCommand(new DiagonalCommand());
         addCommand(new DisconnectCommand());
         addCommand(new EjectAllCommand());
