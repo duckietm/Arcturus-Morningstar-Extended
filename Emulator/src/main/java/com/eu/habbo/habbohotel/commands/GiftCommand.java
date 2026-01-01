@@ -58,7 +58,7 @@ public class GiftCommand extends Command {
                 }
             }
 
-            final String finalMessage = message.toString();
+            final String finalMessage = message.toString().replace("\t", " ");
 
             HabboItem item = Emulator.getGameEnvironment().getItemManager().createItem(0, baseItem, 0, 0, "");
 

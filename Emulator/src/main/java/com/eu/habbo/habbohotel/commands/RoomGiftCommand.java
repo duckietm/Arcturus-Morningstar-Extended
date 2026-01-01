@@ -46,7 +46,7 @@ public class RoomGiftCommand extends Command {
                 }
             }
 
-            final String finalMessage = message.toString();
+            final String finalMessage = message.toString().replace("\t", " ");
 
             for (Habbo habbo : gameClient.getHabbo().getHabboInfo().getCurrentRoom().getHabbos()) {
                 HabboItem item = Emulator.getGameEnvironment().getItemManager().createItem(0, baseItem, 0, 0, "");

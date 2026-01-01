@@ -51,7 +51,7 @@ public class MassGiftCommand extends Command {
                 }
             }
 
-            final String finalMessage = message.toString();
+            final String finalMessage = message.toString().replace("\t", " ");
 
             THashMap<String, String> keys = new THashMap<>();
             keys.put("display", "BUBBLE");
