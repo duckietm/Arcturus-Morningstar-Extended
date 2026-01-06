@@ -22,12 +22,12 @@ public class GuardianTicket {
     private final Habbo reporter;
     private final Habbo reported;
     private final Date date;
-    private final ArrayList<ModToolChatLog> chatLogs;
+    private ArrayList<ModToolChatLog> chatLogs;
     private GuardianVoteType verdict;
     private int timeLeft = 120;
     private int resendCount = 0;
-    private final int checkSum = 0;
-    private final int guardianCount = 0; //TODO: Figure out what this was supposed to do.
+    private int checkSum = 0;
+    private int guardianCount = 0;
 
     public GuardianTicket(Habbo reporter, Habbo reported, ArrayList<ModToolChatLog> chatLogs) {
         this.chatLogs = chatLogs;
@@ -44,6 +44,7 @@ public class GuardianTicket {
         guardian.getClient().sendResponse(new GuardianNewReportReceivedComposer());
 
         this.votes.put(guardian, new GuardianVote(this.guardianCount, guardian));
+        this.guardianCount++;
 
         Emulator.getThreading().run(new GuardianNotAccepted(this, guardian), Emulator.getConfig().getInt("guardians.accept.timer") * 1000L);
     }

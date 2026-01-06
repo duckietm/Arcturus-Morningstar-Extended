@@ -10,7 +10,7 @@ public class SitCommand extends Command {
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
-        if (gameClient.getHabbo().getHabboInfo().getRiding() == null) //TODO Make this an event plugin which fires that can be cancelled
+        if (gameClient.getHabbo().getHabboInfo().getRiding() == null)
             gameClient.getHabbo().getHabboInfo().getCurrentRoom().makeSit(gameClient.getHabbo());
         return true;
     }

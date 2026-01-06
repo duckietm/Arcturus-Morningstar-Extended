@@ -101,7 +101,6 @@ public class PetManager {
     }
 
     public static int maxEnergy(int level) {
-        //TODO: Add energy calculation.
         return 100 * level;
     }
 

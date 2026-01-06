@@ -235,19 +235,34 @@ public class PetData implements Comparable<PetData> {
 
 
     public PetVocal randomVocal(PetVocalsType type) {
-        //TODO: Remove this useless copying.
-        List<PetVocal> vocals = new ArrayList<>();
+        THashSet<PetVocal> petTypeVocals = this.petVocals.get(type);
+        THashSet<PetVocal> generalVocals = PetData.generalPetVocals.get(type);
 
-        if (this.petVocals.get(type) != null)
-            vocals.addAll(this.petVocals.get(type));
+        int petTypeSize = petTypeVocals != null ? petTypeVocals.size() : 0;
+        int generalSize = generalVocals != null ? generalVocals.size() : 0;
+        int totalSize = petTypeSize + generalSize;
 
-        if (PetData.generalPetVocals.get(type) != null)
-            vocals.addAll(PetData.generalPetVocals.get(type));
-
-        if (vocals.isEmpty())
+        if (totalSize == 0)
             return null;
 
-        return vocals.get(Emulator.getRandom().nextInt(vocals.size()));
+        int randomIndex = Emulator.getRandom().nextInt(totalSize);
+
+        if (randomIndex < petTypeSize) {
+            int i = 0;
+            for (PetVocal vocal : petTypeVocals) {
+                if (i == randomIndex) return vocal;
+                i++;
+            }
+        } else {
+            int i = 0;
+            int targetIndex = randomIndex - petTypeSize;
+            for (PetVocal vocal : generalVocals) {
+                if (i == targetIndex) return vocal;
+                i++;
+            }
+        }
+
+        return null;
     }
 
     @Override

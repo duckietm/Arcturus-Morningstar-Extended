@@ -111,7 +111,7 @@ public class Incoming {
     public static final int RequestFriendRequestEvent = 2448;
     public static final int RoomSettingsSaveEvent = 1969;
     public static final int AcceptFriendRequest = 137;
-    public static final int DeclineFriendRequest = 2890; //835; //TODO
+    public static final int DeclineFriendRequest = 2890;
     public static final int ReleaseVersionEvent = 4000;//4000 
     public static final int InitDiffieHandshake = 3110;
     public static final int CompleteDiffieHandshake = 773;

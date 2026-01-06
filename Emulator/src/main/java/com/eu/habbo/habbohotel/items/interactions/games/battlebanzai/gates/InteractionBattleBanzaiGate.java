@@ -44,7 +44,6 @@ public class InteractionBattleBanzaiGate extends InteractionGameGate {
         return game == null || game.getState() == GameState.IDLE;
     }
 
-    //TODO: Move to upper class
     @Override
     public void onWalkOn(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
         BattleBanzaiGame game = (BattleBanzaiGame) room.getGame(BattleBanzaiGame.class);

@@ -63,14 +63,10 @@ public class FloorItemOnRollerComposer extends MessageComposer {
             this.item.setZ(this.item.getZ() + this.heightOffset);
             this.item.needsUpdate(true);
 
-            //TODO This is bad
-            //
+            // Update affected tiles for both old and new positions
             THashSet<RoomTile> tiles = this.room.getLayout().getTilesAt(this.room.getLayout().getTile(oldX, oldY), this.item.getBaseItem().getWidth(), this.item.getBaseItem().getLength(), this.item.getRotation());
             tiles.addAll(this.room.getLayout().getTilesAt(this.room.getLayout().getTile(this.item.getX(), this.item.getY()), this.item.getBaseItem().getWidth(), this.item.getBaseItem().getLength(), this.item.getRotation()));
             this.room.updateTiles(tiles);
-            //this.room.sendComposer(new UpdateStackHeightComposer(oldX, oldY, this.room.getStackHeight(oldX, oldY, true)).compose());
-            //
-            //this.room.updateHabbosAt(RoomLayout.getRectangle(this.item.getX(), this.item.getY(), this.item.getBaseItem().getWidth(), this.item.getBaseItem().getLength(), this.item.getRotation()));
         }
 
         return this.response;
