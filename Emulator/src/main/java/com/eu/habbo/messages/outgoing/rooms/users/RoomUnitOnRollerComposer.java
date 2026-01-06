@@ -23,7 +23,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
     private final Room room;
     private int x;
     private int y;
-    private final HabboItem oldTopItem;
+    private HabboItem oldTopItem;
 
     public RoomUnitOnRollerComposer(RoomUnit roomUnit, HabboItem roller, RoomTile oldLocation, double oldZ, RoomTile newLocation, double newZ, Room room) {
         this.roomUnit = roomUnit;
@@ -65,8 +65,17 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
         this.response.appendString(this.newZ + "");
 
         if (this.roller != null && room.getLayout() != null) {
+            // Update location immediately to prevent desync issues where the unit gets
+            // "stuck" rolling because subsequent roller cycles see the unit at the old position
+            if (!this.roomUnit.isWalking() && this.roomUnit.getCurrentLocation() == this.oldLocation) {
+                this.roomUnit.setLocation(this.newLocation);
+                this.roomUnit.setZ(this.newZ);
+                this.roomUnit.setPreviousLocationZ(this.newZ);
+            }
+
+            // Delay the walk on/off events to allow the visual animation to complete
             Emulator.getThreading().run(() -> {
-                if(!this.roomUnit.isWalking() && this.roomUnit.getCurrentLocation() == this.oldLocation) {
+                if (!this.roomUnit.isWalking()) {
                     HabboItem topItem = this.room.getTopItemAt(this.oldLocation.x, this.oldLocation.y);
                     HabboItem topItemNewLocation = this.room.getTopItemAt(this.newLocation.x, this.newLocation.y);
 
@@ -77,10 +86,6 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                             LOGGER.error("Caught exception", e);
                         }
                     }
-
-                    this.roomUnit.setLocation(this.newLocation);
-                    this.roomUnit.setZ(this.newLocation.getStackHeight());
-                    this.roomUnit.setPreviousLocationZ(this.newLocation.getStackHeight());
 
                     if (topItemNewLocation != null && topItemNewLocation != roller && oldTopItem != topItemNewLocation) {
                         try {
