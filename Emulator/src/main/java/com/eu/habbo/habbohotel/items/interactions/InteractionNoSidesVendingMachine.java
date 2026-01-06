@@ -3,7 +3,6 @@ package com.eu.habbo.habbohotel.items.interactions;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
-import com.eu.habbo.habbohotel.users.Habbo;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;

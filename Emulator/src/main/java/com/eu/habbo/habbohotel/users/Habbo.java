@@ -14,7 +14,6 @@ import com.eu.habbo.messages.outgoing.rooms.FloodCounterComposer;
 import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.messages.outgoing.users.*;
-import com.eu.habbo.plugin.events.furniture.FurnitureBuildheightEvent;
 import com.eu.habbo.plugin.events.users.UserCreditsEvent;
 import com.eu.habbo.plugin.events.users.UserDisconnectEvent;
 import com.eu.habbo.plugin.events.users.UserGetIPAddressEvent;

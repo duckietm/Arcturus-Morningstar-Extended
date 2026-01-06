@@ -2,8 +2,6 @@ package com.eu.habbo.messages.rcon;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.habbohotel.users.HabboInfo;
-import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.google.gson.Gson;
 import org.slf4j.Logger;

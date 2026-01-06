@@ -17,7 +17,7 @@ public class RoomUserDataComposer extends MessageComposer {
         this.response.init(Outgoing.RoomUserDataComposer);
         this.response.appendInt(this.habbo.getRoomUnit() == null ? -1 : this.habbo.getRoomUnit().getId());
         this.response.appendString(this.habbo.getHabboInfo().getLook());
-        this.response.appendString(this.habbo.getHabboInfo().getGender().name() + "");
+        this.response.appendString(this.habbo.getHabboInfo().getGender().name());
         this.response.appendString(this.habbo.getHabboInfo().getMotto());
         this.response.appendInt(this.habbo.getHabboStats().getAchievementScore());
         this.response.appendInt(this.habbo.getHabboInfo().getInfostandBg());

@@ -4,14 +4,9 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.*;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.threading.runnables.RoomUnitGiveHanditem;
 import com.eu.habbo.threading.runnables.RoomUnitWalkToLocation;
 import com.eu.habbo.util.pathfinding.Rotation;
@@ -21,8 +16,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledFuture;
 
 public class InteractionVendingMachine extends HabboItem {
     public InteractionVendingMachine(ResultSet set, Item baseItem) throws SQLException {
@@ -34,7 +27,7 @@ public class InteractionVendingMachine extends HabboItem {
         super(id, userId, item, extradata, limitedStack, limitedSells);
         this.setExtradata("0");
     }
-    
+
     public THashSet<RoomTile> getActivatorTiles(Room room) {
         THashSet<RoomTile> tiles = new THashSet<>();
         RoomTile tileInFront = getSquareInFront(room.getLayout(), this);
@@ -63,7 +56,7 @@ public class InteractionVendingMachine extends HabboItem {
         boolean inActivatorSpace = false;
 
         for(RoomTile tile : activatorTiles) {
-            if(unit.getCurrentLocation().is(unit.getX(), unit.getY())) {
+            if(unit.getCurrentLocation().is(tile.x, tile.y)) {
                 inActivatorSpace = true;
             }
         }

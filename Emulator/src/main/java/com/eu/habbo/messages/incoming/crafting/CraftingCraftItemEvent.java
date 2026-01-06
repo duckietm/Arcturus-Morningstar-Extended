@@ -14,7 +14,6 @@ import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.inventory.RemoveHabboItemComposer;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItems;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.procedure.TObjectProcedure;
 
 import java.util.Map;
 

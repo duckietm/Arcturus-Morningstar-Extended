@@ -10,11 +10,8 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.incoming.rooms.users.RoomUserWalkEvent;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemIntStateComposer;
 import com.eu.habbo.threading.runnables.RoomUnitWalkToLocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InteractionOneWayGate extends HabboItem {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InteractionOneWayGate.class);
 
     private boolean walkable = false;
 

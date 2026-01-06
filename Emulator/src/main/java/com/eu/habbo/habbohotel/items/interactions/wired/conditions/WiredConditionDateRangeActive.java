@@ -9,7 +9,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

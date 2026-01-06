@@ -13,21 +13,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public class UsernameEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
-        boolean calendar = false;
         if (!this.client.getHabbo().getHabboStats().getAchievementProgress().containsKey(Emulator.getGameEnvironment().getAchievementManager().getAchievement("Login"))) {
             AchievementManager.progressAchievement(this.client.getHabbo(), Emulator.getGameEnvironment().getAchievementManager().getAchievement("Login"));
-            calendar = true;
         } else {
 
             long daysBetween = DAYS.between(new Date((long) this.client.getHabbo().getHabboInfo().getLastOnline() * 1000L).toInstant(), new Date().toInstant());
@@ -45,9 +40,8 @@ public class UsernameEvent extends MessageHandler {
                     AchievementManager.progressAchievement(this.client.getHabbo(), Emulator.getGameEnvironment().getAchievementManager().getAchievement("Login"));
                 }
                 this.client.getHabbo().getHabboStats().loginStreak++;
-                calendar = true;
             } else if (daysBetween >= 1) {
-                calendar = true;
+                // Calendar would be shown
             } else {
                 if (((lastLogin.getTime() / 1000) - Emulator.getIntUnixTimestamp()) > 86400) {
                     this.client.getHabbo().getHabboStats().loginStreak = 0;
@@ -91,11 +85,11 @@ public class UsernameEvent extends MessageHandler {
         if (Emulator.getConfig().getBoolean("hotel.calendar.enabled")) {
             CalendarCampaign campaign = Emulator.getGameEnvironment().getCalendarManager().getCalendarCampaign(Emulator.getConfig().getValue("hotel.calendar.default"));
             if(campaign != null){
-                    long daysBetween = DAYS.between(new Timestamp(campaign.getStartTimestamp() * 1000L).toInstant(), new Date().toInstant());
-                    if(daysBetween >= 0) {
-                        this.client.sendResponse(new AdventCalendarDataComposer(campaign.getName(), campaign.getImage(), campaign.getTotalDays(), (int) daysBetween, this.client.getHabbo().getHabboStats().calendarRewardsClaimed, campaign.getLockExpired()));
-                        this.client.sendResponse(new NuxAlertComposer("openView/calendar"));
-                    }
+                long daysBetween = DAYS.between(new Timestamp(campaign.getStartTimestamp() * 1000L).toInstant(), new Date().toInstant());
+                if(daysBetween >= 0) {
+                    this.client.sendResponse(new AdventCalendarDataComposer(campaign.getName(), campaign.getImage(), campaign.getTotalDays(), (int) daysBetween, this.client.getHabbo().getHabboStats().calendarRewardsClaimed, campaign.getLockExpired()));
+                    this.client.sendResponse(new NuxAlertComposer("openView/calendar"));
+                }
             };
         }
 

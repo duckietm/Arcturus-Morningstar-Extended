@@ -1,7 +1,6 @@
 package com.eu.habbo.habbohotel.items.interactions.games.tag.bunnyrun;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.achievements.Achievement;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.games.tag.BunnyrunGame;
 import com.eu.habbo.habbohotel.items.Item;

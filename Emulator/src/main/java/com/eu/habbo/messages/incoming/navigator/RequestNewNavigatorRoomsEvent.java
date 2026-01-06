@@ -134,6 +134,7 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
         return nList;
     }
 
+    @SuppressWarnings("unused")
     private void filter(List<SearchResultList> resultLists, NavigatorFilter filter, String part) {
         List<SearchResultList> toRemove = new ArrayList<>();
         Map<Integer, HashMap<Integer, Room>> filteredRooms = new HashMap<>();

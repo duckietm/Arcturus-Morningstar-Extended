@@ -9,7 +9,6 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.inventory.InventoryPetsComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.procedure.TObjectProcedure;
 
 public class EmptyPetsInventoryCommand extends Command {
     public EmptyPetsInventoryCommand() {

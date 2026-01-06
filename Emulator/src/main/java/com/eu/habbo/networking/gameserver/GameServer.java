@@ -11,7 +11,6 @@ import com.eu.habbo.networking.gameserver.handlers.IdleTimeoutHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 
 public class GameServer extends Server {
     private final PacketManager packetManager;

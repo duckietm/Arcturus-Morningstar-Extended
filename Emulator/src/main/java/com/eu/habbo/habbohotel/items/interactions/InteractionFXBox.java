@@ -6,7 +6,6 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.users.inventory.EffectsComponent;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 
@@ -16,12 +15,12 @@ import java.sql.SQLException;
 public class InteractionFXBox extends InteractionDefault {
     public InteractionFXBox(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
-     //   this.setExtradata("0");
+        //   this.setExtradata("0");
     }
 
     public InteractionFXBox(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
-       // this.setExtradata("0");
+        // this.setExtradata("0");
     }
 
     @Override
@@ -50,7 +49,7 @@ public class InteractionFXBox extends InteractionDefault {
             if(client.getHabbo().getInventory().getEffectsComponent().ownsEffect(effectId))
                 return;
 
-            EffectsComponent.HabboEffect effect = client.getHabbo().getInventory().getEffectsComponent().createEffect(effectId, 0);
+            client.getHabbo().getInventory().getEffectsComponent().createEffect(effectId, 0);
             client.getHabbo().getInventory().getEffectsComponent().enableEffect(effectId);
 
             this.setExtradata("1");

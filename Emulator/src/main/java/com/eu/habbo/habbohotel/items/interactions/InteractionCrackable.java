@@ -12,8 +12,6 @@ import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.outgoing.users.UserClubComposer;
-import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
 import com.eu.habbo.threading.runnables.CrackableExplode;
 import com.eu.habbo.util.pathfinding.Rotation;
 

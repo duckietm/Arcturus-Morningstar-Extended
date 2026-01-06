@@ -3,9 +3,9 @@ package com.eu.habbo.habbohotel.navigation;
 import com.eu.habbo.messages.ServerMessage;
 
 public class EventCategory {
-    private int id;
-    private String caption;
-    private boolean visible;
+    private final int id;
+    private final String caption;
+    private final boolean visible;
 
     public EventCategory(int id, String caption, boolean visible) {
         this.id = id;

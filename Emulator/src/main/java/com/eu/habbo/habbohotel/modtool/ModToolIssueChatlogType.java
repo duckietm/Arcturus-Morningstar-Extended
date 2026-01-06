@@ -9,7 +9,7 @@ public enum ModToolIssueChatlogType {
     SELFIE(5),
     PHOTO(6);
 
-    private int type;
+    private final int type;
 
     ModToolIssueChatlogType(int type) {
         this.type = type;

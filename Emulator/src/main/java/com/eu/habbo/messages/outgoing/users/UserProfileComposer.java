@@ -26,7 +26,7 @@ public class UserProfileComposer extends MessageComposer {
 
     private final HabboInfo habboInfo;
     private Habbo habbo;
-    private GameClient viewer;
+    private final GameClient viewer;
 
     public UserProfileComposer(HabboInfo habboInfo, GameClient viewer) {
         this.habboInfo = habboInfo;

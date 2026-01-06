@@ -1,6 +1,5 @@
 package com.eu.habbo.habbohotel.items.interactions;
 
-import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -18,7 +17,7 @@ public class InteractionVoteCounter extends HabboItem {
 
     private boolean frozen;
     private int votes;
-    private List<Integer> votedUsers;
+    private final List<Integer> votedUsers;
 
     public InteractionVoteCounter(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

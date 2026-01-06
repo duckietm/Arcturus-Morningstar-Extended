@@ -11,7 +11,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 

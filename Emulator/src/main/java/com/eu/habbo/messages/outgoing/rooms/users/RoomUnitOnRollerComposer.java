@@ -5,12 +5,10 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionRoller;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +23,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
     private final Room room;
     private int x;
     private int y;
-    private HabboItem oldTopItem;
+    private final HabboItem oldTopItem;
 
     public RoomUnitOnRollerComposer(RoomUnit roomUnit, HabboItem roller, RoomTile oldLocation, double oldZ, RoomTile newLocation, double newZ, Room room) {
         this.roomUnit = roomUnit;

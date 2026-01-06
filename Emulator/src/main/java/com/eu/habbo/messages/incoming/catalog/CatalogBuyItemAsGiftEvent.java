@@ -22,7 +22,6 @@ import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.HotelWillCloseInMinutesComposer;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
-import com.eu.habbo.messages.outgoing.users.UserPointsComposer;
 import com.eu.habbo.threading.runnables.ShutdownEmulator;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -67,7 +66,6 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
                 int ribbonId = this.packet.readInt();
                 boolean showName = this.packet.readBoolean();
 
-                int count = 1;
                 int userId = 0;
 
                 if (!Emulator.getGameEnvironment().getCatalogManager().giftWrappers.containsKey(spriteId) && !Emulator.getGameEnvironment().getCatalogManager().giftFurnis.containsKey(spriteId)) {
@@ -180,7 +178,6 @@ public class CatalogBuyItemAsGiftEvent extends MessageHandler {
                     int limitedStack = 0;
                     int limitedNumber = 0;
                     if (item.isLimited()) {
-                        count = 1;
                         if (Emulator.getGameEnvironment().getCatalogManager().getLimitedConfig(item).available() == 0 && habbo != null) {
                             habbo.getClient().sendResponse(new AlertLimitedSoldOutComposer());
                             return;

@@ -28,13 +28,11 @@ public class GuildAcceptMembershipEvent extends MessageHandler {
                 if (habbo != null) {
                     if (habbo.getHabboStats().hasGuild(guild.getId())) {
                         this.client.sendResponse(new GuildAcceptMemberErrorComposer(guild.getId(), GuildAcceptMemberErrorComposer.ALREADY_ACCEPTED));
-                        return;
                     } else {
                         //Check the user has requested
                         GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild, habbo);
                         if (member == null || member.getRank().type != GuildRank.REQUESTED.type) {
                             this.client.sendResponse(new GuildAcceptMemberErrorComposer(guild.getId(), GuildAcceptMemberErrorComposer.NO_LONGER_MEMBER));
-                            return;
                         } else {
                             GuildAcceptedMembershipEvent event = new GuildAcceptedMembershipEvent(guild, userId, habbo);
                             Emulator.getPluginManager().fireEvent(event);

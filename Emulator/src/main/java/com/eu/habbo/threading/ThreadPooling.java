@@ -24,7 +24,7 @@ public class ThreadPooling {
         LOGGER.info("Thread Pool -> Loaded!");
     }
 
-    public ScheduledFuture run(Runnable run) {
+    public ScheduledFuture<?> run(Runnable run) {
         try {
             if (this.canAdd) {
                 return this.run(run, 0);
@@ -40,7 +40,7 @@ public class ThreadPooling {
         return null;
     }
 
-    public ScheduledFuture run(Runnable run, long delay) {
+    public ScheduledFuture<?> run(Runnable run, long delay) {
         try {
             if (this.canAdd) {
                 return this.scheduledPool.schedule(() -> {

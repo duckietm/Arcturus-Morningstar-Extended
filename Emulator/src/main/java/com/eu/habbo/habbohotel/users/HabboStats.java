@@ -1,12 +1,12 @@
 package com.eu.habbo.habbohotel.users;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardClaimed;
-import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.achievements.Achievement;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.achievements.TalentTrackType;
+import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardClaimed;
 import com.eu.habbo.habbohotel.catalog.CatalogItem;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.rooms.RoomTrade;
@@ -25,7 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HabboStats implements Runnable {
@@ -43,7 +46,7 @@ public class HabboStats implements Runnable {
     private final THashMap<Integer, CatalogItem> recentPurchases;
     private final TIntArrayList favoriteRooms;
     private final TIntArrayList ignoredUsers;
-    private TIntArrayList roomsVists;
+    private final TIntArrayList roomsVists;
     public int achievementScore;
     public int respectPointsReceived;
     public int respectPointsGiven;
@@ -93,7 +96,7 @@ public class HabboStats implements Runnable {
     public boolean hasGottenDefaultSavedSearches;
     private HabboInfo habboInfo;
     private boolean allowTrade;
-    private int clubExpireTimestamp;
+    private final int clubExpireTimestamp;
     private int muteEndTime;
     public int maxFriends;
     public int maxRooms;
@@ -283,11 +286,8 @@ public class HabboStats implements Runnable {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT guild_id FROM guilds_members WHERE user_id = ? AND level_id < 3 LIMIT 100")) {
                     statement.setInt(1, habboInfo.getId());
                     try (ResultSet set = statement.executeQuery()) {
-
-                        int i = 0;
                         while (set.next()) {
                             stats.guilds.add(set.getInt("guild_id"));
-                            i++;
                         }
                     }
                 }

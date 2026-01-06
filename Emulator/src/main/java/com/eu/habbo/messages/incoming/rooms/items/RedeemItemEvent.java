@@ -7,8 +7,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.UpdateStackHeightComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
-import com.eu.habbo.messages.outgoing.users.UserCreditsComposer;
-import com.eu.habbo.messages.outgoing.users.UserCurrencyComposer;
 import com.eu.habbo.plugin.events.furniture.FurnitureRedeemedEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 import org.slf4j.Logger;

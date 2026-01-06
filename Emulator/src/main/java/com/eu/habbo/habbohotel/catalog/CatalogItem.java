@@ -3,7 +3,6 @@ package com.eu.habbo.habbohotel.catalog;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;

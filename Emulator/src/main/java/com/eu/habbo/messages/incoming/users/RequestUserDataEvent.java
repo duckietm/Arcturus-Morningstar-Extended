@@ -1,10 +1,8 @@
 package com.eu.habbo.messages.incoming.users;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.rooms.RoomManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
 import com.eu.habbo.messages.outgoing.users.MeMenuSettingsComposer;
 import com.eu.habbo.messages.outgoing.users.UserDataComposer;
 import com.eu.habbo.messages.outgoing.users.UserPerksComposer;

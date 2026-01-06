@@ -13,7 +13,7 @@ import java.sql.SQLException;
 public class QueryDeleteHabboItems implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryDeleteHabboItems.class);
 
-    private TIntObjectMap<HabboItem> items;
+    private final TIntObjectMap<HabboItem> items;
 
     public QueryDeleteHabboItems(TIntObjectMap<HabboItem> items) {
         this.items = items;

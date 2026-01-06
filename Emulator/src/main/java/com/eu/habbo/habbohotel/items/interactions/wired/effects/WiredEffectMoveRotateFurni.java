@@ -10,13 +10,10 @@ import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,13 +23,11 @@ import java.util.stream.Collectors;
 
 public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implements ICycleable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectMoveRotateFurni.class);
-
     public static final WiredEffectType type = WiredEffectType.MOVE_ROTATE;
     private final THashSet<HabboItem> items = new THashSet<>(WiredHandler.MAXIMUM_FURNI_SELECTION / 2);
     private int direction;
     private int rotation;
-    private THashSet<HabboItem> itemCooldowns;
+    private final THashSet<HabboItem> itemCooldowns;
 
     public WiredEffectMoveRotateFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

@@ -10,7 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.*;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
@@ -30,7 +33,7 @@ public class WiredHighscoreManager {
     private final static DayOfWeek lastDayOfWeek = DayOfWeek.of(((firstDayOfWeek.getValue() + 5) % DayOfWeek.values().length) + 1);
     private final static ZoneId zoneId = ZoneId.systemDefault();
 
-    public static ScheduledFuture midnightUpdater = null;
+    public static ScheduledFuture<?> midnightUpdater = null;
 
     public void load() {
         long millis = System.currentTimeMillis();

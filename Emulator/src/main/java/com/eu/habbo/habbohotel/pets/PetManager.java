@@ -501,6 +501,7 @@ public class PetManager {
         return color;
     }
 
+    @SuppressWarnings("unused")
     private int randomLeprechaunColor() {
         return Emulator.getRandom().nextInt(2) == 1 ? 19 : 27;
     }

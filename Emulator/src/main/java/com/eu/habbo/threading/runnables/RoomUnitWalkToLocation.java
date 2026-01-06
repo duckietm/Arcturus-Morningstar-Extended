@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoomUnitWalkToLocation implements Runnable {
-    private RoomUnit walker;
-    private RoomTile goalTile;
-    private Room room;
-    private List<Runnable> targetReached;
-    private List<Runnable> failedReached;
+    private final RoomUnit walker;
+    private final RoomTile goalTile;
+    private final Room room;
+    private final List<Runnable> targetReached;
+    private final List<Runnable> failedReached;
 
     public RoomUnitWalkToLocation(RoomUnit walker, RoomTile goalTile, Room room, Runnable targetReached, Runnable failedReached) {
         this.walker = walker;

@@ -36,6 +36,7 @@ public class WordFilter {
         LOGGER.info("WordFilter -> Loaded! ({} MS)", System.currentTimeMillis() - start);
     }
 
+    @SuppressWarnings("unused")
     private static String stripDiacritics(String str) {
         str = Normalizer.normalize(str, Normalizer.Form.NFD);
         str = DIACRITICS_AND_FRIENDS.matcher(str).replaceAll("");
@@ -90,7 +91,7 @@ public class WordFilter {
     public boolean autoReportCheck(RoomChatMessage roomChatMessage) {
         String message = this.normalise(roomChatMessage.getMessage()).toLowerCase();
 
-        TObjectHashIterator iterator = this.autoReportWords.iterator();
+        TObjectHashIterator<WordFilterWord> iterator = this.autoReportWords.iterator();
 
         while (iterator.hasNext()) {
             WordFilterWord word = (WordFilterWord) iterator.next();
@@ -111,7 +112,7 @@ public class WordFilter {
     public boolean hideMessageCheck(String message) {
         message = this.normalise(message).toLowerCase();
 
-        TObjectHashIterator iterator = this.hideMessageWords.iterator();
+        TObjectHashIterator<WordFilterWord> iterator = this.hideMessageWords.iterator();
 
         while (iterator.hasNext()) {
             WordFilterWord word = (WordFilterWord) iterator.next();
@@ -138,7 +139,7 @@ public class WordFilter {
             filteredMessage = this.normalise(filteredMessage);
         }
 
-        TObjectHashIterator iterator = this.words.iterator();
+        TObjectHashIterator<WordFilterWord> iterator = this.words.iterator();
 
         boolean foundShit = false;
 
@@ -173,7 +174,7 @@ public class WordFilter {
             message = this.normalise(message);
         }
 
-        TObjectHashIterator iterator = this.words.iterator();
+        TObjectHashIterator<WordFilterWord> iterator = this.words.iterator();
 
         while (iterator.hasNext()) {
             WordFilterWord word = (WordFilterWord) iterator.next();

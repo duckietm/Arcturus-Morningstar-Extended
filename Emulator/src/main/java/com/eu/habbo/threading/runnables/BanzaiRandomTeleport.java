@@ -14,7 +14,7 @@ public class BanzaiRandomTeleport implements Runnable {
     private final HabboItem targetTeleporter;
     private final RoomUnit roomUnit;
     private final Room room;
-    private RoomUserRotation newRotation;
+    private final RoomUserRotation newRotation;
 
     public BanzaiRandomTeleport(HabboItem initialTeleporter, HabboItem targetTeleporter, RoomUnit roomUnit, Room room) {
         this(initialTeleporter, targetTeleporter, roomUnit, room, getRandomRotation());

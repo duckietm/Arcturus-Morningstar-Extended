@@ -9,16 +9,8 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.AlertPurchaseFailedComposer;
 import com.eu.habbo.messages.outgoing.catalog.PurchaseOKComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
-import com.eu.habbo.messages.outgoing.unknown.ExtendClubMessageComposer;
-import com.eu.habbo.messages.outgoing.users.UserClubComposer;
-import com.eu.habbo.messages.outgoing.users.UserCreditsComposer;
-import com.eu.habbo.messages.outgoing.users.UserCurrencyComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CatalogBuyClubDiscountEvent extends MessageHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogBuyClubDiscountEvent.class);
 
     @Override
     public void handle() throws Exception {

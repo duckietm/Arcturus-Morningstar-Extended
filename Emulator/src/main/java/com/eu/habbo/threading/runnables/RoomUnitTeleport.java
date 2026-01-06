@@ -5,8 +5,6 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +13,11 @@ import java.util.LinkedList;
 public class RoomUnitTeleport implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnitTeleport.class);
 
-    private RoomUnit roomUnit;
-    private Room room;
-    private int x;
-    private int y;
-    private double z;
-
-    private int newEffect;
+    private final RoomUnit roomUnit;
+    private final Room room;
+    private final int x;
+    private final int y;
+    private final double z;
 
     public RoomUnitTeleport(RoomUnit roomUnit, Room room, int x, int y, double z, int newEffect) {
         this.roomUnit = roomUnit;
@@ -29,7 +25,6 @@ public class RoomUnitTeleport implements Runnable {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.newEffect = newEffect;
     }
 
     @Override

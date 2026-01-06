@@ -3,7 +3,6 @@ package com.eu.habbo.habbohotel.catalog;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.bots.Bot;
-import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardObject;
 import com.eu.habbo.habbohotel.catalog.layouts.*;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.guilds.Guild;
@@ -19,7 +18,6 @@ import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.catalog.*;
-import com.eu.habbo.messages.outgoing.events.calendar.AdventCalendarProductComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
 import com.eu.habbo.messages.outgoing.inventory.AddBotComposer;
@@ -28,8 +26,6 @@ import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolIssueHandledComposer;
 import com.eu.habbo.messages.outgoing.users.AddUserBadgeComposer;
-import com.eu.habbo.messages.outgoing.users.UserCreditsComposer;
-import com.eu.habbo.messages.outgoing.users.UserPointsComposer;
 import com.eu.habbo.plugin.events.emulator.EmulatorLoadCatalogManagerEvent;
 import com.eu.habbo.plugin.events.users.catalog.UserCatalogFurnitureBoughtEvent;
 import com.eu.habbo.plugin.events.users.catalog.UserCatalogItemPurchasedEvent;
@@ -805,8 +801,6 @@ public class CatalogManager {
 
 
     public void purchaseItem(CatalogPage page, CatalogItem item, Habbo habbo, int amount, String extradata, boolean free) {
-        Item cBaseItem = null;
-
         if (item == null || habbo.getHabboStats().isPurchasingFurniture) {
             habbo.getClient().sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR).compose());
             return;

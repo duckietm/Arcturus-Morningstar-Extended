@@ -51,8 +51,6 @@ public class RequestInventoryItemsDelete extends MessageHandler {
             if (habboItem.getBaseItem().getId() == item.getId())
                 count++;
         }
-        if (count < amount)
-            return false;
-        return true;
+        return count >= amount;
     }
 }

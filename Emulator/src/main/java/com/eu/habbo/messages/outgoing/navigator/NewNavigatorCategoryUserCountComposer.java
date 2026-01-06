@@ -20,7 +20,7 @@ public class NewNavigatorCategoryUserCountComposer extends MessageComposer {
         this.response.appendInt(this.roomCategories.size());
 
         for (RoomCategory category : this.roomCategories) {
-            this.response.appendInt(0);
+            this.response.appendInt(category.getId());
             this.response.appendInt(0);
             this.response.appendInt(200);
         }

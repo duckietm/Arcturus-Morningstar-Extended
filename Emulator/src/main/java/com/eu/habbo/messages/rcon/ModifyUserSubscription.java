@@ -1,20 +1,11 @@
 package com.eu.habbo.messages.rcon;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
-import com.eu.habbo.messages.outgoing.users.MeMenuSettingsComposer;
-import com.eu.habbo.messages.outgoing.users.UpdateUserLookComposer;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class ModifyUserSubscription extends RCONMessage<ModifyUserSubscription.JSON> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ModifyUserSubscription.class);

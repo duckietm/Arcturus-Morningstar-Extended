@@ -1,9 +1,6 @@
 package com.eu.habbo.habbohotel.games;
 
-import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.plugin.Event;
-import com.eu.habbo.plugin.events.games.GameHabboLeaveEvent;
 import gnu.trove.set.hash.THashSet;
 
 public class GameTeam {

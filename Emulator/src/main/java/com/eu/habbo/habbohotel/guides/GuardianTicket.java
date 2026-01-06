@@ -22,12 +22,12 @@ public class GuardianTicket {
     private final Habbo reporter;
     private final Habbo reported;
     private final Date date;
-    private ArrayList<ModToolChatLog> chatLogs;
+    private final ArrayList<ModToolChatLog> chatLogs;
     private GuardianVoteType verdict;
     private int timeLeft = 120;
     private int resendCount = 0;
-    private int checkSum = 0;
-    private int guardianCount = 0; //TODO: Figure out what this was supposed to do.
+    private final int checkSum = 0;
+    private final int guardianCount = 0; //TODO: Figure out what this was supposed to do.
 
     public GuardianTicket(Habbo reporter, Habbo reported, ArrayList<ModToolChatLog> chatLogs) {
         this.chatLogs = chatLogs;
@@ -155,29 +155,7 @@ public class GuardianTicket {
 
 
     public GuardianVoteType calculateVerdict() {
-        int countAcceptably = 0;
-        int countBadly = 0;
-        int countAwfully = 0;
-        int total = 0;
-
-        synchronized (this.votes) {
-            for (Map.Entry<Habbo, GuardianVote> set : this.votes.entrySet()) {
-                GuardianVote vote = set.getValue();
-
-                if (vote.type == GuardianVoteType.ACCEPTABLY) {
-                    countAcceptably++;
-                } else if (vote.type == GuardianVoteType.BADLY) {
-                    countBadly++;
-                } else if (vote.type == GuardianVoteType.AWFULLY) {
-                    countAwfully++;
-                }
-            }
-        }
-
-        total += countAcceptably;
-        total += countBadly;
-
-
+        // Vote counting logic placeholder - currently returns fixed verdict
         return GuardianVoteType.BADLY;
     }
 

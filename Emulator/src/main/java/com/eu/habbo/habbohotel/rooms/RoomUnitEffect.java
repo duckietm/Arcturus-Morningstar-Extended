@@ -204,7 +204,7 @@ public enum RoomUnitEffect {
     YELLOWDUCK(198),
     FLYNGTURTLE(199);
 
-    private int id;
+    private final int id;
 
     RoomUnitEffect(int id) {
         this.id = id;

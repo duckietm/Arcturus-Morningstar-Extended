@@ -9,7 +9,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 public class WiredConditionFurniTypeMatch extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.STUFF_IS;
 
-    private THashSet<HabboItem> items = new THashSet<>();
+    private final THashSet<HabboItem> items = new THashSet<>();
 
     public WiredConditionFurniTypeMatch(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -45,8 +44,7 @@ public class WiredConditionFurniTypeMatch extends InteractionWiredCondition {
 
         if (stuff != null) {
             if (stuff.length >= 1) {
-                if (stuff[0] instanceof HabboItem) {
-                    HabboItem triggeringItem = (HabboItem)stuff[0];
+                if (stuff[0] instanceof HabboItem triggeringItem) {
                     return this.items.stream().anyMatch(item -> item == triggeringItem);
                 }
             }

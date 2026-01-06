@@ -30,15 +30,15 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     public int roomId;
     public boolean isCommand = false;
     public boolean filtered = false;
-    private int roomUnitId;
+    private final int roomUnitId;
     private String message;
-    private String unfilteredMessage;
+    private final String unfilteredMessage;
     private int timestamp = 0;
     private RoomChatMessageBubbles bubble;
     private Habbo targetHabbo;
     private byte emotion;
     private String RoomChatColour;
-    ; //Added ChatColor
+    //Added ChatColor
 
     public RoomChatMessage(MessageHandler message) {
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {

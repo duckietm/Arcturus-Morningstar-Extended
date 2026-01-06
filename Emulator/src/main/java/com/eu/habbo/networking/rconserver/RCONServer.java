@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class RCONServer extends Server {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RCONServer.class);

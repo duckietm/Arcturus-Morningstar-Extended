@@ -72,7 +72,7 @@ public abstract class InteractionWired extends InteractionDefault {
     public abstract void onPickUp();
 
     public void activateBox(Room room) {
-        this.activateBox(room, (RoomUnit)null, 0L);
+        this.activateBox(room, null, 0L);
     }
 
     public void activateBox(Room room, RoomUnit roomUnit, long millis) {

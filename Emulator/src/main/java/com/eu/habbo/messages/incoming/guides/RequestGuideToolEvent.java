@@ -11,7 +11,7 @@ public class RequestGuideToolEvent extends MessageHandler {
         boolean onDuty = this.packet.readBoolean();
 
         if (onDuty) {
-            boolean tourRequests = this.packet.readBoolean();
+            this.packet.readBoolean();
             boolean helperRequests = this.packet.readBoolean();
             boolean bullyReports = this.packet.readBoolean();
 

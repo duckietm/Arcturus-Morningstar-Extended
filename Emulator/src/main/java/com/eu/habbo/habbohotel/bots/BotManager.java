@@ -1,7 +1,6 @@
 package com.eu.habbo.habbohotel.bots;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;

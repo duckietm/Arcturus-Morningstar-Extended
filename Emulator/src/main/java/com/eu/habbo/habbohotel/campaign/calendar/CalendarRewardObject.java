@@ -2,21 +2,16 @@ package com.eu.habbo.habbohotel.campaign.calendar;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class CalendarRewardObject {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CalendarRewardObject.class);
 
     private final int id;
     private final String productName;

@@ -1,6 +1,5 @@
 package com.eu.habbo.habbohotel.items.interactions;
 
-import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.*;
@@ -9,16 +8,11 @@ import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class InteractionMultiHeight extends HabboItem {
     public InteractionMultiHeight(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
@@ -85,7 +79,6 @@ public class InteractionMultiHeight extends HabboItem {
         for(RoomTile tile : occupiedTiles) {
             Collection<RoomUnit> unitsOnItem = room.getRoomUnitsAt(room.getLayout().getTile(tile.x, tile.y));
 
-            THashSet<RoomUnit> updatedUnits = new THashSet<>();
             for (RoomUnit unit : unitsOnItem) {
                 if (unit.hasStatus(RoomUnitStatus.MOVE) && unit.getGoal() != tile)
                     continue;

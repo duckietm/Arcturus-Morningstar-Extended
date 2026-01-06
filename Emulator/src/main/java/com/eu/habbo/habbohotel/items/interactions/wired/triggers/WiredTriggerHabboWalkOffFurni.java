@@ -9,7 +9,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 public class WiredTriggerHabboWalkOffFurni extends InteractionWiredTrigger {
     public static final WiredTriggerType type = WiredTriggerType.WALKS_OFF_FURNI;
 
-    private THashSet<HabboItem> items;
+    private final THashSet<HabboItem> items;
 
     public WiredTriggerHabboWalkOffFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

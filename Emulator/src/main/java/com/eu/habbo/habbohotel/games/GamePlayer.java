@@ -9,7 +9,7 @@ public class GamePlayer {
     private final Habbo habbo;
 
 
-    private GameTeamColors teamColor;
+    private final GameTeamColors teamColor;
 
 
     private int score;

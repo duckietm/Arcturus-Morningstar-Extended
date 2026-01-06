@@ -63,7 +63,7 @@ public class KickBallAction implements Runnable {
 
                     this.room.sendComposer(new FloorItemOnRollerComposer(this.ball, null, next, next.getStackHeight() - this.ball.getZ(), this.room).compose());
 
-                    Emulator.getThreading().run(this, (long) delay);
+                    Emulator.getThreading().run(this, delay);
                 } else {
                     this.currentStep = this.totalSteps; //End the move sequence, the ball can't bounce anywhere
                     this.run();

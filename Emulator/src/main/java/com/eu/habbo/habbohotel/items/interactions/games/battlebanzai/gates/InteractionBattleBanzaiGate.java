@@ -25,7 +25,7 @@ public class InteractionBattleBanzaiGate extends InteractionGameGate {
 
     @Override
     public boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects) {
-        return room.getGame(BattleBanzaiGame.class) == null || ((BattleBanzaiGame) room.getGame(BattleBanzaiGame.class)).state.equals(GameState.IDLE);
+        return room.getGame(BattleBanzaiGame.class) == null || room.getGame(BattleBanzaiGame.class).state.equals(GameState.IDLE);
     }
 
     @Override

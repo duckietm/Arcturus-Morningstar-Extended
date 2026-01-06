@@ -6,9 +6,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameGate;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameScoreboard;
-import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTeamItem;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
-import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiPuck;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTeleporter;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTile;
 import com.eu.habbo.habbohotel.items.interactions.games.freeze.InteractionFreezeBlock;
@@ -24,7 +22,6 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -177,8 +174,6 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         Habbo habbo = room.getHabbo(roomUnit);
-
-        HabboItem triggerItem = null;
 
         THashSet<HabboItem> itemsToRemove = new THashSet<>();
         for (HabboItem item : this.items) {

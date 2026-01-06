@@ -25,7 +25,7 @@ public class InteractionFreezeGate extends InteractionGameGate {
 
     @Override
     public boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects) {
-        return room.getGame(FreezeGame.class) == null || ((FreezeGame) room.getGame(FreezeGame.class)).state.equals(GameState.IDLE);
+        return room.getGame(FreezeGame.class) == null || room.getGame(FreezeGame.class).state.equals(GameState.IDLE);
     }
 
     @Override

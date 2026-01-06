@@ -3,7 +3,9 @@ package com.eu.habbo.habbohotel.rooms;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.items.interactions.*;
+import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWater;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWaterItem;
 import com.eu.habbo.habbohotel.items.interactions.interfaces.ConditionalGate;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.RideablePet;
@@ -60,7 +62,6 @@ public class RoomUnit {
     private boolean fastWalk = false;
     private boolean statusUpdate = false;
     private boolean invisible = false;
-    private boolean lastCycleStatus = false;
     private boolean canLeaveRoomByDoor = true;
     private RoomUserRotation bodyRotation = RoomUserRotation.NORTH;
     private RoomUserRotation headRotation = RoomUserRotation.NORTH;
@@ -72,12 +73,12 @@ public class RoomUnit {
     private int walkTimeOut;
     private int effectId;
     private int effectEndTimestamp;
-    private ScheduledFuture moveBlockingTask;
+    private ScheduledFuture<?> moveBlockingTask;
 
     private int idleTimer;
     private Room room;
     private RoomRightLevels rightsLevel = RoomRightLevels.NONE;
-    private THashSet<Integer> overridableTiles;
+    private final THashSet<Integer> overridableTiles;
     private boolean isGameSnow;
 
     public RoomUnit() {
@@ -820,11 +821,11 @@ public class RoomUnit {
         );
     }
 
-    public ScheduledFuture getMoveBlockingTask() {
+    public ScheduledFuture<?> getMoveBlockingTask() {
         return moveBlockingTask;
     }
 
-    public void setMoveBlockingTask(ScheduledFuture moveBlockingTask) {
+    public void setMoveBlockingTask(ScheduledFuture<?> moveBlockingTask) {
         this.moveBlockingTask = moveBlockingTask;
     }
 

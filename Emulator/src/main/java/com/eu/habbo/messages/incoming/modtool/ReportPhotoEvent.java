@@ -11,7 +11,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.modtool.ModToolReportReceivedAlertComposer;
 import com.eu.habbo.threading.runnables.InsertModToolIssue;
-import com.google.gson.JsonParser;
 
 public class ReportPhotoEvent extends MessageHandler {
     @Override
@@ -21,11 +20,11 @@ public class ReportPhotoEvent extends MessageHandler {
         this.packet.getBuffer().resetReaderIndex();
 
         if (hasExtradataId) {
-            String extradataId = this.packet.readString();
+            this.packet.readString();
         }
 
         int roomId = this.packet.readInt();
-        int reportedUserId = this.packet.readInt();
+        this.packet.readInt();
         int topicId = this.packet.readInt();
         int itemId = this.packet.readInt();
 

@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Bot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
@@ -112,7 +113,7 @@ public class Bot implements Runnable {
         this.chatRandom = false;
         this.chatDelay = 10;
         this.chatTimeOut = Emulator.getIntUnixTimestamp() + this.chatDelay;
-        this.chatLines = new ArrayList<>(Arrays.asList("Default Message :D"));
+        this.chatLines = new ArrayList<>(List.of("Default Message :D"));
         this.type = bot.getType();
         this.effect = bot.getEffect();
         this.bubble = bot.getBubbleId();

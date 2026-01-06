@@ -22,7 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-public class InteractionGameTimer extends HabboItem implements Runnable {
+public class InteractionGameTimer extends HabboItem {
     private static final Logger LOGGER = LoggerFactory.getLogger(InteractionGameTimer.class);
 
     private int[] TIMER_INTERVAL_STEPS = new int[] { 30, 60, 120, 180, 300, 600 };
@@ -284,6 +284,48 @@ public class InteractionGameTimer extends HabboItem implements Runnable {
     @Override
     public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
 
+    }
+
+
+    public void startTimer(Room room) {
+        if (!isRunning) {
+            isRunning = true;
+            isPaused = false;
+            if(timeNow <= 0) {
+                timeNow = baseTime;
+                room.updateItem(this);
+            }
+            this.createNewGame(room);
+            WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{this});
+            if (!threadActive) {
+                threadActive = true;
+                Emulator.getThreading().run(new GameTimer(this), 1000);
+            }
+        }
+    }
+
+    public void pauseTimer(Room room) {
+        if (isRunning && !isPaused) {
+            isPaused = true;
+            pause(room);
+        }
+    }
+
+    public void resumeTimer(Room room) {
+        if (!this.isRunning) {
+            startTimer(room);
+            return;
+        }
+
+        if (this.isPaused) {
+            this.isPaused = false;
+            this.unpause(room);
+
+            if (!this.threadActive) {
+                this.threadActive = true;
+                Emulator.getThreading().run(new GameTimer(this), 1000);
+            }
+        }
     }
 
     private void increaseTimer(Room room) {

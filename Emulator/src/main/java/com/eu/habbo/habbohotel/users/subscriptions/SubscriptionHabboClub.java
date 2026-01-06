@@ -13,7 +13,9 @@ import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManage
 import com.eu.habbo.messages.outgoing.catalog.ClubCenterDataComposer;
 import com.eu.habbo.messages.outgoing.generic.PickMonthlyClubGiftNotificationComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
-import com.eu.habbo.messages.outgoing.users.*;
+import com.eu.habbo.messages.outgoing.users.UpdateUserLookComposer;
+import com.eu.habbo.messages.outgoing.users.UserClubComposer;
+import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
 import gnu.trove.map.hash.THashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,7 +217,7 @@ public class SubscriptionHabboClub extends Subscription {
                 }
             }
 
-            THashMap<String, Object> queryParams = new THashMap();
+            THashMap<String, Object> queryParams = new THashMap<>();
             queryParams.put("@user_id", habbo.getId());
             queryParams.put("@timestamp_start", habbo.getHabboStats().lastHCPayday);
             queryParams.put("@timestamp_end", HC_PAYDAY_NEXT_DATE);
@@ -347,7 +349,7 @@ public class SubscriptionHabboClub extends Subscription {
                 while (set.next()) {
                     try {
                         int logId = set.getInt("id");
-                        int userId = set.getInt("user_id");
+                        set.getInt("user_id");
                         int totalPayout = set.getInt("total_payout");
                         String currency = set.getString("currency");
 

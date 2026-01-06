@@ -75,7 +75,7 @@ public class YouAreAPirate implements Runnable {
     public final Room room;
 
     private int index = 0;
-    private int oldEffect;
+    private final int oldEffect;
 
     public YouAreAPirate(Habbo habbo, Room room) {
         this.habbo = habbo;

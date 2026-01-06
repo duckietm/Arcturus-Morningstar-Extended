@@ -11,7 +11,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -30,7 +29,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     private final List<HabboItem> items = new ArrayList<>();
     private int direction;
     private int spacing = 1;
-    private Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
+    private final Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
 
     public WiredEffectMoveFurniTo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -85,7 +84,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         if (this.items.isEmpty())
             return false;
 
-        if (stuff != null && stuff.length > 0) {
+        if (stuff != null) {
             for (Object object : stuff) {
                 if (object instanceof HabboItem) {
                     HabboItem targetItem = this.items.get(Emulator.getRandom().nextInt(this.items.size()));

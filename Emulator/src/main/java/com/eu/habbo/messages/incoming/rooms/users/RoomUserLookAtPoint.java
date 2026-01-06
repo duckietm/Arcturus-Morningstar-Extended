@@ -6,7 +6,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 
 public class RoomUserLookAtPoint extends MessageHandler {
     @Override

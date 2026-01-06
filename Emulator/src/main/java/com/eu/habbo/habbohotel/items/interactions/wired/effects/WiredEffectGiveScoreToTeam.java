@@ -13,7 +13,6 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -28,7 +27,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
     private int count;
     private GameTeamColors teamColor = GameTeamColors.RED;
 
-    private TIntIntHashMap startTimes = new TIntIntHashMap();
+    private final TIntIntHashMap startTimes = new TIntIntHashMap();
 
     public WiredEffectGiveScoreToTeam(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);

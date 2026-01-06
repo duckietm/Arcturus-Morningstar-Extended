@@ -84,10 +84,10 @@ public final class Emulator {
         Runtime.getRuntime().addShutdownHook(hook);
     }
 
+    @SuppressWarnings("resource")
+
     public static void main(String[] args) throws Exception {
         try {
-            // Check if running on Windows and not in IntelliJ.
-            // If so, we need to reconfigure the console appender and enable Jansi for colors.
             if (OS_NAME.startsWith("Windows") && !CLASS_PATH.contains("idea_rt.jar")) {
                 ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 ConsoleAppender<ILoggingEvent> appender = (ConsoleAppender<ILoggingEvent>) root.getAppender("Console");
@@ -105,10 +105,10 @@ public final class Emulator {
 
             System.out.println(logo);
 
-            System.out.println("");
+            System.out.println();
             LOGGER.warn("Arcturus Morningstar 3.x is no longer accepting merge requests. Please target MS4 branches if you wish to contribute.");
             LOGGER.info("Follow our development at https://git.krews.org/morningstar/Arcturus-Community, ");
-            System.out.println("");
+            System.out.println();
             LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
             LOGGER.info("Version: {}", version);
             LOGGER.info("Build: {}", build);
@@ -205,15 +205,16 @@ public final class Emulator {
         StringBuilder sb = new StringBuilder();
         try {
             String filepath = new File(Emulator.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getAbsolutePath();
-            MessageDigest md = MessageDigest.getInstance("MD5");// MD5
-            FileInputStream fis = new FileInputStream(filepath);
-            byte[] dataBytes = new byte[1024];
-            int nread = 0;
-            while ((nread = fis.read(dataBytes)) != -1)
-                md.update(dataBytes, 0, nread);
-            byte[] mdbytes = md.digest();
-            for (int i = 0; i < mdbytes.length; i++)
-                sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            try (FileInputStream fis = new FileInputStream(filepath)) {
+                byte[] dataBytes = new byte[1024];
+                int nread = 0;
+                while ((nread = fis.read(dataBytes)) != -1)
+                    md.update(dataBytes, 0, nread);
+                byte[] mdbytes = md.digest();
+                for (int i = 0; i < mdbytes.length; i++)
+                    sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+            }
         } catch (Exception e) {
             build = "UNKNOWN";
             return;
@@ -407,8 +408,6 @@ public final class Emulator {
     }
 
     public static Date modifyDate(Date date, String timeString) {
-        int totalSeconds = 0;
-
         Calendar c = Calendar.getInstance();
         c.setTime(date);
 

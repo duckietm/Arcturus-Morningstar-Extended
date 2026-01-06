@@ -2,8 +2,6 @@ package com.eu.habbo.habbohotel.users.subscriptions;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.core.DatabaseLoggable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -13,7 +11,6 @@ import java.sql.SQLException;
  */
 public class HcPayDayLogEntry implements Runnable, DatabaseLoggable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HcPayDayLogEntry.class);
     private static final String QUERY = "INSERT INTO `logs_hc_payday` (`timestamp`, `user_id`, `hc_streak`, `total_coins_spent`, `reward_coins_spent`, `reward_streak`, `total_payout`, `currency`, `claimed`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     public final int timestamp;

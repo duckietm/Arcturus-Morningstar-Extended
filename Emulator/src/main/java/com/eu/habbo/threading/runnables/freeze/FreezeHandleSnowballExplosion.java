@@ -75,8 +75,7 @@ class FreezeHandleSnowballExplosion implements Runnable {
                             habbos.addAll(this.thrownData.room.getHabbosAt(freezeTile.getX(), freezeTile.getY()));
 
                             for (Habbo habbo : habbos) {
-                                if (habbo.getHabboInfo().getGamePlayer() != null && habbo.getHabboInfo().getGamePlayer() instanceof FreezeGamePlayer) {
-                                    FreezeGamePlayer hPlayer = (FreezeGamePlayer) habbo.getHabboInfo().getGamePlayer();
+                                if (habbo.getHabboInfo().getGamePlayer() != null && habbo.getHabboInfo().getGamePlayer() instanceof FreezeGamePlayer hPlayer) {
                                     if (!hPlayer.canGetFrozen())
                                         continue;
 

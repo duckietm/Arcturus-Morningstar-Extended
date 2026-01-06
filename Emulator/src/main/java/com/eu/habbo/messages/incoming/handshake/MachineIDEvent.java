@@ -15,8 +15,8 @@ public class MachineIDEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
         String storedMachineId = this.packet.readString();
-        String clientFingerprint = this.packet.readString();
-        String capabilities = this.packet.readString();
+        this.packet.readString();
+        this.packet.readString();
 
         if (storedMachineId.length() > HASH_LENGTH) {
             storedMachineId = storedMachineId.substring(0, HASH_LENGTH);

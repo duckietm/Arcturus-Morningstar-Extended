@@ -7,7 +7,6 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;

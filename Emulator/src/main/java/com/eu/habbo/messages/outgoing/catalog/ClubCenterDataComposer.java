@@ -1,16 +1,8 @@
 package com.eu.habbo.messages.outgoing.catalog;
 
-import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
-import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 public class ClubCenterDataComposer extends MessageComposer {
     public final int currentHcStreak;

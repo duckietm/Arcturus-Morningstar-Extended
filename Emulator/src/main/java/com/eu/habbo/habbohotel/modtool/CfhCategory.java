@@ -5,12 +5,10 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class CfhCategory {
-    private final int id;
     private final String name;
     private final TIntObjectMap<CfhTopic> topics;
 
     public CfhCategory(int id, String name) {
-        this.id = id;
         this.name = name;
         this.topics = TCollections.synchronizedMap(new TIntObjectHashMap<>());
     }

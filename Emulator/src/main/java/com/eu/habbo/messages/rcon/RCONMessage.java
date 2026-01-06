@@ -31,6 +31,7 @@ public abstract class RCONMessage<T> {
 
     public abstract void handle(Gson gson, T json);
 
+    @SuppressWarnings("rawtypes")
     public static class RCONMessageSerializer implements JsonSerializer<RCONMessage> {
         @Override
         public JsonElement serialize(final RCONMessage rconMessage, final Type type, final JsonSerializationContext context) {

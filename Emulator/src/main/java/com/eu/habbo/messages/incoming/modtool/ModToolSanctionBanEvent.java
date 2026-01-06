@@ -10,8 +10,6 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 import gnu.trove.map.hash.THashMap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
 public class ModToolSanctionBanEvent extends MessageHandler {
     public static final int BAN_18_HOURS = 3;
@@ -29,7 +27,7 @@ public class ModToolSanctionBanEvent extends MessageHandler {
         String message = this.packet.readString();
         int cfhTopic = this.packet.readInt();
         int banType = this.packet.readInt();
-        boolean unknown = this.packet.readBoolean();
+        this.packet.readBoolean();
 
         int duration = 0;
 

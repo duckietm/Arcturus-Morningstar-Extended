@@ -5,19 +5,14 @@ import com.eu.habbo.util.PacketUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerMessage {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ServerMessage.class);
     private boolean initialized;
 
     private int header;
-    private AtomicInteger refs;
     private ByteBufOutputStream stream;
     private ByteBuf channelBuffer;
     private MessageComposer composer;
@@ -37,7 +32,6 @@ public class ServerMessage {
 
         this.initialized = true;
         this.header = id;
-        this.refs = new AtomicInteger(0);
         this.channelBuffer = Unpooled.buffer();
         this.stream = new ByteBufOutputStream(this.channelBuffer);
         this.composer = null;

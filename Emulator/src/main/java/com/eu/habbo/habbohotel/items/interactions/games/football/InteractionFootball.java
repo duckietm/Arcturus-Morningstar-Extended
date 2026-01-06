@@ -167,7 +167,7 @@ public class InteractionFootball extends InteractionPushable {
         BigDecimal topItemHeight = BigDecimal.valueOf(topItem.getZ() + topItem.getBaseItem().getHeight());
         BigDecimal ballHeight = BigDecimal.valueOf(this.getZ());
 
-        if (topItemHeight.subtract(ballHeight).compareTo(new BigDecimal(1.65)) > 0) {
+        if (topItemHeight.subtract(ballHeight).compareTo(new BigDecimal("1.65")) > 0) {
             return false;
         }
 

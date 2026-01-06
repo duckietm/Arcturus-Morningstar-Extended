@@ -367,8 +367,9 @@ public class Pet implements ISerialize, Runnable {
             case STAND:
             case NEST:
             case RIDE:
-
                 return false;
+            default:
+                break;
         }
 
         return true;

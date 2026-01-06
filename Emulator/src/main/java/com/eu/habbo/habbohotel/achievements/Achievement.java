@@ -57,7 +57,6 @@ public class Achievement {
 
 
     public AchievementLevel getNextLevel(int currentLevel) {
-        AchievementLevel l = null;
 
         for (AchievementLevel level : this.levels.values()) {
             if (level.level == (currentLevel + 1))

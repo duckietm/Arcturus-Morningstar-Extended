@@ -4,14 +4,9 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
-import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-
-import java.time.Period;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class UserClubComposer extends MessageComposer {
     private final Habbo habbo;

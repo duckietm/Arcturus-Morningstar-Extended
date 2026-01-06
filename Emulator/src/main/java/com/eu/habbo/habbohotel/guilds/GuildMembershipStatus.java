@@ -5,7 +5,7 @@ public enum GuildMembershipStatus {
     MEMBER(1),
     PENDING(2);
 
-    private int status;
+    private final int status;
 
     GuildMembershipStatus(int status) {
         this.status = status;

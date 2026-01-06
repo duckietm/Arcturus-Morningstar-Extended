@@ -7,13 +7,10 @@ import com.eu.habbo.habbohotel.catalog.CatalogPageLayouts;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.procedure.TObjectProcedure;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class ClubGiftsComposer extends MessageComposer {
 

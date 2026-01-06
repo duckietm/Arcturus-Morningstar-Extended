@@ -24,8 +24,7 @@ public class PetInfoCommand extends Command {
                 @Override
                 public boolean execute(int a, Pet pet) {
                     if (pet.getName().equalsIgnoreCase(name)) {
-                        gameClient.getHabbo().alert("" +
-                                Emulator.getTexts().getValue("commands.generic.cmd_pet_info.title") + ": " + pet.getName() + "\r\n" +
+                        gameClient.getHabbo().alert(Emulator.getTexts().getValue("commands.generic.cmd_pet_info.title") + ": " + pet.getName() + "\r\n" +
                                 Emulator.getTexts().getValue("generic.pet.id") + ": " + pet.getId() + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.name") + ": " + pet.getName() + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.age") + ": " + pet.daysAlive() + " " + Emulator.getTexts().getValue("generic.pet.days.alive") + "\r" +
@@ -38,7 +37,7 @@ public class PetInfoCommand extends Command {
                                 Emulator.getTexts().getValue("generic.pet.level.thirst") + ": " + pet.levelThirst + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.level.hunger") + ": " + pet.levelHunger + "\r" +
                                 Emulator.getTexts().getValue("generic.pet.current_action") + ": " + (pet.getTask() == null ? Emulator.getTexts().getValue("generic.nothing") : pet.getTask().name()) + "\r" +
-                                Emulator.getTexts().getValue("generic.can.walk") + ": " + (pet.getRoomUnit().canWalk() ? Emulator.getTexts().getValue("generic.yes") : Emulator.getTexts().getValue("generic.no")) + ""
+                                Emulator.getTexts().getValue("generic.can.walk") + ": " + (pet.getRoomUnit().canWalk() ? Emulator.getTexts().getValue("generic.yes") : Emulator.getTexts().getValue("generic.no"))
                         );
                     }
 

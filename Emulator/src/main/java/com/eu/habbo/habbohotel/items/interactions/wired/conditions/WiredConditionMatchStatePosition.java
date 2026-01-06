@@ -11,7 +11,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -23,7 +22,7 @@ import java.util.List;
 public class WiredConditionMatchStatePosition extends InteractionWiredCondition implements InteractionWiredMatchFurniSettings {
     public static final WiredConditionType type = WiredConditionType.MATCH_SSHOT;
 
-    private THashSet<WiredMatchFurniSetting> settings;
+    private final THashSet<WiredMatchFurniSetting> settings;
 
     private boolean state;
     private boolean position;

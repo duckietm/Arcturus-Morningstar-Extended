@@ -4,9 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class FriendRequest {
-    private int id;
-    private String username;
-    private String look;
+    private final int id;
+    private final String username;
+    private final String look;
 
     public FriendRequest(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

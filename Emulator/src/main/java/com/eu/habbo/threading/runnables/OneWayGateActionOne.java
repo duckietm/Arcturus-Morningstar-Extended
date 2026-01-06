@@ -8,9 +8,9 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 
 public class OneWayGateActionOne implements Runnable {
-    private HabboItem oneWayGate;
-    private Room room;
-    private GameClient client;
+    private final HabboItem oneWayGate;
+    private final Room room;
+    private final GameClient client;
 
     public OneWayGateActionOne(GameClient client, Room room, HabboItem item) {
         this.oneWayGate = item;

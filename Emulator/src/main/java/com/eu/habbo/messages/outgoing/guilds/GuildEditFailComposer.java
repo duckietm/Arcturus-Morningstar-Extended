@@ -10,7 +10,7 @@ public class GuildEditFailComposer extends MessageComposer {
     public static final int HC_REQUIRED = 2;
     public static final int MAX_GUILDS_JOINED = 3;
 
-    private int errorCode;
+    private final int errorCode;
 
     public GuildEditFailComposer(int errorCode) {
         this.errorCode = errorCode;

@@ -1,8 +1,8 @@
 package com.eu.habbo.habbohotel.navigation;
 
 public class NavigatorSavedSearch {
-    private String searchCode;
-    private String filter;
+    private final String searchCode;
+    private final String filter;
     private int id;
 
     public NavigatorSavedSearch(String searchCode, String filter) {

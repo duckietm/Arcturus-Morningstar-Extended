@@ -6,7 +6,7 @@ import com.eu.habbo.messages.outgoing.events.resolution.NewYearResolutionCompose
 public class RequestResolutionEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
-        int itemId = this.packet.readInt();
+        this.packet.readInt(); // itemId - not used
         int viewAll = this.packet.readInt();
 
         if (viewAll == 0) {

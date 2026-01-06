@@ -4,10 +4,8 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.campaign.calendar.CalendarCampaign;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.messages.outgoing.events.calendar.AdventCalendarDataComposer;
-import com.eu.habbo.messages.outgoing.habboway.nux.NuxAlertComposer;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.Date;
 
 import static java.time.temporal.ChronoUnit.DAYS;

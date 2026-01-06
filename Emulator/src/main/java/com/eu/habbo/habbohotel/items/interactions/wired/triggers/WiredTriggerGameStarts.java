@@ -7,7 +7,6 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.procedure.TObjectProcedure;
 
@@ -61,7 +60,7 @@ public class WiredTriggerGameStarts extends InteractionWiredTrigger {
         message.appendString("");
         message.appendInt(0);
         message.appendInt(0);
-        message.appendInt(this.type.code);
+        message.appendInt(WiredTriggerGameStarts.type.code);
 
         if (!this.isTriggeredByRoomUnit()) {
             List<Integer> invalidTriggers = new ArrayList<>();

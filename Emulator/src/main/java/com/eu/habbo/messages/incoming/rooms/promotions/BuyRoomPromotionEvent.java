@@ -21,7 +21,7 @@ public class BuyRoomPromotionEvent extends MessageHandler {
         int itemId = this.packet.readInt();
         int roomId = this.packet.readInt();
         String title = this.packet.readString();
-        boolean extendedPromotion = this.packet.readBoolean();
+        this.packet.readBoolean(); // extendedPromotion - not used
         String description = this.packet.readString();
         int categoryId = this.packet.readInt();
 

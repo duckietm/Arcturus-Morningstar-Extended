@@ -6,7 +6,7 @@ import com.eu.habbo.habbohotel.catalog.CatalogPage;
 import com.eu.habbo.habbohotel.catalog.CatalogPageLayouts;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.catalog.*;
+import com.eu.habbo.messages.outgoing.catalog.AlertPurchaseFailedComposer;
 import com.eu.habbo.messages.outgoing.users.ClubGiftReceivedComposer;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;

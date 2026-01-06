@@ -11,11 +11,11 @@ import java.util.List;
 
 public class RoomUnitWalkToRoomUnit implements Runnable {
     private final int minDistance;
-    private RoomUnit walker;
-    private RoomUnit target;
-    private Room room;
-    private List<Runnable> targetReached;
-    private List<Runnable> failedReached;
+    private final RoomUnit walker;
+    private final RoomUnit target;
+    private final Room room;
+    private final List<Runnable> targetReached;
+    private final List<Runnable> failedReached;
 
     private RoomTile goalTile = null;
 

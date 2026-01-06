@@ -10,8 +10,6 @@ import com.eu.habbo.messages.outgoing.modtool.ModToolIssueHandledComposer;
 import gnu.trove.map.hash.THashMap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
 public class ModToolSanctionTradeLockEvent extends MessageHandler {
     @Override

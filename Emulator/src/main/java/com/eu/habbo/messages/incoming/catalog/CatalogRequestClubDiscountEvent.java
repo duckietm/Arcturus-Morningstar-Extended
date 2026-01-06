@@ -1,24 +1,13 @@
 package com.eu.habbo.messages.incoming.catalog;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.catalog.CatalogItem;
-import com.eu.habbo.habbohotel.catalog.CatalogPage;
-import com.eu.habbo.habbohotel.catalog.CatalogPageLayouts;
 import com.eu.habbo.habbohotel.catalog.ClubOffer;
-import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.catalog.AlertPurchaseFailedComposer;
 import com.eu.habbo.messages.outgoing.unknown.ExtendClubMessageComposer;
-import com.eu.habbo.messages.outgoing.users.ClubGiftReceivedComposer;
-import gnu.trove.set.hash.THashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CatalogRequestClubDiscountEvent extends MessageHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogRequestClubDiscountEvent.class);
 
     @Override
     public void handle() throws Exception {

@@ -2,7 +2,6 @@ package com.eu.habbo.messages.incoming.modtool;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.permissions.Permission;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.modtool.ModToolUserRoomVisitsComposer;

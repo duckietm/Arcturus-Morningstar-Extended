@@ -2,15 +2,11 @@ package com.eu.habbo.habbohotel.catalog;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.core.DatabaseLoggable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class CatalogPurchaseLogEntry implements Runnable, DatabaseLoggable {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogPurchaseLogEntry.class);
     private static final String QUERY = "INSERT INTO `logs_shop_purchases` (timestamp, user_id, catalog_item_id, item_ids, catalog_name, cost_credits, cost_points, points_type, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private final int timestamp;

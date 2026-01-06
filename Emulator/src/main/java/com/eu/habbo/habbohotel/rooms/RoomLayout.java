@@ -31,7 +31,7 @@ public class RoomLayout {
     private int mapSizeY;
     private RoomTile[][] roomTiles;
     private RoomTile doorTile;
-    private Room room;
+    private final Room room;
     boolean canMoveDiagonally = PathfinderConfig.canMoveDiagonally();
 
     public RoomLayout(ResultSet set, Room room) throws SQLException {
@@ -51,7 +51,7 @@ public class RoomLayout {
     }
 
     public class PathfinderConfig {
-        private static boolean canMoveDiagonally = Emulator.getConfig().getBoolean("pathfinder.diagonal.enabled", false);
+        private static final boolean canMoveDiagonally = Emulator.getConfig().getBoolean("pathfinder.diagonal.enabled", false);
         public static boolean canMoveDiagonally() {
             return canMoveDiagonally;
         }

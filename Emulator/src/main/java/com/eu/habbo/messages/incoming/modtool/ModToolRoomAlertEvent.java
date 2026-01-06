@@ -10,7 +10,7 @@ public class ModToolRoomAlertEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
         if (this.client.getHabbo().hasPermission(Permission.ACC_SUPPORTTOOL)) {
-            int type = this.packet.readInt();
+            this.packet.readInt();
 
             Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
             if (room != null) {

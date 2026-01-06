@@ -4,7 +4,7 @@ import com.eu.habbo.habbohotel.guides.GuardianTicket;
 
 public class GuardianVotingFinish implements Runnable {
     private final GuardianTicket ticket;
-    private int checkSum;
+    private final int checkSum;
 
     public GuardianVotingFinish(GuardianTicket ticket) {
         this.ticket = ticket;

@@ -5,7 +5,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 
 public class WiredResetTimers implements Runnable {
-    private Room room;
+    private final Room room;
 
     public WiredResetTimers(Room room) {
         this.room = room;

@@ -6,7 +6,7 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
 public class RoomUserShoutComposer extends MessageComposer {
-    private RoomChatMessage roomChatMessage;
+    private final RoomChatMessage roomChatMessage;
 
     public RoomUserShoutComposer(RoomChatMessage roomChatMessage) {
         this.roomChatMessage = roomChatMessage;

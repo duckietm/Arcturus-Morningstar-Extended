@@ -17,7 +17,6 @@ public class SaveWindowSettingsEvent extends MessageHandler {
         boolean openSearches = this.packet.readBoolean();
         windowSettings.openSearches = openSearches;
 
-        int unknownVar = this.packet.readInt();
-        int unknown = unknownVar;
+        this.packet.readInt();
     }
 }

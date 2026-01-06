@@ -12,7 +12,6 @@ import gnu.trove.map.hash.THashMap;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 public class ModToolSanctionInfoComposer extends MessageComposer {

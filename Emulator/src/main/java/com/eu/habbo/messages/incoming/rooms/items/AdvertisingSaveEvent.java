@@ -8,8 +8,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import gnu.trove.map.hash.THashMap;
 
-import java.util.Map;
-
 public class AdvertisingSaveEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {

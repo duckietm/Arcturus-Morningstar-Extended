@@ -1,6 +1,5 @@
 package com.eu.habbo.habbohotel.users.clothingvalidation;
 
-import java.util.Map;
 import java.util.TreeMap;
 
 public class FiguredataSettype {

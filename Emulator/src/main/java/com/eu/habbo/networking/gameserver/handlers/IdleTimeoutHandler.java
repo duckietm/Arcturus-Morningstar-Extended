@@ -99,8 +99,7 @@ public class IdleTimeoutHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         // check if its a pong message
-        if (msg instanceof ClientMessage) {
-            ClientMessage packet = (ClientMessage) msg;
+        if (msg instanceof ClientMessage packet) {
             if (packet.getMessageId() == Incoming.PongEvent) {
                 this.lastPongTime = System.nanoTime();
 

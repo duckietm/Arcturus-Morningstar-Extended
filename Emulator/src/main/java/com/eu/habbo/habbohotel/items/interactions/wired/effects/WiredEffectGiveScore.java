@@ -12,7 +12,6 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.iterator.TObjectIntIterator;
@@ -33,7 +32,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     private int score;
     private int count;
 
-    private TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
+    private final TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
 
     public WiredEffectGiveScore(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

@@ -4,7 +4,6 @@ import gnu.trove.map.hash.THashMap;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Map;
 
 public class CalendarCampaign {

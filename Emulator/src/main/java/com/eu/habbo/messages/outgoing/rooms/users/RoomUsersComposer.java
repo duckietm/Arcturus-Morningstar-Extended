@@ -101,7 +101,7 @@ public class RoomUsersComposer extends MessageComposer {
             }
         } else if (this.bot != null) {
             this.response.appendInt(1);
-            this.response.appendInt(0 - this.bot.getId());
+            this.response.appendInt(-this.bot.getId());
             this.response.appendString(this.bot.getName());
             this.response.appendString(this.bot.getMotto());
             this.response.appendInt(0);
@@ -131,7 +131,7 @@ public class RoomUsersComposer extends MessageComposer {
         } else if (this.bots != null) {
             this.response.appendInt(this.bots.size());
             for (Bot bot : this.bots) {
-                this.response.appendInt(0 - bot.getId());
+                this.response.appendInt(-bot.getId());
                 this.response.appendString(bot.getName());
                 this.response.appendString(bot.getMotto());
                 this.response.appendInt(0);

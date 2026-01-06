@@ -23,7 +23,7 @@ public class WiredBlob extends InteractionDefault {
         ACTIVE("0"),
         USED("1");
 
-        private String state;
+        private final String state;
         WiredBlobState(String state) {
             this.state = state;
         }

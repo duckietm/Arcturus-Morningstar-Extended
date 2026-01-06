@@ -16,7 +16,7 @@ import java.sql.*;
 public class ForumThreadComment implements Runnable, ISerialize {
     private static final Logger LOGGER = LoggerFactory.getLogger(ForumThreadComment.class);
 
-    private static THashMap<Integer, ForumThreadComment> forumCommentsCache = new THashMap<>();
+    private static final THashMap<Integer, ForumThreadComment> forumCommentsCache = new THashMap<>();
     private final int commentId;
     private final int threadId;
     private final int userId;

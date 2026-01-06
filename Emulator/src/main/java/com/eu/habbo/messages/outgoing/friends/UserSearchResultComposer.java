@@ -16,7 +16,7 @@ public class UserSearchResultComposer extends MessageComposer {
     private final THashSet<MessengerBuddy> friends;
     private final Habbo habbo;
 
-    private static Comparator COMPARATOR = Comparator.comparing((MessengerBuddy b) -> b.getUsername().length()).thenComparing((MessengerBuddy b, MessengerBuddy b2) -> b.getUsername().compareToIgnoreCase(b2.getUsername()));
+    private static Comparator<MessengerBuddy> COMPARATOR = Comparator.comparing((MessengerBuddy b) -> b.getUsername().length()).thenComparing((MessengerBuddy b, MessengerBuddy b2) -> b.getUsername().compareToIgnoreCase(b2.getUsername()));
 
     public UserSearchResultComposer(THashSet<MessengerBuddy> users, THashSet<MessengerBuddy> friends, Habbo habbo) {
         this.users = users;

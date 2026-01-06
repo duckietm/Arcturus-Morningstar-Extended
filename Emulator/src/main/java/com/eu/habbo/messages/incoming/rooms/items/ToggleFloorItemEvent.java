@@ -2,7 +2,6 @@ package com.eu.habbo.messages.incoming.rooms.items;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDice;
-import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionMonsterPlantSeed;
 import com.eu.habbo.habbohotel.pets.MonsterplantPet;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -12,20 +11,18 @@ import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.PetPackageComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.plugin.Event;
-import com.eu.habbo.plugin.events.furniture.FurniturePickedUpEvent;
 import com.eu.habbo.plugin.events.furniture.FurnitureToggleEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class ToggleFloorItemEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToggleFloorItemEvent.class);
 
-    private static HashSet<String> PET_BOXES = new HashSet<>(Arrays.asList("val11_present", "gnome_box", "leprechaun_box", "velociraptor_egg", "pterosaur_egg", "petbox_epic"));
+    private static final HashSet<String> PET_BOXES = new HashSet<>(Arrays.asList("val11_present", "gnome_box", "leprechaun_box", "velociraptor_egg", "pterosaur_egg", "petbox_epic"));
 
     @Override
     public void handle() throws Exception {

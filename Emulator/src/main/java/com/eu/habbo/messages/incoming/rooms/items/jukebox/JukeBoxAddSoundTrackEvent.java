@@ -1,7 +1,6 @@
 package com.eu.habbo.messages.incoming.rooms.items.jukebox;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionMusicDisc;
-import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
@@ -12,7 +11,7 @@ public class JukeBoxAddSoundTrackEvent extends MessageHandler {
         if (!this.client.getHabbo().getHabboInfo().getCurrentRoom().hasRights(this.client.getHabbo())) return;
 
         int itemId = this.packet.readInt();
-        int slotId = this.packet.readInt();
+        this.packet.readInt(); // slotId
 
         Habbo habbo = this.client.getHabbo();
 

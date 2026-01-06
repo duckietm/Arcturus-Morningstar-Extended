@@ -5,25 +5,25 @@ import java.sql.SQLException;
 
 public class NewsWidget {
 
-    private int id;
+    private final int id;
 
 
-    private String title;
+    private final String title;
 
 
-    private String message;
+    private final String message;
 
 
-    private String buttonMessage;
+    private final String buttonMessage;
 
 
-    private int type;
+    private final int type;
 
 
-    private String link;
+    private final String link;
 
 
-    private String image;
+    private final String image;
 
     public NewsWidget(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class InteractionObstacle extends HabboItem implements ICycleable {
 
-    private THashSet<RoomTile> middleTiles;
+    private final THashSet<RoomTile> middleTiles;
 
     public InteractionObstacle(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

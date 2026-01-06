@@ -5,9 +5,9 @@ import com.eu.habbo.crypto.HabboRC4;
 import com.eu.habbo.messages.NoAuthMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.handshake.CompleteDiffieHandshakeComposer;
+import com.eu.habbo.networking.gameserver.GameServerAttributes;
 import com.eu.habbo.networking.gameserver.decoders.GameByteDecryption;
 import com.eu.habbo.networking.gameserver.encoders.GameByteEncryption;
-import com.eu.habbo.networking.gameserver.GameServerAttributes;
 
 @NoAuthMessage
 public class CompleteDiffieHandshakeEvent extends MessageHandler {

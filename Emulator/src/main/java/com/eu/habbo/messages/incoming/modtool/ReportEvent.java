@@ -25,7 +25,7 @@ public class ReportEvent extends MessageHandler {
         int topic = this.packet.readInt();
         int userId = this.packet.readInt();
         int roomId = this.packet.readInt();
-        int messageCount = this.packet.readInt();
+        this.packet.readInt();
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(roomId);
         List<ModToolIssue> issues = Emulator.getGameEnvironment().getModToolManager().openTicketsForHabbo(this.client.getHabbo());

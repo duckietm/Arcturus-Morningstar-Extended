@@ -5,8 +5,6 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDefault;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.users.inventory.EffectsComponent;
-import com.eu.habbo.messages.outgoing.inventory.UserEffectsListComposer;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -84,7 +82,7 @@ public class InteractionTotemPlanet extends InteractionDefault {
                 return;
             }
 
-            EffectsComponent.HabboEffect effect = client.getHabbo().getInventory().getEffectsComponent().createEffect(effectId);
+            client.getHabbo().getInventory().getEffectsComponent().createEffect(effectId);
             client.getHabbo().getInventory().getEffectsComponent().enableEffect(effectId);
             return;
         }

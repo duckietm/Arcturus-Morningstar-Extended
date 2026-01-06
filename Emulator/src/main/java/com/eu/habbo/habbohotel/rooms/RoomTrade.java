@@ -8,7 +8,6 @@ import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.messages.outgoing.trading.*;
-import com.eu.habbo.plugin.events.furniture.FurnitureRedeemedEvent;
 import com.eu.habbo.plugin.events.trading.TradeConfirmEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 import gnu.trove.set.hash.THashSet;
@@ -27,12 +26,9 @@ public class RoomTrade {
 
     private final List<RoomTradeUser> users;
     private final Room room;
-    private boolean tradeCompleted;
 
     public RoomTrade(Habbo userOne, Habbo userTwo, Room room) {
         this.users = new ArrayList<>();
-        this.tradeCompleted = false;
-
         this.users.add(new RoomTradeUser(userOne));
         this.users.add(new RoomTradeUser(userTwo));
         this.room = room;
@@ -105,8 +101,10 @@ public class RoomTrade {
         this.sendMessageToUsers(new TradeAcceptedComposer(user));
         boolean accepted = true;
         for (RoomTradeUser roomTradeUser : this.users) {
-            if (!roomTradeUser.getAccepted())
+            if (!roomTradeUser.getAccepted()) {
                 accepted = false;
+                break;
+            }
         }
         if (accepted) {
             this.sendMessageToUsers(new TradingWaitingConfirmComposer());
@@ -121,8 +119,10 @@ public class RoomTrade {
         this.sendMessageToUsers(new TradeAcceptedComposer(user));
         boolean accepted = true;
         for (RoomTradeUser roomTradeUser : this.users) {
-            if (!roomTradeUser.getConfirmed())
+            if (!roomTradeUser.getConfirmed()) {
                 accepted = false;
+                break;
+            }
         }
         if (accepted) {
             if (this.tradeItems()) {

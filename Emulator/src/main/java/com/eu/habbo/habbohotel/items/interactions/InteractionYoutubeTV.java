@@ -20,7 +20,7 @@ public class InteractionYoutubeTV extends HabboItem {
     public int startedWatchingAt = 0;
     public int offset = 0;
     public boolean playing = true;
-    public ScheduledFuture autoAdvance = null;
+    public ScheduledFuture<?> autoAdvance = null;
 
     public InteractionYoutubeTV(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

@@ -94,6 +94,9 @@ public class OpenGift implements Runnable {
 
                         unseenItems.get(AddHabboItemComposer.AddHabboItemCategory.BOT).add(item.getGiftAdjustedId());
                         break;
+
+                    default:
+                        break;
                 }
             }
 

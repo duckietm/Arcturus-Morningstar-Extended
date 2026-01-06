@@ -17,7 +17,6 @@ import com.eu.habbo.messages.outgoing.inventory.RemoveHabboItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.jukebox.JukeBoxMySongsComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.jukebox.JukeBoxNowPlayingMessageComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.jukebox.JukeBoxPlayListComposer;
-import gnu.trove.map.hash.THashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,7 +245,6 @@ public class TraxManager implements Disposable {
 
         if(this.songsLimit < this.songs.size() + 1)
         {
-            THashMap<String, String> codes = new THashMap<>();
             ServerMessage msg = new BubbleAlertComposer("${playlist.editor.alert.playlist.full.title}", "${playlist.editor.alert.playlist.full}").compose();
             habbo.getClient().sendResponse(msg);
             return;

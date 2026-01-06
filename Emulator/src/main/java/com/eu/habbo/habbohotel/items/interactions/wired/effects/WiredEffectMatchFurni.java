@@ -11,7 +11,6 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
-import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -111,7 +110,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         else {
             String[] data = set.getString("wired_data").split(":");
 
-            int itemCount = Integer.parseInt(data[0]);
+            Integer.parseInt(data[0]); // itemCount - consumed but unused, data[1] contains actual items
 
             String[] items = data[1].split(Pattern.quote(";"));
 

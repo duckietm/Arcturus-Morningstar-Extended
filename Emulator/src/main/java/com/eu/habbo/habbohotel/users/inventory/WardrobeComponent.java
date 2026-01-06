@@ -83,7 +83,7 @@ public class WardrobeComponent {
     }
 
     public class WardrobeItem implements Runnable {
-        private int slotId;
+        private final int slotId;
         private HabboGender gender;
         private Habbo habbo;
         private String look;

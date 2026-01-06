@@ -45,7 +45,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         message.appendInt(0);
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
-        message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
+        message.appendString(this.botName + ((char) 9) + this.message);
         message.appendInt(1);
         message.appendInt(this.mode);
         message.appendInt(0);

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PostItSaveDataEvent extends MessageHandler {
-    private static List<String> COLORS = Arrays.asList("9CCEFF", "FF9CFF", "9CFF9C", "FFFF33");
+    private static final List<String> COLORS = Arrays.asList("9CCEFF", "FF9CFF", "9CFF9C", "FFFF33");
 
     @Override
     public void handle() throws Exception {

@@ -44,7 +44,7 @@ public class PetUseItemEvent extends MessageHandler {
                     raceType = 0;
 
                 pet.setRace(raceType);
-                ((HorsePet) pet).needsUpdate = true;
+                pet.needsUpdate = true;
             } else if (item.getBaseItem().getName().toLowerCase().startsWith("horse_hairdye")) {
                 int splittedHairdye = Integer.parseInt(item.getBaseItem().getName().toLowerCase().split("_")[2]);
                 int newHairdye = 48;
@@ -60,7 +60,7 @@ public class PetUseItemEvent extends MessageHandler {
                 }
 
                 ((HorsePet) pet).setHairColor(newHairdye);
-                ((HorsePet) pet).needsUpdate = true;
+                pet.needsUpdate = true;
             } else if (item.getBaseItem().getName().toLowerCase().startsWith("horse_hairstyle")) {
                 int splittedHairstyle = Integer.parseInt(item.getBaseItem().getName().toLowerCase().split("_")[2]);
                 int newHairstyle = 100;
@@ -72,14 +72,14 @@ public class PetUseItemEvent extends MessageHandler {
                 }
 
                 ((HorsePet) pet).setHairStyle(newHairstyle);
-                ((HorsePet) pet).needsUpdate = true;
+                pet.needsUpdate = true;
             } else if (item.getBaseItem().getName().toLowerCase().startsWith("horse_saddle")) {
                 ((HorsePet) pet).hasSaddle(true);
                 ((HorsePet) pet).setSaddleItemId(item.getBaseItem().getId());
-                ((HorsePet) pet).needsUpdate = true;
+                pet.needsUpdate = true;
             }
 
-            if (((HorsePet) pet).needsUpdate) {
+            if (pet.needsUpdate) {
                 Emulator.getThreading().run(pet);
                 this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomPetHorseFigureComposer((HorsePet) pet).compose());
 
@@ -94,7 +94,7 @@ public class PetUseItemEvent extends MessageHandler {
                     ((MonsterplantPet) pet).setDeathTimestamp(Emulator.getIntUnixTimestamp() + MonsterplantPet.timeToLive);
                     pet.getRoomUnit().clearStatus();
                     pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, "rev");
-                    ((MonsterplantPet) pet).packetUpdate = true;
+                    pet.packetUpdate = true;
 
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().removeHabboItem(item);
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RemoveFloorItemComposer(item).compose());

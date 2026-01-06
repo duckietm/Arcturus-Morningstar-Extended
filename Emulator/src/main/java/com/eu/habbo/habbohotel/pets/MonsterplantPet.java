@@ -69,8 +69,8 @@ public class MonsterplantPet extends Pet implements IPetLook {
     private final int mouth;
     private final int mouthColor;
     public String look;
-    private int type;
-    private int hue;
+    private final int type;
+    private final int hue;
     private int deathTimestamp = Emulator.getIntUnixTimestamp() + timeToLive;
     private boolean canBreed = true;
     private boolean publiclyBreedable = false;
@@ -171,6 +171,7 @@ public class MonsterplantPet extends Pet implements IPetLook {
                     for (RoomUnitStatus s : this.roomUnit.getStatusMap().keySet()) {
                         if (s.equals(RoomUnitStatus.GROW)) {
                             clear = true;
+                            break;
                         }
                     }
 

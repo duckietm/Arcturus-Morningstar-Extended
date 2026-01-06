@@ -77,7 +77,7 @@ public class NavigatorManager {
                 try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM navigator_filter")) {
                     while (set.next()) {
                         Method field = null;
-                        Class clazz = Room.class;
+                        Class<?> clazz = Room.class;
 
                         if (set.getString("field").contains(".")) {
                             for (String s : (set.getString("field")).split("\\.")) {

@@ -5,16 +5,16 @@ import java.sql.SQLException;
 
 public class HallOfFameWinner implements Comparable<HallOfFameWinner> {
 
-    private int id;
+    private final int id;
 
 
-    private String username;
+    private final String username;
 
 
-    private String look;
+    private final String look;
 
 
-    private int points;
+    private final int points;
 
     public HallOfFameWinner(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

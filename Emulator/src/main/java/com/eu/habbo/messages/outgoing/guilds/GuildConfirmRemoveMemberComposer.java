@@ -5,8 +5,8 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
 public class GuildConfirmRemoveMemberComposer extends MessageComposer {
-    private int userId;
-    private int furniCount;
+    private final int userId;
+    private final int furniCount;
 
     public GuildConfirmRemoveMemberComposer(int userId, int furniCount) {
         this.userId = userId;

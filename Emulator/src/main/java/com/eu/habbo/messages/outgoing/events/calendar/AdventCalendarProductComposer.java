@@ -1,6 +1,5 @@
 package com.eu.habbo.messages.outgoing.events.calendar;
 
-import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.campaign.calendar.CalendarManager;
 import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardObject;
 import com.eu.habbo.habbohotel.users.Habbo;

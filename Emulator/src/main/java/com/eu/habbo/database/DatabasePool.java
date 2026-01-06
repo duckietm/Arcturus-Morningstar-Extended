@@ -20,8 +20,8 @@ class DatabasePool {
     private static DatabasePool instance;
 
     DatabasePool() {
-        // Private constructor for singleton pattern
     }
+
     public static synchronized DatabasePool getInstance() {
         if (instance == null) {
             instance = new DatabasePool();

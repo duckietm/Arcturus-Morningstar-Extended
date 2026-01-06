@@ -1,7 +1,10 @@
 package com.eu.habbo.habbohotel;
 
 import com.eu.habbo.Emulator;
-import com.eu.habbo.core.*;
+import com.eu.habbo.core.CreditsScheduler;
+import com.eu.habbo.core.GotwPointsScheduler;
+import com.eu.habbo.core.PixelScheduler;
+import com.eu.habbo.core.PointsScheduler;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.bots.BotManager;
 import com.eu.habbo.habbohotel.campaign.calendar.CalendarManager;
