@@ -29,7 +29,7 @@ public class WiredHighscoreManager {
     private final static String locale = (System.getProperty("user.language") != null ? System.getProperty("user.language") : "en");
     private final static String country = (System.getProperty("user.country") != null ? System.getProperty("user.country") : "US");
 
-    private final static DayOfWeek firstDayOfWeek = WeekFields.of(new Locale(locale, country)).getFirstDayOfWeek();
+    private final static DayOfWeek firstDayOfWeek = WeekFields.of(Locale.of(locale, country)).getFirstDayOfWeek();
     private final static DayOfWeek lastDayOfWeek = DayOfWeek.of(((firstDayOfWeek.getValue() + 5) % DayOfWeek.values().length) + 1);
     private final static ZoneId zoneId = ZoneId.systemDefault();
 

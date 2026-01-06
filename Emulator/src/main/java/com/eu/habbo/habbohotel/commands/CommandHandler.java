@@ -53,7 +53,7 @@ public class CommandHandler {
     public static void addCommand(Class<? extends Command> command) {
         try {
             //command.getConstructor().setAccessible(true);
-            addCommand(command.newInstance());
+            addCommand(command.getDeclaredConstructor().newInstance());
             LOGGER.debug("Added command: {}", command.getName());
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);

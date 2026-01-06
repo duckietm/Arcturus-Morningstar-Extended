@@ -179,7 +179,7 @@ public class PacketManager {
                     return;
                 }
 
-                final MessageHandler handler = handlerClass.newInstance();
+                final MessageHandler handler = handlerClass.getDeclaredConstructor().newInstance();
 
                 if (handler.getRatelimit() > 0) {
                     if (client.messageTimestamps.containsKey(handlerClass) && System.currentTimeMillis() - client.messageTimestamps.get(handlerClass) < handler.getRatelimit()) {

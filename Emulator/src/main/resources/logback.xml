@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <withJansi>false</withJansi>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%-14thread] %highlight(%-5level) %cyan(%-36logger{36}) - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%-14thread] %-5level %-36logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -54,15 +53,11 @@
         </encoder>
     </appender>
 
-    <logger name="io.netty">
-        <level value="info"/>
-    </logger>
+    <logger name="io.netty" level="INFO"/>
 
-    <logger name="com.zaxxer.hikari">
-        <level value="error"/>
-    </logger>
+    <logger name="com.zaxxer.hikari" level="ERROR"/>
 
-    <root level="info">
+    <root level="INFO">
         <appender-ref ref="Console" />
         <appender-ref ref="FileDebug" />
         <appender-ref ref="FileErrors" />

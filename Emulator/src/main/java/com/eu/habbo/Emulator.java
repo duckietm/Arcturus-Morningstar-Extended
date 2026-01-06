@@ -97,7 +97,7 @@ public final class Emulator {
                 appender.start();
             }
 
-            Locale.setDefault(new Locale("en"));
+            Locale.setDefault(Locale.of("en"));
             setBuild();
             Emulator.stopped = false;
             ConsoleCommand.load();
