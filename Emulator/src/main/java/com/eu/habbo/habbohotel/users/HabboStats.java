@@ -1,12 +1,12 @@
 package com.eu.habbo.habbohotel.users;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardClaimed;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.achievements.Achievement;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.achievements.TalentTrackType;
-import com.eu.habbo.habbohotel.campaign.calendar.CalendarRewardClaimed;
 import com.eu.habbo.habbohotel.catalog.CatalogItem;
-import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.rooms.RoomTrade;
@@ -25,10 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HabboStats implements Runnable {
@@ -46,7 +43,7 @@ public class HabboStats implements Runnable {
     private final THashMap<Integer, CatalogItem> recentPurchases;
     private final TIntArrayList favoriteRooms;
     private final TIntArrayList ignoredUsers;
-    private final TIntArrayList roomsVists;
+    private TIntArrayList roomsVists;
     public int achievementScore;
     public int respectPointsReceived;
     public int respectPointsGiven;
@@ -96,7 +93,7 @@ public class HabboStats implements Runnable {
     public boolean hasGottenDefaultSavedSearches;
     private HabboInfo habboInfo;
     private boolean allowTrade;
-    private final int clubExpireTimestamp;
+    private int clubExpireTimestamp;
     private int muteEndTime;
     public int maxFriends;
     public int maxRooms;
@@ -746,6 +743,7 @@ public class HabboStats implements Runnable {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("generic.error.ignore_higher_rank"), RoomChatMessageBubbles.ALERT);
             return false;
         }
+
         if (!this.userIgnored(userId)) {
             this.ignoredUsers.add(userId);
 

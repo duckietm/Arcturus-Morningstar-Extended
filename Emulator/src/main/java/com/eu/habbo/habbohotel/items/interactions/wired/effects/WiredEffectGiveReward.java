@@ -13,7 +13,8 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredGiveRewardItem;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
@@ -26,19 +27,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WiredEffectGiveReward extends InteractionWiredEffect {
-    public final static int LIMIT_ONCE = 0;
-    public final static int LIMIT_N_DAY = 1;
-    public final static int LIMIT_N_HOURS = 2;
-    public final static int LIMIT_N_MINUTES = 3;
+    public static final int LIMIT_ONCE = 0;
+    public static final int LIMIT_N_DAY = 1;
+    public static final int LIMIT_N_HOURS = 2;
+    public static final int LIMIT_N_MINUTES = 3;
 
-    public final static WiredEffectType type = WiredEffectType.GIVE_REWARD;
-    public int limit;
-    public int limitationInterval;
-    public int given;
-    public int rewardTime;
-    public boolean uniqueRewards;
-
-    public THashSet<WiredGiveRewardItem> rewardItems = new THashSet<>();
+    public static final WiredEffectType type = WiredEffectType.GIVE_REWARD;
+    
+    private int limit;
+    private int limitationInterval;
+    private int given;
+    private int rewardTime;
+    private boolean uniqueRewards;
+    private THashSet<WiredGiveRewardItem> rewardItems = new THashSet<>();
 
     public WiredEffectGiveReward(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -49,17 +50,29 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        if (roomUnit == null) return;
+
         Habbo habbo = room.getHabbo(roomUnit);
 
-        return habbo != null && WiredHandler.getReward(habbo, this);
+        if (habbo != null) {
+            WiredManager.getReward(habbo, this);
+        }
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
 
         ArrayList<WiredGiveRewardItem> rewards = new ArrayList<>(this.rewardItems);
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.limit, this.given, this.rewardTime, this.uniqueRewards, this.limitationInterval, rewards, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.limit, this.given, this.rewardTime, this.uniqueRewards, this.limitationInterval, rewards, this.getDelay()));
     }
 
     @Override
@@ -67,7 +80,7 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.limit = data.limit;
             this.given = data.given;
@@ -207,7 +220,7 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
 
             this.setDelay(settings.getDelay());
 
-            WiredHandler.dropRewards(this.getId());
+            WiredManager.dropRewards(this.getId());
             return true;
         }
 
@@ -222,7 +235,7 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
 
     @Override
     protected long requiredCooldown() {
-        return 0;
+        return COOLDOWN_NONE;
     }
 
     static class JsonData {
@@ -243,5 +256,59 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
             this.rewards = rewards;
             this.delay = delay;
         }
+    }
+    
+    // Getters and Setters
+    
+    public int getLimit() {
+        return this.limit;
+    }
+    
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+    
+    public int getLimitationInterval() {
+        return this.limitationInterval;
+    }
+    
+    public void setLimitationInterval(int limitationInterval) {
+        this.limitationInterval = limitationInterval;
+    }
+    
+    public int getGiven() {
+        return this.given;
+    }
+    
+    public void setGiven(int given) {
+        this.given = given;
+    }
+    
+    public void incrementGiven() {
+        this.given++;
+    }
+    
+    public int getRewardTime() {
+        return this.rewardTime;
+    }
+    
+    public void setRewardTime(int rewardTime) {
+        this.rewardTime = rewardTime;
+    }
+    
+    public boolean isUniqueRewards() {
+        return this.uniqueRewards;
+    }
+    
+    public void setUniqueRewards(boolean uniqueRewards) {
+        this.uniqueRewards = uniqueRewards;
+    }
+    
+    public THashSet<WiredGiveRewardItem> getRewardItems() {
+        return this.rewardItems;
+    }
+    
+    public void setRewardItems(THashSet<WiredGiveRewardItem> rewardItems) {
+        this.rewardItems = rewardItems;
     }
 }

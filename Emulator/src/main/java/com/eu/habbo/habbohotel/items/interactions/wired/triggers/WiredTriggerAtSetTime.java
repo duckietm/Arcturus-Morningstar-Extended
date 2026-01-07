@@ -1,6 +1,5 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
-import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
@@ -8,10 +7,12 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredEvent;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
 import com.eu.habbo.messages.ServerMessage;
-import com.eu.habbo.threading.runnables.WiredExecuteTask;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.sql.ResultSet;
@@ -19,11 +20,24 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements WiredTriggerReset {
-    public final static WiredTriggerType type = WiredTriggerType.AT_GIVEN_TIME;
+/**
+ * One-shot timer wired trigger that fires once after a set time.
+ * <p>
+ * Uses the new 50ms tick system via {@link WiredTickable} for accurate
+ * timing. After firing, the timer automatically resets and starts again.
+ * </p>
+ */
+public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements WiredTickable, WiredTriggerReset {
+    public static final WiredTriggerType type = WiredTriggerType.AT_GIVEN_TIME;
 
+    /** The time in milliseconds until the trigger fires */
     public int executeTime;
-    public int taskId;
+    
+    /** Accumulated time since last reset (in milliseconds) */
+    private long accumulatedTime = 0;
+    
+    /** Whether the timer has fired and is waiting for reset */
+    private boolean hasFired = false;
 
     public WiredTriggerAtSetTime(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -34,15 +48,20 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
     }
 
     @Override
+    public boolean matches(HabboItem triggerItem, WiredEvent event) {
+        // Only match if this timer is the one that actually fired
+        return event.getSourceItem().map(item -> item.getId() == this.getId()).orElse(false);
+    }
+
+    @Deprecated
+    @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        return true;
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
-            this.executeTime
-        ));
+        return WiredManager.getGson().toJson(new JsonData(this.executeTime));
     }
 
     @Override
@@ -50,7 +69,7 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.executeTime = data.executeTime;
         } else {
             if (wiredData.length() >= 1) {
@@ -61,14 +80,17 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
         if (this.executeTime < 500) {
             this.executeTime = 20 * 500;
         }
-        this.taskId = 1;
-        Emulator.getThreading().run(new WiredExecuteTask(this, Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId())), this.executeTime);
+        
+        // Initialize for tick system - will be registered by RoomItemManager
+        this.accumulatedTime = 0;
+        this.hasFired = false;
     }
 
     @Override
     public void onPickUp() {
         this.executeTime = 0;
-        this.taskId = 0;
+        this.accumulatedTime = 0;
+        this.hasFired = false;
     }
 
     @Override
@@ -111,7 +133,7 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
 
     @Override
     public boolean saveData(WiredSettings settings) {
-        if(settings.getIntParams().length < 1) return false;
+        if (settings.getIntParams().length < 1) return false;
         this.executeTime = settings.getIntParams()[0] * 500;
 
         this.resetTimer();
@@ -119,12 +141,53 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
         return true;
     }
 
+    // ========== WiredTickable Implementation ==========
+
+    @Override
+    public void onWiredTick(Room room, long tickCount, int tickIntervalMs) {
+        // Don't tick if already fired (waiting for manual reset)
+        if (this.hasFired) {
+            return;
+        }
+        
+        // Add fixed tick interval
+        this.accumulatedTime += tickIntervalMs;
+        
+        // Check if enough time has passed
+        if (this.accumulatedTime >= this.executeTime) {
+            this.hasFired = true;
+            this.accumulatedTime = 0;
+            
+            if (this.getRoomId() != 0 && room.isLoaded()) {
+                WiredManager.triggerTimerTick(room, this);
+            }
+        }
+    }
+
     @Override
     public void resetTimer() {
-        this.taskId++;
-
-        Emulator.getThreading().run(new WiredExecuteTask(this, Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId())), this.executeTime);
+        this.accumulatedTime = 0;
+        this.hasFired = false;
     }
+
+    @Override
+    public void onRegistered(Room room, long currentTimeMillis) {
+        this.accumulatedTime = 0;
+        this.hasFired = false;
+    }
+
+    @Override
+    public void onUnregistered(Room room) {
+        this.accumulatedTime = 0;
+        this.hasFired = false;
+    }
+
+    @Override
+    public boolean isOneShot() {
+        return true; // One-shot timer, fires once then waits for reset
+    }
+
+    // ========== JSON Data ==========
 
     static class JsonData {
         int executeTime;

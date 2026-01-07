@@ -10,6 +10,9 @@ import com.eu.habbo.messages.outgoing.rooms.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class RoomSettingsSaveEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomSettingsSaveEvent.class);
 
@@ -55,6 +58,7 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 int usersMax = this.packet.readInt();
                 int categoryId = this.packet.readInt();
                 StringBuilder tags = new StringBuilder();
+                Set<String> uniqueTags = new HashSet<>();
                 int count = Math.min(this.packet.readInt(), 2);
                 for (int i = 0; i < count; i++) {
                     String tag = this.packet.readString();
@@ -63,7 +67,10 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                         this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.TAGS_TOO_LONG, ""));
                         return;
                     }
-                    tags.append(tag).append(";");
+                    if(!uniqueTags.contains(tag)) {
+                        uniqueTags.add(tag);
+                        tags.append(tag).append(";");
+                    }
                 }
 
                 if (!Emulator.getGameEnvironment().getWordFilter().filter(tags.toString(), this.client.getHabbo()).contentEquals(tags)) {

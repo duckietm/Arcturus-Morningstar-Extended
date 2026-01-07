@@ -43,7 +43,7 @@ public class InteractionMuteArea extends InteractionCustomValues {
         }
     };
 
-    private final THashSet<RoomTile> tiles;
+    private THashSet<RoomTile> tiles;
 
     public InteractionMuteArea(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem, defaultValues);

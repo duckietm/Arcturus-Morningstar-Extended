@@ -8,8 +8,9 @@ import com.eu.habbo.habbohotel.items.interactions.wired.interfaces.InteractionWi
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
@@ -22,7 +23,7 @@ import java.util.List;
 public class WiredConditionMatchStatePosition extends InteractionWiredCondition implements InteractionWiredMatchFurniSettings {
     public static final WiredConditionType type = WiredConditionType.MATCH_SSHOT;
 
-    private final THashSet<WiredMatchFurniSetting> settings;
+    private THashSet<WiredMatchFurniSetting> settings;
 
     private boolean state;
     private boolean position;
@@ -48,7 +49,7 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
         this.refresh();
 
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.settings.size());
 
         for (WiredMatchFurniSetting item : this.settings)
@@ -97,7 +98,8 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        Room room = ctx.room();
         if (this.settings.isEmpty())
             return true;
 
@@ -135,9 +137,15 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
         return true;
     }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.state,
                 this.position,
                 this.direction,
@@ -150,7 +158,7 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.state = data.state;
             this.position = data.position;
             this.direction = data.direction;

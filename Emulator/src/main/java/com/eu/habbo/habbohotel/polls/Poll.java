@@ -20,7 +20,7 @@ public class Poll {
 
     public int lastQuestionId;
 
-    private final ArrayList<PollQuestion> questions;
+    private ArrayList<PollQuestion> questions;
 
     public Poll(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

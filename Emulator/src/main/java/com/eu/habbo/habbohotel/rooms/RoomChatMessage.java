@@ -30,15 +30,14 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     public int roomId;
     public boolean isCommand = false;
     public boolean filtered = false;
-    private final int roomUnitId;
+    private int roomUnitId;
     private String message;
-    private final String unfilteredMessage;
+    private String unfilteredMessage;
     private int timestamp = 0;
     private RoomChatMessageBubbles bubble;
     private Habbo targetHabbo;
     private byte emotion;
-    private String RoomChatColour;
-    //Added ChatColor
+	private String RoomChatColour; // Added Chatcolor
 
     public RoomChatMessage(MessageHandler message) {
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {
@@ -48,38 +47,28 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         } else {
             this.message = message.packet.readString();
         }
-
-        this.habbo = message.client.getHabbo();
-        this.roomUnitId = this.habbo.getRoomUnit().getId();
-
-        RoomChatMessageBubbles userBubble = this.habbo.getHabboStats().chatColor;
-
-        int bubbleId = message.packet.readInt();
-
         try {
-            this.bubble = RoomChatMessageBubbles.getBubble(bubbleId);
+            this.bubble = RoomChatMessageBubbles.getBubble(message.packet.readInt());
         } catch (Exception e) {
             this.bubble = RoomChatMessageBubbles.NORMAL;
         }
 
-        if (userBubble != null && this.bubble.isOverridable()) {
-            this.bubble = userBubble;
-        }
-
-        this.RoomChatColour = message.packet.readString();
-
         if (!message.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
-                if (i.equals(this.bubble.getType())) {
+                if (i == this.bubble.getType()) {
                     this.bubble = RoomChatMessageBubbles.NORMAL;
                     break;
                 }
             }
         }
 
+        this.habbo = message.client.getHabbo();
+        this.roomUnitId = this.habbo.getRoomUnit().getId();
         this.unfilteredMessage = this.message;
         this.timestamp = Emulator.getIntUnixTimestamp();
+
         this.checkEmotion();
+
         this.filter();
     }
 
@@ -209,7 +198,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(this.getEmotion());
             message.appendInt(this.getBubble().getType());
             message.appendInt(0);
-            message.appendString(this.RoomChatColour); //Added packet for room chat
+			message.appendString(this.RoomChatColour); //Added packet for room chat
             message.appendInt(this.getMessage().length());
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);

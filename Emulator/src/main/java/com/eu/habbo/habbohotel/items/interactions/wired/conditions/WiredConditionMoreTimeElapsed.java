@@ -7,7 +7,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -27,13 +28,19 @@ public class WiredConditionMoreTimeElapsed extends InteractionWiredCondition {
     }
 
     @Override
+    public boolean evaluate(WiredContext ctx) {
+        return (Emulator.getIntUnixTimestamp() - ctx.room().getLastTimerReset()) / 0.5 > this.cycles;
+    }
+
+    @Deprecated
+    @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        return (Emulator.getIntUnixTimestamp() - room.getLastTimerReset()) / 0.5 > this.cycles;
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.cycles
         ));
     }
@@ -44,7 +51,7 @@ public class WiredConditionMoreTimeElapsed extends InteractionWiredCondition {
 
         try {
             if (wiredData.startsWith("{")) {
-                JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+                JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
                 this.cycles = data.cycles;
             } else {
                 if (!wiredData.equals(""))

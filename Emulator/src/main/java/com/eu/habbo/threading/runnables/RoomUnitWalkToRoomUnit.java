@@ -4,18 +4,17 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
 import java.util.List;
 
 public class RoomUnitWalkToRoomUnit implements Runnable {
     private final int minDistance;
-    private final RoomUnit walker;
-    private final RoomUnit target;
-    private final Room room;
-    private final List<Runnable> targetReached;
-    private final List<Runnable> failedReached;
+    private RoomUnit walker;
+    private RoomUnit target;
+    private Room room;
+    private List<Runnable> targetReached;
+    private List<Runnable> failedReached;
 
     private RoomTile goalTile = null;
 
@@ -50,7 +49,7 @@ public class RoomUnitWalkToRoomUnit implements Runnable {
                 for (Runnable r : this.targetReached) {
                     Emulator.getThreading().run(r);
 
-                    WiredHandler.handle(WiredTriggerType.BOT_REACHED_AVTR, this.target, this.room, new Object[]{ this.walker });
+                    WiredManager.triggerBotReachedHabbo(this.room, this.walker, this.target);
                 }
             } else {
                 Emulator.getThreading().run(this, 500);

@@ -14,7 +14,6 @@ import com.eu.habbo.habbohotel.games.tag.IceTagGame;
 import com.eu.habbo.habbohotel.games.tag.RollerskateGame;
 import com.eu.habbo.habbohotel.games.wired.WiredGame;
 import com.eu.habbo.habbohotel.guilds.Guild;
-import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.navigation.NavigatorFilterComparator;
@@ -27,8 +26,7 @@ import com.eu.habbo.habbohotel.pets.PetTasks;
 import com.eu.habbo.habbohotel.polls.Poll;
 import com.eu.habbo.habbohotel.polls.PollManager;
 import com.eu.habbo.habbohotel.users.*;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.users.UserNuxEvent;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
 import com.eu.habbo.messages.outgoing.hotelview.HotelViewComposer;
@@ -52,6 +50,7 @@ import com.eu.habbo.plugin.events.users.UserExitRoomEvent;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.procedure.TIntProcedure;
+import gnu.trove.procedure.TObjectProcedure;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +152,7 @@ public class RoomManager {
 
     public THashMap<Integer, List<Room>> findRooms(NavigatorFilterField filterField, String value, int category, boolean showInvisible) {
         THashMap<Integer, List<Room>> rooms = new THashMap<>();
-        String query = filterField.databaseQuery + " AND rooms.state NOT LIKE " + (showInvisible ? "''" : "'invisible'") + (category >= 0 ? "AND rooms.category = '" + category + "'" : "") + "  ORDER BY rooms.users, rooms.id DESC LIMIT " + (page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE) + ((page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE) + NavigatorManager.MAXIMUM_RESULTS_PER_PAGE);
+        String query = filterField.databaseQuery + " AND rooms.state NOT LIKE " + (showInvisible ? "''" : "'invisible'") + (category >= 0 ? "AND rooms.category = '" + category + "'" : "") + "  ORDER BY rooms.users, rooms.id DESC LIMIT " + (page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE) + "" + ((page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE) + NavigatorManager.MAXIMUM_RESULTS_PER_PAGE);
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, (filterField.comparator == NavigatorFilterComparator.EQUALS ? value : "%" + value + "%"));
             try (ResultSet set = statement.executeQuery()) {
@@ -290,6 +289,14 @@ public class RoomManager {
         return loadRoom(id, false);
     }
 
+    /**
+     * Loads a room, optionally loading its data.
+     * If the room is already being loaded in the background, this will wait for that to complete.
+     * 
+     * @param id The room ID
+     * @param loadData Whether to load room data (items, bots, pets, etc.)
+     * @return The loaded room, or null if not found
+     */
     public Room loadRoom(int id, boolean loadData) {
         Room room = null;
 
@@ -301,7 +308,10 @@ public class RoomManager {
             room = this.activeRooms.get(id);
 
             if (loadData) {
-                if (room.isPreLoaded() && !room.isLoaded()) {
+                if (room.isLoadingInProgress()) {
+                    // Wait for background loading to complete
+                    room.waitForLoad();
+                } else if (room.isPreLoaded() && !room.isLoaded()) {
                     room.loadData();
                 }
             }
@@ -530,7 +540,6 @@ public class RoomManager {
         }
 
         if (overrideChecks ||
-                habbo.roomBypass ||
                 room.isOwner(habbo) ||
                 room.getState() == RoomState.OPEN ||
                 habbo.hasPermission(Permission.ACC_ANYROOMOWNER) ||
@@ -803,16 +812,20 @@ public class RoomManager {
                 }
             }
 
-            allFloorItems.forEach(object ->  {
-                if (room.isHideWired() && object instanceof InteractionWired | object instanceof InteractionTileWalkMagic)
-                    return true;
+            allFloorItems.forEach(new TObjectProcedure<HabboItem>() {
+                @Override
+                public boolean execute(HabboItem object) {
+                    if (room.isHideWired() && object instanceof InteractionWired)
+                        return true;
 
-                floorItems.add(object);
-                if (floorItems.size() == 250) {
-                    habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
-                    floorItems.clear();
+                    floorItems.add(object);
+                    if (floorItems.size() == 250) {
+                        habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
+                        floorItems.clear();
+                    }
+
+                    return true;
                 }
-                return true;
             });
 
             habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
@@ -912,7 +925,7 @@ public class RoomManager {
             }
         }
 
-        WiredHandler.handle(WiredTriggerType.ENTER_ROOM, habbo.getRoomUnit(), room, null);
+        WiredManager.triggerUserEntersRoom(room, habbo.getRoomUnit());
         room.habboEntered(habbo);
 
         if (!habbo.getHabboStats().nux && (room.isOwner(habbo) || room.isPublicRoom())) {
@@ -1136,7 +1149,6 @@ public class RoomManager {
         return rooms;
     }
 
-
     public ArrayList<Room> getGroupRoomsWithName(String name) {
         ArrayList<Room> rooms = new ArrayList<>();
 
@@ -1222,7 +1234,7 @@ public class RoomManager {
     public ArrayList<Room> getRoomsVisited(Habbo habbo, boolean includeSelf, int limit) {
         ArrayList<Room> rooms = new ArrayList<>();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT rooms.* FROM room_enter_log INNER JOIN rooms ON room_enter_log.room_id = rooms.id WHERE user_id = ? AND timestamp >= ? AND rooms.owner_id != ? GROUP BY rooms.id ORDER BY timestamp DESC LIMIT " + limit)) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT rooms.* FROM room_enter_log INNER JOIN rooms ON room_enter_log.room_id = rooms.id WHERE user_id = ? AND timestamp >= ? AND rooms.owner_id != ? GROUP BY rooms.id ORDER BY MAX(timestamp) DESC LIMIT " + limit)) {
             statement.setInt(1, habbo.getHabboInfo().getId());
             statement.setInt(2, Emulator.getIntUnixTimestamp() - 259200);
             statement.setInt(3, (includeSelf ? 0 : habbo.getHabboInfo().getId()));
@@ -1444,6 +1456,8 @@ public class RoomManager {
         ArrayList<Room> r = new ArrayList<>();
 
         for (Room room : rooms) {
+            if (room.getTags().split(";").length == 0)
+                continue;
 
             for (String s : room.getTags().split(";")) {
                 if (s.equalsIgnoreCase(filter))

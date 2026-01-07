@@ -10,8 +10,8 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
@@ -42,7 +42,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         message.appendInt(0);
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
-        message.appendString(this.botName + ((char) 9) + this.message);
+        message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
         message.appendInt(1);
         message.appendInt(this.mode);
         message.appendInt(0);
@@ -89,10 +89,12 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
         String message = this.message;
 
-        Habbo habbo = room.getHabbo(roomUnit);
+        Habbo habbo = roomUnit != null ? room.getHabbo(roomUnit) : null;
 
         if (habbo != null) {
             message = message.replace(Emulator.getTexts().getValue("wired.variable.username", "%username%"), habbo.getHabboInfo().getUsername())
@@ -111,7 +113,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         if (bots.size() == 1) {
             Bot bot = bots.get(0);
 
-            if(!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, bot.getRoomUnit(), room, new Object[]{ message })) {
+            if(!WiredManager.triggerUserSays(room, bot.getRoomUnit(), message)) {
                 if (this.mode == 1) {
                     bot.shout(message);
                 } else {
@@ -119,13 +121,17 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
                 }
             }
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay()));
     }
 
     @Override
@@ -133,7 +139,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.mode = data.mode;
             this.botName = data.bot_name;

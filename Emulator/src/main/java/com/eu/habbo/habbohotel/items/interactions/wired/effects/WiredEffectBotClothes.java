@@ -9,7 +9,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
@@ -39,7 +40,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
         message.appendInt(0);
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
-        message.appendString(this.botName + ((char) 9) + this.botLook);
+        message.appendString(this.botName + ((char) 9) + "" + this.botLook);
         message.appendInt(0);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -77,20 +78,25 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
         List<Bot> bots = room.getBots(this.botName);
 
         if (bots.size() == 1) {
             Bot bot = bots.get(0);
             bot.setFigure(this.botLook);
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.botName, this.botLook, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.botLook, this.getDelay()));
     }
 
     @Override
@@ -98,7 +104,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.botName = data.bot_name;
             this.botLook = data.look;

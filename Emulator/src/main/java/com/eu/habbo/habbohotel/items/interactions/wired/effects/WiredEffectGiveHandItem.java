@@ -2,8 +2,8 @@ package com.eu.habbo.habbohotel.items.interactions.wired.effects;
 
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
-import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,17 +18,17 @@ public class WiredEffectGiveHandItem extends WiredEffectWhisper {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
         try {
             int itemId = Integer.parseInt(this.message);
 
-            Habbo habbo = room.getHabbo(roomUnit);
+            Room room = ctx.room();
+            Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
             if (habbo != null) {
                 room.giveHandItem(habbo, itemId);
             }
         } catch (Exception e) {
         }
-        return false;
     }
 }

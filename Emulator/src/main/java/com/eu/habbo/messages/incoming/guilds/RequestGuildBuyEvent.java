@@ -74,7 +74,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
                             badge += "s";
                         }
 
-                        badge += (id < 100 ? "0" : "") + (id < 10 ? "0" : "") + id + (color < 10 ? "0" : "") + color + pos;
+                        badge += (id < 100 ? "0" : "") + (id < 10 ? "0" : "") + id + (color < 10 ? "0" : "") + color + "" + pos;
 
                         base += 3;
                     }

@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public final class MarketPlace {
+public class MarketPlace {
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketPlace.class);
 
     //Configuration. Loaded from database & updated accordingly.
@@ -142,9 +142,10 @@ public final class MarketPlace {
             case 2:
                 query += " ORDER BY minPrice ASC";
                 break;
-            case 1:
             default:
+            case 1:
                 query += " ORDER BY minPrice DESC";
+                break;
         }
 
         query += ")";
@@ -365,13 +366,15 @@ public final class MarketPlace {
         THashSet<MarketPlaceOffer> offers = new THashSet<>();
         offers.addAll(client.getHabbo().getInventory().getMarketplaceItems());
 
-        for (MarketPlaceOffer offer : offers) {
-            if (offer.getState().equals(MarketPlaceState.SOLD)) {
-                client.getHabbo().getInventory().removeMarketplaceOffer(offer);
-                credits += offer.getPrice();
-                removeUser(offer);
-                offer.needsUpdate(true);
-                Emulator.getThreading().run(offer);
+        synchronized (client.getHabbo().getInventory()) {
+            for (MarketPlaceOffer offer : offers) {
+                if (offer.getState().equals(MarketPlaceState.SOLD)) {
+                    client.getHabbo().getInventory().removeMarketplaceOffer(offer);
+                    credits += offer.getPrice();
+                    removeUser(offer);
+                    offer.needsUpdate(true);
+                    Emulator.getThreading().run(offer);
+                }
             }
         }
 

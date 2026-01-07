@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoomUnitWalkToLocation implements Runnable {
-    private final RoomUnit walker;
-    private final RoomTile goalTile;
-    private final Room room;
-    private final List<Runnable> targetReached;
-    private final List<Runnable> failedReached;
+    private RoomUnit walker;
+    private RoomTile goalTile;
+    private Room room;
+    private List<Runnable> targetReached;
+    private List<Runnable> failedReached;
 
     public RoomUnitWalkToLocation(RoomUnit walker, RoomTile goalTile, Room room, Runnable targetReached, Runnable failedReached) {
         this.walker = walker;
@@ -48,12 +48,8 @@ public class RoomUnitWalkToLocation implements Runnable {
             return;
         }
 
-        if (!this.walker.getGoal().equals(this.goalTile) || (this.walker.getPath().size() == 0 && !this.walker.hasStatus(RoomUnitStatus.MOVE))) {
-            onFail();
-            return;
-        }
-
-        if (!this.walker.getGoal().equals(this.goalTile) || (this.walker.getPath().size() == 0 && (!this.walker.hasStatus(RoomUnitStatus.MOVE) || !this.walker.hasStatus(RoomUnitStatus.SNOWWAR_RUN)))) {
+        RoomTile currentGoal = this.walker.getGoal();
+        if (currentGoal == null || !currentGoal.equals(this.goalTile) || (this.walker.getPath().size() == 0 && !this.walker.hasStatus(RoomUnitStatus.MOVE))) {
             onFail();
             return;
         }

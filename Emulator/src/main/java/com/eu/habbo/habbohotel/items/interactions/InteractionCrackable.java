@@ -39,7 +39,7 @@ public class InteractionCrackable extends HabboItem {
         serverMessage.appendInt(7 + (this.isLimited() ? 256 : 0));
 
         serverMessage.appendString(Emulator.getGameEnvironment().getItemManager().calculateCrackState(Integer.parseInt(this.getExtradata()), Emulator.getGameEnvironment().getItemManager().getCrackableCount(this.getBaseItem().getId()), this.getBaseItem()) + "");
-        serverMessage.appendInt(Integer.parseInt(this.getExtradata()));
+        serverMessage.appendInt(Integer.valueOf(this.getExtradata()));
         serverMessage.appendInt(Emulator.getGameEnvironment().getItemManager().getCrackableCount(this.getBaseItem().getId()));
 
         super.serializeExtradata(serverMessage);

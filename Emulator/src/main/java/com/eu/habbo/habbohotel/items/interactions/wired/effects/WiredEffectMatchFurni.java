@@ -8,8 +8,9 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.interfaces.InteractionWiredMatchFurniSettings;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
@@ -45,10 +46,14 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
 
         if(this.settings.isEmpty())
-            return true;
+            return;
+
+        if (room.getLayout() == null)
+            return;
 
         for (WiredMatchFurniSetting setting : this.settings) {
             HabboItem item = room.getHabboItem(setting.item_id);
@@ -61,6 +66,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
                 }
 
                 RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
+                if (oldLocation == null) continue;
                 double oldZ = item.getZ();
 
                 if(this.direction && !this.position) {
@@ -84,14 +90,18 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
 
             }
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
         this.refresh();
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.state, this.direction, this.position, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.state, this.direction, this.position, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay()));
     }
 
     @Override
@@ -99,7 +109,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.state = data.state;
             this.direction = data.direction;
@@ -155,7 +165,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.refresh();
 
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.settings.size());
 
         for (WiredMatchFurniSetting item : this.settings)
@@ -196,7 +206,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
 
         for (int i = 0; i < itemsCount; i++) {
             int itemId = settings.getFurniIds()[i];
-            HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
+            HabboItem it = room.getHabboItem(itemId);
 
             if(it == null)
                 throw new WiredSaveException(String.format("Item %s not found", itemId));
@@ -223,18 +233,8 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
         if (room != null && room.isLoaded()) {
-            THashSet<WiredMatchFurniSetting> remove = new THashSet<>();
-
-            for (WiredMatchFurniSetting setting : this.settings) {
-                HabboItem item = room.getHabboItem(setting.item_id);
-                if (item == null) {
-                    remove.add(setting);
-                }
-            }
-
-            for (WiredMatchFurniSetting setting : remove) {
-                this.settings.remove(setting);
-            }
+            // Use removeIf for O(n) instead of O(n²) with separate remove set
+            this.settings.removeIf(setting -> room.getHabboItem(setting.item_id) == null);
         }
     }
 

@@ -5,8 +5,7 @@ import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
 public class BotFollowHabbo implements Runnable {
     private final Bot bot;
@@ -36,7 +35,7 @@ public class BotFollowHabbo implements Runnable {
 
                                 if(this.habbo.getRoomUnit().getCurrentLocation().distance(this.bot.getRoomUnit().getCurrentLocation()) < 2) {
                                     if(!hasReached) {
-                                        WiredHandler.handle(WiredTriggerType.BOT_REACHED_AVTR, bot.getRoomUnit(), room, new Object[]{});
+                                        WiredManager.triggerBotReachedHabbo(room, bot.getRoomUnit(), habbo.getRoomUnit());
                                         hasReached = true;
                                     }
                                 }

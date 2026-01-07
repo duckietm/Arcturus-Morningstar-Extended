@@ -10,7 +10,9 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -29,7 +31,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     private final List<HabboItem> items = new ArrayList<>();
     private int direction;
     private int spacing = 1;
-    private final Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
+    private Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
 
     public WiredEffectMoveFurniTo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -69,11 +71,14 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        if (room == null || room.getLayout() == null) return;
+        
         List<HabboItem> items = new ArrayList<>();
 
         for (HabboItem item : this.items) {
-            if (Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
+            if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
 
@@ -82,9 +87,10 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         }
 
         if (this.items.isEmpty())
-            return false;
+            return;
 
-        if (stuff != null) {
+        Object[] stuff = ctx.legacySettings();
+        if (stuff != null && stuff.length > 0) {
             for (Object object : stuff) {
                 if (object instanceof HabboItem) {
                     HabboItem targetItem = this.items.get(Emulator.getRandom().nextInt(this.items.size()));
@@ -100,7 +106,10 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                         RoomTile objectTile = room.getLayout().getTile(targetItem.getX(), targetItem.getY());
 
                         if (objectTile != null) {
-                            THashSet<RoomTile> refreshTiles = room.getLayout().getTilesAt(room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY()), ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation());
+                            RoomTile sourceTile = room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY());
+                            if (sourceTile == null) continue;
+                            
+                            THashSet<RoomTile> refreshTiles = room.getLayout().getTilesAt(sourceTile, ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation());
 
                             RoomTile tile = room.getLayout().getTileInFront(objectTile, this.direction, indexOffset);
                             if (tile == null || !tile.getAllowStack()) {
@@ -108,8 +117,16 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                                 tile = room.getLayout().getTileInFront(objectTile, this.direction, indexOffset);
                             }
 
+                            if(tile == null) {
+                                continue;
+                            }
+
                             room.sendComposer(new FloorItemOnRollerComposer((HabboItem) object, null, tile, tile.getStackHeight() - ((HabboItem) object).getZ(), room).compose());
-                            refreshTiles.addAll(room.getLayout().getTilesAt(room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY()), ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation()));
+                            
+                            RoomTile newSourceTile = room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY());
+                            if (newSourceTile != null) {
+                                refreshTiles.addAll(room.getLayout().getTilesAt(newSourceTile, ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation()));
+                            }
                             room.updateTiles(refreshTiles);
                             this.indexOffset.put(targetItem.getId(), indexOffset);
                         }
@@ -117,7 +134,47 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                 }
             }
         }
+    }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
+    @Override
+    public boolean simulate(WiredContext ctx, WiredSimulation simulation) {
+        Room room = ctx.room();
+        if (room == null || room.getLayout() == null) return true;
+        
+        Object[] stuff = ctx.legacySettings();
+        if (stuff == null || stuff.length == 0) return true;
+        
+        for (Object object : stuff) {
+            if (object instanceof HabboItem) {
+                HabboItem item = (HabboItem) object;
+                
+                if (this.items.isEmpty()) continue;
+                HabboItem targetItem = this.items.get(0);
+                if (targetItem == null) continue;
+                
+                WiredSimulation.SimulatedPosition targetPos = simulation.getItemPosition(targetItem);
+                RoomTile objectTile = room.getLayout().getTile(targetPos.x, targetPos.y);
+                if (objectTile == null) continue;
+                
+                RoomTile tile = room.getLayout().getTileInFront(objectTile, this.direction, 0);
+                if (tile == null) continue;
+                
+                WiredSimulation.SimulatedPosition currentPos = simulation.getItemPosition(item);
+                if (!simulation.isTileValidForItem(tile.x, tile.y, item)) {
+                    return false;
+                }
+                if (!simulation.moveItem(item, tile.x, tile.y, tile.getStackHeight(), currentPos.rotation)) {
+                    return false;
+                }
+            }
+        }
+        
         return true;
     }
 
@@ -134,7 +191,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
             this.items.remove(item);
         }
 
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.direction,
                 this.spacing,
                 this.getDelay(),
@@ -156,7 +213,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         }
 
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.items.size());
         for (HabboItem item : this.items)
             message.appendInt(item.getId());
@@ -178,7 +235,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.direction = data.direction;
             this.spacing = data.spacing;
             this.setDelay(data.delay);

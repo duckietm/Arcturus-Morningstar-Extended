@@ -6,7 +6,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +60,21 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        RoomUnit roomUnit = ctx.actor().orElse(null);
         if (roomUnit == null) return false;
         return roomUnit.getHandItem() == this.handItem;
     }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.handItem
         ));
     }
@@ -77,7 +85,7 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
             String wiredData = set.getString("wired_data");
 
             if (wiredData.startsWith("{")) {
-                JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+                JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
                 this.handItem = data.handItemId;
             } else {
                 this.handItem = Integer.parseInt(wiredData);

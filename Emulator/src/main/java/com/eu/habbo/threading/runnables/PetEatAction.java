@@ -27,7 +27,7 @@ public class PetEatAction implements Runnable {
                 this.pet.setTask(PetTasks.EAT);
                 this.pet.getRoomUnit().setCanWalk(false);
 
-                this.food.setExtradata(Integer.parseInt(this.food.getExtradata()) + 1 + "");
+                this.food.setExtradata(Integer.valueOf(this.food.getExtradata()) + 1 + "");
                 this.pet.getRoom().updateItem(this.food);
 
                 if (this.pet instanceof GnomePet) {

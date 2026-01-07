@@ -18,10 +18,15 @@ class WiredRepeatEffectTask implements Runnable {
     @Override
     public void run() {
         if (!Emulator.isShuttingDown && Emulator.isReady) {
-            if (this.room != null && this.room.getId() == this.effect.getRoomId()) {
-                this.effect.execute(null, this.room, null);
-
-                Emulator.getThreading().run(this, this.delay);
+            if (this.effect == null) return;
+            
+            if (this.room != null && this.room.isLoaded() && this.room.getId() == this.effect.getRoomId()) {
+                try {
+                    this.effect.execute(null, this.room, null);
+                    Emulator.getThreading().run(this, this.delay);
+                } catch (Exception e) {
+                    // Prevent task from crashing the thread pool
+                }
             }
         }
     }

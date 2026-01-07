@@ -88,11 +88,11 @@ public class HabboDiffieHellman {
         }
 
         if (this.DHPrime.compareTo(BigInteger.valueOf(2)) < 1) {
-            throw new HabboCryptoException("Prime cannot be <= 2!\nPrime: " + this.DHPrime);
+            throw new HabboCryptoException("Prime cannot be <= 2!\nPrime: " + this.DHPrime.toString());
         }
 
         if (this.DHGenerator.compareTo(this.DHPrime) > -1) {
-            throw new HabboCryptoException("Generator cannot be >= Prime!\nPrime: " + this.DHPrime + "\nGenerator: " + this.DHGenerator.toString());
+            throw new HabboCryptoException("Generator cannot be >= Prime!\nPrime: " + this.DHPrime.toString() + "\nGenerator: " + this.DHGenerator.toString());
         }
 
         generateDHKeys();

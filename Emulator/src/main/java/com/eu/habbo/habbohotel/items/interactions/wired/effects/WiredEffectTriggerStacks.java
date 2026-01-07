@@ -9,9 +9,10 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -51,7 +52,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             this.items.remove(item);
         }
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.items.size());
         for (HabboItem item : this.items) {
             message.appendInt(item.getId());
@@ -116,44 +117,81 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
         return true;
     }
 
+    /**
+     * Maximum recursion depth to prevent infinite loops when trigger stacks call each other.
+     */
+    private static final int MAX_STACK_DEPTH = 10;
+    
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-
-        if (stuff == null || (stuff.length >= 1 && stuff[stuff.length - 1] instanceof WiredEffectTriggerStacks)) {
-            return false;
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        Object[] stuff = ctx.legacyStuff();
+        
+        // Prevent infinite recursion by checking for WiredEffectTriggerStacks in the call chain
+        // and limiting the recursion depth
+        int stackDepth = 0;
+        if (stuff != null) {
+            for (Object obj : stuff) {
+                if (obj instanceof WiredEffectTriggerStacks) {
+                    stackDepth++;
+                    // If this specific stack is already in the chain, prevent infinite loop
+                    if (obj == this) {
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // Prevent excessive recursion depth
+        if (stackDepth >= MAX_STACK_DEPTH) {
+            return;
         }
 
         THashSet<RoomTile> usedTiles = new THashSet<>();
 
-        boolean found;
-
         for (HabboItem item : this.items) {
-            //if(item instanceof InteractionWiredTrigger)
-            {
-                found = false;
-                for (RoomTile tile : usedTiles) {
-                    if (tile.x == item.getX() && tile.y == item.getY()) {
-                        found = true;
-                        break;
-                    }
+            if (item == null) continue;
+            
+            boolean found = false;
+            for (RoomTile tile : usedTiles) {
+                if (tile.x == item.getX() && tile.y == item.getY()) {
+                    found = true;
+                    break;
                 }
+            }
 
-                if (!found) {
-                    usedTiles.add(room.getLayout().getTile(item.getX(), item.getY()));
+            if (!found) {
+                RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+                if (tile != null) {
+                    usedTiles.add(tile);
                 }
             }
         }
-            Object[] newStuff = new Object[stuff.length + 1];
+        
+        // Create new stuff array with this trigger stack added for recursion tracking
+        Object[] newStuff;
+        if (stuff != null) {
+            newStuff = new Object[stuff.length + 1];
             System.arraycopy(stuff, 0, newStuff, 0, stuff.length);
             newStuff[newStuff.length - 1] = this;
-            WiredHandler.executeEffectsAtTiles(usedTiles, roomUnit, room, newStuff);
-
-            return true;
+        } else {
+            newStuff = new Object[] { this };
         }
+        
+        WiredManager.executeEffectsAtTiles(usedTiles, roomUnit, room, newStuff);
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
@@ -165,7 +203,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -205,7 +243,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
 
     @Override
     protected long requiredCooldown() {
-        return 250;
+        return COOLDOWN_TRIGGER_STACKS;
     }
 
     static class JsonData {

@@ -6,8 +6,8 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
 public class RoomUserReceivedHandItemComposer extends MessageComposer {
-    private final RoomUnit from;
-    private final int handItem;
+    private RoomUnit from;
+    private int handItem;
 
     public RoomUserReceivedHandItemComposer(RoomUnit from, int handItem) {
         this.from = from;

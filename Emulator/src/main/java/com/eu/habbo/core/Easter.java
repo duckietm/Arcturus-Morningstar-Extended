@@ -9,7 +9,7 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.users.UserSavedMottoEvent;
 
-public final class Easter {
+public class Easter {
     @EventHandler
     public static void onUserChangeMotto(UserSavedMottoEvent event) {
         if (Emulator.getConfig().getBoolean("easter_eggs.enabled") && event.newMotto.equalsIgnoreCase("crickey!")) {

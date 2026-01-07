@@ -85,7 +85,7 @@ public class RedeemCommand extends Command {
 
         if (pixels > 0) {
             message[0] += ", " + Emulator.getTexts().getValue("generic.pixels");
-            message[0] += ": " + pixels;
+            message[0] += ": " + pixels + "";
         }
 
         if (!points.isEmpty()) {

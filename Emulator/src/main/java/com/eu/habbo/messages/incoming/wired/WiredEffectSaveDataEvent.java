@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
 import com.eu.habbo.messages.outgoing.wired.WiredSavedComposer;
@@ -38,6 +39,9 @@ public class WiredEffectSaveDataEvent extends MessageHandler {
                                 this.client.sendResponse(new WiredSavedComposer());
                                 effect.needsUpdate(true);
                                 Emulator.getThreading().run(effect);
+                                
+                                // Invalidate wired cache when effect is saved
+                                WiredManager.invalidateRoom(room);
                             }
                         }
                         else {
@@ -45,6 +49,9 @@ public class WiredEffectSaveDataEvent extends MessageHandler {
                                 this.client.sendResponse(new WiredSavedComposer());
                                 effect.needsUpdate(true);
                                 Emulator.getThreading().run(effect);
+                                
+                                // Invalidate wired cache when effect is saved
+                                WiredManager.invalidateRoom(room);
                             }
                         }
                     } else {

@@ -10,7 +10,8 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.hotelview.BonusRareComposer;
 import gnu.trove.procedure.TObjectProcedure;
@@ -85,23 +86,27 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        Habbo habbo = room.getHabbo(roomUnit);
+    public void execute(WiredContext ctx) {
+        Habbo habbo = ctx.actor().map(unit -> ctx.room().getHabbo(unit)).orElse(null);
 
         if (habbo == null)
-            return false;
+            return;
 
         if (this.amount > 0) {
             habbo.givePoints(Emulator.getConfig().getInt("hotelview.promotional.points.type"), this.amount);
             habbo.getClient().sendResponse(new BonusRareComposer(habbo));
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.getDelay(), this.amount));
+        return WiredManager.getGson().toJson(new JsonData(this.getDelay(), this.amount));
     }
 
     @Override
@@ -110,7 +115,7 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
         this.amount = 0;
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.amount = data.amount;
         } else {

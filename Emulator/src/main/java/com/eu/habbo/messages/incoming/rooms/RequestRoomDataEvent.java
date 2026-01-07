@@ -15,6 +15,13 @@ public class RequestRoomDataEvent extends MessageHandler {
         if (room != null) {
             boolean unknown = something != 0 || something2 != 1;
 
+            // Start background loading of room data to reduce perceived load time
+            // This allows the room to start loading while the client is still processing the room info
+            if (room.isPreLoaded() && !room.isLoadedOrLoading()) {
+                room.startBackgroundLoad();
+            }
+
+            //this.client.getHabbo().getHabboInfo().getCurrentRoom() != room
             this.client.sendResponse(new RoomDataComposer(room, this.client.getHabbo(), true, unknown));
         }
     }

@@ -12,7 +12,8 @@ import com.eu.habbo.habbohotel.rooms.RoomTileState;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserEffectComposer;
@@ -56,7 +57,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
         roomUnit.getRoom().unIdle(roomUnit.getRoom().getHabbo(roomUnit));
         room.sendComposer(new RoomUserEffectComposer(roomUnit, 4).compose());
-        Emulator.getThreading().run(new SendRoomUnitEffectComposer(room, roomUnit), WiredHandler.TELEPORT_DELAY + 1000);
+        Emulator.getThreading().run(new SendRoomUnitEffectComposer(room, roomUnit), WiredManager.TELEPORT_DELAY + 1000);
 
         if (tile == roomUnit.getCurrentLocation()) {
             return;
@@ -79,8 +80,8 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             }
         }
 
-        Emulator.getThreading().run(() -> { roomUnit.isWiredTeleporting = true; }, Math.max(0, WiredHandler.TELEPORT_DELAY - 500));
-        Emulator.getThreading().run(new RoomUnitTeleport(roomUnit, room, tile.x, tile.y, tile.getStackHeight() + (tile.state == RoomTileState.SIT ? -0.5 : 0), roomUnit.getEffectId()), WiredHandler.TELEPORT_DELAY);
+        Emulator.getThreading().run(() -> { roomUnit.isWiredTeleporting = true; }, Math.max(0, WiredManager.TELEPORT_DELAY - 500));
+        Emulator.getThreading().run(new RoomUnitTeleport(roomUnit, room, tile.x, tile.y, tile.getStackHeight() + (tile.state == RoomTileState.SIT ? -0.5 : 0), roomUnit.getEffectId()), WiredManager.TELEPORT_DELAY);
     }
 
     @Override
@@ -97,7 +98,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         }
 
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.items.size());
         for (HabboItem item : this.items)
             message.appendInt(item.getId());
@@ -152,14 +153,19 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+
         if (this.items.isEmpty())
-            return false;
+            return;
+
+        if (room.getLayout() == null)
+            return;
 
         List<Bot> bots = room.getBots(this.botName);
 
         if (bots.size() != 1) {
-            return false;
+            return;
         }
 
         Bot bot = bots.get(0);
@@ -170,15 +176,22 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         for (HabboItem item : this.items) {
             if (item.getRoomId() != 0 && item.getRoomId() == bot.getRoom().getId()) {
                 if (i == j) {
-                    teleportUnitToTile(bot.getRoomUnit(), room.getLayout().getTile(item.getX(), item.getY()));
-                    return true;
+                    RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+                    if (tile != null) {
+                        teleportUnitToTile(bot.getRoomUnit(), tile);
+                    }
+                    return;
                 } else {
                     j++;
                 }
             }
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
@@ -193,7 +206,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             }
         }
 
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.botName, itemIds, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, itemIds, this.getDelay()));
     }
 
     @Override
@@ -203,7 +216,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.botName = data.bot_name;
 

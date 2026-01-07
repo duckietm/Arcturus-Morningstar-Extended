@@ -9,9 +9,9 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserEffectComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 
 public class RoomUnitRidePet implements Runnable {
-    private final RideablePet pet;
-    private final Habbo habbo;
-    private final RoomTile goalTile;
+    private RideablePet pet;
+    private Habbo habbo;
+    private RoomTile goalTile;
 
     public RoomUnitRidePet(RideablePet pet, Habbo habbo, RoomTile goalTile) {
         this.pet = pet;

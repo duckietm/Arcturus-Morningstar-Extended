@@ -4,12 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SoundTrack {
-    private final int id;
-    private final String name;
-    private final String author;
-    private final String code;
-    private final String data;
-    private final int length;
+    private int id;
+    private String name;
+    private String author;
+    private String code;
+    private String data;
+    private int length;
 
     public SoundTrack(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

@@ -24,7 +24,7 @@ public class ModToolBan implements Runnable {
     public ModToolBanType type;
     public int cfhTopic;
 
-    private final boolean needsInsert;
+    private boolean needsInsert;
 
     public ModToolBan(ResultSet set) throws SQLException {
         this.userId = set.getInt("user_id");

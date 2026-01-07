@@ -3,8 +3,7 @@ package com.eu.habbo.habbohotel.bots;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.plugin.events.bots.BotServerItemEvent;
 import com.eu.habbo.threading.runnables.RoomUnitGiveHanditem;
 import com.eu.habbo.threading.runnables.RoomUnitWalkToRoomUnit;
@@ -100,7 +99,7 @@ public class ButlerBot extends Bot {
                                                 .replace("%key%", key)
                                                 .replace("%username%", serveEvent.habbo.getHabboInfo().getUsername());
 
-                                        if (!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), this.getRoom(), new Object[]{ botMessage })) {
+                                        if (!WiredManager.triggerUserSays(this.getRoom(), this.getRoomUnit(), botMessage)) {
                                             bot.talk(botMessage);
                                         }
                                     }
@@ -128,7 +127,7 @@ public class ButlerBot extends Bot {
                                     this.getRoom().giveHandItem(serveEvent.habbo, serveEvent.itemId);
 
                                     String msg = Emulator.getTexts().getValue("bots.butler.given").replace("%key%", keyword).replace("%username%", serveEvent.habbo.getHabboInfo().getUsername());
-                                    if (!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), this.getRoom(), new Object[]{msg})) {
+                                    if (!WiredManager.triggerUserSays(this.getRoom(), this.getRoomUnit(), msg)) {
                                         this.talk(msg);
                                     }
                                 }

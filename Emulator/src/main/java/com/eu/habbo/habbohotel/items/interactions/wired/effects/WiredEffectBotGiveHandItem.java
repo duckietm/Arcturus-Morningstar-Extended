@@ -12,8 +12,8 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.threading.runnables.RoomUnitGiveHanditem;
@@ -102,7 +102,11 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        if (roomUnit == null) return;
+
         Habbo habbo = room.getHabbo(roomUnit);
         List<Bot> bots = room.getBots(this.botName);
 
@@ -114,7 +118,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
             tasks.add(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, 0));
             tasks.add(() -> {
                 if(roomUnit.getRoom() != null && roomUnit.getRoom().getId() == room.getId() && roomUnit.getCurrentLocation().distance(bot.getRoomUnit().getCurrentLocation()) < 2) {
-                    WiredHandler.handle(WiredTriggerType.BOT_REACHED_AVTR, bot.getRoomUnit(), room, new Object[]{});
+                    WiredManager.triggerBotReachedHabbo(room, bot.getRoomUnit(), roomUnit);
                 }
             });
 
@@ -126,16 +130,18 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
 
             Emulator.getThreading().run(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, this.itemId));
             Emulator.getThreading().run(new RoomUnitWalkToLocation(bot.getRoomUnit(), tile, room, tasks, tasks));
-
-            return true;
         }
+    }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.botName, this.itemId, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.itemId, this.getDelay()));
     }
 
     @Override
@@ -143,7 +149,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.itemId = data.item_id;
             this.botName = data.bot_name;

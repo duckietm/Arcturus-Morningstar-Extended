@@ -13,7 +13,8 @@ import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
@@ -39,21 +40,19 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        if (room == null)
-            return false;
-
-        Habbo habbo = room.getHabbo(roomUnit);
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
         if (habbo != null) {
             if (habbo.hasPermission(Permission.ACC_UNKICKABLE)) {
                 habbo.whisper(Emulator.getTexts().getValue("hotel.wired.kickexception.unkickable"));
-                return true;
+                return;
             }
 
             if (habbo.getHabboInfo().getId() == room.getOwnerId()) {
                 habbo.whisper(Emulator.getTexts().getValue("hotel.wired.kickexception.owner"));
-                return true;
+                return;
             }
 
             room.giveEffect(habbo, 4, 2);
@@ -62,16 +61,18 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
                 habbo.getClient().sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(this.message, habbo, habbo, RoomChatMessageBubbles.ALERT)));
 
             Emulator.getThreading().run(new RoomUnitKick(habbo, room, true), 2000);
-
-            return true;
         }
+    }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay()));
     }
 
     @Override
@@ -79,7 +80,7 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.message = data.message;
         }

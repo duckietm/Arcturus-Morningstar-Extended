@@ -1,5 +1,9 @@
 package com.eu.habbo.messages.outgoing.friends;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.messenger.MessengerCategory;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -8,15 +12,11 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 public class UpdateFriendComposer extends MessageComposer {
-    private final Collection<MessengerBuddy> buddies;
+    private Collection<MessengerBuddy> buddies;
 
-    private final Habbo habbo;
-    private final int action;
+    private Habbo habbo;
+    private int action;
 
     public UpdateFriendComposer(Habbo habbo, MessengerBuddy buddy, Integer action) {
         this.habbo = habbo;

@@ -5,7 +5,7 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
 public class RemoveGuildFromRoomComposer extends MessageComposer {
-    private final int guildId;
+    private int guildId;
 
     public RemoveGuildFromRoomComposer(int guildId) {
         this.guildId = guildId;

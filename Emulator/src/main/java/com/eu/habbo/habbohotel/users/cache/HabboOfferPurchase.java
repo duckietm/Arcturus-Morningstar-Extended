@@ -12,7 +12,6 @@ import java.sql.SQLException;
 
 public class HabboOfferPurchase {
     private static final Logger LOGGER = LoggerFactory.getLogger(HabboOfferPurchase.class);
-    private final int userId;
     private final int offerId;
     private int state;
     private int amount;
@@ -20,7 +19,6 @@ public class HabboOfferPurchase {
     private boolean needsUpdate = false;
 
     public HabboOfferPurchase(ResultSet set) throws SQLException {
-        this.userId = set.getInt("user_id");
         this.offerId = set.getInt("offer_id");
         this.state = set.getInt("state");
         this.amount = set.getInt("amount");
@@ -28,7 +26,6 @@ public class HabboOfferPurchase {
     }
 
     private HabboOfferPurchase(int userId, int offerId) {
-        this.userId = userId;
         this.offerId = offerId;
     }
 

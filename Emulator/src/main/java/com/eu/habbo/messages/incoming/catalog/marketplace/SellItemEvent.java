@@ -22,7 +22,7 @@ public class SellItemEvent extends MessageHandler {
 
         int credits = this.packet.readInt();
 
-        this.packet.readInt();
+        this.packet.readInt(); // unknown - not used
         int itemId = this.packet.readInt();
 
         HabboItem item = this.client.getHabbo().getInventory().getItemsComponent().getHabboItem(itemId);

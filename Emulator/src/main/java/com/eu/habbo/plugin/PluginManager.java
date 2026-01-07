@@ -8,7 +8,6 @@ import com.eu.habbo.habbohotel.bots.BotManager;
 import com.eu.habbo.habbohotel.catalog.CatalogManager;
 import com.eu.habbo.habbohotel.catalog.TargetOffer;
 import com.eu.habbo.habbohotel.catalog.marketplace.MarketPlace;
-import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.games.freeze.FreezeGame;
 import com.eu.habbo.habbohotel.games.tag.TagGame;
 import com.eu.habbo.habbohotel.items.ItemManager;
@@ -21,11 +20,12 @@ import com.eu.habbo.habbohotel.navigation.EventCategory;
 import com.eu.habbo.habbohotel.navigation.NavigatorManager;
 import com.eu.habbo.habbohotel.pets.PetManager;
 import com.eu.habbo.habbohotel.rooms.*;
+import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManager;
 import com.eu.habbo.habbohotel.users.HabboInventory;
 import com.eu.habbo.habbohotel.users.HabboManager;
-import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManager;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredEngine;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.messages.PacketManager;
 import com.eu.habbo.messages.incoming.camera.CameraPublishToWebEvent;
@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 
 public class PluginManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PluginManager.class);
 
     private final THashSet<HabboPlugin> plugins = new THashSet<>();
     private final THashSet<Method> methods = new THashSet<>();
@@ -99,6 +99,8 @@ public class PluginManager {
         BotManager.MAXIMUM_NAME_LENGTH = Emulator.getConfig().getInt("hotel.bot.max.namelength");
         BotManager.MAXIMUM_CHAT_SPEED = Emulator.getConfig().getInt("hotel.bot.max.chatdelay");
         Bot.PLACEMENT_MESSAGES = Emulator.getConfig().getValue("hotel.bot.placement.messages", "Yo!;Hello I'm a real party animal!;Hello!").split(";");
+        Bot.BOT_LIMIT_WALKING_DISTANCE = Emulator.getConfig().getBoolean("hotel.bot.limit.walking.distance", true);
+        Bot.BOT_WALKING_DISTANCE_RADIUS = Emulator.getConfig().getInt("hotel.bot.limit.walking.distance.radius", 5);
 
         HabboInventory.MAXIMUM_ITEMS = Emulator.getConfig().getInt("hotel.inventory.max.items");
         Messenger.MAXIMUM_FRIENDS = Emulator.getConfig().getInt("hotel.users.max.friends", 300);
@@ -114,8 +116,12 @@ public class PluginManager {
         RoomManager.MAXIMUM_ROOMS_USER = Emulator.getConfig().getInt("hotel.users.max.rooms", 50);
         RoomManager.MAXIMUM_ROOMS_HC = Emulator.getConfig().getInt("hotel.users.max.rooms.hc", 75);
         RoomManager.HOME_ROOM_ID = Emulator.getConfig().getInt("hotel.home.room");
-        WiredHandler.MAXIMUM_FURNI_SELECTION = Emulator.getConfig().getInt("hotel.wired.furni.selection.count");
-        WiredHandler.TELEPORT_DELAY = Emulator.getConfig().getInt("wired.effect.teleport.delay", 500);
+        WiredManager.MAXIMUM_FURNI_SELECTION = Emulator.getConfig().getInt("hotel.wired.furni.selection.count");
+        WiredManager.TELEPORT_DELAY = Emulator.getConfig().getInt("wired.effect.teleport.delay", 500);
+        WiredEngine.MAX_RECURSION_DEPTH = Emulator.getConfig().getInt("wired.abuse.max.recursion.depth", 10);
+        WiredEngine.MAX_EVENTS_PER_WINDOW = Emulator.getConfig().getInt("wired.abuse.max.events.per.window", 100);
+        WiredEngine.RATE_LIMIT_WINDOW_MS = Emulator.getConfig().getInt("wired.abuse.rate.limit.window.ms", 10000);
+        WiredEngine.WIRED_BAN_DURATION_MS = Emulator.getConfig().getInt("wired.abuse.ban.duration.ms", 600000);
         NavigatorManager.MAXIMUM_RESULTS_PER_PAGE = Emulator.getConfig().getInt("hotel.navigator.search.maxresults");
         NavigatorManager.CATEGORY_SORT_USING_ORDER_NUM = Emulator.getConfig().getBoolean("hotel.navigator.sort.ordernum");
         RoomChatMessage.MAXIMUM_LENGTH = Emulator.getConfig().getInt("hotel.chat.max.length");
@@ -284,70 +290,6 @@ public class PluginManager {
         }
     }
 
-    public void updatePluginByName(String name) {
-        File loc = new File("plugins");
-        HabboPlugin pluginReload = null;
-
-        for(HabboPlugin p : this.plugins){
-            if(p.configuration.name.equalsIgnoreCase(name)){
-                pluginReload = p;
-            }
-        }
-
-        if (!loc.exists()) {
-            if (loc.mkdirs()) {
-                LOGGER.info("Created plugins directory!");
-            }
-        }
-
-        for (File file : Objects.requireNonNull(loc.listFiles(file -> file.getPath().toLowerCase().endsWith(".jar")))) {
-            URLClassLoader urlClassLoader;
-            InputStream stream;
-            try {
-                urlClassLoader = URLClassLoader.newInstance(new URL[]{file.toURI().toURL()});
-                stream = urlClassLoader.getResourceAsStream("plugin.json");
-
-                if (stream == null) {
-                    throw new RuntimeException("Invalid Jar! Missing plugin.json in: " + file.getName());
-                }
-
-                byte[] content = new byte[stream.available()];
-
-                if (stream.read(content) > 0) {
-                    String body = new String(content);
-
-                    Gson gson = new GsonBuilder().create();
-                    HabboPluginConfiguration pluginConfigurtion = gson.fromJson(body, HabboPluginConfiguration.class);
-
-                    try {
-                        Class<?> clazz = urlClassLoader.loadClass(pluginConfigurtion.main);
-                        Class<? extends HabboPlugin> stackClazz = clazz.asSubclass(HabboPlugin.class);
-                        Constructor<? extends HabboPlugin> constructor = stackClazz.getConstructor();
-                        HabboPlugin plugin = constructor.newInstance();
-                        plugin.configuration = pluginConfigurtion;
-                        plugin.classLoader = urlClassLoader;
-                        plugin.stream = stream;
-
-                        if(plugin.configuration.name.equalsIgnoreCase(name) && pluginReload != null){
-                            if(this.plugins.contains(pluginReload) && this.plugins.remove(pluginReload)){
-                                this.plugins.add(plugin);
-                                plugin.onEnable();
-                                LOGGER.info("Plugin: " + plugin.configuration.name + " updated!");
-                            }
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Could not load plugin {}!", pluginConfigurtion.name);
-                        LOGGER.error("Caught exception", e);
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
-            }
-        }
-
-
-    }
-
     public void registerEvents(HabboPlugin plugin, EventListener listener) {
         synchronized (plugin.registeredEvents) {
             Method[] methods = listener.getClass().getMethods();
@@ -488,6 +430,7 @@ public class PluginManager {
             this.methods.add(InteractionFootballGate.class.getMethod("onUserSavedLookEvent", UserSavedLookEvent.class));
             this.methods.add(PluginManager.class.getMethod("globalOnConfigurationUpdated", EmulatorConfigUpdatedEvent.class));
             this.methods.add(WiredHighscoreManager.class.getMethod("onEmulatorLoaded", EmulatorLoadedEvent.class));
+            this.methods.add(WiredManager.class.getMethod("onEmulatorLoaded", EmulatorLoadedEvent.class));
         } catch (NoSuchMethodException e) {
             LOGGER.info("Failed to define default events!");
             LOGGER.error("Caught exception", e);

@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.Channel;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 
 public abstract class CameraOutgoingMessage extends CameraMessage {
     private final ByteBufOutputStream stream;
@@ -107,7 +107,7 @@ public abstract class CameraOutgoingMessage extends CameraMessage {
 
         buffer.setInt(0, buffer.writerIndex() - 4);
 
-        String consoleText = buffer.toString(StandardCharsets.UTF_8);
+        String consoleText = buffer.toString(Charset.forName("UTF-8"));
 
         for (int i = 0; i < 14; i++) {
             consoleText = consoleText.replace(Character.toString((char) i), "[" + i + "]");

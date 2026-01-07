@@ -4,6 +4,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +21,10 @@ public class WiredConditionNotTriggerOnFurni extends WiredConditionTriggerOnFurn
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        Room room = ctx.room();
+
         if (roomUnit == null)
             return false;
 
@@ -30,6 +34,12 @@ public class WiredConditionNotTriggerOnFurni extends WiredConditionTriggerOnFurn
             return true;
 
         return !triggerOnFurni(roomUnit, room);
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override

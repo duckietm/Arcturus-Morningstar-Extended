@@ -12,7 +12,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -27,7 +28,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
     private int count;
     private GameTeamColors teamColor = GameTeamColors.RED;
 
-    private final TIntIntHashMap startTimes = new TIntIntHashMap();
+    private TIntIntHashMap startTimes = new TIntIntHashMap();
 
     public WiredEffectGiveScoreToTeam(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
@@ -38,7 +39,8 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
         for (Game game : room.getGames()) {
             if (game != null && game.state.equals(GameState.RUNNING)) {
                 int c = this.startTimes.get(game.getStartTime());
@@ -54,13 +56,17 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
                 }
             }
         }
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.points, this.count, this.teamColor, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.points, this.count, this.teamColor, this.getDelay()));
     }
 
     @Override
@@ -68,7 +74,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.points = data.score;
             this.count = data.count;
             this.teamColor = data.team;

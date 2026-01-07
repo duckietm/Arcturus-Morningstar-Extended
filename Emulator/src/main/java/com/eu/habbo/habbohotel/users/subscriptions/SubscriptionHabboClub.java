@@ -13,9 +13,7 @@ import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManage
 import com.eu.habbo.messages.outgoing.catalog.ClubCenterDataComposer;
 import com.eu.habbo.messages.outgoing.generic.PickMonthlyClubGiftNotificationComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
-import com.eu.habbo.messages.outgoing.users.UpdateUserLookComposer;
-import com.eu.habbo.messages.outgoing.users.UserClubComposer;
-import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
+import com.eu.habbo.messages.outgoing.users.*;
 import gnu.trove.map.hash.THashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -267,26 +265,9 @@ public class SubscriptionHabboClub extends Subscription {
 
             try (ResultSet set = statement.executeQuery()) {
                 while (set.next()) {
-                    int userId = set.getInt("user_id");
                     try {
+                        int userId = set.getInt("user_id");
                         HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
-
-                        if (habboInfo == null) {
-                            SubscriptionManager.LOGGER.error("HabboInfo is null for user #" + userId + ". Removing subscription.");
-
-                            // Remove subscription from the database
-                            try (PreparedStatement removeStatement = connection.prepareStatement(
-                                    "DELETE FROM users_subscriptions WHERE user_id = ? AND subscription_type = ?")) {
-                                removeStatement.setInt(1, userId);
-                                removeStatement.setString(2, Subscription.HABBO_CLUB);
-                                removeStatement.executeUpdate();
-                            } catch (SQLException e) {
-                                SubscriptionManager.LOGGER.error("SQL exception when trying to remove subscription for user #" + userId, e);
-                            }
-
-                            continue;
-                        }
-
                         HabboStats stats = habboInfo.getHabboStats();
                         ClubCenterDataComposer calculated = calculatePayday(habboInfo);
                         int totalReward = (calculated.creditRewardForMonthlySpent + calculated.creditRewardForStreakBonus);
@@ -298,7 +279,7 @@ public class SubscriptionHabboClub extends Subscription {
                         stats.lastHCPayday = timestampNow;
                         Emulator.getThreading().run(stats);
                     } catch (Exception e) {
-                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #" + userId, e);
+                        SubscriptionManager.LOGGER.error("Exception processing HC payday for user #{}", set.getInt("user_id"), e);
                     }
                 }
             }
@@ -327,7 +308,6 @@ public class SubscriptionHabboClub extends Subscription {
         isExecuting = false;
     }
 
-
     /**
      * Called when a user logs in. Checks for any unclaimed HC Pay day rewards and issues rewards.
      *
@@ -349,7 +329,7 @@ public class SubscriptionHabboClub extends Subscription {
                 while (set.next()) {
                     try {
                         int logId = set.getInt("id");
-                        set.getInt("user_id");
+                        set.getInt("user_id"); // consumed but unused - user_id is in logs_hc_payday
                         int totalPayout = set.getInt("total_payout");
                         String currency = set.getString("currency");
 

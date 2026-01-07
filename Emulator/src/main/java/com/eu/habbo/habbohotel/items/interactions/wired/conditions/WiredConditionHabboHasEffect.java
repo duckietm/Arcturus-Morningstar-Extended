@@ -6,7 +6,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -26,14 +27,21 @@ public class WiredConditionHabboHasEffect extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        RoomUnit roomUnit = ctx.actor().orElse(null);
         if (roomUnit == null) return false;
         return roomUnit.getEffectId() == this.effectId;
     }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.effectId
         ));
     }
@@ -43,7 +51,7 @@ public class WiredConditionHabboHasEffect extends InteractionWiredCondition {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.effectId = data.effectId;
         } else {
             this.effectId = Integer.parseInt(wiredData);
@@ -67,8 +75,9 @@ public class WiredConditionHabboHasEffect extends InteractionWiredCondition {
         message.appendInt(0);
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
-        message.appendString(this.effectId + "");
-        message.appendInt(0);
+        message.appendString("");
+        message.appendInt(1);
+        message.appendInt(this.effectId);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);

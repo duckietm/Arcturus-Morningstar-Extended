@@ -46,7 +46,7 @@ public class AchievementListComposer extends MessageComposer {
                 this.response.appendInt(Math.max(achievementProgress, 0)); //Current progress
                 this.response.appendBoolean(AchievementManager.hasAchieved(this.habbo, achievement)); //Achieved? (Current Progress == MaxLevel.Progress)
                 this.response.appendString(achievement.category.toString().toLowerCase()); //Category
-                this.response.appendString(""); //Empty, completely unused in client code
+                this.response.appendString(""); //Empty, completly unused in client code
                 this.response.appendInt(achievement.levels.size()); //Count of total levels in this achievement
                 this.response.appendInt(AchievementManager.hasAchieved(this.habbo, achievement) ? 1 : 0); //1 = Progressbar visible if the achievement is completed
             }

@@ -31,9 +31,9 @@ public class TestCommand extends Command {
                     message.appendString("");
                 }
             } else if (data[0].equals("i")) {
-                message.appendInt(Integer.parseInt(data[1]));
+                message.appendInt(Integer.valueOf(data[1]));
             } else if (data[0].equalsIgnoreCase("by")) {
-                message.appendByte(Integer.parseInt(data[1]));
+                message.appendByte(Integer.valueOf(data[1]));
             } else if (data[0].equalsIgnoreCase("sh")) {
                 message.appendShort(Integer.parseInt(data[1]));
             }

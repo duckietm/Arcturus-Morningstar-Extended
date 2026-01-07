@@ -10,6 +10,10 @@ public class RoomUserGiveRespectEvent extends MessageHandler {
     public void handle() throws Exception {
         int userId = this.packet.readInt();
 
+        if (userId == client.getHabbo().getHabboInfo().getId()) {
+            return;
+        }
+
         if (this.client.getHabbo().getHabboStats().respectPointsToGive > 0) {
             Habbo target = this.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(userId);
 
