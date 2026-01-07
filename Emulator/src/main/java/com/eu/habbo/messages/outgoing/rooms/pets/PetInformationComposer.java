@@ -43,7 +43,7 @@ public class PetInformationComposer extends MessageComposer {
         }
         this.response.appendInt(this.pet.getEnergy());
         this.response.appendInt(this.pet.getMaxEnergy()); //Max energy
-        this.response.appendInt(this.pet.getHappiness()); //this.pet.getHappiness()
+        this.response.appendInt(this.pet.getHappiness());
         this.response.appendInt(100);
         this.response.appendInt(this.pet.getRespect());
         this.response.appendInt(this.pet.getUserId());
@@ -51,7 +51,19 @@ public class PetInformationComposer extends MessageComposer {
         this.response.appendString(this.room.getFurniOwnerName(this.pet.getUserId())); //Owner name
 
         this.response.appendInt(this.pet instanceof MonsterplantPet ? ((MonsterplantPet) this.pet).getRarity() : 0);
-        this.response.appendBoolean(this.pet instanceof RideablePet && this.requestingHabbo != null && (((RideablePet) this.pet).getRider() == null || this.pet.getUserId() == this.requestingHabbo.getHabboInfo().getId()) && ((RideablePet) this.pet).hasSaddle());  // can ride
+        
+        // Can ride: pet has saddle, no one riding or user owns pet, and (user owns pet or anyone can ride)
+        boolean canRide = false;
+        if (this.pet instanceof RideablePet && this.requestingHabbo != null) {
+            RideablePet rideablePet = (RideablePet) this.pet;
+            boolean hasSaddle = rideablePet.hasSaddle();
+            boolean noRider = rideablePet.getRider() == null;
+            boolean isOwner = this.pet.getUserId() == this.requestingHabbo.getHabboInfo().getId();
+            boolean canRidePermission = isOwner || rideablePet.anyoneCanRide();
+            canRide = hasSaddle && (noRider || isOwner) && canRidePermission;
+        }
+        this.response.appendBoolean(canRide);
+        
         this.response.appendBoolean(this.pet instanceof RideablePet && ((RideablePet) this.pet).getRider() != null && this.requestingHabbo != null && ((RideablePet) this.pet).getRider().getHabboInfo().getId() == this.requestingHabbo.getHabboInfo().getId()); // is current user riding
         this.response.appendInt(0);
         this.response.appendInt(this.pet instanceof RideablePet && ((RideablePet) this.pet).anyoneCanRide() ? 1 : 0); // anyone can ride

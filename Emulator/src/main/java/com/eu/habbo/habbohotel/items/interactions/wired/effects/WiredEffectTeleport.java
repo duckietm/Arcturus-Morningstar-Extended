@@ -6,10 +6,14 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
+import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomTileState;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
+import com.eu.habbo.habbohotel.rooms.RoomUnitType;
+import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
@@ -17,6 +21,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserEffectComposer;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.threading.runnables.RoomUnitTeleport;
 import com.eu.habbo.threading.runnables.SendRoomUnitEffectComposer;
 import gnu.trove.procedure.TObjectProcedure;
@@ -52,6 +57,27 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
 
         if (room == null) {
             return;
+        }
+
+        // If this is a rider, sync the riding pet to the rider's current position immediately
+        // Both will teleport together when the delay fires
+        if (roomUnit.getRoomUnitType() == RoomUnitType.USER) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo != null && habbo.getHabboInfo() != null && habbo.getHabboInfo().getRiding() != null) {
+                RideablePet ridingPet = habbo.getHabboInfo().getRiding();
+                RoomUnit petUnit = ridingPet.getRoomUnit();
+                if (petUnit != null) {
+                    // Sync pet to rider's current position
+                    RoomTile riderTile = roomUnit.getCurrentLocation();
+                    petUnit.setLocation(riderTile);
+                    petUnit.setZ(roomUnit.getZ() - 1.0);
+                    petUnit.setPreviousLocation(riderTile);
+                    petUnit.setGoalLocation(riderTile);
+                    petUnit.removeStatus(RoomUnitStatus.MOVE);
+                    petUnit.setCanWalk(false);
+                    room.sendComposer(new RoomUserStatusComposer(petUnit).compose());
+                }
+            }
         }
 
         // makes a temporary effect

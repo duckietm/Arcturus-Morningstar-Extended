@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDefault;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetTasks;
+import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
@@ -33,6 +34,10 @@ public class InteractionPetToy extends InteractionDefault {
         Pet pet = room.getPet(roomUnit);
 
         if (pet != null) {
+            // Don't let ridden pets play with toys
+            if (pet instanceof RideablePet && ((RideablePet) pet).getRider() != null)
+                return;
+                
             if (pet.getEnergy() <= 35) {
                 return;
             }

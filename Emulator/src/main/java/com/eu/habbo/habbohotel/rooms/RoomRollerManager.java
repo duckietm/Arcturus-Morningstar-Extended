@@ -279,14 +279,23 @@ public class RoomRollerManager {
                 Habbo rollingHabbo = this.room.getHabbo(unit);
                 if (rollingHabbo != null && rollingHabbo.getHabboInfo() != null) {
                     RideablePet riding = rollingHabbo.getHabboInfo().getRiding();
-                    if (riding != null) {
+                    if (riding != null && riding.getRoomUnit() != null) {
                         RoomUnit ridingUnit = riding.getRoomUnit();
-                        newZ = ridingUnit.getZ() + zOffset;
+                        double petOldZ = ridingUnit.getZ();
+                        double petNewZ = tileInFront.getStackHeight();
+                        
+                        // Update pet position immediately before composing messages to prevent desync
                         rolledUnitIds.add(ridingUnit.getId());
                         updatedUnit.remove(ridingUnit);
-                        messages.add(new RoomUnitOnRollerComposer(ridingUnit, roller,
-                            ridingUnit.getCurrentLocation(), ridingUnit.getZ(), tileInFront, newZ,
-                            this.room));
+                        
+                        // Compose and send pet roller message first
+                        RoomUnitOnRollerComposer petRollerComposer = new RoomUnitOnRollerComposer(
+                            ridingUnit, roller, ridingUnit.getCurrentLocation(), petOldZ, 
+                            tileInFront, petNewZ, this.room);
+                        messages.add(petRollerComposer);
+                        
+                        // Update newZ for the rider (1 unit above pet)
+                        newZ = petNewZ + 1.0;
                         isRiding = true;
                     }
                 }
@@ -295,9 +304,12 @@ public class RoomRollerManager {
             usersRolledThisTile.add(unit.getId());
             rolledUnitIds.add(unit.getId());
             updatedUnit.remove(unit);
+            
+            // For riding users, use pet-relative Z values
+            double riderOldZ = isRiding ? unit.getZ() : unit.getZ();
+            double riderNewZ = isRiding ? newZ : (unit.getZ() + zOffset);
             messages.add(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(),
-                unit.getZ() + (isRiding ? 1 : 0), tileInFront, newZ + (isRiding ? 1 : 0),
-                this.room));
+                riderOldZ, tileInFront, riderNewZ, this.room));
 
             if (itemsOnRoller.isEmpty()) {
                 HabboItem item = this.room.getTopItemAt(tileInFront.x, tileInFront.y);

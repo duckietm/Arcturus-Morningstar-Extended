@@ -23,18 +23,13 @@ import com.eu.habbo.util.pathfinding.Rotation;
 import gnu.trove.map.TMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RoomUnit {
 
@@ -155,9 +150,11 @@ public class RoomUnit {
       if (!this.isWalking() && !this.isKicked) {
         if (this.status.remove(RoomUnitStatus.MOVE) == null) {
           Habbo habboT = room.getHabbo(this);
-          if (habboT != null) {
-            habboT.getHabboInfo().getRiding().getRoomUnit().status.remove(RoomUnitStatus.MOVE);
-
+          if (habboT != null && habboT.getHabboInfo() != null && habboT.getHabboInfo().getRiding() != null) {
+            RoomUnit ridingRoomUnit = habboT.getHabboInfo().getRiding().getRoomUnit();
+            if (ridingRoomUnit != null) {
+              ridingRoomUnit.status.remove(RoomUnitStatus.MOVE);
+            }
           }
           return true;
         }

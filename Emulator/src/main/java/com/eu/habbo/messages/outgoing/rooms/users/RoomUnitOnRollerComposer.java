@@ -4,10 +4,12 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.interactions.InteractionRoller;
 import com.eu.habbo.habbohotel.pets.Pet;
+import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitType;
+import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
@@ -58,7 +60,21 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
         // Early validation: Check if the roller movement is still valid before composing the packet
         if (this.roller != null && room.getLayout() != null) {
             // Check if the destination tile is blocked by another unit that moved there
-            if (this.newLocation.hasUnits() && !this.newLocation.getUnits().contains(this.roomUnit)) {
+            // Skip this check for pets with riders or users riding pets (they share the tile)
+            boolean isRidingPetOrRider = false;
+            if (this.roomUnit.getRoomUnitType() == RoomUnitType.PET) {
+                Pet pet = this.room.getPet(this.roomUnit);
+                if (pet instanceof RideablePet && ((RideablePet) pet).getRider() != null) {
+                    isRidingPetOrRider = true;
+                }
+            } else if (this.roomUnit.getRoomUnitType() == RoomUnitType.USER) {
+                Habbo habbo = this.room.getHabbo(this.roomUnit);
+                if (habbo != null && habbo.getHabboInfo() != null && habbo.getHabboInfo().getRiding() != null) {
+                    isRidingPetOrRider = true;
+                }
+            }
+            
+            if (!isRidingPetOrRider && this.newLocation.hasUnits() && !this.newLocation.getUnits().contains(this.roomUnit)) {
                 return null;
             }
             
@@ -106,6 +122,15 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                     Pet pet = this.room.getPet(this.roomUnit);
                     if (pet != null) {
                         pet.needsUpdate = true;
+                        
+                        // If this pet has a rider, sync the rider's position with the pet
+                        if (pet instanceof RideablePet) {
+                            RideablePet rideablePet = (RideablePet) pet;
+                            Habbo rider = rideablePet.getRider();
+                            if (rider != null && rider.getRoomUnit() != null) {
+                                rider.getRoomUnit().setLastRollerTime(System.currentTimeMillis());
+                            }
+                        }
                     }
                 }
             }

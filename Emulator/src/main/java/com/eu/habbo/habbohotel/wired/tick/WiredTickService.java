@@ -252,7 +252,6 @@ public final class WiredTickService {
         
         if (tickables.add(tickable)) {
             tickable.onRegistered(room, System.currentTimeMillis());
-            LOGGER.debug("Registered tickable {} in room {}", tickable.getId(), roomId);
         }
     }
     
@@ -273,7 +272,6 @@ public final class WiredTickService {
         if (tickables != null) {
             if (tickables.remove(tickable)) {
                 tickable.onUnregistered(room);
-                LOGGER.debug("Unregistered tickable {} from room {}", tickable.getId(), roomId);
             }
             
             // Clean up empty sets

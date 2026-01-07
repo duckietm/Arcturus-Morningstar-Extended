@@ -256,14 +256,6 @@ public final class WiredContext {
         return legacySettings != null ? legacySettings : new Object[0];
     }
 
-    /**
-     * Get the legacy stuff array from the event.
-     * @return the legacy stuff array
-     */
-    public Object[] legacyStuff() {
-        return event.getLegacyStuff();
-    }
-
     // ========== Utility Methods ==========
 
     /**

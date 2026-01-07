@@ -128,11 +128,15 @@ public final class WiredEvent {
 
     private final Type type;
     private final Room room;
-    private final RoomUnit actor;       // nullable
-    private final HabboItem sourceItem; // nullable
-    private final RoomTile tile;        // nullable
-    private final String text;          // nullable
-    private final Object[] legacyStuff; // for adapter compatibility
+    private final RoomUnit actor;       // nullable - the user/bot that caused the event
+    private final HabboItem sourceItem; // nullable - the furniture involved
+    private final RoomTile tile;        // nullable - the tile where event occurred
+    private final String text;          // nullable - text for say triggers
+    private final RoomUnit targetUnit;  // nullable - target user (e.g., for bot reached habbo)
+    private final int score;            // score value for score achieved events
+    private final int scoreAdded;       // amount added for score achieved events
+    private final boolean triggeredByEffect; // true if triggered by a wired effect (to prevent loops)
+    private final int callStackDepth;   // recursion depth for trigger stacks effect
     private final long createdAtMs;
 
     private WiredEvent(Builder builder) {
@@ -142,7 +146,11 @@ public final class WiredEvent {
         this.sourceItem = builder.sourceItem;
         this.tile = builder.tile;
         this.text = builder.text;
-        this.legacyStuff = builder.legacyStuff;
+        this.targetUnit = builder.targetUnit;
+        this.score = builder.score;
+        this.scoreAdded = builder.scoreAdded;
+        this.triggeredByEffect = builder.triggeredByEffect;
+        this.callStackDepth = builder.callStackDepth;
         this.createdAtMs = builder.createdAtMs;
     }
 
@@ -199,12 +207,46 @@ public final class WiredEvent {
     }
 
     /**
-     * Get the legacy stuff array for adapter compatibility.
-     * This allows legacy triggers/conditions/effects to work with the new system.
-     * @return the legacy stuff array, or empty array if not set
+     * Get the target unit for this event.
+     * Used for events like BOT_REACHED_HABBO where we need to track the target user.
+     * @return optional containing the target unit
      */
-    public Object[] getLegacyStuff() {
-        return legacyStuff != null ? legacyStuff : new Object[0];
+    public Optional<RoomUnit> getTargetUnit() {
+        return Optional.ofNullable(targetUnit);
+    }
+
+    /**
+     * Get the score value for score achieved events.
+     * @return the current score
+     */
+    public int getScore() {
+        return score;
+    }
+
+    /**
+     * Get the amount of score added for score achieved events.
+     * @return the amount added
+     */
+    public int getScoreAdded() {
+        return scoreAdded;
+    }
+
+    /**
+     * Check if this event was triggered by a wired effect.
+     * Used to prevent infinite loops (e.g., effect toggles furni -> triggers state changed -> triggers effect).
+     * @return true if triggered by a wired effect
+     */
+    public boolean isTriggeredByEffect() {
+        return triggeredByEffect;
+    }
+
+    /**
+     * Get the call stack depth for recursion tracking.
+     * Used by WiredEffectTriggerStacks to prevent infinite recursion.
+     * @return the current recursion depth
+     */
+    public int getCallStackDepth() {
+        return callStackDepth;
     }
 
     /**
@@ -256,7 +298,11 @@ public final class WiredEvent {
         private HabboItem sourceItem;
         private RoomTile tile;
         private String text;
-        private Object[] legacyStuff;
+        private RoomUnit targetUnit;
+        private int score;
+        private int scoreAdded;
+        private boolean triggeredByEffect;
+        private int callStackDepth;
         private long createdAtMs = System.currentTimeMillis();
 
         private Builder(Type type, Room room) {
@@ -307,12 +353,52 @@ public final class WiredEvent {
         }
 
         /**
-         * Set the legacy stuff array for adapter compatibility.
-         * @param stuff the legacy object array
+         * Set the target unit for this event.
+         * @param targetUnit the target room unit
          * @return this builder
          */
-        public Builder legacyStuff(Object[] stuff) {
-            this.legacyStuff = stuff;
+        public Builder targetUnit(RoomUnit targetUnit) {
+            this.targetUnit = targetUnit;
+            return this;
+        }
+
+        /**
+         * Set the score value for score achieved events.
+         * @param score the current score
+         * @return this builder
+         */
+        public Builder score(int score) {
+            this.score = score;
+            return this;
+        }
+
+        /**
+         * Set the amount of score added for score achieved events.
+         * @param scoreAdded the amount added
+         * @return this builder
+         */
+        public Builder scoreAdded(int scoreAdded) {
+            this.scoreAdded = scoreAdded;
+            return this;
+        }
+
+        /**
+         * Mark this event as triggered by a wired effect.
+         * @param triggeredByEffect true if triggered by effect
+         * @return this builder
+         */
+        public Builder triggeredByEffect(boolean triggeredByEffect) {
+            this.triggeredByEffect = triggeredByEffect;
+            return this;
+        }
+
+        /**
+         * Set the call stack depth for recursion tracking.
+         * @param callStackDepth the recursion depth
+         * @return this builder
+         */
+        public Builder callStackDepth(int callStackDepth) {
+            this.callStackDepth = callStackDepth;
             return this;
         }
 

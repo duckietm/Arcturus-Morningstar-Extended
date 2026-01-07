@@ -200,18 +200,18 @@ public final class WiredEvents {
     }
 
     /**
-     * Create an event for when a score is achieved.
-    /**
      * Create an event for when a score threshold is achieved.
      * @param room the room
      * @param user the user who achieved the score
-     * @param score the score achieved
+     * @param score the current total score
+     * @param scoreAdded the amount of score just added
      * @return the event
      */
-    public static WiredEvent scoreAchieved(Room room, RoomUnit user, int score) {
+    public static WiredEvent scoreAchieved(Room room, RoomUnit user, int score, int scoreAdded) {
         return WiredEvent.builder(WiredEvent.Type.SCORE_ACHIEVED, room)
                 .actor(user)
-                .legacyStuff(new Object[]{score})
+                .score(score)
+                .scoreAdded(scoreAdded)
                 .build();
     }
 
@@ -257,7 +257,7 @@ public final class WiredEvents {
         return WiredEvent.builder(WiredEvent.Type.BOT_REACHED_HABBO, room)
                 .actor(botUnit)
                 .tile(targetUser.getCurrentLocation())
-                .legacyStuff(new Object[]{targetUser})
+                .targetUnit(targetUser)
                 .build();
     }
 
@@ -324,15 +324,14 @@ public final class WiredEvents {
      * @param triggerType the legacy trigger type
      * @param room the room
      * @param roomUnit the triggering unit (may be null)
-     * @param stuff legacy stuff array
+     * @param stuff legacy stuff array (now only used to extract typed data)
      * @return the event
      */
     public static WiredEvent fromLegacy(WiredTriggerType triggerType, Room room, RoomUnit roomUnit, Object[] stuff) {
         WiredEvent.Type eventType = WiredEvent.Type.fromLegacyType(triggerType);
         
         WiredEvent.Builder builder = WiredEvent.builder(eventType, room)
-                .actor(roomUnit)
-                .legacyStuff(stuff);
+                .actor(roomUnit);
         
         // Try to extract common data from stuff array
         if (stuff != null) {

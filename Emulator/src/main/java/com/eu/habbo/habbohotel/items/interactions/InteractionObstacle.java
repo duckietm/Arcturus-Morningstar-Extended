@@ -1,14 +1,18 @@
 package com.eu.habbo.habbohotel.items.interactions;
 
+import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.ICycleable;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.pets.HorsePet;
 import com.eu.habbo.habbohotel.pets.Pet;
+import com.eu.habbo.habbohotel.pets.PetTasks;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.threading.runnables.HabboItemNewState;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -56,9 +60,10 @@ public class InteractionObstacle extends HabboItem implements ICycleable {
 
     @Override
     public void onWalk(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
-        /*Pet pet = room.getPet(roomUnit);
+        Pet pet = room.getPet(roomUnit);
 
         if (pet instanceof HorsePet && ((HorsePet) pet).getRider() != null) {
+            Habbo rider = ((HorsePet) pet).getRider();
             if (pet.getTask() != null && pet.getTask().equals(PetTasks.RIDE)) {
                 if (pet.getRoomUnit().hasStatus(RoomUnitStatus.JUMP)) {
                     pet.getRoomUnit().removeStatus(RoomUnitStatus.JUMP);
@@ -75,13 +80,13 @@ public class InteractionObstacle extends HabboItem implements ICycleable {
                     this.setExtradata(state + "");
                     pet.getRoomUnit().setStatus(RoomUnitStatus.JUMP, "0");
 
-                    AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("HorseConsecutiveJumpsCount"));
-                    AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("HorseJumping"));
+                    AchievementManager.progressAchievement(rider, Emulator.getGameEnvironment().getAchievementManager().getAchievement("HorseConsecutiveJumpsCount"));
+                    AchievementManager.progressAchievement(rider, Emulator.getGameEnvironment().getAchievementManager().getAchievement("HorseJumping"));
                 }
 
                 room.updateItemState(this);
             }
-        }*/
+        }
     }
 
     @Override

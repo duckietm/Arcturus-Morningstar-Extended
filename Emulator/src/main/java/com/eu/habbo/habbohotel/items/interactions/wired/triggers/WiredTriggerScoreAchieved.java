@@ -28,15 +28,11 @@ public class WiredTriggerScoreAchieved extends InteractionWiredTrigger {
 
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
-        Object[] stuff = event.getLegacyStuff();
-        if (stuff.length >= 2) {
-            int points = (Integer) stuff[0];
-            int amountAdded = (Integer) stuff[1];
+        int points = event.getScore();
+        int amountAdded = event.getScoreAdded();
 
-            return points - amountAdded < this.score && points >= this.score;
-        }
-
-        return false;
+        // Check if this score addition crossed the threshold
+        return points - amountAdded < this.score && points >= this.score;
     }
 
     @Deprecated

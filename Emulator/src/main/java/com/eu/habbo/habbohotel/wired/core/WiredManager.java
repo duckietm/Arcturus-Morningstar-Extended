@@ -357,13 +357,17 @@ public final class WiredManager {
 
     /**
      * Trigger when score is achieved.
+     * @param room the room
+     * @param user the user who scored
+     * @param score the current total score
+     * @param scoreAdded the amount of score just added
      */
-    public static boolean triggerScoreAchieved(Room room, RoomUnit user, int score) {
+    public static boolean triggerScoreAchieved(Room room, RoomUnit user, int score, int scoreAdded) {
         if (!isEnabled() || room == null || user == null) {
             return false;
         }
         
-        WiredEvent event = WiredEvents.scoreAchieved(room, user, score);
+        WiredEvent event = WiredEvents.scoreAchieved(room, user, score, scoreAdded);
         return handleEvent(event);
     }
 
@@ -631,7 +635,15 @@ public final class WiredManager {
 
     // ========== Effect Execution ==========
 
-    public static boolean executeEffectsAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final Object[] stuff) {
+    /**
+     * Execute all wired effects at the specified tiles.
+     * @param tiles the tiles to execute effects at
+     * @param roomUnit the triggering room unit (may be null)
+     * @param room the room
+     * @param callStackDepth current recursion depth for trigger stacks
+     * @return true if any effects were executed
+     */
+    public static boolean executeEffectsAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
         for (RoomTile tile : tiles) {
             if (room != null) {
                 THashSet<HabboItem> items = room.getItemsAt(tile);
@@ -642,7 +654,7 @@ public final class WiredManager {
                         InteractionWiredEffect effect = (InteractionWiredEffect) item;
                         WiredEvent event = WiredEvent.builder(WiredEvent.Type.CUSTOM, room)
                             .actor(roomUnit)
-                            .legacyStuff(stuff)
+                            .callStackDepth(callStackDepth)
                             .build();
                         WiredContext ctx = new WiredContext(event, effect, DefaultWiredServices.getInstance(), new WiredState(100));
                         effect.execute(ctx);

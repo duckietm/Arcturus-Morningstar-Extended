@@ -40,7 +40,7 @@ public class GamePlayer {
                 this.wiredScore += amount;
             }
 
-            WiredManager.triggerScoreAchieved(this.habbo.getHabboInfo().getCurrentRoom(), this.habbo.getRoomUnit(), this.score);
+            WiredManager.triggerScoreAchieved(this.habbo.getHabboInfo().getCurrentRoom(), this.habbo.getRoomUnit(), this.score, amount);
         }
     }
 

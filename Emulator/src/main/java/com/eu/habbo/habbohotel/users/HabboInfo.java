@@ -480,6 +480,10 @@ public class HabboInfo implements Runnable {
         roomUnit.setZ(riding.getRoomUnit().getZ());
         roomUnit.setPreviousLocationZ(riding.getRoomUnit().getZ());
         roomUnit.stopWalking();
+        if (riding.getRoomUnit() != null) {
+            riding.getRoomUnit().setCanWalk(true);
+            room.sendComposer(new RoomUserStatusComposer(riding.getRoomUnit()).compose());
+        }
         room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
         List<RoomTile> availableTiles = isRemoving ? new ArrayList<>() : this.getCurrentRoom().getLayout().getWalkableTilesAround(roomUnit.getCurrentLocation());
 

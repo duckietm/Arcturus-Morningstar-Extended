@@ -126,25 +126,12 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         RoomUnit roomUnit = ctx.actor().orElse(null);
-        Object[] stuff = ctx.legacyStuff();
         
-        // Prevent infinite recursion by checking for WiredEffectTriggerStacks in the call chain
-        // and limiting the recursion depth
-        int stackDepth = 0;
-        if (stuff != null) {
-            for (Object obj : stuff) {
-                if (obj instanceof WiredEffectTriggerStacks) {
-                    stackDepth++;
-                    // If this specific stack is already in the chain, prevent infinite loop
-                    if (obj == this) {
-                        return;
-                    }
-                }
-            }
-        }
+        // Get the current call stack depth from the event
+        int currentDepth = ctx.event().getCallStackDepth();
         
         // Prevent excessive recursion depth
-        if (stackDepth >= MAX_STACK_DEPTH) {
+        if (currentDepth >= MAX_STACK_DEPTH) {
             return;
         }
 
@@ -169,17 +156,8 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             }
         }
         
-        // Create new stuff array with this trigger stack added for recursion tracking
-        Object[] newStuff;
-        if (stuff != null) {
-            newStuff = new Object[stuff.length + 1];
-            System.arraycopy(stuff, 0, newStuff, 0, stuff.length);
-            newStuff[newStuff.length - 1] = this;
-        } else {
-            newStuff = new Object[] { this };
-        }
-        
-        WiredManager.executeEffectsAtTiles(usedTiles, roomUnit, room, newStuff);
+        // Execute effects at tiles with incremented call stack depth
+        WiredManager.executeEffectsAtTiles(usedTiles, roomUnit, room, currentDepth + 1);
     }
 
     @Deprecated

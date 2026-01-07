@@ -21,7 +21,10 @@ public class RoomUnitRidePet implements Runnable {
 
     @Override
     public void run() {
-        if (this.habbo.getRoomUnit() == null || this.pet.getRoomUnit() == null || this.pet.getRoom() != this.habbo.getHabboInfo().getCurrentRoom() || this.goalTile == null || this.habbo.getRoomUnit().getGoal() != this.goalTile)
+        if (this.habbo == null || this.habbo.getRoomUnit() == null || this.pet == null || 
+            this.pet.getRoomUnit() == null || this.habbo.getHabboInfo() == null ||
+            this.pet.getRoom() != this.habbo.getHabboInfo().getCurrentRoom() || 
+            this.goalTile == null || this.habbo.getRoomUnit().getGoal() != this.goalTile)
             return;
 
         if (habbo.getRoomUnit().getCurrentLocation().distance(pet.getRoomUnit().getCurrentLocation()) <= 1) {
@@ -34,10 +37,16 @@ public class RoomUnitRidePet implements Runnable {
             habbo.getRoomUnit().setPreviousLocationZ(this.pet.getRoomUnit().getZ() + 1);
             habbo.getRoomUnit().setRotation(this.pet.getRoomUnit().getBodyRotation());
             habbo.getRoomUnit().statusUpdate(true);
+            
+            // Set up the pet for riding
             pet.setRider(habbo);
+            pet.setTask(PetTasks.RIDE);
+            pet.getRoomUnit().stopWalking();
+            pet.getRoomUnit().setGoalLocation(habbo.getRoomUnit().getCurrentLocation());
+            
             habbo.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserStatusComposer(habbo.getRoomUnit()).compose());
             habbo.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserEffectComposer(habbo.getRoomUnit()).compose());
-            pet.setTask(PetTasks.RIDE);
+            habbo.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserStatusComposer(pet.getRoomUnit()).compose());
         } else {
             pet.getRoomUnit().setWalkTimeOut(3 + Emulator.getIntUnixTimestamp());
             pet.getRoomUnit().stopWalking();

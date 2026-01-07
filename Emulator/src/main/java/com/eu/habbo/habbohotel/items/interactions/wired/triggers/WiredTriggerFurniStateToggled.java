@@ -6,9 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
@@ -37,25 +35,14 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
-        RoomUnit roomUnit = event.getActor().orElse(null);
-        Room room = event.getRoom();
-        Object[] stuff = event.getLegacyStuff();
+        // Reject if this was triggered by a wired effect (to prevent loops)
+        if (event.isTriggeredByEffect()) {
+            return false;
+        }
 
-        if (stuff.length >= 1) {
-            Habbo habbo = room.getHabbo(roomUnit);
-
-            if (habbo != null) {
-                for (Object object : stuff) {
-                    if (object instanceof WiredEffectType) {
-                        return false;
-                    }
-                }
-
-                HabboItem sourceItem = event.getSourceItem().orElse(null);
-                if (sourceItem != null) {
-                    return this.items.contains(sourceItem);
-                }
-            }
+        HabboItem sourceItem = event.getSourceItem().orElse(null);
+        if (sourceItem != null) {
+            return this.items.contains(sourceItem);
         }
         return false;
     }

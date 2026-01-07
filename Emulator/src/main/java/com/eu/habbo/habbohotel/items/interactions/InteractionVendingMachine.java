@@ -27,7 +27,7 @@ public class InteractionVendingMachine extends HabboItem {
         super(id, userId, item, extradata, limitedStack, limitedSells);
         this.setExtradata("0");
     }
-
+    
     public THashSet<RoomTile> getActivatorTiles(Room room) {
         THashSet<RoomTile> tiles = new THashSet<>();
         RoomTile tileInFront = getSquareInFront(room.getLayout(), this);

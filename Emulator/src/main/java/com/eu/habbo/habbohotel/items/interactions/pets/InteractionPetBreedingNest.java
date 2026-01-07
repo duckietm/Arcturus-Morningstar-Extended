@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetManager;
 import com.eu.habbo.habbohotel.pets.PetTasks;
+import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -33,7 +34,11 @@ public class InteractionPetBreedingNest extends HabboItem {
 
     @Override
     public boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects) {
-        return room.getPet(roomUnit) != null && !this.boxFull();
+        Pet pet = room.getPet(roomUnit);
+        if (pet == null) return false;
+        // Don't let ridden pets enter breeding nest
+        if (pet instanceof RideablePet && ((RideablePet) pet).getRider() != null) return false;
+        return !this.boxFull();
     }
 
     @Override
