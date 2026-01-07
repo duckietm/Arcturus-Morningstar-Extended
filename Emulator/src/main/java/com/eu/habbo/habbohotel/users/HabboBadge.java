@@ -11,7 +11,7 @@ public class HabboBadge implements Runnable {
     private int id;
     private String code;
     private int slot;
-    private final Habbo habbo;
+    private Habbo habbo;
     private boolean needsUpdate;
     private boolean needsInsert;
 

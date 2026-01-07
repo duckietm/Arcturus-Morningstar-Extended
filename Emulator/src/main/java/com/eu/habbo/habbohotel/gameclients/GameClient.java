@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.MessageComposer;
+import com.eu.habbo.plugin.events.emulator.OutgoingPacketEvent;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,8 @@ public class GameClient {
 
     private final Channel channel;
     private final HabboEncryption encryption;
-    private final LatencyTracker latencyTracker;
+	private final LatencyTracker latencyTracker;
+
     private Habbo habbo;
     private boolean handshakeFinished;
     private String machineId = "";
@@ -37,7 +39,7 @@ public class GameClient {
                     Emulator.getCrypto().getModulus(),
                     Emulator.getCrypto().getPrivateExponent())
                 : null;
-        this.latencyTracker = new LatencyTracker();
+			this.latencyTracker = new LatencyTracker();
     }
 
     public Channel getChannel() {
@@ -47,8 +49,10 @@ public class GameClient {
     public HabboEncryption getEncryption() {
         return encryption;
     }
-
-    public LatencyTracker getLatencyTracker() { return latencyTracker; }
+	
+	public LatencyTracker getLatencyTracker() { 
+		return latencyTracker;
+	}
 
     public Habbo getHabbo() {
         return this.habbo;
@@ -88,6 +92,17 @@ public class GameClient {
                 return;
             }
 
+            OutgoingPacketEvent event = new OutgoingPacketEvent(this.habbo, response.getComposer(), response);
+            Emulator.getPluginManager().fireEvent(event);
+
+            if (event.isCancelled()) {
+                return;
+            }
+
+            if (event.hasCustomMessage()) {
+                response = event.getCustomMessage();
+            }
+
             this.channel.write(response, this.channel.voidPromise());
             this.channel.flush();
         }
@@ -100,14 +115,25 @@ public class GameClient {
                     return;
                 }
 
+                OutgoingPacketEvent event = new OutgoingPacketEvent(this.habbo, response.getComposer(), response);
+                Emulator.getPluginManager().fireEvent(event);
+
+                if (event.isCancelled()) {
+                    continue;
+                }
+
+                if (event.hasCustomMessage()) {
+                    response = event.getCustomMessage();
+                }
+
                 this.channel.write(response);
             }
 
             this.channel.flush();
         }
     }
-
-    public void sendKeepAlive() {
+	
+	public void sendKeepAlive() {
         if (this.channel != null && this.channel.isOpen()) {
             this.channel.writeAndFlush(new ServerMessage(-1));
         }

@@ -46,7 +46,7 @@ public class InteractionBuildArea extends InteractionCustomValues {
         }
     };
 
-    private final THashSet<RoomTile> tiles;
+    private THashSet<RoomTile> tiles;
 
     public InteractionBuildArea(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem, defaultValues);

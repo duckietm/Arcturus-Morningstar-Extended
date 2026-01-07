@@ -61,10 +61,6 @@ public class RoomTile {
         this.units = null;
     }
 
-    public double getStackHeight() {
-        return this.stackHeight;
-    }
-
     public void setStackHeight(double stackHeight) {
         if (this.state == RoomTileState.INVALID) {
             this.stackHeight = Short.MAX_VALUE;
@@ -87,10 +83,6 @@ public class RoomTile {
         }
 
         return this.allowStack;
-    }
-
-    public void setAllowStack(boolean allowStack) {
-        this.allowStack = allowStack;
     }
 
     public short relativeHeight() {
@@ -124,14 +116,6 @@ public class RoomTile {
         this.diagonally = isDiagonally;
     }
 
-    public RoomTile getPrevious() {
-        return this.previous;
-    }
-
-    public void setPrevious(RoomTile previous) {
-        this.previous = previous;
-    }
-
     public int getfCosts() {
         return this.gCosts + this.hCosts;
     }
@@ -148,7 +132,7 @@ public class RoomTile {
         this.gCosts = gCosts;
     }
 
-    void setgCosts(RoomTile previousRoomTile, int basicCost) {
+    public void setgCosts(RoomTile previousRoomTile, int basicCost) {
         this.setgCosts((short) (previousRoomTile.getgCosts() + basicCost));
     }
 
@@ -160,8 +144,8 @@ public class RoomTile {
         return previousRoomTile.getgCosts() + 10;
     }
 
-    public void sethCosts(RoomTile parent) {
-        this.hCosts = (short) ((Math.abs(this.x - parent.x) + Math.abs(this.y - parent.y)) * (parent.diagonally ? RoomLayout.DIAGONALMOVEMENTCOST : RoomLayout.BASICMOVEMENTCOST));
+    public void sethCosts(RoomTile parent, int cost) {
+        this.hCosts = (short) ((Math.abs(this.x - parent.x) + Math.abs(this.y - parent.y)) * (cost));
     }
 
     public String toString() {
@@ -172,21 +156,13 @@ public class RoomTile {
         return this.state == RoomTileState.OPEN;
     }
 
-    public RoomTileState getState() {
-        return this.state;
-    }
-
-    public void setState(RoomTileState state) {
-        this.state = state;
-    }
-
     public boolean is(short x, short y) {
         return this.x == x && this.y == y;
     }
 
     public List<RoomUnit> getUnits() {
         synchronized (this.units) {
-            return new ArrayList<RoomUnit>(this.units);
+            return new ArrayList<>(this.units);
         }
     }
 
@@ -215,5 +191,65 @@ public class RoomTile {
 
     public boolean unitIsOnFurniOnTile(RoomUnit unit, Item item) {
         return (unit.getX() >= this.x && unit.getX() < this.x + item.getLength()) && (unit.getY() >= this.y && unit.getY() < this.y + item.getWidth());
+    }
+
+    public short getX() {
+        return this.x;
+    }
+
+    public short getY() {
+        return this.y;
+    }
+
+    public short getZ() {
+        return this.z;
+    }
+
+    public short getGCost() {
+        return this.gCosts;
+    }
+
+    public short getHCost() {
+        return this.hCosts;
+    }
+
+    public void setDiagonally(boolean diagonally) {
+        this.diagonally = diagonally;
+    }
+
+    public void setGCost(short gCost) {
+        this.gCosts = gCost;
+    }
+
+    public void setHCost(short hCost) {
+        this.hCosts = hCost;
+    }
+
+    public RoomTileState getState() {
+        return this.state;
+    }
+
+    public double getStackHeight() {
+        return this.stackHeight;
+    }
+
+    public RoomTile getPrevious() {
+        return this.previous;
+    }
+
+    public boolean isDiagonally() {
+        return this.diagonally;
+    }
+
+    public void setState(RoomTileState state) {
+        this.state = state;
+    }
+
+    public void setAllowStack(boolean allowStack) {
+        this.allowStack = allowStack;
+    }
+
+    public void setPrevious(RoomTile previous) {
+        this.previous = previous;
     }
 }

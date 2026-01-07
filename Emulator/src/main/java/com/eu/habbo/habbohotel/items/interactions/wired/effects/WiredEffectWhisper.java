@@ -7,14 +7,11 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.permissions.Permission;
-import com.eu.habbo.habbohotel.rooms.Room;
-import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
-import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
-import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
@@ -91,35 +88,38 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
         if (this.message.length() > 0) {
+            RoomUnit roomUnit = ctx.actor().orElse(null);
             if (roomUnit != null) {
                 Habbo habbo = room.getHabbo(roomUnit);
 
                 if (habbo != null) {
                     String msg = this.message.replace("%user%", habbo.getHabboInfo().getUsername()).replace("%online_count%", Emulator.getGameEnvironment().getHabboManager().getOnlineCount() + "").replace("%room_count%", Emulator.getGameEnvironment().getRoomManager().getActiveRooms().size() + "");
                     habbo.getClient().sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(msg, habbo, habbo, RoomChatMessageBubbles.WIRED)));
-                    Emulator.getThreading().run(() -> WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, roomUnit, room, new Object[]{ msg }));
 
                     if (habbo.getRoomUnit().isIdle()) {
                         habbo.getRoomUnit().getRoom().unIdle(habbo);
                     }
-                    return true;
                 }
             } else {
                 for (Habbo h : room.getHabbos()) {
                     h.getClient().sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(this.message.replace("%user%", h.getHabboInfo().getUsername()).replace("%online_count%", Emulator.getGameEnvironment().getHabboManager().getOnlineCount() + "").replace("%room_count%", Emulator.getGameEnvironment().getRoomManager().getActiveRooms().size() + ""), h, h, RoomChatMessageBubbles.WIRED)));
                 }
-
-                return true;
             }
         }
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay()));
     }
 
     @Override
@@ -127,7 +127,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.message = data.message;
         }

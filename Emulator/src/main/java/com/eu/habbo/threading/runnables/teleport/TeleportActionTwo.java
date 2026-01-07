@@ -38,8 +38,12 @@ class TeleportActionTwo implements Runnable {
             delayOffset = 0;
         }
 
-        if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != this.room)
+        if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != this.room) {
+            this.client.getHabbo().getHabboInfo().setLoadingRoom(0);
+            this.client.getHabbo().getRoomUnit().isTeleporting = false;
+            this.client.getHabbo().getRoomUnit().setCanWalk(true);
             return;
+        }
 
         this.client.getHabbo().getRoomUnit().removeStatus(RoomUnitStatus.MOVE);
         this.room.sendComposer(new RoomUserStatusComposer(this.client.getHabbo().getRoomUnit()).compose());

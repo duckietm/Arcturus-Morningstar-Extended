@@ -5,13 +5,11 @@ import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredHighscore;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
-import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerTeamLoses;
-import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerTeamWins;
+import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreDataEntry;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreDataEntry;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.outgoing.guides.GuideSessionPartnerIsPlayingComposer;
 import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.games.GameHabboJoinEvent;
@@ -153,7 +151,7 @@ public abstract class Game implements Runnable {
 
         if (winningTeam != null) {
             for (GamePlayer player : winningTeam.getMembers()) {
-                WiredHandler.handleCustomTrigger(WiredTriggerTeamWins.class, player.getHabbo().getRoomUnit(), this.room, new Object[]{this});
+                WiredManager.triggerTeamWins(this.room, player.getHabbo().getRoomUnit());
 
                 Habbo winner = player.getHabbo();
                 if (winner != null) {
@@ -171,7 +169,7 @@ public abstract class Game implements Runnable {
                 if (team == winningTeam) continue;
 
                 for (GamePlayer player : team.getMembers()) {
-                    WiredHandler.handleCustomTrigger(WiredTriggerTeamLoses.class, player.getHabbo().getRoomUnit(), this.room, new Object[]{this});
+                    WiredManager.triggerTeamLoses(this.room, player.getHabbo().getRoomUnit());
                 }
 
                 if (team.getMembers().size() > 0 && team.getTotalScore() > 0) {

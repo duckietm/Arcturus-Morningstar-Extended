@@ -4,8 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.plugin.events.bots.BotChatEvent;
 import com.eu.habbo.plugin.events.bots.BotShoutEvent;
@@ -21,7 +20,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Bot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
@@ -113,7 +111,7 @@ public class Bot implements Runnable {
         this.chatRandom = false;
         this.chatDelay = 10;
         this.chatTimeOut = Emulator.getIntUnixTimestamp() + this.chatDelay;
-        this.chatLines = new ArrayList<>(List.of("Default Message :D"));
+        this.chatLines = new ArrayList<>(Arrays.asList("Default Message :D"));
         this.type = bot.getType();
         this.effect = bot.getEffect();
         this.bubble = bot.getBubbleId();
@@ -140,26 +138,30 @@ public class Bot implements Runnable {
     @Override
     public void run() {
         if (this.needsUpdate) {
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE bots SET name = ?, motto = ?, figure = ?, gender = ?, user_id = ?, room_id = ?, dance = ?, freeroam = ?, chat_lines = ?, chat_auto = ?, chat_random = ?, chat_delay = ?, effect = ?, bubble_id = ? WHERE id = ?")) {
+            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE bots SET name = ?, motto = ?, figure = ?, gender = ?, user_id = ?, room_id = ?, x = ?, y = ?, z = ?, rot = ?, dance = ?, freeroam = ?, chat_lines = ?, chat_auto = ?, chat_random = ?, chat_delay = ?, effect = ?, bubble_id = ? WHERE id = ?")) {
                 statement.setString(1, this.name);
                 statement.setString(2, this.motto);
                 statement.setString(3, this.figure);
                 statement.setString(4, this.gender.toString());
                 statement.setInt(5, this.ownerId);
                 statement.setInt(6, this.room == null ? 0 : this.room.getId());
-                statement.setInt(7, this.roomUnit == null ? 0 : this.roomUnit.getDanceType().getType());
-                statement.setString(8, this.canWalk ? "1" : "0");
+                statement.setInt(7, this.roomUnit == null ? 0 : this.roomUnit.getX());
+                statement.setInt(8, this.roomUnit == null ? 0 : this.roomUnit.getY());
+                statement.setDouble(9, this.roomUnit == null ? 0 : this.roomUnit.getZ());
+                statement.setInt(10, this.roomUnit == null ? 0 : this.roomUnit.getBodyRotation().getValue());
+                statement.setInt(11, this.roomUnit == null ? 0 : this.roomUnit.getDanceType().getType());
+                statement.setString(12, this.canWalk ? "1" : "0");
                 StringBuilder text = new StringBuilder();
                 for (String s : this.chatLines) {
                     text.append(s).append("\r");
                 }
-                statement.setString(9, text.toString());
-                statement.setString(10, this.chatAuto ? "1" : "0");
-                statement.setString(11, this.chatRandom ? "1" : "0");
-                statement.setInt(12, this.chatDelay);
-                statement.setInt(13, this.effect);
-                statement.setInt(14, this.bubble);
-                statement.setInt(15, this.id);
+                statement.setString(13, text.toString());
+                statement.setString(14, this.chatAuto ? "1" : "0");
+                statement.setString(15, this.chatRandom ? "1" : "0");
+                statement.setInt(16, this.chatDelay);
+                statement.setInt(17, this.effect);
+                statement.setInt(18, this.bubble);
+                statement.setInt(19, this.id);
                 statement.execute();
                 this.needsUpdate = false;
             } catch (SQLException e) {
@@ -177,7 +179,7 @@ public class Bot implements Runnable {
                                 Bot.BOT_LIMIT_WALKING_DISTANCE
                                         ? this.room.getRandomWalkableTilesAround(
                                         this.getRoomUnit(),
-                                        this.room.getLayout().getTile(this.roomUnit.getX(), this.roomUnit.getY()),
+                                        this.room.getLayout().getTile(this.roomUnit.getBotStartLocation().x, this.roomUnit.getBotStartLocation().y),
                                         Bot.BOT_WALKING_DISTANCE_RADIUS)
                                         : this.room.getRandomWalkableTile()
                         );
@@ -187,7 +189,7 @@ public class Bot implements Runnable {
                     }
                 }/* else {
                     for (RoomTile t : this.room.getLayout().getTilesAround(this.room.getLayout().getTile(this.getRoomUnit().getX(), this.getRoomUnit().getY()))) {
-                        WiredHandler.handle(WiredTriggerType.BOT_REACHED_STF, this.roomUnit, this.room, this.room.getItemsAt(t).toArray());
+                        WiredManager.handle(WiredTriggerType.BOT_REACHED_STF, this.roomUnit, this.room, this.room.getItemsAt(t).toArray());
                     }
                 }*/
             }
@@ -205,7 +207,7 @@ public class Bot implements Runnable {
                             .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), this.room.getName())
                             .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), this.room.getUserCount() + "");
 
-                    if(!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{ message })) {
+                    if(!WiredManager.triggerUserSays(room, this.getRoomUnit(), message)) {
                         this.talk(message);
                     }
 
@@ -273,7 +275,7 @@ public class Bot implements Runnable {
 
         if(PLACEMENT_MESSAGES.length > 0) {
             String message = PLACEMENT_MESSAGES[Emulator.getRandom().nextInt(PLACEMENT_MESSAGES.length)];
-            if (!WiredHandler.handle(WiredTriggerType.SAY_SOMETHING, this.getRoomUnit(), room, new Object[]{message})) {
+            if (!WiredManager.triggerUserSays(room, this.getRoomUnit(), message)) {
                 this.talk(message);
             }
         }

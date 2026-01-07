@@ -29,7 +29,8 @@ public class PetPickupEvent extends MessageHandler {
                     return;
                 }
 
-                if (pet instanceof RideablePet rideablePet) {
+                if (pet instanceof RideablePet) {
+                    RideablePet rideablePet = (RideablePet) pet;
                     if (rideablePet.getRider() != null) {
                         rideablePet.getRider().getHabboInfo().dismountPet(true);
                     }

@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.effects;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,20 +18,20 @@ public class WiredEffectGiveEffect extends WiredEffectWhisper {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
         int effectId;
 
         try {
             effectId = Integer.parseInt(this.message);
         } catch (Exception e) {
-            return false;
+            return;
         }
 
-        if (effectId >= 0) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+
+        if (effectId >= 0 && roomUnit != null) {
             room.giveEffect(roomUnit, effectId, Integer.MAX_VALUE);
-            return true;
         }
-
-        return false;
     }
 }

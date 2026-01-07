@@ -60,4 +60,9 @@ public enum RoomUserRotation {
         }
         return null;
     }
+
+    public static int rotationDistance(int a, int b) {
+        int diff = Math.abs(a - b);
+        return Math.min(diff, 8 - diff);
+    }
 }

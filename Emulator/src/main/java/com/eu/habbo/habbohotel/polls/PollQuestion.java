@@ -32,7 +32,7 @@ public class PollQuestion implements ISerialize, Comparable<PollQuestion> {
 
     public final int order;
 
-    private final ArrayList<PollQuestion> subQuestions;
+    private ArrayList<PollQuestion> subQuestions;
 
     public PollQuestion(ResultSet set) throws SQLException {
         this.id = set.getInt("id");

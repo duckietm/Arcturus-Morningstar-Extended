@@ -22,7 +22,7 @@ class QueryDeleteHabboBadge implements Runnable {
 
     @Override
     public void run() {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM user_badges WHERE user_id = ? AND badge_code = ?")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM users_badges WHERE user_id = ? AND badge_code = ?")) {
             statement.setInt(1, this.habbo.getHabboInfo().getId());
             statement.setString(2, this.name);
             statement.execute();

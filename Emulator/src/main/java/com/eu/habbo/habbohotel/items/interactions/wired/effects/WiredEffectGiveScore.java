@@ -11,7 +11,8 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.iterator.TObjectIntIterator;
@@ -32,7 +33,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     private int score;
     private int count;
 
-    private final TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
+    private TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
 
     public WiredEffectGiveScore(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -43,14 +44,15 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        Habbo habbo = room.getHabbo(roomUnit);
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
         if (habbo != null && habbo.getHabboInfo().getCurrentGame() != null) {
             Game game = room.getGame(habbo.getHabboInfo().getCurrentGame());
 
             if (game == null)
-                return false;
+                return;
 
             int gameStartTime = game.getStartTime();
 
@@ -70,7 +72,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
                             habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
 
-                            return true;
+                            return;
                         }
                     } else {
                         iterator.remove();
@@ -89,16 +91,18 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             if (habbo.getHabboInfo().getGamePlayer() != null) {
                 habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
             }
-
-            return true;
         }
+    }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.score, this.count, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.score, this.count, this.getDelay()));
     }
 
     @Override
@@ -106,7 +110,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.score = data.score;
             this.count = data.count;
             this.setDelay(data.delay);

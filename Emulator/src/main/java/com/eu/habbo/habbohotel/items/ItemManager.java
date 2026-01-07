@@ -3,10 +3,7 @@ package com.eu.habbo.habbohotel.items;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
-import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiPuck;
-import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiSphere;
-import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTeleporter;
-import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTile;
+import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.*;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.gates.InteractionBattleBanzaiGateBlue;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.gates.InteractionBattleBanzaiGateGreen;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.gates.InteractionBattleBanzaiGateRed;
@@ -48,12 +45,13 @@ import com.eu.habbo.habbohotel.items.interactions.totems.InteractionTotemPlanet;
 import com.eu.habbo.habbohotel.items.interactions.wired.conditions.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
+import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
-import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.plugin.events.emulator.EmulatorLoadItemsManagerEvent;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
@@ -170,6 +168,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("youtube", InteractionYoutubeTV.class));
         this.interactionsList.add(new ItemInteraction("jukebox", InteractionJukeBox.class));
         this.interactionsList.add(new ItemInteraction("switch", InteractionSwitch.class));
+        this.interactionsList.add(new ItemInteraction("switch_remote_control", InteractionSwitchRemoteControl.class));
         this.interactionsList.add(new ItemInteraction("fx_box", InteractionFXBox.class));
         this.interactionsList.add(new ItemInteraction("blackhole", InteractionBlackHole.class));
         this.interactionsList.add(new ItemInteraction("effect_toggle", InteractionEffectToggle.class));
@@ -191,6 +190,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("crackable_subscription_box", InteractionRedeemableSubscriptionBox.class));
         this.interactionsList.add(new ItemInteraction("random_state", InteractionRandomState.class));
         this.interactionsList.add(new ItemInteraction("vendingmachine_no_sides", InteractionNoSidesVendingMachine.class));
+        this.interactionsList.add(new ItemInteraction("tile_walkmagic", InteractionTileWalkMagic.class));
 
         this.interactionsList.add(new ItemInteraction("game_timer", InteractionGameTimer.class));
 
@@ -268,11 +268,13 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_cnd_trggrer_on_frn", WiredConditionTriggerOnFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_handitem", WiredConditionHabboHasHandItem.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_date_rng_active", WiredConditionDateRangeActive.class));
+        this.interactionsList.add(new ItemInteraction("wf_cnd_valid_moves", WiredConditionMovementValidation.class));
 
 
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
         this.interactionsList.add(new ItemInteraction("wf_blob", WiredBlob.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_or_eval", WiredExtraOrEval.class));
 
 
         this.interactionsList.add(new ItemInteraction("wf_highscore", InteractionWiredHighscore.class));
@@ -344,9 +346,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("totem_leg", InteractionTotemLegs.class));
         this.interactionsList.add(new ItemInteraction("totem_head", InteractionTotemHead.class));
         this.interactionsList.add(new ItemInteraction("totem_planet", InteractionTotemPlanet.class));
-
-        this.interactionsList.add(new ItemInteraction("tile_walkmagic", InteractionTileWalkMagic.class));
-        }
+    }
 
 
     public void addItemInteraction(ItemInteraction itemInteraction) {
@@ -517,20 +517,6 @@ public class ItemManager {
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         }
-    }
-
-    public HabboItem createItemNoSql(int habboId, Item item, int limitedStack, int limitedSells, String extraData) {
-        Class<? extends HabboItem> itemClass = item.getInteractionType().getType();
-        int id = new Random().nextInt(10000000) + 1000000000;
-        if (itemClass != null) {
-            try {
-                return itemClass.getDeclaredConstructor(int.class, int.class, Item.class, String.class, int.class, int.class).newInstance(id, habboId, item, extraData, limitedStack, limitedSells);
-            } catch (Exception e) {
-                LOGGER.error("Caught exception", e);
-                return new InteractionDefault(id, habboId, item, extraData, limitedStack, limitedSells);
-            }
-        }
-        return null;
     }
 
     public void addNewUserGift(NewUserGift gift) {
@@ -783,7 +769,6 @@ public class ItemManager {
 
         return null;
     }
-
 
     public YoutubeManager getYoutubeManager() {
         return this.youtubeManager;

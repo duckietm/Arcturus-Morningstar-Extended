@@ -4,8 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.rooms.RoomLayout;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserRemoveComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUsersComposer;
@@ -31,7 +30,7 @@ public class InvisibleCommand extends Command {
             roomUnit.getRoom().sendComposer(new RoomUsersComposer(gameClient.getHabbo()).compose());
             roomUnit.getRoom().sendComposer(new RoomUserStatusComposer(roomUnit).compose());
 
-            WiredHandler.handle(WiredTriggerType.ENTER_ROOM, roomUnit, roomUnit.getRoom(), null);
+            WiredManager.triggerUserEntersRoom(roomUnit.getRoom(), roomUnit);
             roomUnit.getRoom().habboEntered(gameClient.getHabbo());
 
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_invisible.updated.back"));

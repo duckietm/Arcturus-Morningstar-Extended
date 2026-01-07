@@ -274,7 +274,8 @@ public class InteractionWater extends InteractionDefault {
 
     private boolean isValidForMask(Room room, int x, int y, double z, boolean corner) {
         for (HabboItem item : room.getItemsAt(x, y, z)) {
-            if (item instanceof InteractionWater water) {
+            if (item instanceof InteractionWater) {
+                InteractionWater water = (InteractionWater) item;
 
                 // Take out picked up water from the recalculation.
                 if (!water.isInRoom) {

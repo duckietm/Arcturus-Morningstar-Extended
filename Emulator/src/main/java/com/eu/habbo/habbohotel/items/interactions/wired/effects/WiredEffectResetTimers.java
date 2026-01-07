@@ -9,7 +9,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.threading.runnables.WiredResetTimers;
 import gnu.trove.procedure.TObjectProcedure;
@@ -73,15 +74,20 @@ public class WiredEffectResetTimers extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
         Emulator.getThreading().run(new WiredResetTimers(room), this.delay);
+    }
 
-        return true;
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
             this.getDelay()
         ));
     }
@@ -91,7 +97,7 @@ public class WiredEffectResetTimers extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.delay = data.delay;
         } else {
             try {

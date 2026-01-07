@@ -29,6 +29,7 @@ public class RoomTrade {
 
     public RoomTrade(Habbo userOne, Habbo userTwo, Room room) {
         this.users = new ArrayList<>();
+
         this.users.add(new RoomTradeUser(userOne));
         this.users.add(new RoomTradeUser(userTwo));
         this.room = room;
@@ -101,10 +102,8 @@ public class RoomTrade {
         this.sendMessageToUsers(new TradeAcceptedComposer(user));
         boolean accepted = true;
         for (RoomTradeUser roomTradeUser : this.users) {
-            if (!roomTradeUser.getAccepted()) {
+            if (!roomTradeUser.getAccepted())
                 accepted = false;
-                break;
-            }
         }
         if (accepted) {
             this.sendMessageToUsers(new TradingWaitingConfirmComposer());
@@ -119,10 +118,8 @@ public class RoomTrade {
         this.sendMessageToUsers(new TradeAcceptedComposer(user));
         boolean accepted = true;
         for (RoomTradeUser roomTradeUser : this.users) {
-            if (!roomTradeUser.getConfirmed()) {
+            if (!roomTradeUser.getConfirmed())
                 accepted = false;
-                break;
-            }
         }
         if (accepted) {
             if (this.tradeItems()) {

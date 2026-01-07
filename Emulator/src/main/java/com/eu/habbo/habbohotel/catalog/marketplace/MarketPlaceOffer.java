@@ -16,8 +16,8 @@ public class MarketPlaceOffer implements Runnable {
     public int avarage;
     public int count;
     private int offerId;
-    private final Item baseItem;
-    private final int itemId;
+    private Item baseItem;
+    private int itemId;
     private int price;
     private int limitedStack;
     private int limitedNumber;

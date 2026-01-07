@@ -1,15 +1,14 @@
 package com.eu.habbo.habbohotel.games;
 
 import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
 public class GamePlayer {
 
     private final Habbo habbo;
 
 
-    private final GameTeamColors teamColor;
+    private GameTeamColors teamColor;
 
 
     private int score;
@@ -41,7 +40,7 @@ public class GamePlayer {
                 this.wiredScore += amount;
             }
 
-            WiredHandler.handle(WiredTriggerType.SCORE_ACHIEVED, this.habbo.getRoomUnit(), this.habbo.getHabboInfo().getCurrentRoom(), new Object[]{this.habbo.getHabboInfo().getCurrentRoom().getGame(this.habbo.getHabboInfo().getCurrentGame()).getTeamForHabbo(this.habbo).getTotalScore(), amount});
+            WiredManager.triggerScoreAchieved(this.habbo.getHabboInfo().getCurrentRoom(), this.habbo.getRoomUnit(), this.score);
         }
     }
 

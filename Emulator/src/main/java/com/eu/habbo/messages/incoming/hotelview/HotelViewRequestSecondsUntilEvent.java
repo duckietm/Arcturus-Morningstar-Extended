@@ -8,7 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 public class HotelViewRequestSecondsUntilEvent extends MessageHandler {
-    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm");
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm");
 
     @Override
     public void handle() throws Exception {

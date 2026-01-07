@@ -5,8 +5,10 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredEvent;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -53,13 +55,21 @@ public class WiredTriggerBotReachedHabbo extends InteractionWiredTrigger {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean matches(HabboItem triggerItem, WiredEvent event) {
+        RoomUnit roomUnit = event.getActor().orElse(null);
+        Room room = event.getRoom();
         return room.getBots(this.botName).stream().anyMatch(bot -> bot.getRoomUnit() == roomUnit);
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
             this.botName
         ));
     }
@@ -69,7 +79,7 @@ public class WiredTriggerBotReachedHabbo extends InteractionWiredTrigger {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.botName = data.botName;
         } else {
             this.botName = wiredData;

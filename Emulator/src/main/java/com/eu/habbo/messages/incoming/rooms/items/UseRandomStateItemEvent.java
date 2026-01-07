@@ -20,9 +20,10 @@ public class UseRandomStateItemEvent extends MessageHandler {
 
             HabboItem item = room.getHabboItem(itemId);
 
-            if (item == null || !(item instanceof InteractionRandomState randomStateItem))
+            if (item == null || !(item instanceof InteractionRandomState))
                 return;
 
+            InteractionRandomState randomStateItem = (InteractionRandomState)item;
             randomStateItem.onRandomStateClick(this.client, room);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);

@@ -26,7 +26,7 @@ public class RoomBackgroundEvent extends MessageHandler {
             int saturation = this.packet.readInt();
             int brightness = this.packet.readInt();
 
-            FurnitureRoomTonerEvent event = Emulator.getPluginManager().fireEvent(new FurnitureRoomTonerEvent(item, this.client.getHabbo(), hue, saturation, brightness));
+            FurnitureRoomTonerEvent event = (FurnitureRoomTonerEvent) Emulator.getPluginManager().fireEvent(new FurnitureRoomTonerEvent(item, this.client.getHabbo(), hue, saturation, brightness));
 
             if (event.isCancelled())
                 return;

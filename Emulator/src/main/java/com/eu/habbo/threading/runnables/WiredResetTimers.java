@@ -2,8 +2,14 @@ package com.eu.habbo.threading.runnables;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
+/**
+ * Runnable task that resets all wired timers in a room.
+ * <p>
+ * Uses the new centralized WiredTickService for timer management.
+ * </p>
+ */
 public class WiredResetTimers implements Runnable {
     private final Room room;
 
@@ -14,7 +20,13 @@ public class WiredResetTimers implements Runnable {
     @Override
     public void run() {
         if (!Emulator.isShuttingDown && Emulator.isReady) {
-            WiredHandler.resetTimers(this.room);
+            if (this.room != null && this.room.isLoaded()) {
+                try {
+                    WiredManager.resetTimers(this.room);
+                } catch (Exception e) {
+                    // Prevent task from crashing the thread pool
+                }
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ public class InteractionVoteCounter extends HabboItem {
 
     private boolean frozen;
     private int votes;
-    private final List<Integer> votedUsers;
+    private List<Integer> votedUsers;
 
     public InteractionVoteCounter(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

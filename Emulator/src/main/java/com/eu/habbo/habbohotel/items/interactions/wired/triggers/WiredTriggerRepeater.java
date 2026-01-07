@@ -1,7 +1,5 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
-import com.eu.habbo.Emulator;
-import com.eu.habbo.habbohotel.items.ICycleable;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
@@ -9,8 +7,11 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredEvent;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.procedure.TObjectProcedure;
 
@@ -19,12 +20,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICycleable, WiredTriggerReset {
+/**
+ * Repeating wired trigger that fires periodically.
+ * <p>
+ * Uses the new 50ms tick system via {@link WiredTickable} for higher-resolution
+ * timing compared to the old 500ms room cycle.
+ * </p>
+ */
+public class WiredTriggerRepeater extends InteractionWiredTrigger implements WiredTickable, WiredTriggerReset {
     public static final WiredTriggerType type = WiredTriggerType.PERIODICALLY;
-    public static final int DEFAULT_DELAY = 10 * 500;
+    public static final int DEFAULT_DELAY = 10 * 500; // 5 seconds default
 
+    /** The interval in milliseconds between triggers */
     protected int repeatTime = DEFAULT_DELAY;
-    protected int counter = 0;
 
     public WiredTriggerRepeater(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -35,15 +43,20 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICy
     }
 
     @Override
+    public boolean matches(HabboItem triggerItem, WiredEvent event) {
+        // Only match if this repeater is the one that actually fired
+        return event.getSourceItem().map(item -> item.getId() == this.getId()).orElse(false);
+    }
+
+    @Deprecated
+    @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        return true;
+        return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
-            this.repeatTime
-        ));
+        return WiredManager.getGson().toJson(new JsonData(this.repeatTime));
     }
 
     @Override
@@ -51,7 +64,7 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICy
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.repeatTime = data.repeatTime;
         } else {
             if (wiredData.length() >= 1) {
@@ -67,7 +80,6 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICy
     @Override
     public void onPickUp() {
         this.repeatTime = DEFAULT_DELAY;
-        this.counter = 0;
     }
 
     @Override
@@ -110,46 +122,55 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements ICy
 
     @Override
     public boolean saveData(WiredSettings settings) {
-        if(settings.getIntParams().length < 1) return false;
-        this.repeatTime = settings.getIntParams()[0] * 500;
-        this.counter = 0;
+        if (settings.getIntParams().length < 1) return false;
+        int newRepeatTime = settings.getIntParams()[0] * 500;
 
-        if (this.repeatTime < 500) {
-            this.repeatTime = 500;
+        if (newRepeatTime < 500) {
+            newRepeatTime = 500;
         }
+
+        this.repeatTime = newRepeatTime;
 
         return true;
     }
 
+    // ========== WiredTickable Implementation ==========
+
     @Override
-    public void cycle(Room room) {
-        this.counter += 500;
-        long currentMillis = System.currentTimeMillis();
-        String Key = Double.toString(this.getX()) + Double.toString(this.getY());
-
-        room.repeatersLastTick.putIfAbsent(Key, currentMillis);
-
-        if (this.counter >= this.repeatTime && room.repeatersLastTick.get(Key) < currentMillis - 450) {
-            this.counter = 0;
-            if (this.getRoomId() != 0) {
-                if (room.isLoaded()) {
-                    room.repeatersLastTick.put(Key, currentMillis);
-                    WiredHandler.handle(this, null, room, new Object[]{this});
-                }
+    public void onWiredTick(Room room, long tickCount, int tickIntervalMs) {
+        // Calculate elapsed time based on global tick count
+        // All repeaters with the same interval fire on the exact same tick
+        long elapsedMs = tickCount * tickIntervalMs;
+        
+        // Fire when elapsed time is a multiple of repeatTime
+        if (elapsedMs % this.repeatTime == 0) {
+            if (this.getRoomId() != 0 && room.isLoaded()) {
+                WiredManager.triggerTimerRepeat(room, this);
             }
         }
     }
 
     @Override
     public void resetTimer() {
-        this.counter = 0;
-        if (this.getRoomId() != 0) {
-            Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
-            if (room != null && room.isLoaded()) {
-                WiredHandler.handle(this, null, room, new Object[]{this});
-            }
-        }
+        // No-op - using global tick count, no local state to reset
     }
+
+    @Override
+    public void onRegistered(Room room, long currentTimeMillis) {
+        // No-op - using global tick count
+    }
+
+    @Override
+    public void onUnregistered(Room room) {
+        // No-op - using global tick count
+    }
+
+    @Override
+    public boolean isOneShot() {
+        return false; // Repeating timer
+    }
+
+    // ========== JSON Data ==========
 
     static class JsonData {
         int repeatTime;

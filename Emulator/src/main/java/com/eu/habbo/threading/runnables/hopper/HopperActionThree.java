@@ -41,6 +41,7 @@ class HopperActionThree implements Runnable {
 
         if (targetTeleport == null) {
             this.client.getHabbo().getRoomUnit().removeStatus(RoomUnitStatus.MOVE);
+            this.client.getHabbo().getRoomUnit().isTeleporting = false;
             this.client.getHabbo().getRoomUnit().setCanWalk(true);
             return;
         }

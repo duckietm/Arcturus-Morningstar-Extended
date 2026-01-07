@@ -3,8 +3,7 @@ package com.eu.habbo.threading.runnables.games;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
 import com.eu.habbo.habbohotel.rooms.Room;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
 public class GameTimer implements Runnable {
 
@@ -38,7 +37,7 @@ public class GameTimer implements Runnable {
             timer.setThreadActive(false);
             timer.setTimeNow(0);
             timer.endGame(room);
-            WiredHandler.handle(WiredTriggerType.GAME_ENDS, null, room, new Object[]{});
+            WiredManager.triggerGameEnds(room);
         }
 
         room.updateItem(timer);

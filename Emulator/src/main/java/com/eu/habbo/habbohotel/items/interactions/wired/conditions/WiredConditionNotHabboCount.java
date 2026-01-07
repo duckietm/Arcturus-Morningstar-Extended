@@ -6,7 +6,8 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -27,15 +28,21 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        int count = room.getUserCount();
+    public boolean evaluate(WiredContext ctx) {
+        int count = ctx.room().getUserCount();
 
         return count < this.lowerLimit || count > this.upperLimit;
     }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
+    }
+
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.lowerLimit,
                 this.upperLimit
         ));
@@ -46,7 +53,7 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            WiredConditionHabboCount.JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, WiredConditionHabboCount.JsonData.class);
+            WiredConditionHabboCount.JsonData data = WiredManager.getGson().fromJson(wiredData, WiredConditionHabboCount.JsonData.class);
             this.lowerLimit = data.lowerLimit;
             this.upperLimit = data.upperLimit;
         } else {

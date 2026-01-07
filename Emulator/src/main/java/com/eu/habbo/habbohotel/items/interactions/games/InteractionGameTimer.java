@@ -11,8 +11,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.threading.runnables.games.GameTimer;
 import org.slf4j.Logger;
@@ -208,7 +207,7 @@ public class InteractionGameTimer extends HabboItem {
             this.endGame(room, true);
 
             if(wasPaused) {
-                WiredHandler.handle(WiredTriggerType.GAME_ENDS, null, room, new Object[]{});
+                WiredManager.triggerGameEnds(room);
             }
 
             this.createNewGame(room);
@@ -218,7 +217,7 @@ public class InteractionGameTimer extends HabboItem {
             this.isPaused = false;
 
             room.updateItem(this);
-            WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{});
+            WiredManager.triggerGameStarts(room);
 
             if (!this.threadActive) {
                 this.threadActive = true;
@@ -255,7 +254,7 @@ public class InteractionGameTimer extends HabboItem {
                         room.updateItem(this);
 
                         this.createNewGame(room);
-                        WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{this});
+                        WiredManager.triggerGameStarts(room);
 
                         if (!this.threadActive) {
                             this.threadActive = true;
@@ -271,7 +270,7 @@ public class InteractionGameTimer extends HabboItem {
                     } else if (this.isPaused) {
                         this.endGame(room);
                         this.increaseTimer(room);
-                        WiredHandler.handle(WiredTriggerType.GAME_ENDS, null, room, new Object[]{});
+                        WiredManager.triggerGameEnds(room);
                     }
 
                     break;
@@ -296,7 +295,7 @@ public class InteractionGameTimer extends HabboItem {
                 room.updateItem(this);
             }
             this.createNewGame(room);
-            WiredHandler.handle(WiredTriggerType.GAME_STARTS, null, room, new Object[]{this});
+            WiredManager.triggerGameStarts(room);
             if (!threadActive) {
                 threadActive = true;
                 Emulator.getThreading().run(new GameTimer(this), 1000);

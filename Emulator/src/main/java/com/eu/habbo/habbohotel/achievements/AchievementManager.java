@@ -50,7 +50,8 @@ public class AchievementManager {
                 progressAchievement(habbo, achievement, amount);
             } else {
                 try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-                     PreparedStatement statement = connection.prepareStatement("INSERT INTO users_achievements_queue (user_id, achievement_id, amount) VALUES (?, ?, ?) " +
+                     PreparedStatement statement = connection.prepareStatement("" +
+                             "INSERT INTO users_achievements_queue (user_id, achievement_id, amount) VALUES (?, ?, ?) " +
                              "ON DUPLICATE KEY UPDATE amount = amount + ?")) {
                     statement.setInt(1, habboId);
                     statement.setInt(2, achievement.id);
@@ -360,7 +361,7 @@ public class AchievementManager {
                             }
                         }
 
-                        if (level.badges != null) {
+                        if (level.badges != null && level.badges.length > 0) {
                             for (String badge : level.badges) {
                                 if (!badge.isEmpty()) {
                                     if (!habbo.getInventory().getBadgesComponent().hasBadge(badge)) {
@@ -373,11 +374,10 @@ public class AchievementManager {
                             }
                         }
 
-                        if (level.perks != null) {
+                        if (level.perks != null && level.perks.length > 0) {
                             for (String perk : level.perks) {
                                 if (perk.equalsIgnoreCase("TRADE")) {
                                     habbo.getHabboStats().perkTrade = true;
-                                    break;
                                 }
                             }
                         }

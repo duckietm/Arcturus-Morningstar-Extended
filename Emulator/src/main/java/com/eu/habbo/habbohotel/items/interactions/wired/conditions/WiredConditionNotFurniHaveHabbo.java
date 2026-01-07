@@ -12,7 +12,8 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -43,28 +44,42 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        Room room = ctx.room();
+
         this.refresh();
 
         if (this.items.isEmpty())
             return true;
 
+        if (room.getLayout() == null)
+            return false;
+
         Collection<Habbo> habbos = room.getHabbos();
         Collection<Bot> bots = room.getCurrentBots().valueCollection();
         Collection<Pet> pets = room.getCurrentPets().valueCollection();
 
-        return this.items.stream().noneMatch(item -> {
-            THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
-            return habbos.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    bots.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    pets.stream().anyMatch(character -> occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
+        return this.items.stream().filter(item -> item != null).noneMatch(item -> {
+            RoomTile baseTile = room.getLayout().getTile(item.getX(), item.getY());
+            if (baseTile == null) return false;
+            
+            THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(baseTile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+            return habbos.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                    bots.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                    pets.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
         });
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
     public String getWiredData() {
         this.refresh();
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(
+        return WiredManager.getGson().toJson(new JsonData(
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -75,7 +90,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
-            WiredConditionFurniHaveHabbo.JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, WiredConditionFurniHaveHabbo.JsonData.class);
+            WiredConditionFurniHaveHabbo.JsonData data = WiredManager.getGson().fromJson(wiredData, WiredConditionFurniHaveHabbo.JsonData.class);
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -110,7 +125,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         this.refresh();
 
         message.appendBoolean(false);
-        message.appendInt(WiredHandler.MAXIMUM_FURNI_SELECTION);
+        message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
         message.appendInt(this.items.size());
 
         for (HabboItem item : this.items)

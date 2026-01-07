@@ -11,7 +11,8 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -99,9 +100,12 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
-        Habbo habbo = room.getHabbo(roomUnit);
+    public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        if (roomUnit == null) return;
 
+        Habbo habbo = room.getHabbo(roomUnit);
         List<Bot> bots = room.getBots(this.botName);
 
         if (habbo != null && bots.size() == 1) {
@@ -112,16 +116,18 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
             } else {
                 bot.stopFollowingHabbo();
             }
-
-            return true;
         }
+    }
 
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
     @Override
     public String getWiredData() {
-        return WiredHandler.getGsonBuilder().create().toJson(new JsonData(this.botName, this.mode, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.getDelay()));
     }
 
     @Override
@@ -129,7 +135,7 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
 
         if(wiredData.startsWith("{")) {
-            JsonData data = WiredHandler.getGsonBuilder().create().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.mode = data.mode;
             this.botName = data.bot_name;

@@ -31,7 +31,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Manages special room item types including wired components, game elements, and pets.
+ * This class is thread-safe and uses concurrent collections for wired components
+ * to support high-frequency access patterns.
+ */
 public class RoomSpecialTypes {
     private final THashMap<Integer, InteractionBattleBanzaiTeleporter> banzaiTeleporters;
     private final THashMap<Integer, InteractionNest> nests;
@@ -40,10 +47,17 @@ public class RoomSpecialTypes {
     private final THashMap<Integer, InteractionPetToy> petToys;
     private final THashMap<Integer, InteractionRoller> rollers;
 
-    private final THashMap<WiredTriggerType, THashSet<InteractionWiredTrigger>> wiredTriggers;
-    private final THashMap<WiredEffectType, THashSet<InteractionWiredEffect>> wiredEffects;
-    private final THashMap<WiredConditionType, THashSet<InteractionWiredCondition>> wiredConditions;
-    private final THashMap<Integer, InteractionWiredExtra> wiredExtras;
+    // Thread-safe wired collections using ConcurrentHashMap for better concurrency
+    private final ConcurrentHashMap<WiredTriggerType, Set<InteractionWiredTrigger>> wiredTriggers;
+    private final ConcurrentHashMap<WiredEffectType, Set<InteractionWiredEffect>> wiredEffects;
+    private final ConcurrentHashMap<WiredConditionType, Set<InteractionWiredCondition>> wiredConditions;
+    private final ConcurrentHashMap<Integer, InteractionWiredExtra> wiredExtras;
+    
+    // Spatial index for O(1) coordinate-based lookups of wired components
+    private final ConcurrentHashMap<Long, Set<InteractionWiredTrigger>> wiredTriggersByLocation;
+    private final ConcurrentHashMap<Long, Set<InteractionWiredEffect>> wiredEffectsByLocation;
+    private final ConcurrentHashMap<Long, Set<InteractionWiredCondition>> wiredConditionsByLocation;
+    private final ConcurrentHashMap<Long, Set<InteractionWiredExtra>> wiredExtrasByLocation;
 
     private final THashMap<Integer, InteractionGameScoreboard> gameScoreboards;
     private final THashMap<Integer, InteractionGameGate> gameGates;
@@ -51,7 +65,7 @@ public class RoomSpecialTypes {
 
     private final THashMap<Integer, InteractionFreezeExitTile> freezeExitTile;
     private final THashMap<Integer, HabboItem> undefined;
-    private final THashSet<ICycleable> cycleTasks;
+    private final Set<ICycleable> cycleTasks;
 
     public RoomSpecialTypes() {
         this.banzaiTeleporters = new THashMap<>(0);
@@ -61,10 +75,16 @@ public class RoomSpecialTypes {
         this.petToys = new THashMap<>(0);
         this.rollers = new THashMap<>(0);
 
-        this.wiredTriggers = new THashMap<>(0);
-        this.wiredEffects = new THashMap<>(0);
-        this.wiredConditions = new THashMap<>(0);
-        this.wiredExtras = new THashMap<>(0);
+        this.wiredTriggers = new ConcurrentHashMap<>();
+        this.wiredEffects = new ConcurrentHashMap<>();
+        this.wiredConditions = new ConcurrentHashMap<>();
+        this.wiredExtras = new ConcurrentHashMap<>();
+        
+        // Initialize spatial indexes
+        this.wiredTriggersByLocation = new ConcurrentHashMap<>();
+        this.wiredEffectsByLocation = new ConcurrentHashMap<>();
+        this.wiredConditionsByLocation = new ConcurrentHashMap<>();
+        this.wiredExtrasByLocation = new ConcurrentHashMap<>();
 
         this.gameScoreboards = new THashMap<>(0);
         this.gameGates = new THashMap<>(0);
@@ -72,7 +92,15 @@ public class RoomSpecialTypes {
 
         this.freezeExitTile = new THashMap<>(0);
         this.undefined = new THashMap<>(0);
-        this.cycleTasks = new THashSet<>(0);
+        this.cycleTasks = ConcurrentHashMap.newKeySet();
+    }
+    
+    /**
+     * Generates a unique key for spatial indexing based on x,y coordinates.
+     * Uses bit shifting to combine two shorts into a single long for efficient lookups.
+     */
+    private static long coordinateKey(int x, int y) {
+        return ((long) x << 32) | (y & 0xFFFFFFFFL);
     }
 
 
@@ -227,247 +255,463 @@ public class RoomSpecialTypes {
     }
 
 
+    /**
+     * Finds a wired trigger by its item ID.
+     * @param itemId The item ID to search for
+     * @return The trigger if found, null otherwise
+     */
     public InteractionWiredTrigger getTrigger(int itemId) {
-        synchronized (this.wiredTriggers) {
-            for (Map.Entry<WiredTriggerType, THashSet<InteractionWiredTrigger>> map : this.wiredTriggers.entrySet()) {
-                for (InteractionWiredTrigger trigger : map.getValue()) {
-                    if (trigger.getId() == itemId)
-                        return trigger;
+        for (Set<InteractionWiredTrigger> triggers : this.wiredTriggers.values()) {
+            for (InteractionWiredTrigger trigger : triggers) {
+                if (trigger.getId() == itemId) {
+                    return trigger;
                 }
             }
-
-            return null;
         }
+        return null;
     }
 
+    /**
+     * Gets all wired triggers in the room.
+     * @return A new set containing all triggers (safe for iteration)
+     */
     public THashSet<InteractionWiredTrigger> getTriggers() {
-        synchronized (this.wiredTriggers) {
-            THashSet<InteractionWiredTrigger> triggers = new THashSet<>();
-
-            for (Map.Entry<WiredTriggerType, THashSet<InteractionWiredTrigger>> map : this.wiredTriggers.entrySet()) {
-                triggers.addAll(map.getValue());
-            }
-
-            return triggers;
+        THashSet<InteractionWiredTrigger> result = new THashSet<>();
+        for (Set<InteractionWiredTrigger> triggers : this.wiredTriggers.values()) {
+            result.addAll(triggers);
         }
+        return result;
     }
 
+    /**
+     * Gets all wired triggers of a specific type.
+     * @param type The trigger type to filter by
+     * @return A new set containing matching triggers (safe for iteration)
+     */
     public THashSet<InteractionWiredTrigger> getTriggers(WiredTriggerType type) {
-        return this.wiredTriggers.get(type);
+        Set<InteractionWiredTrigger> triggers = this.wiredTriggers.get(type);
+        if (triggers == null) {
+            return new THashSet<>(0);
+        }
+        return new THashSet<>(triggers);
     }
 
+    /**
+     * Gets all wired triggers at specific coordinates using spatial index.
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @return A new set containing triggers at the location (safe for iteration)
+     */
     public THashSet<InteractionWiredTrigger> getTriggers(int x, int y) {
-        synchronized (this.wiredTriggers) {
-            THashSet<InteractionWiredTrigger> triggers = new THashSet<>();
-
-            for (Map.Entry<WiredTriggerType, THashSet<InteractionWiredTrigger>> map : this.wiredTriggers.entrySet()) {
-                for (InteractionWiredTrigger trigger : map.getValue()) {
-                    if (trigger.getX() == x && trigger.getY() == y)
-                        triggers.add(trigger);
-                }
-            }
-
-            return triggers;
+        long key = coordinateKey(x, y);
+        Set<InteractionWiredTrigger> triggers = this.wiredTriggersByLocation.get(key);
+        if (triggers == null) {
+            return new THashSet<>(0);
         }
+        return new THashSet<>(triggers);
     }
 
+    /**
+     * Adds a wired trigger to the room.
+     * @param trigger The trigger to add
+     */
     public void addTrigger(InteractionWiredTrigger trigger) {
-        synchronized (this.wiredTriggers) {
-            if (!this.wiredTriggers.containsKey(trigger.getType()))
-                this.wiredTriggers.put(trigger.getType(), new THashSet<>());
-
-            this.wiredTriggers.get(trigger.getType()).add(trigger);
-        }
+        // Add to type-based index
+        this.wiredTriggers.computeIfAbsent(trigger.getType(), k -> ConcurrentHashMap.newKeySet())
+                .add(trigger);
+        
+        // Add to spatial index
+        long key = coordinateKey(trigger.getX(), trigger.getY());
+        this.wiredTriggersByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
+                .add(trigger);
     }
 
+    /**
+     * Removes a wired trigger from the room.
+     * @param trigger The trigger to remove
+     */
     public void removeTrigger(InteractionWiredTrigger trigger) {
-        synchronized (this.wiredTriggers) {
-            this.wiredTriggers.get(trigger.getType()).remove(trigger);
-
-            if (this.wiredTriggers.get(trigger.getType()).isEmpty()) {
+        // Remove from type-based index
+        Set<InteractionWiredTrigger> triggers = this.wiredTriggers.get(trigger.getType());
+        if (triggers != null) {
+            triggers.remove(trigger);
+            if (triggers.isEmpty()) {
                 this.wiredTriggers.remove(trigger.getType());
             }
         }
+        
+        // Remove from spatial index
+        long key = coordinateKey(trigger.getX(), trigger.getY());
+        Set<InteractionWiredTrigger> locationTriggers = this.wiredTriggersByLocation.get(key);
+        if (locationTriggers != null) {
+            locationTriggers.remove(trigger);
+            if (locationTriggers.isEmpty()) {
+                this.wiredTriggersByLocation.remove(key);
+            }
+        }
+    }
+    
+    /**
+     * Updates the spatial index when a trigger is moved.
+     * @param trigger The trigger that was moved
+     * @param oldX The old X coordinate
+     * @param oldY The old Y coordinate
+     */
+    public void updateTriggerLocation(InteractionWiredTrigger trigger, int oldX, int oldY) {
+        // Remove from old location
+        long oldKey = coordinateKey(oldX, oldY);
+        Set<InteractionWiredTrigger> oldLocationTriggers = this.wiredTriggersByLocation.get(oldKey);
+        if (oldLocationTriggers != null) {
+            oldLocationTriggers.remove(trigger);
+            if (oldLocationTriggers.isEmpty()) {
+                this.wiredTriggersByLocation.remove(oldKey);
+            }
+        }
+        
+        // Add to new location
+        long newKey = coordinateKey(trigger.getX(), trigger.getY());
+        this.wiredTriggersByLocation.computeIfAbsent(newKey, k -> ConcurrentHashMap.newKeySet())
+                .add(trigger);
     }
 
 
+    /**
+     * Finds a wired effect by its item ID.
+     * @param itemId The item ID to search for
+     * @return The effect if found, null otherwise
+     */
     public InteractionWiredEffect getEffect(int itemId) {
-        synchronized (this.wiredEffects) {
-            for (Map.Entry<WiredEffectType, THashSet<InteractionWiredEffect>> map : this.wiredEffects.entrySet()) {
-                for (InteractionWiredEffect effect : map.getValue()) {
-                    if (effect.getId() == itemId)
-                        return effect;
+        for (Set<InteractionWiredEffect> effects : this.wiredEffects.values()) {
+            for (InteractionWiredEffect effect : effects) {
+                if (effect.getId() == itemId) {
+                    return effect;
                 }
             }
         }
-
         return null;
     }
 
+    /**
+     * Gets all wired effects in the room.
+     * @return A new set containing all effects (safe for iteration)
+     */
     public THashSet<InteractionWiredEffect> getEffects() {
-        synchronized (this.wiredEffects) {
-            THashSet<InteractionWiredEffect> effects = new THashSet<>();
-
-            for (Map.Entry<WiredEffectType, THashSet<InteractionWiredEffect>> map : this.wiredEffects.entrySet()) {
-                effects.addAll(map.getValue());
-            }
-
-            return effects;
+        THashSet<InteractionWiredEffect> result = new THashSet<>();
+        for (Set<InteractionWiredEffect> effects : this.wiredEffects.values()) {
+            result.addAll(effects);
         }
+        return result;
     }
 
+    /**
+     * Gets all wired effects of a specific type.
+     * @param type The effect type to filter by
+     * @return A new set containing matching effects (safe for iteration)
+     */
     public THashSet<InteractionWiredEffect> getEffects(WiredEffectType type) {
-        return this.wiredEffects.get(type);
+        Set<InteractionWiredEffect> effects = this.wiredEffects.get(type);
+        if (effects == null) {
+            return new THashSet<>(0);
+        }
+        return new THashSet<>(effects);
     }
 
+    /**
+     * Gets all wired effects at specific coordinates using spatial index.
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @return A new set containing effects at the location (safe for iteration)
+     */
     public THashSet<InteractionWiredEffect> getEffects(int x, int y) {
-        synchronized (this.wiredEffects) {
-            THashSet<InteractionWiredEffect> effects = new THashSet<>();
-
-            for (Map.Entry<WiredEffectType, THashSet<InteractionWiredEffect>> map : this.wiredEffects.entrySet()) {
-                for (InteractionWiredEffect effect : map.getValue()) {
-                    if (effect.getX() == x && effect.getY() == y)
-                        effects.add(effect);
-                }
-            }
-
-            return effects;
+        long key = coordinateKey(x, y);
+        Set<InteractionWiredEffect> effects = this.wiredEffectsByLocation.get(key);
+        if (effects == null) {
+            return new THashSet<>(0);
         }
+        return new THashSet<>(effects);
     }
 
+    /**
+     * Adds a wired effect to the room.
+     * @param effect The effect to add
+     */
     public void addEffect(InteractionWiredEffect effect) {
-        synchronized (this.wiredEffects) {
-            if (!this.wiredEffects.containsKey(effect.getType()))
-                this.wiredEffects.put(effect.getType(), new THashSet<>());
-
-            this.wiredEffects.get(effect.getType()).add(effect);
-        }
+        // Add to type-based index
+        this.wiredEffects.computeIfAbsent(effect.getType(), k -> ConcurrentHashMap.newKeySet())
+                .add(effect);
+        
+        // Add to spatial index
+        long key = coordinateKey(effect.getX(), effect.getY());
+        this.wiredEffectsByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
+                .add(effect);
     }
 
+    /**
+     * Removes a wired effect from the room.
+     * @param effect The effect to remove
+     */
     public void removeEffect(InteractionWiredEffect effect) {
-        synchronized (this.wiredEffects) {
-            this.wiredEffects.get(effect.getType()).remove(effect);
-
-            if (this.wiredEffects.get(effect.getType()).isEmpty()) {
+        // Remove from type-based index
+        Set<InteractionWiredEffect> effects = this.wiredEffects.get(effect.getType());
+        if (effects != null) {
+            effects.remove(effect);
+            if (effects.isEmpty()) {
                 this.wiredEffects.remove(effect.getType());
             }
         }
+        
+        // Remove from spatial index
+        long key = coordinateKey(effect.getX(), effect.getY());
+        Set<InteractionWiredEffect> locationEffects = this.wiredEffectsByLocation.get(key);
+        if (locationEffects != null) {
+            locationEffects.remove(effect);
+            if (locationEffects.isEmpty()) {
+                this.wiredEffectsByLocation.remove(key);
+            }
+        }
+    }
+    
+    /**
+     * Updates the spatial index when an effect is moved.
+     * @param effect The effect that was moved
+     * @param oldX The old X coordinate
+     * @param oldY The old Y coordinate
+     */
+    public void updateEffectLocation(InteractionWiredEffect effect, int oldX, int oldY) {
+        // Remove from old location
+        long oldKey = coordinateKey(oldX, oldY);
+        Set<InteractionWiredEffect> oldLocationEffects = this.wiredEffectsByLocation.get(oldKey);
+        if (oldLocationEffects != null) {
+            oldLocationEffects.remove(effect);
+            if (oldLocationEffects.isEmpty()) {
+                this.wiredEffectsByLocation.remove(oldKey);
+            }
+        }
+        
+        // Add to new location
+        long newKey = coordinateKey(effect.getX(), effect.getY());
+        this.wiredEffectsByLocation.computeIfAbsent(newKey, k -> ConcurrentHashMap.newKeySet())
+                .add(effect);
     }
 
 
+    /**
+     * Finds a wired condition by its item ID.
+     * @param itemId The item ID to search for
+     * @return The condition if found, null otherwise
+     */
     public InteractionWiredCondition getCondition(int itemId) {
-        synchronized (this.wiredConditions) {
-            for (Map.Entry<WiredConditionType, THashSet<InteractionWiredCondition>> map : this.wiredConditions.entrySet()) {
-                for (InteractionWiredCondition condition : map.getValue()) {
-                    if (condition.getId() == itemId)
-                        return condition;
+        for (Set<InteractionWiredCondition> conditions : this.wiredConditions.values()) {
+            for (InteractionWiredCondition condition : conditions) {
+                if (condition.getId() == itemId) {
+                    return condition;
                 }
             }
         }
-
         return null;
     }
 
+    /**
+     * Gets all wired conditions in the room.
+     * @return A new set containing all conditions (safe for iteration)
+     */
     public THashSet<InteractionWiredCondition> getConditions() {
-        synchronized (this.wiredConditions) {
-            THashSet<InteractionWiredCondition> conditions = new THashSet<>();
-
-            for (Map.Entry<WiredConditionType, THashSet<InteractionWiredCondition>> map : this.wiredConditions.entrySet()) {
-                conditions.addAll(map.getValue());
-            }
-
-            return conditions;
+        THashSet<InteractionWiredCondition> result = new THashSet<>();
+        for (Set<InteractionWiredCondition> conditions : this.wiredConditions.values()) {
+            result.addAll(conditions);
         }
+        return result;
     }
 
+    /**
+     * Gets all wired conditions of a specific type.
+     * @param type The condition type to filter by
+     * @return A new set containing matching conditions (safe for iteration)
+     */
     public THashSet<InteractionWiredCondition> getConditions(WiredConditionType type) {
-        synchronized (this.wiredConditions) {
-            return this.wiredConditions.get(type);
+        Set<InteractionWiredCondition> conditions = this.wiredConditions.get(type);
+        if (conditions == null) {
+            return new THashSet<>(0);
         }
+        return new THashSet<>(conditions);
     }
 
+    /**
+     * Gets all wired conditions at specific coordinates using spatial index.
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @return A new set containing conditions at the location (safe for iteration)
+     */
     public THashSet<InteractionWiredCondition> getConditions(int x, int y) {
-        synchronized (this.wiredConditions) {
-            THashSet<InteractionWiredCondition> conditions = new THashSet<>();
-
-            for (Map.Entry<WiredConditionType, THashSet<InteractionWiredCondition>> map : this.wiredConditions.entrySet()) {
-                for (InteractionWiredCondition condition : map.getValue()) {
-                    if (condition.getX() == x && condition.getY() == y)
-                        conditions.add(condition);
-                }
-            }
-
-            return conditions;
+        long key = coordinateKey(x, y);
+        Set<InteractionWiredCondition> conditions = this.wiredConditionsByLocation.get(key);
+        if (conditions == null) {
+            return new THashSet<>(0);
         }
+        return new THashSet<>(conditions);
     }
 
+    /**
+     * Adds a wired condition to the room.
+     * @param condition The condition to add
+     */
     public void addCondition(InteractionWiredCondition condition) {
-        synchronized (this.wiredConditions) {
-            if (!this.wiredConditions.containsKey(condition.getType()))
-                this.wiredConditions.put(condition.getType(), new THashSet<>());
-
-            this.wiredConditions.get(condition.getType()).add(condition);
-        }
+        // Add to type-based index
+        this.wiredConditions.computeIfAbsent(condition.getType(), k -> ConcurrentHashMap.newKeySet())
+                .add(condition);
+        
+        // Add to spatial index
+        long key = coordinateKey(condition.getX(), condition.getY());
+        this.wiredConditionsByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
+                .add(condition);
     }
 
+    /**
+     * Removes a wired condition from the room.
+     * @param condition The condition to remove
+     */
     public void removeCondition(InteractionWiredCondition condition) {
-        synchronized (this.wiredConditions) {
-            this.wiredConditions.get(condition.getType()).remove(condition);
-
-            if (this.wiredConditions.get(condition.getType()).isEmpty()) {
+        // Remove from type-based index
+        Set<InteractionWiredCondition> conditions = this.wiredConditions.get(condition.getType());
+        if (conditions != null) {
+            conditions.remove(condition);
+            if (conditions.isEmpty()) {
                 this.wiredConditions.remove(condition.getType());
             }
         }
+        
+        // Remove from spatial index
+        long key = coordinateKey(condition.getX(), condition.getY());
+        Set<InteractionWiredCondition> locationConditions = this.wiredConditionsByLocation.get(key);
+        if (locationConditions != null) {
+            locationConditions.remove(condition);
+            if (locationConditions.isEmpty()) {
+                this.wiredConditionsByLocation.remove(key);
+            }
+        }
+    }
+    
+    /**
+     * Updates the spatial index when a condition is moved.
+     * @param condition The condition that was moved
+     * @param oldX The old X coordinate
+     * @param oldY The old Y coordinate
+     */
+    public void updateConditionLocation(InteractionWiredCondition condition, int oldX, int oldY) {
+        // Remove from old location
+        long oldKey = coordinateKey(oldX, oldY);
+        Set<InteractionWiredCondition> oldLocationConditions = this.wiredConditionsByLocation.get(oldKey);
+        if (oldLocationConditions != null) {
+            oldLocationConditions.remove(condition);
+            if (oldLocationConditions.isEmpty()) {
+                this.wiredConditionsByLocation.remove(oldKey);
+            }
+        }
+        
+        // Add to new location
+        long newKey = coordinateKey(condition.getX(), condition.getY());
+        this.wiredConditionsByLocation.computeIfAbsent(newKey, k -> ConcurrentHashMap.newKeySet())
+                .add(condition);
     }
 
 
+    /**
+     * Gets all wired extras in the room.
+     * @return A new set containing all extras (safe for iteration)
+     */
     public THashSet<InteractionWiredExtra> getExtras() {
-        synchronized (this.wiredExtras) {
-            THashSet<InteractionWiredExtra> conditions = new THashSet<>();
-
-            for (Map.Entry<Integer, InteractionWiredExtra> map : this.wiredExtras.entrySet()) {
-                conditions.add(map.getValue());
-            }
-
-            return conditions;
-        }
+        THashSet<InteractionWiredExtra> result = new THashSet<>();
+        result.addAll(this.wiredExtras.values());
+        return result;
     }
 
+    /**
+     * Gets all wired extras at specific coordinates using spatial index.
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @return A new set containing extras at the location (safe for iteration)
+     */
     public THashSet<InteractionWiredExtra> getExtras(int x, int y) {
-        synchronized (this.wiredExtras) {
-            THashSet<InteractionWiredExtra> extras = new THashSet<>();
-
-            for (Map.Entry<Integer, InteractionWiredExtra> map : this.wiredExtras.entrySet()) {
-                if (map.getValue().getX() == x && map.getValue().getY() == y) {
-                    extras.add(map.getValue());
-                }
-            }
-
-            return extras;
+        long key = coordinateKey(x, y);
+        Set<InteractionWiredExtra> extras = this.wiredExtrasByLocation.get(key);
+        if (extras == null) {
+            return new THashSet<>(0);
         }
+        return new THashSet<>(extras);
     }
 
+    /**
+     * Adds a wired extra to the room.
+     * @param extra The extra to add
+     */
     public void addExtra(InteractionWiredExtra extra) {
-        synchronized (this.wiredExtras) {
-            this.wiredExtras.put(extra.getId(), extra);
-        }
+        this.wiredExtras.put(extra.getId(), extra);
+        
+        // Add to spatial index
+        long key = coordinateKey(extra.getX(), extra.getY());
+        this.wiredExtrasByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
+                .add(extra);
     }
 
+    /**
+     * Removes a wired extra from the room.
+     * @param extra The extra to remove
+     */
     public void removeExtra(InteractionWiredExtra extra) {
-        synchronized (this.wiredExtras) {
-            this.wiredExtras.remove(extra.getId());
-        }
-    }
-
-    public boolean hasExtraType(short x, short y, Class<? extends InteractionWiredExtra> type) {
-        synchronized (this.wiredExtras) {
-            for (Map.Entry<Integer, InteractionWiredExtra> map : this.wiredExtras.entrySet()) {
-                if (map.getValue().getX() == x && map.getValue().getY() == y && map.getValue().getClass().isAssignableFrom(type)) {
-                    return true;
-                }
+        this.wiredExtras.remove(extra.getId());
+        
+        // Remove from spatial index
+        long key = coordinateKey(extra.getX(), extra.getY());
+        Set<InteractionWiredExtra> locationExtras = this.wiredExtrasByLocation.get(key);
+        if (locationExtras != null) {
+            locationExtras.remove(extra);
+            if (locationExtras.isEmpty()) {
+                this.wiredExtrasByLocation.remove(key);
             }
         }
+    }
+    
+    /**
+     * Updates the spatial index when an extra is moved.
+     * @param extra The extra that was moved
+     * @param oldX The old X coordinate
+     * @param oldY The old Y coordinate
+     */
+    public void updateExtraLocation(InteractionWiredExtra extra, int oldX, int oldY) {
+        // Remove from old location
+        long oldKey = coordinateKey(oldX, oldY);
+        Set<InteractionWiredExtra> oldLocationExtras = this.wiredExtrasByLocation.get(oldKey);
+        if (oldLocationExtras != null) {
+            oldLocationExtras.remove(extra);
+            if (oldLocationExtras.isEmpty()) {
+                this.wiredExtrasByLocation.remove(oldKey);
+            }
+        }
+        
+        // Add to new location
+        long newKey = coordinateKey(extra.getX(), extra.getY());
+        this.wiredExtrasByLocation.computeIfAbsent(newKey, k -> ConcurrentHashMap.newKeySet())
+                .add(extra);
+    }
 
+    /**
+     * Checks if there's a wired extra of a specific type at given coordinates.
+     * @param x The X coordinate
+     * @param y The Y coordinate
+     * @param type The extra type to check for
+     * @return true if an extra of the given type exists at the location
+     */
+    public boolean hasExtraType(short x, short y, Class<? extends InteractionWiredExtra> type) {
+        long key = coordinateKey(x, y);
+        Set<InteractionWiredExtra> extras = this.wiredExtrasByLocation.get(key);
+        if (extras == null) {
+            return false;
+        }
+        for (InteractionWiredExtra extra : extras) {
+            if (type.isAssignableFrom(extra.getClass())) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -504,7 +748,7 @@ public class RoomSpecialTypes {
 
             for (Map.Entry<Integer, InteractionGameScoreboard> set : this.gameScoreboards.entrySet()) {
                 if (set.getValue() instanceof InteractionFreezeScoreboard) {
-                    if (set.getValue().teamColor.equals(teamColor))
+                    if (((InteractionFreezeScoreboard) set.getValue()).teamColor.equals(teamColor))
                         boards.put(set.getValue().getId(), (InteractionFreezeScoreboard) set.getValue());
                 }
             }
@@ -533,7 +777,7 @@ public class RoomSpecialTypes {
 
             for (Map.Entry<Integer, InteractionGameScoreboard> set : this.gameScoreboards.entrySet()) {
                 if (set.getValue() instanceof InteractionBattleBanzaiScoreboard) {
-                    if (set.getValue().teamColor.equals(teamColor))
+                    if (((InteractionBattleBanzaiScoreboard) set.getValue()).teamColor.equals(teamColor))
                         boards.put(set.getValue().getId(), (InteractionBattleBanzaiScoreboard) set.getValue());
                 }
             }
@@ -562,7 +806,7 @@ public class RoomSpecialTypes {
 
             for (Map.Entry<Integer, InteractionGameScoreboard> set : this.gameScoreboards.entrySet()) {
                 if (set.getValue() instanceof InteractionFootballScoreboard) {
-                    if (set.getValue().teamColor.equals(teamColor))
+                    if (((InteractionFootballScoreboard) set.getValue()).teamColor.equals(teamColor))
                         boards.put(set.getValue().getId(), (InteractionFootballScoreboard) set.getValue());
                 }
             }
@@ -694,7 +938,11 @@ public class RoomSpecialTypes {
         return i;
     }
 
-    public THashSet<ICycleable> getCycleTasks() {
+    /**
+     * Gets the set of cycle tasks.
+     * @return The set of cycle tasks (thread-safe)
+     */
+    public Set<ICycleable> getCycleTasks() {
         return this.cycleTasks;
     }
 

@@ -22,7 +22,7 @@ import java.util.HashSet;
 public class ToggleFloorItemEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToggleFloorItemEvent.class);
 
-    private static final HashSet<String> PET_BOXES = new HashSet<>(Arrays.asList("val11_present", "gnome_box", "leprechaun_box", "velociraptor_egg", "pterosaur_egg", "petbox_epic"));
+    private static HashSet<String> PET_BOXES = new HashSet<>(Arrays.asList("val11_present", "gnome_box", "leprechaun_box", "velociraptor_egg", "pterosaur_egg", "petbox_epic"));
 
     @Override
     public void handle() throws Exception {

@@ -15,7 +15,7 @@ import java.util.Map;
 
 
 public class FootballGame extends Game {
-    private final Room room;
+    private Room room;
 
     public FootballGame(Room room) {
         super(null, null, room, true);

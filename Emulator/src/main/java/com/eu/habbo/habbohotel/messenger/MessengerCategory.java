@@ -1,7 +1,7 @@
 package com.eu.habbo.habbohotel.messenger;
 
 public class MessengerCategory {
-    private final int user_id;
+    private int user_id;
     private String name;
     private int id;
 

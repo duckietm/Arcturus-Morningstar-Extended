@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
+import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -24,13 +25,21 @@ public class WiredConditionGroupMember extends InteractionWiredCondition {
     }
 
     @Override
-    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean evaluate(WiredContext ctx) {
+        RoomUnit roomUnit = ctx.actor().orElse(null);
+        Room room = ctx.room();
         if (room.getGuildId() == 0)
             return false;
 
         Habbo habbo = room.getHabbo(roomUnit);
 
         return habbo != null && habbo.getHabboStats().hasGuild(room.getGuildId());
+    }
+
+    @Deprecated
+    @Override
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
+        return false;
     }
 
     @Override
