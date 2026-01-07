@@ -13,8 +13,8 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredGiveRewardItem;
-import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
@@ -34,12 +34,12 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
 
     public static final WiredEffectType type = WiredEffectType.GIVE_REWARD;
     
-    private int limit;
-    private int limitationInterval;
-    private int given;
-    private int rewardTime;
-    private boolean uniqueRewards;
-    private THashSet<WiredGiveRewardItem> rewardItems = new THashSet<>();
+    public int limit;
+    public int limitationInterval;
+    public int given;
+    public int rewardTime;
+    public boolean uniqueRewards;
+    public THashSet<WiredGiveRewardItem> rewardItems = new THashSet<>();
 
     public WiredEffectGiveReward(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

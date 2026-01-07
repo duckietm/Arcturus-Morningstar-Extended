@@ -23,7 +23,7 @@ public class UpdateFurniturePositionEvent extends MessageHandler {
         int rotation = this.packet.readInt();
         RoomTile tile = room.getLayout().getTile((short) x, (short) y);
 
-        room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), true, true);
+        room.moveFurniTo(item, tile, rotation, this.client.getHabbo(), true, true);
         this.client.sendResponse(new FloorItemUpdateComposer(item));
     }
 }

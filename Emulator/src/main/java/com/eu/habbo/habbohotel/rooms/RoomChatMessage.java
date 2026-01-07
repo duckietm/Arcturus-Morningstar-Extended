@@ -53,6 +53,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             this.bubble = RoomChatMessageBubbles.NORMAL;
         }
 
+        this.RoomChatColour = message.packet.readString();
+
         if (!message.client.getHabbo().hasPermission(Permission.ACC_ANYCHATCOLOR)) {
             for (Integer i : RoomChatMessage.BANNED_BUBBLES) {
                 if (i == this.bubble.getType()) {

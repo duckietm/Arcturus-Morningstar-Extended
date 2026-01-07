@@ -12,8 +12,7 @@ import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
-import com.eu.habbo.habbohotel.wired.WiredHandler;
-import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDanceComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
@@ -37,17 +36,17 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HabboItem.class);
 
-    private static final Class<?>[] TOGGLING_INTERACTIONS = new Class[]{
+    private static Class<?>[] TOGGLING_INTERACTIONS = new Class<?>[]{
             InteractionGameTimer.class,
             InteractionWired.class,
             InteractionWiredHighscore.class,
             InteractionMultiHeight.class
     };
 
-    private final int id;
+    private int id;
     private int userId;
     private int roomId;
-    private final Item baseItem;
+    private Item baseItem;
     private String wallPosition;
     private short x;
     private short y;
@@ -271,7 +270,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                     statement.execute();
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
-                    LOGGER.error("SQLException trying to save HabboItem: {}", this);
+                    LOGGER.error("SQLException trying to save HabboItem: {}", this.toString());
                 }
 
                 this.needsUpdate = false;
@@ -296,7 +295,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
             }
 
             if ((this.getBaseItem().getStateCount() > 1 && !(this instanceof InteractionDice)) || Arrays.asList(HabboItem.TOGGLING_INTERACTIONS).contains(this.getClass()) || (objects != null && objects.length == 1 && objects[0].equals("TOGGLE_OVERRIDE"))) {
-                WiredHandler.handle(WiredTriggerType.STATE_CHANGED, client.getHabbo().getRoomUnit(), room, new Object[]{this});
+                WiredManager.triggerFurniStateChanged(room, client.getHabbo().getRoomUnit(), this);
             }
         }
     }
@@ -306,7 +305,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         /*if (objects != null && objects.length >= 1 && objects[0] instanceof InteractionWired)
             return;*/
 
-        WiredHandler.handle(WiredTriggerType.WALKS_ON_FURNI, roomUnit, room, new Object[]{this});
+        WiredManager.triggerUserWalksOn(room, roomUnit, this);
 
         if ((this.getBaseItem().allowSit() || this.getBaseItem().allowLay()) && !roomUnit.getDanceType().equals(DanceType.NONE)) {
             roomUnit.setDanceType(DanceType.NONE);
@@ -331,7 +330,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     @Override
     public void onWalkOff(RoomUnit roomUnit, Room room, Object[] objects) throws Exception {
         if(objects != null && objects.length > 0) {
-            WiredHandler.handle(WiredTriggerType.WALKS_OFF_FURNI, roomUnit, room, new Object[]{this});
+            WiredManager.triggerUserWalksOff(room, roomUnit, this);
         }
     }
 
