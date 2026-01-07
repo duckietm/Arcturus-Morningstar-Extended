@@ -155,6 +155,16 @@ public class Habbo implements Runnable {
         }
 
         this.habboInfo.setMachineID(this.client.getMachineId());
+
+        if (Emulator.getGameEnvironment().getModToolManager().hasMACBan(this.client)) {
+            return false;
+        }
+
+        if (Emulator.getGameEnvironment().getModToolManager().hasIPBan(this.habboInfo.getIpLogin())) {
+            return false;
+        }
+
+        this.habboInfo.setMachineID(this.client.getMachineId());
         this.isOnline(true);
 
         this.messenger.connectionChanged(this, true, false);

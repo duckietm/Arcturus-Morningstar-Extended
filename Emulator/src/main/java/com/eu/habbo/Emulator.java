@@ -36,8 +36,8 @@ public final class Emulator {
     private static final String OS_NAME = (System.getProperty("os.name") != null ? System.getProperty("os.name") : "Unknown");
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
 
-    public final static int MAJOR = 3;
-    public final static int MINOR = 6;
+    public final static int MAJOR = 4;
+    public final static int MINOR = 0;
     public final static int BUILD = 1;
     public final static String PREVIEW = "";
 
@@ -50,7 +50,7 @@ public final class Emulator {
                     "██║╚██╔╝██║██║   ██║██╔══██╗██║╚██╗██║██║██║╚██╗██║██║   ██║╚════██║   ██║   ██╔══██║██╔══██╗\n" +
                     "██║ ╚═╝ ██║╚██████╔╝██║  ██║██║ ╚████║██║██║ ╚████║╚██████╔╝███████║   ██║   ██║  ██║██║  ██║\n" +
                     "╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝\n" +
-                    "Still Rocking in 2024.\n";
+                    "Still Rocking in 2026.\n";
 
     public static String build = "";
     public static boolean isReady = false;
@@ -106,8 +106,7 @@ public final class Emulator {
             System.out.println(logo);
 
             System.out.println();
-            LOGGER.warn("Arcturus Morningstar 3.x is no longer accepting merge requests. Please target MS4 branches if you wish to contribute.");
-            LOGGER.info("Follow our development at https://git.krews.org/morningstar/Arcturus-Community, ");
+            LOGGER.info("https://github.com/duckietm/Arcturus-Morningstar-Extended, ");
             System.out.println();
             LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
             LOGGER.info("Version: {}", version);
