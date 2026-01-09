@@ -97,15 +97,22 @@ public class PetData implements Comparable<PetData> {
 
 
     boolean haveNest(Item nest) {
+        // If no nest items are registered, allow all nest items
+        if (this.nestItems.isEmpty() && PetData.generalNestItems.isEmpty()) {
+            return true;
+        }
         return PetData.generalNestItems.contains(nest) || this.nestItems.contains(nest);
     }
 
 
     public HabboItem randomNest(THashSet<InteractionNest> items) {
         List<HabboItem> nestList = new ArrayList<>();
+        
+        // If no nest items are registered, allow all nests in the room
+        boolean allowAll = this.nestItems.isEmpty() && PetData.generalNestItems.isEmpty();
 
         for (InteractionNest nest : items) {
-            if (this.haveNest(nest)) {
+            if (allowAll || this.haveNest(nest)) {
                 nestList.add(nest);
             }
         }
@@ -136,15 +143,22 @@ public class PetData implements Comparable<PetData> {
 
 
     boolean haveFoodItem(Item food) {
+        // If no food items are registered, allow all food items
+        if (this.foodItems.isEmpty() && PetData.generalFoodItems.isEmpty()) {
+            return true;
+        }
         return this.foodItems.contains(food) || PetData.generalFoodItems.contains(food);
     }
 
 
     public HabboItem randomFoodItem(THashSet<InteractionPetFood> items) {
         List<HabboItem> foodList = new ArrayList<>();
+        
+        // If no food items are registered, allow all food in the room
+        boolean allowAll = this.foodItems.isEmpty() && PetData.generalFoodItems.isEmpty();
 
         for (InteractionPetFood food : items) {
-            if (this.haveFoodItem(food)) {
+            if (allowAll || this.haveFoodItem(food)) {
                 foodList.add(food);
             }
         }
@@ -174,15 +188,22 @@ public class PetData implements Comparable<PetData> {
 
 
     boolean haveDrinkItem(Item item) {
+        // If no drink items are registered, allow all drink items
+        if (this.drinkItems.isEmpty() && PetData.generalDrinkItems.isEmpty()) {
+            return true;
+        }
         return this.drinkItems.contains(item) || PetData.generalDrinkItems.contains(item);
     }
 
 
     public HabboItem randomDrinkItem(THashSet<InteractionPetDrink> items) {
         List<HabboItem> drinkList = new ArrayList<>();
+        
+        // If no drink items are registered, allow all drinks in the room
+        boolean allowAll = this.drinkItems.isEmpty() && PetData.generalDrinkItems.isEmpty();
 
         for (InteractionPetDrink drink : items) {
-            if (this.haveDrinkItem(drink)) {
+            if (allowAll || this.haveDrinkItem(drink)) {
                 drinkList.add(drink);
             }
         }
@@ -212,15 +233,22 @@ public class PetData implements Comparable<PetData> {
 
 
     public boolean haveToyItem(Item toy) {
+        // If no toy items are registered, allow all toy items
+        if (this.toyItems.isEmpty() && PetData.generalToyItems.isEmpty()) {
+            return true;
+        }
         return this.toyItems.contains(toy) || PetData.generalToyItems.contains(toy);
     }
 
 
     public HabboItem randomToyItem(THashSet<InteractionPetToy> toys) {
         List<HabboItem> toyList = new ArrayList<>();
+        
+        // If no toy items are registered, allow all toys in the room
+        boolean allowAll = this.toyItems.isEmpty() && PetData.generalToyItems.isEmpty();
 
         for (InteractionPetToy toy : toys) {
-            if (this.haveToyItem(toy)) {
+            if (allowAll || this.haveToyItem(toy)) {
                 toyList.add(toy);
             }
         }
@@ -228,6 +256,30 @@ public class PetData implements Comparable<PetData> {
         if (!toyList.isEmpty()) {
             Collections.shuffle(toyList);
             return toyList.get(0);
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds a random toy item from a generic set of HabboItems.
+     * Used for finding pet items like trampolines, trees, etc.
+     */
+    public HabboItem randomToyHabboItem(THashSet<HabboItem> items) {
+        List<HabboItem> itemList = new ArrayList<>();
+        
+        // If no toy items are registered, allow all toys in the room
+        boolean allowAll = this.toyItems.isEmpty() && PetData.generalToyItems.isEmpty();
+
+        for (HabboItem item : items) {
+            if (allowAll || this.haveToyItem(item)) {
+                itemList.add(item);
+            }
+        }
+
+        if (!itemList.isEmpty()) {
+            Collections.shuffle(itemList);
+            return itemList.get(0);
         }
 
         return null;
@@ -242,8 +294,10 @@ public class PetData implements Comparable<PetData> {
         int generalSize = generalVocals != null ? generalVocals.size() : 0;
         int totalSize = petTypeSize + generalSize;
 
-        if (totalSize == 0)
-            return null;
+        if (totalSize == 0) {
+            // Return a default vocal instead of null
+            return getDefaultVocal(type);
+        }
 
         int randomIndex = Emulator.getRandom().nextInt(totalSize);
 
@@ -262,7 +316,31 @@ public class PetData implements Comparable<PetData> {
             }
         }
 
-        return null;
+        return getDefaultVocal(type);
+    }
+
+    /**
+     * Returns a default vocal message when no configured vocals exist for the type.
+     * This prevents null pointer exceptions and silent pets.
+     */
+    private static PetVocal getDefaultVocal(PetVocalsType type) {
+        return switch (type) {
+            case GENERIC_HAPPY -> new PetVocal("*wags tail happily*");
+            case GENERIC_SAD -> new PetVocal("*whimpers*");
+            case GENERIC_NEUTRAL -> new PetVocal("*looks around*");
+            case HUNGRY -> new PetVocal("*stomach growls*");
+            case THIRSTY -> new PetVocal("*pants*");
+            case TIRED -> new PetVocal("*yawns*");
+            case SLEEPING -> new PetVocal("*snores softly*");
+            case PLAYFUL -> new PetVocal("*bounces excitedly*");
+            case DISOBEY -> new PetVocal("*ignores command*");
+            case EATING -> new PetVocal("*munches happily*");
+            case DRINKING -> new PetVocal("*laps up water*");
+            case LEVEL_UP -> new PetVocal("*jumps with joy*");
+            case GREET_OWNER -> new PetVocal("*perks up excitedly*");
+            case MUTED -> new PetVocal("*stays quiet*");
+            case UNKNOWN_COMMAND -> new PetVocal("*tilts head confused*");
+        };
     }
 
     @Override

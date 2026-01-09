@@ -37,7 +37,7 @@ public class PetPickupEvent extends MessageHandler {
                 }
 
                 pet.removeFromRoom();
-                Emulator.getThreading().run(pet);
+                pet.run();  // Run synchronously to ensure DB is updated before returning pet to inventory
 
                 if (this.client.getHabbo().getHabboInfo().getId() == pet.getUserId()) {
                     this.client.sendResponse(new AddPetComposer(pet));

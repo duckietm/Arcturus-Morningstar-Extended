@@ -434,6 +434,12 @@ public class RoomCycleManager {
             }
 
             if (!unit.isWalking() && !unit.cmdSit) {
+                // Don't override special pet statuses with SIT
+                boolean hasSpecialPetStatus = unit.hasStatus(RoomUnitStatus.HANG) 
+                    || unit.hasStatus(RoomUnitStatus.SWING) 
+                    || unit.hasStatus(RoomUnitStatus.FLAME)
+                    || unit.hasStatus(RoomUnitStatus.PLAY);
+                
                 RoomTile thisTile = this.room.getLayout().getTile(unit.getX(), unit.getY());
                 HabboItem topItem = this.room.getTallestChair(thisTile);
 
@@ -442,7 +448,7 @@ public class RoomCycleManager {
                         unit.removeStatus(RoomUnitStatus.SIT);
                         update = true;
                     }
-                } else if (thisTile.state == RoomTileState.SIT && (!unit.hasStatus(RoomUnitStatus.SIT)
+                } else if (!hasSpecialPetStatus && thisTile.state == RoomTileState.SIT && (!unit.hasStatus(RoomUnitStatus.SIT)
                         || unit.sitUpdate)) {
                     this.room.dance(unit, DanceType.NONE);
                     unit.setStatus(RoomUnitStatus.SIT, (Item.getCurrentHeight(topItem) * 1.0D) + "");

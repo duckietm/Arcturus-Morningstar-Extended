@@ -13,11 +13,9 @@ import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.Interaction
 import com.eu.habbo.habbohotel.items.interactions.games.freeze.InteractionFreezeExitTile;
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagField;
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagPole;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionNest;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetBreedingNest;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetDrink;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
+import com.eu.habbo.habbohotel.items.interactions.pets.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -25,23 +23,10 @@ import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.RemoveWallItemComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.WallItemUpdateComposer;
-import com.eu.habbo.habbohotel.permissions.Permission;
-import com.eu.habbo.messages.outgoing.rooms.items.AddFloorItemComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.AddWallItemComposer;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
+import com.eu.habbo.messages.outgoing.rooms.items.*;
 import com.eu.habbo.plugin.Event;
-import com.eu.habbo.plugin.events.furniture.FurnitureBuildheightEvent;
-import com.eu.habbo.plugin.events.furniture.FurnitureMovedEvent;
-import com.eu.habbo.plugin.events.furniture.FurniturePickedUpEvent;
-import com.eu.habbo.plugin.events.furniture.FurniturePlacedEvent;
-import com.eu.habbo.plugin.events.furniture.FurnitureRotatedEvent;
+import com.eu.habbo.plugin.events.furniture.*;
 import gnu.trove.TCollections;
-import org.apache.commons.math3.util.Pair;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.TIntObjectMap;
@@ -49,6 +34,7 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.THashSet;
+import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -661,6 +647,10 @@ public class RoomItemManager {
                 specialTypes.addPetDrink((InteractionPetDrink) item);
             } else if (item instanceof InteractionPetFood) {
                 specialTypes.addPetFood((InteractionPetFood) item);
+            } else if (item instanceof InteractionPetToy) {
+                specialTypes.addPetToy((InteractionPetToy) item);
+            } else if (item instanceof InteractionPetTree) {
+                specialTypes.addPetTree((InteractionPetTree) item);
             } else if (item instanceof InteractionMoodLight ||
                        item instanceof InteractionPyramid ||
                        item instanceof InteractionMusicDisc ||
@@ -780,6 +770,10 @@ public class RoomItemManager {
             specialTypes.removePetDrink((InteractionPetDrink) item);
         } else if (item instanceof InteractionPetFood) {
             specialTypes.removePetFood((InteractionPetFood) item);
+        } else if (item instanceof InteractionPetToy) {
+            specialTypes.removePetToy((InteractionPetToy) item);
+        } else if (item instanceof InteractionPetTree) {
+            specialTypes.removePetTree((InteractionPetTree) item);
         } else if (item instanceof InteractionMoodLight ||
                    item instanceof InteractionPyramid ||
                    item instanceof InteractionMusicDisc ||

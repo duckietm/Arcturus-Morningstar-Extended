@@ -23,6 +23,8 @@ public class ActionCroak extends PetAction {
 
         if (pet.getHappiness() > 80)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
+        else
+            pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_NEUTRAL));
 
         return true;
     }

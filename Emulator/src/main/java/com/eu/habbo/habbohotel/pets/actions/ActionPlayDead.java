@@ -21,6 +21,9 @@ public class ActionPlayDead extends PetAction {
 
         pet.getRoomUnit().setStatus(RoomUnitStatus.DEAD, pet.getRoom().getStackHeight(pet.getRoomUnit().getX(), pet.getRoomUnit().getY(), false) + "");
 
+        // Playing dead is not very fun
+        pet.addHappiness(-3);
+
         if (pet.getHappiness() > 50)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
         else

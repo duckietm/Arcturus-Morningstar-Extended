@@ -23,6 +23,7 @@ public class ActionTorch extends PetAction {
             return false;
         }
 
+        pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
         Emulator.getThreading().run(new PetClearPosture(pet, RoomUnitStatus.EAT, null, false), this.minimumActionDuration);
         return true;
     }

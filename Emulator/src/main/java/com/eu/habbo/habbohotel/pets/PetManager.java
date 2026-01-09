@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionNest;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetDrink;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
+import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTrampoline;
 import com.eu.habbo.habbohotel.pets.actions.*;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
@@ -52,6 +53,12 @@ public class PetManager {
             this.put(15, new ActionFollowLeft());
             this.put(16, new ActionFollowRight());
             this.put(17, new ActionPlayFootball());
+            this.put(18, new ActionTeleport());
+            this.put(19, new ActionBounce());
+            this.put(20, new ActionFlatten());
+            this.put(21, new ActionDance());
+            this.put(22, new ActionSpin());
+            this.put(23, new ActionSwitch());
             this.put(24, new ActionMoveForward());
             this.put(25, new ActionTurnLeft());
             this.put(26, new ActionTurnRight());
@@ -59,10 +66,20 @@ public class PetManager {
             this.put(28, new ActionCroak());
             this.put(29, new ActionDip());
             this.put(30, new ActionWave());
+            this.put(31, new ActionMambo());
+            this.put(32, new ActionHighJump());
+            this.put(33, new ActionChickenDance());
+            this.put(34, new ActionTripleJump());
             this.put(35, new ActionWings());
             this.put(36, new ActionBreatheFire());
+            this.put(37, new ActionHang());
             this.put(38, new ActionTorch());
+            this.put(40, new ActionSwing());
+            this.put(41, new ActionRoll());
+            this.put(42, new ActionRingOfFire());
             this.put(43, new ActionEat());
+            this.put(44, new ActionWagTail());
+            this.put(45, new ActionCount());
             this.put(46, new ActionBreed());
 
         }
@@ -200,7 +217,7 @@ public class PetManager {
                             PetData.generalFoodItems.add(baseItem);
                         else if (baseItem.getInteractionType().getType() == InteractionPetDrink.class)
                             PetData.generalDrinkItems.add(baseItem);
-                        else if (baseItem.getInteractionType().getType() == InteractionPetToy.class)
+                        else if (baseItem.getInteractionType().getType() == InteractionPetToy.class || baseItem.getInteractionType().getType() == InteractionPetTrampoline.class)
                             PetData.generalToyItems.add(baseItem);
                     } else {
                         PetData data = this.getPetData(set.getInt("pet_id"));
@@ -212,7 +229,7 @@ public class PetManager {
                                 data.addFoodItem(baseItem);
                             else if (baseItem.getInteractionType().getType() == InteractionPetDrink.class)
                                 data.addDrinkItem(baseItem);
-                            else if (baseItem.getInteractionType().getType() == InteractionPetToy.class)
+                            else if (baseItem.getInteractionType().getType() == InteractionPetToy.class || baseItem.getInteractionType().getType() == InteractionPetTrampoline.class)
                                 data.addToyItem(baseItem);
                         }
                     }

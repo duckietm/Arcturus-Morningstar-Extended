@@ -946,8 +946,20 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             }
           }
 
-          this.unitManager.clear();
+          // Save ALL remaining pets (including owner's pets) BEFORE clearing
+          TIntObjectIterator<Pet> petIterator = this.getCurrentPets().iterator();
+          for (int i = this.getCurrentPets().size(); i-- > 0; ) {
+            try {
+              petIterator.advance();
+              petIterator.value().needsUpdate = true;
+              petIterator.value().run();  // Run synchronously to ensure DB is updated before room reload
+            } catch (NoSuchElementException e) {
+              LOGGER.error("Caught exception", e);
+              break;
+            }
+          }
 
+          this.unitManager.clear();
           this.unitManager.clearBots();
           this.unitManager.clearPets();
         } catch (Exception e) {

@@ -23,6 +23,9 @@ public class ActionFollow extends PetAction {
 
         Emulator.getThreading().run(new PetFollowHabbo(pet, habbo, 0));
 
+        // Following owner is enjoyable
+        pet.addHappiness(5);
+
         if (pet.getHappiness() > 75)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
         else

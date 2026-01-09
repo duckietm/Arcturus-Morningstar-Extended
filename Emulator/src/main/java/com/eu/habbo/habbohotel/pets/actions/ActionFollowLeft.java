@@ -10,7 +10,7 @@ import com.eu.habbo.threading.runnables.PetFollowHabbo;
 
 public class ActionFollowLeft extends PetAction {
     public ActionFollowLeft() {
-        super(PetTasks.FOLLOW, true);
+        super(PetTasks.FOLLOW_LEFT, true);
     }
 
     @Override
@@ -18,7 +18,10 @@ public class ActionFollowLeft extends PetAction {
         //Follow left.
         pet.clearPosture();
 
-        Emulator.getThreading().run(new PetFollowHabbo(pet, habbo, -2));
+        Emulator.getThreading().run(new PetFollowHabbo(pet, habbo, +2));
+
+        // Following owner is enjoyable
+        pet.addHappiness(5);
 
         if (pet.getHappiness() > 75)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));

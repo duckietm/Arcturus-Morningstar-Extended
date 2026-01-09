@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.bots.VisitorBot;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetManager;
+import com.eu.habbo.habbohotel.pets.PetVocalsType;
 import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -983,7 +984,7 @@ public class RoomUnitManager {
                 ((RideablePet) pet).setRider(null);
             }
             
-            Emulator.getThreading().run(pet);
+            pet.run();  // Run synchronously to ensure DB is updated before returning pet to inventory
             habbo.getInventory().getPetsComponent().addPet(pet);
             habbo.getClient().sendResponse(new AddPetComposer(pet));
             this.currentPets.remove(pet.getId());
@@ -1266,10 +1267,28 @@ public class RoomUnitManager {
     // ==================== VISITOR BOT HANDLING ====================
 
     /**
-     * Handles Habbo entering the room (visitor bot notification).
+     * Handles Habbo entering the room (visitor bot notification and pet greeting).
      */
     public void habboEntered(Habbo habbo) {
         habbo.getRoomUnit().animateWalk = false;
+
+        // Have pets greet their owner
+        synchronized (this.currentPets) {
+            TIntObjectIterator<Pet> petIterator = this.currentPets.iterator();
+            for (int i = this.currentPets.size(); i-- > 0; ) {
+                try {
+                    petIterator.advance();
+                    Pet pet = petIterator.value();
+                    if (pet.getUserId() == habbo.getHabboInfo().getId()) {
+                        // Pet sees its owner - greet them!
+                        pet.say(pet.getPetData().randomVocal(PetVocalsType.GREET_OWNER));
+                        pet.addHappiness(10);
+                    }
+                } catch (Exception e) {
+                    break;
+                }
+            }
+        }
 
         synchronized (this.currentBots) {
             if (habbo.getHabboInfo().getId() != this.room.getOwnerId()) {

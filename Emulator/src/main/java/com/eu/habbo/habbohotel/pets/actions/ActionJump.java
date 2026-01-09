@@ -22,6 +22,9 @@ public class ActionJump extends PetAction {
 
         Emulator.getThreading().run(new PetClearPosture(pet, RoomUnitStatus.JUMP, null, false), 2000);
 
+        // Jumping is fun!
+        pet.addHappiness(8);
+
         if (pet.getHappiness() > 60)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.PLAYFUL));
         else

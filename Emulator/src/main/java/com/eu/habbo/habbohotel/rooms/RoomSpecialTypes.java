@@ -19,6 +19,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionNest;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetDrink;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
+import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTree;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
@@ -45,6 +46,7 @@ public class RoomSpecialTypes {
     private final THashMap<Integer, InteractionPetDrink> petDrinks;
     private final THashMap<Integer, InteractionPetFood> petFoods;
     private final THashMap<Integer, InteractionPetToy> petToys;
+    private final THashMap<Integer, InteractionPetTree> petTrees;
     private final THashMap<Integer, InteractionRoller> rollers;
 
     // Thread-safe wired collections using ConcurrentHashMap for better concurrency
@@ -73,6 +75,7 @@ public class RoomSpecialTypes {
         this.petDrinks = new THashMap<>(0);
         this.petFoods = new THashMap<>(0);
         this.petToys = new THashMap<>(0);
+        this.petTrees = new THashMap<>(0);
         this.rollers = new THashMap<>(0);
 
         this.wiredTriggers = new ConcurrentHashMap<>();
@@ -228,6 +231,28 @@ public class RoomSpecialTypes {
             petToys.addAll(this.petToys.values());
 
             return petToys;
+        }
+    }
+
+
+    public InteractionPetTree getPetTree(int itemId) {
+        return this.petTrees.get(itemId);
+    }
+
+    public void addPetTree(InteractionPetTree item) {
+        this.petTrees.put(item.getId(), item);
+    }
+
+    public void removePetTree(InteractionPetTree petTree) {
+        this.petTrees.remove(petTree.getId());
+    }
+
+    public THashSet<InteractionPetTree> getPetTrees() {
+        synchronized (this.petTrees) {
+            THashSet<InteractionPetTree> petTrees = new THashSet<>();
+            petTrees.addAll(this.petTrees.values());
+
+            return petTrees;
         }
     }
 
@@ -913,6 +938,23 @@ public class RoomSpecialTypes {
 
     public THashSet<HabboItem> getItemsOfType(Class<? extends HabboItem> type) {
         THashSet<HabboItem> items = new THashSet<>();
+        
+        // Check pet trees collection for InteractionPetTree type
+        if (type == InteractionPetTree.class) {
+            synchronized (this.petTrees) {
+                items.addAll(this.petTrees.values());
+            }
+            return items;
+        }
+        
+        // Check pet toys collection for InteractionPetToy type
+        if (type == InteractionPetToy.class) {
+            synchronized (this.petToys) {
+                items.addAll(this.petToys.values());
+            }
+            return items;
+        }
+        
         synchronized (this.undefined) {
             for (HabboItem item : this.undefined.values()) {
                 if (item.getClass() == type)
@@ -959,6 +1001,8 @@ public class RoomSpecialTypes {
         this.nests.clear();
         this.petDrinks.clear();
         this.petFoods.clear();
+        this.petToys.clear();
+        this.petTrees.clear();
         this.rollers.clear();
 
         this.wiredTriggers.clear();

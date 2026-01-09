@@ -12,17 +12,14 @@ public class ActionNest extends PetAction {
 
     @Override
     public boolean apply(Pet pet, Habbo habbo, String[] data) {
-        if (pet.getEnergy() < 65) {
-            pet.findNest();
+        // Pet always obeys nest command - will go to nest or lay down if no nest available
+        pet.findNest();
 
-            if (pet.getEnergy() < 30)
-                pet.say(pet.getPetData().randomVocal(PetVocalsType.TIRED));
+        if (pet.getEnergy() < 30)
+            pet.say(pet.getPetData().randomVocal(PetVocalsType.TIRED));
+        else
+            pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_NEUTRAL));
 
-            return true;
-        } else {
-            pet.say(pet.getPetData().randomVocal(PetVocalsType.DISOBEY));
-        }
-
-        return false;
+        return true;
     }
 }

@@ -4,6 +4,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetBreedingNes
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetAction;
 import com.eu.habbo.habbohotel.pets.PetTasks;
+import com.eu.habbo.habbohotel.pets.PetVocalsType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.pets.breeding.PetBreedingStartFailedComposer;
@@ -28,6 +29,7 @@ public class ActionBreed extends PetAction {
 
         if (nest != null) {
             pet.getRoomUnit().setGoalLocation(pet.getRoom().getLayout().getTile(nest.getX(), nest.getY()));
+            pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_HAPPY));
 
             return true;
         } else {

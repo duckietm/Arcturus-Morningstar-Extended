@@ -22,6 +22,10 @@ public class ActionStay extends PetAction {
 
         pet.getRoomUnit().setCanWalk(false);
         pet.setStayStartedAt(Emulator.getIntUnixTimestamp());
+        
+        // Staying still is boring
+        pet.addHappiness(-5);
+        
         pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_NEUTRAL));
 
         return true;

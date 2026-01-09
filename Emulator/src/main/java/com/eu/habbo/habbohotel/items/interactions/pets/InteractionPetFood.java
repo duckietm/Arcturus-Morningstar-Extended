@@ -32,6 +32,19 @@ public class InteractionPetFood extends InteractionDefault {
         if (this.getExtradata().length() == 0)
             this.setExtradata("0");
 
+        // Check if there's food left (state < stateCount means food remaining)
+        int currentState = 0;
+        try {
+            currentState = Integer.parseInt(this.getExtradata());
+        } catch (NumberFormatException e) {
+            currentState = 0;
+        }
+        
+        // If food is empty (state >= max states), don't allow eating
+        if (currentState >= this.getBaseItem().getStateCount()) {
+            return;
+        }
+
         Pet pet = room.getPet(roomUnit);
 
         if (pet != null) {

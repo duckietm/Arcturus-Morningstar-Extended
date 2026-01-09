@@ -2,6 +2,9 @@ package com.eu.habbo.habbohotel.pets;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
+import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
+import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTree;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -14,6 +17,7 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserRemoveComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserTalkComposer;
 import com.eu.habbo.plugin.events.pets.PetTalkEvent;
 import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +56,16 @@ public class Pet implements ISerialize, Runnable {
     private int stayStartedAt = 0;
     private int idleCommandTicks = 0;
     private int freeCommandTicks = -1;
+    
+    // Command cooldown tracking to prevent spam
+    private int lastCommandId = -1;
+    private long lastCommandTime = 0;
+    private int sameCommandCount = 0;
+    
+    // New managers for improved pet behavior
+    private PetStatsManager statsManager;
+    private PetBehaviorManager behaviorManager;
+
 
     private PetTasks task = PetTasks.FREE;
 
@@ -78,6 +92,10 @@ public class Pet implements ISerialize, Runnable {
         this.levelThirst = set.getInt("thirst");
         this.levelHunger = set.getInt("hunger");
         this.level = PetManager.getLevel(this.experience);
+        
+        // Initialize managers
+        this.statsManager = new PetStatsManager(this);
+        this.behaviorManager = new PetBehaviorManager(this);
     }
 
     public Pet(int type, int race, String color, String name, int userId) {
@@ -101,6 +119,10 @@ public class Pet implements ISerialize, Runnable {
         this.levelHunger = 0;
         this.created = Emulator.getIntUnixTimestamp();
         this.level = 1;
+        
+        // Initialize managers
+        this.statsManager = new PetStatsManager(this);
+        this.behaviorManager = new PetBehaviorManager(this);
     }
 
 
@@ -216,10 +238,15 @@ public class Pet implements ISerialize, Runnable {
     }
 
     public void cycle() {
+        // Guard clause for null room or roomUnit
+        if (this.room == null || this.roomUnit == null) {
+            return;
+        }
+
         this.idleCommandTicks++;
 
         int time = Emulator.getIntUnixTimestamp();
-        if (this.roomUnit != null && this.task != PetTasks.RIDE) {
+        if (this.task != PetTasks.RIDE) {
             if (time - this.gestureTickTimeout > 5 && this.roomUnit.hasStatus(RoomUnitStatus.GESTURE)) {
                 this.roomUnit.removeStatus(RoomUnitStatus.GESTURE);
                 this.packetUpdate = true;
@@ -254,17 +281,28 @@ public class Pet implements ISerialize, Runnable {
                     if (this.levelThirst > 0)
                         this.levelThirst--;
 
-                    this.addEnergy(5);
+                    // Check if we're about to reach max energy before adding
+                    int maxEnergy = PetManager.maxEnergy(this.level);
+                    boolean wasResting = this.energy < maxEnergy;
+                    
+                    // Nest gives faster regeneration than resting on floor
+                    int energyGain = (this.task == PetTasks.NEST) ? 5 : 2;
+                    this.addEnergy(energyGain);
 
                     this.addHappiness(1);
 
-                    if (this.energy == PetManager.maxEnergy(this.level)) {
+                    // Wake up when fully rested
+                    if (wasResting && this.energy >= maxEnergy) {
                         this.roomUnit.removeStatus(RoomUnitStatus.LAY);
                         this.roomUnit.setCanWalk(true);
-                        this.roomUnit.setGoalLocation(this.room.getRandomWalkableTile());
+                        RoomTile tile = this.room.getRandomWalkableTile();
+                        if (tile != null) {
+                            this.roomUnit.setGoalLocation(tile);
+                        }
                         this.task = null;
                         this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.ENERGY.getKey());
                         this.gestureTickTimeout = time;
+                        this.say(this.petData.randomVocal(PetVocalsType.GENERIC_HAPPY));
                     }
                 } else if (this.tickTimeout >= 5) {
                     if (this.levelHunger < 100)
@@ -319,6 +357,13 @@ public class Pet implements ISerialize, Runnable {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_HAPPY));
                     } else if (this.happiness < 15) {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_SAD));
+                        // When bored and has energy, try to find a toy to play with
+                        if (this.energy > 40 && this.task == null) {
+                            this.findToy();
+                        }
+                    } else if (this.happiness < 40 && this.energy > 50 && this.task == null && Emulator.getRandom().nextInt(100) < 30) {
+                        // 30% chance to seek toy when moderately bored
+                        this.findToy();
                     } else if (this.levelHunger > 50) {
                         this.say(this.petData.randomVocal(PetVocalsType.HUNGRY));
                         this.eat();
@@ -363,10 +408,13 @@ public class Pet implements ISerialize, Runnable {
             case PLAY_FOOTBALL:
             case PLAY_DEAD:
             case FOLLOW:
+            case FOLLOW_LEFT:
+            case FOLLOW_RIGHT:
             case JUMP:
             case STAND:
             case NEST:
             case RIDE:
+            case STAY:
                 return false;
             default:
                 break;
@@ -448,6 +496,9 @@ public class Pet implements ISerialize, Runnable {
 
 
     public void findNest() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return;
+        }
         HabboItem item = this.petData.randomNest(this.room.getRoomSpecialTypes().getNests());
         this.roomUnit.setCanWalk(true);
         if (item != null) {
@@ -460,7 +511,37 @@ public class Pet implements ISerialize, Runnable {
     }
 
 
+    /**
+     * Finds a suitable drink item for this pet in the current room.
+     * @return The drink Item if found, null otherwise
+     */
+    public Item findDrink() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return null;
+        }
+        HabboItem drinkItem = this.petData.randomDrinkItem(this.room.getRoomSpecialTypes().getPetDrinks());
+        return drinkItem != null ? drinkItem.getBaseItem() : null;
+    }
+
+    /**
+     * Finds a suitable food item for this pet in the current room.
+     * @return The food Item if found, null otherwise
+     */
+    public Item findFood() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return null;
+        }
+        HabboItem foodItem = this.petData.randomFoodItem(this.room.getRoomSpecialTypes().getPetFoods());
+        return foodItem != null ? foodItem.getBaseItem() : null;
+    }
+
+    /**
+     * Makes the pet walk to a drink item and drink from it.
+     */
     public void drink() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return;
+        }
         HabboItem item = this.petData.randomDrinkItem(this.room.getRoomSpecialTypes().getPetDrinks());
         if (item != null) {
             this.roomUnit.setCanWalk(true);
@@ -468,26 +549,86 @@ public class Pet implements ISerialize, Runnable {
         }
     }
 
-
+    /**
+     * Makes the pet walk to a food item and eat from it.
+     */
     public void eat() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return;
+        }
         HabboItem item = this.petData.randomFoodItem(this.room.getRoomSpecialTypes().getPetFoods());
-        {
-            if (item != null) {
-                this.roomUnit.setCanWalk(true);
-                this.roomUnit.setGoalLocation(this.room.getLayout().getTile(item.getX(), item.getY()));
-            }
+        if (item != null) {
+            this.roomUnit.setCanWalk(true);
+            this.roomUnit.setGoalLocation(this.room.getLayout().getTile(item.getX(), item.getY()));
         }
     }
 
 
     public void findToy() {
-        HabboItem item = this.petData.randomToyItem(this.room.getRoomSpecialTypes().getPetToys());
-        {
-            if (item != null) {
-                this.roomUnit.setCanWalk(true);
-                this.roomUnit.setGoalLocation(this.room.getLayout().getTile(item.getX(), item.getY()));
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return;
+        }
+        
+        // Get all pet toys in the room
+        THashSet<InteractionPetToy> toys = this.room.getRoomSpecialTypes().getPetToys();
+        if (toys.isEmpty()) {
+            return;
+        }
+        
+        // First try to find a toy this pet can use
+        HabboItem item = this.petData.randomToyItem(toys);
+        
+        // If no compatible toy found, just pick any toy in the room
+        if (item == null) {
+            for (InteractionPetToy toy : toys) {
+                item = toy;
+                break;
             }
         }
+        
+        if (item != null) {
+            this.roomUnit.setCanWalk(true);
+            this.setTask(PetTasks.PLAY);
+            this.roomUnit.setGoalLocation(this.room.getLayout().getTile(item.getX(), item.getY()));
+            this.say(this.petData.randomVocal(PetVocalsType.PLAYFUL));
+        }
+    }
+
+    /**
+     * Finds a pet tree (for dragons/monkeys) and walks to it.
+     * Used for hang, swing, ring of fire actions.
+     */
+    public void findTree() {
+        this.findPetItem(PetTasks.FREE, InteractionPetTree.class);
+    }
+
+    /**
+     * Finds a pet item of a specific type and walks to it.
+     * Used for trampolines, trees, and other special pet furniture.
+     * @param task The task to set on the pet
+     * @param type The class type of the item to find
+     * @return true if an item was found and pet is walking to it
+     */
+    public boolean findPetItem(PetTasks task, Class<? extends HabboItem> type) {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
+            return false;
+        }
+        
+        HabboItem item = this.petData.randomToyHabboItem(this.room.getRoomSpecialTypes().getItemsOfType(type));
+
+        if (item != null) {
+            this.roomUnit.setCanWalk(true);
+            this.setTask(task);
+            if (this.getRoomUnit().getCurrentLocation().distance(this.room.getLayout().getTile(item.getX(), item.getY())) == 0) {
+                try {
+                    item.onWalkOn(this.getRoomUnit(), this.getRoom(), null);
+                } catch (Exception ignored) {}
+                return true;
+            }
+            this.roomUnit.setGoalLocation(this.room.getLayout().getTile(item.getX(), item.getY()));
+            return true;
+        }
+        return false;
     }
 
 
@@ -752,5 +893,75 @@ public class Pet implements ISerialize, Runnable {
 
     public void setStayStartedAt(int stayStartedAt) {
         this.stayStartedAt = stayStartedAt;
+    }
+
+    /**
+     * Gets the stats manager for this pet.
+     * @return The PetStatsManager instance
+     */
+    public PetStatsManager getStatsManager() {
+        return this.statsManager;
+    }
+
+    /**
+     * Gets the behavior manager for this pet.
+     * @return The PetBehaviorManager instance
+     */
+    public PetBehaviorManager getBehaviorManager() {
+        return this.behaviorManager;
+    }
+    
+    /**
+     * Checks if a command can be executed based on cooldown and spam prevention.
+     * @param commandId The command ID to check
+     * @return true if the command can be executed, false if on cooldown
+     */
+    public boolean canExecuteCommand(int commandId) {
+        long now = System.currentTimeMillis();
+        int globalCooldownMs = Emulator.getConfig().getInt("pet.command.cooldown_ms", 2000);
+        int maxSameCommandSpam = Emulator.getConfig().getInt("pet.command.max_same_spam", 3);
+        int spamResetMs = Emulator.getConfig().getInt("pet.command.spam_reset_ms", 10000);
+        
+        // Global cooldown - applies to ALL commands to prevent switching between commands
+        if (now - this.lastCommandTime < globalCooldownMs) {
+            return false;
+        }
+        
+        // Reset spam counter if enough time has passed
+        if (now - this.lastCommandTime > spamResetMs) {
+            this.sameCommandCount = 0;
+        }
+        
+        // Check if same command is being spammed
+        if (commandId == this.lastCommandId) {
+            this.sameCommandCount++;
+            
+            // Pet gets annoyed if same command spammed too much
+            if (this.sameCommandCount > maxSameCommandSpam) {
+                return false;
+            }
+        } else {
+            // Different command - reset counter but still subject to global cooldown
+            this.sameCommandCount = 1;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Records that a command was executed.
+     * @param commandId The command ID that was executed
+     */
+    public void recordCommandExecution(int commandId) {
+        this.lastCommandId = commandId;
+        this.lastCommandTime = System.currentTimeMillis();
+    }
+    
+    /**
+     * Gets the number of times the same command has been repeated.
+     * @return The spam count
+     */
+    public int getSameCommandCount() {
+        return this.sameCommandCount;
     }
 }
