@@ -8,13 +8,14 @@ import com.eu.habbo.habbohotel.pets.PetManager;
 import com.eu.habbo.habbohotel.pets.PetTasks;
 import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.pets.PetPackageNameValidationComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.breeding.PetBreedingCompleted;
-import com.eu.habbo.messages.outgoing.rooms.pets.breeding.PetBreedingResultComposer;
 import com.eu.habbo.threading.runnables.QueryDeleteHabboItem;
 
 import java.sql.ResultSet;
@@ -73,9 +74,11 @@ public class InteractionPetBreedingNest extends HabboItem {
                     Habbo ownerPetTwo = room.getHabbo(this.petTwo.getUserId());
 
                     if (ownerPetOne != null && ownerPetTwo != null && this.petOne.getPetData().getType() == this.petTwo.getPetData().getType() && this.petOne.getPetData().getOffspringType() != -1) {
-                        ownerPetTwo.getClient().sendResponse(new PetBreedingResultComposer(this.getId(), this.petOne.getPetData().getOffspringType(), this.petOne, ownerPetOne.getHabboInfo().getUsername(), this.petTwo, ownerPetTwo.getHabboInfo().getUsername()));
-                        this.setExtradata("1");
-                        room.updateItem(this);
+                        // Auto-breed with generated name (client doesn't have breeding dialog)
+                        String babyName = generateBabyName(this.petOne.getName(), this.petTwo.getName());
+                        this.breed(ownerPetTwo, babyName, this.petOne.getId(), this.petTwo.getId());
+                    } else {
+                        this.freePets();
                     }
                 }
             }
@@ -114,6 +117,25 @@ public class InteractionPetBreedingNest extends HabboItem {
         return false;
     }
 
+    /**
+     * Allow pets to walk onto this tile even if another pet is already on it.
+     * This is required because breeding nests are 1x1 and need 2 pets to breed.
+     */
+    @Override
+    public boolean canOverrideTile(RoomUnit unit, Room room, RoomTile tile) {
+        // Only allow override for pets when the box isn't full yet
+        if (unit.getRoomUnitType() == RoomUnitType.PET && !this.boxFull()) {
+            Pet pet = room.getPet(unit);
+            if (pet != null) {
+                // Make sure it's the right pet type for this nest
+                if (pet.getPetData() != null && pet.getPetData().getOffspringType() != -1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void stopBreeding(Habbo habbo) {
         this.setExtradata("0");
         habbo.getHabboInfo().getCurrentRoom().updateItem(this);
@@ -144,6 +166,27 @@ public class InteractionPetBreedingNest extends HabboItem {
             this.petTwo.setTask(PetTasks.FREE);
             this.petTwo = null;
         }
+    }
+
+    private String generateBabyName(String nameOne, String nameTwo) {
+        // Take first half of parent 1's name and second half of parent 2's name
+        int mid1 = Math.max(1, nameOne.length() / 2);
+        int mid2 = nameTwo.length() / 2;
+
+        String part1 = nameOne.substring(0, mid1);
+        String part2 = nameTwo.substring(mid2);
+
+        String combined = part1 + part2;
+
+        // Ensure name is between 1 and 15 characters
+        if (combined.length() > 15) {
+            combined = combined.substring(0, 15);
+        }
+        if (combined.isEmpty()) {
+            combined = "Baby";
+        }
+
+        return combined;
     }
 
     public void breed(Habbo habbo, String name, int petOneId, int petTwoId) {

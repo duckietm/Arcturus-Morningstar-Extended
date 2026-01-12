@@ -56,6 +56,9 @@ class FreezeHandleSnowballExplosion implements Runnable {
             for (RoomTile roomTile : tiles) {
                 THashSet<HabboItem> items = this.thrownData.room.getItemsAt(roomTile);
 
+                // Track if we already processed a block at this tile to prevent stacking exploit
+                boolean blockProcessedAtTile = false;
+
                 for (HabboItem freezeTile : items) {
                     if (freezeTile instanceof InteractionFreezeTile || freezeTile instanceof InteractionFreezeBlock) {
                         int distance = 0;
@@ -93,9 +96,12 @@ class FreezeHandleSnowballExplosion implements Runnable {
                                 }
                             }
                         } else if (freezeTile instanceof InteractionFreezeBlock) {
-                            if (freezeTile.getExtradata().equalsIgnoreCase("0")) {
+                            // Only process ONE block per tile to prevent stacking exploit
+                            // Stacking many blocks and exploding them causes massive lag
+                            if (!blockProcessedAtTile && freezeTile.getExtradata().equalsIgnoreCase("0")) {
                                 game.explodeBox((InteractionFreezeBlock) freezeTile, distance * 100);
                                 player.addScore(FreezeGame.DESTROY_BLOCK_POINTS);
+                                blockProcessedAtTile = true;
                             }
                         }
                     }

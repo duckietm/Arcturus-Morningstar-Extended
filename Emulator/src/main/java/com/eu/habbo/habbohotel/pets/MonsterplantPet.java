@@ -260,6 +260,17 @@ public class MonsterplantPet extends Pet implements IPetLook {
 
     public void setDeathTimestamp(int deathTimestamp) {
         this.deathTimestamp = deathTimestamp;
+        this.needsUpdate = true;
+    }
+
+    /**
+     * Revives a dead monster plant, resetting its death timestamp and hasDied flag.
+     * Call this instead of just setDeathTimestamp when reviving with mnstr_revival.
+     */
+    public void revive() {
+        this.deathTimestamp = Emulator.getIntUnixTimestamp() + MonsterplantPet.timeToLive;
+        this.hasDied = false; // Reset so achievement can trigger again if plant dies again
+        this.needsUpdate = true;
     }
 
     public int getGrowthStage() {
@@ -284,6 +295,7 @@ public class MonsterplantPet extends Pet implements IPetLook {
 
     public void setCanBreed(boolean canBreed) {
         this.canBreed = canBreed;
+        this.needsUpdate = true;
     }
 
     public boolean breedable() {
@@ -296,15 +308,28 @@ public class MonsterplantPet extends Pet implements IPetLook {
 
     public void setPubliclyBreedable(boolean isPubliclyBreedable) {
         this.publiclyBreedable = isPubliclyBreedable;
+        this.needsUpdate = true;
     }
 
     public void breed(MonsterplantPet pet) {
+        // Validate both plants can breed
+        if (!this.breedable() || !pet.breedable()) {
+            return;
+        }
+        
         if (this.canBreed && pet.canBreed) {
             this.canBreed = false;
             this.publiclyBreedable = false;
+            this.needsUpdate = true;
 
             pet.setCanBreed(false);
             pet.setPubliclyBreedable(false);
+            // pet.needsUpdate is set by setCanBreed and setPubliclyBreedable
+            
+            // Persist changes to database
+            Emulator.getThreading().run(this);
+            Emulator.getThreading().run(pet);
+            
             this.room.sendComposer(new PetStatusUpdateComposer(pet).compose());
             this.room.sendComposer(new PetStatusUpdateComposer(this).compose());
 
@@ -387,6 +412,8 @@ public class MonsterplantPet extends Pet implements IPetLook {
             this.setDeathTimestamp(Emulator.getIntUnixTimestamp() + MonsterplantPet.timeToLive);
             this.addHappiness(10);
             this.addExperience(10);
+            // needsUpdate is set by setDeathTimestamp, persist to database
+            Emulator.getThreading().run(this);
             this.room.sendComposer(new PetStatusUpdateComposer(this).compose());
             this.room.sendComposer(new RoomPetRespectComposer(this, RoomPetRespectComposer.PET_TREATED).compose());
         }

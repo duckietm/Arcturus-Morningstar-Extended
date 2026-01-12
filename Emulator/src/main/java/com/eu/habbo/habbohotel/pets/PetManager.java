@@ -122,15 +122,29 @@ public class PetManager {
     }
 
     public static int randomBody(int minimumRarity, boolean isRare) {
-        int randomRarity = isRare ? random(Math.max(minimumRarity - 1, 0), (MonsterplantPet.bodyRarity.size() - minimumRarity) + (minimumRarity - 1), 2.0) : random(Math.max(minimumRarity - 1, 0), MonsterplantPet.bodyRarity.size(), 2.0);
+        int maxIndex = MonsterplantPet.bodyRarity.size();
+        int randomIndex = isRare 
+            ? random(Math.max(minimumRarity - 1, 0), Math.min(maxIndex, (maxIndex - minimumRarity) + minimumRarity), 2.0) 
+            : random(Math.max(minimumRarity - 1, 0), maxIndex, 2.0);
+        
+        // Clamp to valid range to prevent ArrayIndexOutOfBoundsException
+        randomIndex = Math.max(0, Math.min(randomIndex, maxIndex - 1));
 
-        return MonsterplantPet.bodyRarity.get(MonsterplantPet.bodyRarity.keySet().toArray()[randomRarity]).getValue();
+        // Return the body type KEY (1-12), not the rarity value
+        return (Integer) MonsterplantPet.bodyRarity.keySet().toArray()[randomIndex];
     }
 
     public static int randomColor(int minimumRarity, boolean isRare) {
-        int randomRarity = isRare ? random(Math.max(minimumRarity - 1, 0), (MonsterplantPet.colorRarity.size() - minimumRarity) + (minimumRarity - 1), 2.0) : random(Math.max(minimumRarity - 1, 0), MonsterplantPet.colorRarity.size(), 2.0);
+        int maxIndex = MonsterplantPet.colorRarity.size();
+        int randomIndex = isRare 
+            ? random(Math.max(minimumRarity - 1, 0), Math.min(maxIndex, (maxIndex - minimumRarity) + minimumRarity), 2.0) 
+            : random(Math.max(minimumRarity - 1, 0), maxIndex, 2.0);
+        
+        // Clamp to valid range to prevent ArrayIndexOutOfBoundsException
+        randomIndex = Math.max(0, Math.min(randomIndex, maxIndex - 1));
 
-        return MonsterplantPet.colorRarity.get(MonsterplantPet.colorRarity.keySet().toArray()[randomRarity]).getValue();
+        // Return the color hue KEY (0-10), not the rarity value
+        return (Integer) MonsterplantPet.colorRarity.keySet().toArray()[randomIndex];
     }
 
     public static int random(int low, int high, double bias) {

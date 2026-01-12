@@ -89,12 +89,23 @@ public class PetUseItemEvent extends MessageHandler {
                 Emulator.getGameEnvironment().getItemManager().deleteItem(item);
             }
         } else if (pet instanceof MonsterplantPet) {
+            // Validate ownership - only owner can use items on their plant
+            if (pet.getUserId() != this.client.getHabbo().getHabboInfo().getId()) {
+                return;
+            }
+            
+            MonsterplantPet monsterplant = (MonsterplantPet) pet;
+            
             if (item.getBaseItem().getName().equalsIgnoreCase("mnstr_revival")) {
-                if (((MonsterplantPet) pet).isDead()) {
-                    ((MonsterplantPet) pet).setDeathTimestamp(Emulator.getIntUnixTimestamp() + MonsterplantPet.timeToLive);
+                if (monsterplant.isDead()) {
+                    // Use revive() method which properly resets hasDied flag and sets needsUpdate
+                    monsterplant.revive();
                     pet.getRoomUnit().clearStatus();
                     pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, "rev");
-                    ((MonsterplantPet) pet).packetUpdate = true;
+                    monsterplant.packetUpdate = true;
+                    
+                    // Persist to database
+                    Emulator.getThreading().run(pet);
 
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().removeHabboItem(item);
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RemoveFloorItemComposer(item).compose());
@@ -106,12 +117,17 @@ public class PetUseItemEvent extends MessageHandler {
                     Emulator.getThreading().run(new QueryDeleteHabboItem(item.getId()));
                 }
             } else if (item.getBaseItem().getName().equalsIgnoreCase("mnstr_fert")) {
-                if (!((MonsterplantPet) pet).isFullyGrown()) {
+                if (!monsterplant.isFullyGrown()) {
                     pet.setCreated(pet.getCreated() - MonsterplantPet.growTime);
+                    pet.needsUpdate = true;
                     pet.getRoomUnit().clearStatus();
                     pet.cycle();
                     pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, "spd");
-                    pet.getRoomUnit().setStatus(RoomUnitStatus.fromString("grw" + ((MonsterplantPet) pet).getGrowthStage()), "");
+                    pet.getRoomUnit().setStatus(RoomUnitStatus.fromString("grw" + monsterplant.getGrowthStage()), "");
+                    
+                    // Persist to database
+                    Emulator.getThreading().run(pet);
+                    
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().removeHabboItem(item);
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RemoveFloorItemComposer(item).compose());
                     this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserStatusComposer(pet.getRoomUnit()).compose());
@@ -122,17 +138,20 @@ public class PetUseItemEvent extends MessageHandler {
                     Emulator.getThreading().run(new QueryDeleteHabboItem(item.getId()));
                 }
             } else if (item.getBaseItem().getName().startsWith("mnstr_rebreed")) {
-                if (((MonsterplantPet) pet).isFullyGrown() && !((MonsterplantPet) pet).canBreed()) {
-                    if (
-                            (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed") && ((MonsterplantPet) pet).getRarity() <= 5) ||
-                                    (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed_2") && ((MonsterplantPet) pet).getRarity() >= 6 && ((MonsterplantPet) pet).getRarity() <= 8) ||
-                                    (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed_3") && ((MonsterplantPet) pet).getRarity() >= 9)
-                            )
+                if (monsterplant.isFullyGrown() && !monsterplant.canBreed() && !monsterplant.isDead()) {
+                    boolean validItem = 
+                            (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed") && monsterplant.getRarity() <= 5) ||
+                            (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed_2") && monsterplant.getRarity() >= 6 && monsterplant.getRarity() <= 8) ||
+                            (item.getBaseItem().getName().equalsIgnoreCase("mnstr_rebreed_3") && monsterplant.getRarity() >= 9);
 
-                    {
-                        ((MonsterplantPet) pet).setCanBreed(true);
+                    if (validItem) {
+                        // setCanBreed now automatically sets needsUpdate
+                        monsterplant.setCanBreed(true);
                         pet.getRoomUnit().clearStatus();
                         pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, "reb");
+                        
+                        // Persist to database
+                        Emulator.getThreading().run(pet);
 
                         this.client.getHabbo().getHabboInfo().getCurrentRoom().removeHabboItem(item);
                         this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RemoveFloorItemComposer(item).compose());
