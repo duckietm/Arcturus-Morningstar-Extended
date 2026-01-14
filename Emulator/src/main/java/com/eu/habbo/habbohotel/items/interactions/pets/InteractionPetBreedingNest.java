@@ -207,7 +207,9 @@ public class InteractionPetBreedingNest extends HabboItem {
             offspring.run();
             InteractionPetBreedingNest.this.freePets();
             habbo.getHabboInfo().getCurrentRoom().removeHabboItem(box);
-            habbo.getClient().sendResponse(new PetBreedingCompleted(offspring.getId(), Emulator.getGameEnvironment().getPetManager().getRarityForOffspring(offspring)));
+            habbo.getClient().sendResponse(
+                    new PetBreedingCompleted(PetBreedingCompleted.STATE_ACCEPT, petOneId, petTwoId)
+            );
 
             if (box.getBaseItem().getName().startsWith("pet_breeding_")) {
                 String boxType = box.getBaseItem().getName().replace("pet_breeding_", "");

@@ -4,28 +4,31 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
-public class PetBreedingCompleted extends MessageComposer {
-    private final int type;
-    private final int race;
+public class PetBreedingCompleted extends MessageComposer
+{
+    // match your Nitro parser constants
+    public static final int STATE_CANCEL = 1;
+    public static final int STATE_ACCEPT = 2;
+    public static final int STATE_REQUEST = 3;
 
-    public PetBreedingCompleted(int type, int race) {
-        this.type = type;
-        this.race = race;
+    private final int state;
+    private final int ownPetId;
+    private final int otherPetId;
+
+    public PetBreedingCompleted(int state, int ownPetId, int otherPetId)
+    {
+        this.state = state;
+        this.ownPetId = ownPetId;
+        this.otherPetId = otherPetId;
     }
 
     @Override
-    protected ServerMessage composeInternal() {
-        this.response.init(Outgoing.PetBreedingCompleted);
-        this.response.appendInt(this.type);
-        this.response.appendInt(this.race);
+    protected ServerMessage composeInternal()
+    {
+        this.response.init(Outgoing.PetBreedingCompleted); // 2527
+        this.response.appendInt(this.state);
+        this.response.appendInt(this.ownPetId);
+        this.response.appendInt(this.otherPetId);
         return this.response;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public int getRace() {
-        return race;
     }
 }
