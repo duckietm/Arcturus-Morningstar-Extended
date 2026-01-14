@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
+import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.messages.ClientMessage;
 
 public abstract class MessageHandler {
@@ -12,5 +13,11 @@ public abstract class MessageHandler {
 
     public int getRatelimit() {
         return 0;
+    }
+
+    protected final Room currentRoom() {
+        if (this.client == null || this.client.getHabbo() == null) return null;
+        if (this.client.getHabbo().getHabboInfo() == null) return null;
+        return this.client.getHabbo().getHabboInfo().getCurrentRoom();
     }
 }

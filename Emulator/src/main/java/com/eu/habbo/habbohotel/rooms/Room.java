@@ -2434,6 +2434,18 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     return this.itemManager.moveFurniTo(item, tile, rotation, actor, sendUpdates, checkForUnits);
   }
 
+  public FurnitureMovementError moveFurniTo(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor) {
+    return this.itemManager.moveFurniTo(item, tile, rotation, z, actor, true, true);
+  }
+
+  public FurnitureMovementError moveFurniTo(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor, boolean sendUpdates) {
+    return this.itemManager.moveFurniTo(item, tile, rotation, z, actor, sendUpdates, true);
+  }
+
+  public FurnitureMovementError moveFurniTo(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor, boolean sendUpdates, boolean checkForUnits) {
+    return this.itemManager.moveFurniTo(item, tile, rotation, z, actor, sendUpdates, checkForUnits);
+  }
+
   public FurnitureMovementError slideFurniTo(HabboItem item, RoomTile tile, int rotation) {
     return this.itemManager.slideFurniTo(item, tile, rotation);
   }

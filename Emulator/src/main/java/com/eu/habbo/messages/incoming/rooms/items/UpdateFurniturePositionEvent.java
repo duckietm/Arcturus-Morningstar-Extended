@@ -1,16 +1,15 @@
 package com.eu.habbo.messages.incoming.rooms.items;
 
+import com.eu.habbo.habbohotel.rooms.FurnitureMovementError;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
 
 public class UpdateFurniturePositionEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
-        Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
-
+        Room room = currentRoom();
         if (room == null) return;
 
         int furniId = this.packet.readInt();
@@ -19,11 +18,17 @@ public class UpdateFurniturePositionEvent extends MessageHandler {
 
         int x = this.packet.readInt();
         int y = this.packet.readInt();
-        double z = (double) this.packet.readInt() / 10000;
+        double z = this.packet.readInt() / 10000.0;
         int rotation = this.packet.readInt();
-        RoomTile tile = room.getLayout().getTile((short) x, (short) y);
 
-        room.moveFurniTo(item, tile, rotation, this.client.getHabbo(), true, true);
-        this.client.sendResponse(new FloorItemUpdateComposer(item));
+        RoomTile tile = room.getLayout().getTile((short) x, (short) y);
+        if (tile == null) return;
+
+        FurnitureMovementError result =
+                room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), true, true);
+
+        if (result != FurnitureMovementError.NONE) {
+            return;
+        }
     }
 }

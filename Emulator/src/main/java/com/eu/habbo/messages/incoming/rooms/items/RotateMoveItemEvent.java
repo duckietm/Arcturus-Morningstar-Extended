@@ -12,10 +12,8 @@ import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
 public class RotateMoveItemEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
-        Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
-
-        if (room == null)
-            return;
+        Room room = currentRoom();
+        if (room == null) return;
 
         int furniId = this.packet.readInt();
         HabboItem item = room.getHabboItem(furniId);
@@ -24,17 +22,19 @@ public class RotateMoveItemEvent extends MessageHandler {
         int x = this.packet.readInt();
         int y = this.packet.readInt();
         int rotation = this.packet.readInt();
+
         RoomTile tile = room.getLayout().getTile((short) x, (short) y);
+        if (tile == null) return;
 
         FurnitureMovementError error = room.canPlaceFurnitureAt(item, this.client.getHabbo(), tile, rotation);
-        if (!error.equals(FurnitureMovementError.NONE)) {
+        if (error != FurnitureMovementError.NONE) {
             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, error.errorCode));
             this.client.sendResponse(new FloorItemUpdateComposer(item));
             return;
         }
 
         error = room.moveFurniTo(item, tile, rotation, this.client.getHabbo());
-        if (!error.equals(FurnitureMovementError.NONE)) {
+        if (error != FurnitureMovementError.NONE) {
             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, error.errorCode));
             this.client.sendResponse(new FloorItemUpdateComposer(item));
         }
