@@ -40,10 +40,10 @@ public class RoomUsersComposer extends MessageComposer {
             this.response.appendInt(this.habbo.getHabboInfo().getId());
             this.response.appendString(this.habbo.getHabboInfo().getUsername());
             this.response.appendString(this.habbo.getHabboInfo().getMotto());
-            this.response.appendString(this.habbo.getHabboInfo().getLook());
-			this.response.appendInt(this.habbo.getHabboInfo().getInfostandBg());
+            this.response.appendInt(this.habbo.getHabboInfo().getInfostandBg());
             this.response.appendInt(this.habbo.getHabboInfo().getInfostandStand());
             this.response.appendInt(this.habbo.getHabboInfo().getInfostandOverlay());
+            this.response.appendString(this.habbo.getHabboInfo().getLook());
             this.response.appendInt(this.habbo.getRoomUnit().getId()); //Room Unit ID
             this.response.appendInt(this.habbo.getRoomUnit().getX());
             this.response.appendInt(this.habbo.getRoomUnit().getY());
