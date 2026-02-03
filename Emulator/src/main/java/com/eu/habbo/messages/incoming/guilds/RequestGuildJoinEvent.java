@@ -10,6 +10,11 @@ import com.eu.habbo.messages.outgoing.guilds.GuildJoinErrorComposer;
 
 public class RequestGuildJoinEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int guildId = this.packet.readInt();
 

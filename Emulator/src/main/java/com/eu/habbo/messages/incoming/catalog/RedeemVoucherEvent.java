@@ -8,6 +8,11 @@ import com.eu.habbo.threading.runnables.ShutdownEmulator;
 
 public class RedeemVoucherEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         if (ShutdownEmulator.timestamp > 0) {
             this.client.sendResponse(new HotelWillCloseInMinutesComposer((ShutdownEmulator.timestamp - Emulator.getIntUnixTimestamp()) / 60));

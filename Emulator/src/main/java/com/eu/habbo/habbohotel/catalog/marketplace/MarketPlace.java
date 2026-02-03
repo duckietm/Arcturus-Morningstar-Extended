@@ -120,7 +120,7 @@ public class MarketPlace {
         if (maxPrice > 0 && maxPrice > minPrice) {
             query += " AND CEIL(price + (price / 100)) <= " + maxPrice;
         }
-        if (search.length() > 0) {
+        if (!search.isEmpty()) {
             query += " AND ( bi.public_name LIKE ? OR ci.catalog_name LIKE ? ) ";
         }
 
@@ -157,7 +157,7 @@ public class MarketPlace {
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, Emulator.getIntUnixTimestamp() - 172800);
             statement.setInt(2, Emulator.getIntUnixTimestamp() - 172800);
-            if (search.length() > 0) {
+            if (!search.isEmpty()) {
                 statement.setString(3, "%" + search + "%");
                 statement.setString(4, "%" + search + "%");
             }
@@ -257,17 +257,22 @@ public class MarketPlace {
                                     } else if ((MARKETPLACE_CURRENCY == 0 && price > client.getHabbo().getHabboInfo().getCredits()) || (MARKETPLACE_CURRENCY > 0 && price > client.getHabbo().getHabboInfo().getCurrencyAmount(MARKETPLACE_CURRENCY))) {
                                         client.sendResponse(new MarketplaceBuyErrorComposer(MarketplaceBuyErrorComposer.NOT_ENOUGH_CREDITS, 0, offerId, price));
                                     } else {
-                                        try (PreparedStatement updateOffer = connection.prepareStatement("UPDATE marketplace_items SET state = 2, sold_timestamp = ? WHERE id = ?")) {
-                                            updateOffer.setInt(1, Emulator.getIntUnixTimestamp());
-                                            updateOffer.setInt(2, offerId);
-                                            updateOffer.execute();
-                                        }
                                         Habbo habbo = Emulator.getGameServer().getGameClientManager().getHabbo(set.getInt("user_id"));
                                         HabboItem item = Emulator.getGameEnvironment().getItemManager().loadHabboItem(itemSet);
 
                                         MarketPlaceItemSoldEvent event = new MarketPlaceItemSoldEvent(habbo, client.getHabbo(), item, set.getInt("price"));
                                         if (Emulator.getPluginManager().fireEvent(event).isCancelled()) {
                                             return;
+                                        }
+
+                                        try (PreparedStatement updateOffer = connection.prepareStatement("UPDATE marketplace_items SET state = 2, sold_timestamp = ? WHERE id = ? AND state = 1")) {
+                                            updateOffer.setInt(1, Emulator.getIntUnixTimestamp());
+                                            updateOffer.setInt(2, offerId);
+                                            int updated = updateOffer.executeUpdate();
+                                            if (updated == 0) {
+                                                sendErrorMessage(client, set.getInt("item_id"), offerId);
+                                                return;
+                                            }
                                         }
                                         event.price = calculateCommision(event.price);
 

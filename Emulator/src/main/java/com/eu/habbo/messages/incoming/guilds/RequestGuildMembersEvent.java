@@ -10,6 +10,11 @@ import com.eu.habbo.messages.outgoing.guilds.GuildMembersComposer;
 
 public class RequestGuildMembersEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int groupId = this.packet.readInt();
         int pageId = this.packet.readInt();

@@ -14,16 +14,22 @@ public class SellItemEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SellItemEvent.class);
 
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         if (!MarketPlace.MARKETPLACE_ENABLED) {
             this.client.sendResponse(new MarketplaceItemPostedComposer(MarketplaceItemPostedComposer.MARKETPLACE_DISABLED));
             return;
         }
 
-        int credits = this.packet.readInt();
+        final int credits = this.packet.readInt();
+        final int furniType = this.packet.readInt(); // 1 = FLOOR_TYPE, 2 = WALL_TYPE
+        final int itemId = this.packet.readInt();
 
-        this.packet.readInt(); // unknown - not used
-        int itemId = this.packet.readInt();
+        if (furniType != 1 && furniType != 2) return;
 
         HabboItem item = this.client.getHabbo().getInventory().getItemsComponent().getHabboItem(itemId);
         if (item != null) {

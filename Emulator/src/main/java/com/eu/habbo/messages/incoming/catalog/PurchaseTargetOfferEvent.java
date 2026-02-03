@@ -11,16 +11,17 @@ public class PurchaseTargetOfferEvent extends MessageHandler {
 
     @Override
     public void handle() throws Exception {
-        int offerId = this.packet.readInt();
+        final int offerId = this.packet.readInt();
         int amount = this.packet.readInt();
 
-        if (amount <= 0) return;
+        if (amount <= 0 || offerId <= 0) return;
 
 
         if (Emulator.getIntUnixTimestamp() - this.client.getHabbo().getHabboStats().lastPurchaseTimestamp >= CatalogManager.PURCHASE_COOLDOWN) {
             this.client.getHabbo().getHabboStats().lastPurchaseTimestamp = Emulator.getIntUnixTimestamp();
 
             TargetOffer offer = Emulator.getGameEnvironment().getCatalogManager().getTargetOffer(offerId);
+            if (offer == null) return;
 
             HabboOfferPurchase purchase = HabboOfferPurchase.getOrCreate(this.client.getHabbo(), offerId);
 

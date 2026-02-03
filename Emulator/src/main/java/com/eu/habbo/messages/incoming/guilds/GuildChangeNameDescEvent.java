@@ -9,6 +9,11 @@ import com.eu.habbo.plugin.events.guilds.GuildChangedNameEvent;
 
 public class GuildChangeNameDescEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int guildId = this.packet.readInt();
 
@@ -16,7 +21,9 @@ public class GuildChangeNameDescEvent extends MessageHandler {
 
         if (guild != null) {
             if (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_GUILD_ADMIN)) {
-                GuildChangedNameEvent nameEvent = new GuildChangedNameEvent(guild, this.packet.readString(), this.packet.readString());
+                String newName = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+                String newDesc = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+                GuildChangedNameEvent nameEvent = new GuildChangedNameEvent(guild, newName, newDesc);
                 Emulator.getPluginManager().fireEvent(nameEvent);
 
                 if (nameEvent.isCancelled())

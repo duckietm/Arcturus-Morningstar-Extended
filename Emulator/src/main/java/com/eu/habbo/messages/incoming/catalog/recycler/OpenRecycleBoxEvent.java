@@ -22,11 +22,11 @@ public class OpenRecycleBoxEvent extends MessageHandler {
         if (room == null)
             return;
 
-        if (room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)) {
+        if (room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER) || room.hasRights(this.client.getHabbo())) {
             HabboItem item = room.getHabboItem(this.packet.readInt());
 
-            if (item == null)
-                return;
+            if (item == null) return;
+            if (item.getUserId() != this.client.getHabbo().getHabboInfo().getId()) return;
 
             if (item instanceof InteractionGift) {
                 if (item.getBaseItem().getName().contains("present_wrap")) {

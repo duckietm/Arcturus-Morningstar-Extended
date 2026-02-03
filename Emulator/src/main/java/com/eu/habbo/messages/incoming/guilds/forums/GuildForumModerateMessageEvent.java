@@ -17,6 +17,11 @@ import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 
 public class GuildForumModerateMessageEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int guildId = packet.readInt();
         int threadId = packet.readInt();

@@ -24,6 +24,11 @@ public class RequestDeleteRoomEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestDeleteRoomEvent.class);
 
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int roomId = this.packet.readInt();
 

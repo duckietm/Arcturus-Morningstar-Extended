@@ -7,6 +7,11 @@ import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
 
 public class RequestGuildInfoEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int guildId = this.packet.readInt();
         boolean newWindow = this.packet.readBoolean();

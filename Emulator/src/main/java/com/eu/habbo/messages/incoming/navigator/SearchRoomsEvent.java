@@ -7,12 +7,30 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.PrivateRoomsComposer;
 import com.eu.habbo.plugin.events.navigator.NavigatorSearchResultEvent;
-import gnu.trove.map.hash.THashMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SearchRoomsEvent extends MessageHandler {
-    public final static THashMap<Rank, THashMap<String, ServerMessage>> cachedResults = new THashMap<>(4);
+    private static final int MAX_CACHE_SIZE = 200;
+    public final static Map<Rank, Map<String, ServerMessage>> cachedResults = new ConcurrentHashMap<>(4);
+
+    private static Map<String, ServerMessage> createLRUCache() {
+        return Collections.synchronizedMap(new LinkedHashMap<String, ServerMessage>(MAX_CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, ServerMessage> eldest) {
+                return size() > MAX_CACHE_SIZE;
+            }
+        });
+    }
+
+    @Override
+    public int getRatelimit() {
+        return 500;
+    }
 
     @Override
     public void handle() throws Exception {
@@ -23,10 +41,12 @@ public class SearchRoomsEvent extends MessageHandler {
         ArrayList<Room> rooms;
 
         ServerMessage message = null;
-        if (cachedResults.containsKey(this.client.getHabbo().getHabboInfo().getRank())) {
-            message = cachedResults.get(this.client.getHabbo().getHabboInfo().getRank()).get((name + "\t" + query).toLowerCase());
+        Map<String, ServerMessage> rankCache = cachedResults.get(this.client.getHabbo().getHabboInfo().getRank());
+        if (rankCache != null) {
+            message = rankCache.get((name + "\t" + query).toLowerCase());
         } else {
-            cachedResults.put(this.client.getHabbo().getHabboInfo().getRank(), new THashMap<>());
+            rankCache = createLRUCache();
+            cachedResults.put(this.client.getHabbo().getHabboInfo().getRank(), rankCache);
         }
 
         if (message == null) {
@@ -47,10 +67,10 @@ public class SearchRoomsEvent extends MessageHandler {
             }
 
             message = new PrivateRoomsComposer(rooms).compose();
-            THashMap<String, ServerMessage> map = cachedResults.get(this.client.getHabbo().getHabboInfo().getRank());
+            Map<String, ServerMessage> map = cachedResults.get(this.client.getHabbo().getHabboInfo().getRank());
 
             if (map == null) {
-                map = new THashMap<>(1);
+                map = createLRUCache();
             }
 
             map.put((name + "\t" + query).toLowerCase(), message);

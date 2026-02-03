@@ -27,7 +27,7 @@ public class RecycleEvent extends MessageHandler {
             THashSet<HabboItem> items = new THashSet<>();
 
             int count = this.packet.readInt();
-            if (count < Emulator.getConfig().getInt("recycler.value", 8)) return;
+            if (count != Emulator.getConfig().getInt("recycler.value", 8)) return;
 
             for (int i = 0; i < count; i++) {
                 HabboItem item = this.client.getHabbo().getInventory().getItemsComponent().getHabboItem(this.packet.readInt());

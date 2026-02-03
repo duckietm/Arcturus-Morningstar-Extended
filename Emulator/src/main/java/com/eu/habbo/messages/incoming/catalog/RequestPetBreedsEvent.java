@@ -6,8 +6,13 @@ import com.eu.habbo.messages.outgoing.catalog.PetBreedsComposer;
 
 public class RequestPetBreedsEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
-        String petName = this.packet.readString();
+        final String petName = this.packet.readString();
         this.client.sendResponse(new PetBreedsComposer(petName, Emulator.getGameEnvironment().getPetManager().getBreeds(petName)));
     }
 }

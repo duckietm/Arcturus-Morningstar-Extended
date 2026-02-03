@@ -3,11 +3,7 @@ package com.eu.habbo.habbohotel.pets;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionNest;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetDrink;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
-import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTrampoline;
+import com.eu.habbo.habbohotel.items.interactions.pets.*;
 import com.eu.habbo.habbohotel.pets.actions.*;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
@@ -332,19 +328,13 @@ public class PetManager {
     }
 
     public THashSet<PetRace> getBreeds(String petName) {
-        if (!petName.startsWith("a0 pet")) {
-            LOGGER.error("Pet {} not found. Make sure it matches the pattern \"a0 pet<pet_id>\"!", petName);
+        if (!petName.matches("a0 pet\\d{1,3}")) {
+            LOGGER.error("Pet data '{}' not found. Expected format: a0 pet<0-999>", petName);
             return null;
         }
 
-        try {
-            int petId = Integer.parseInt(petName.split("t")[1]);
-            return this.petRaces.get(petId);
-        } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
-        }
-
-        return null;
+        final int petId = Integer.parseInt(petName.substring(6));
+        return this.petRaces.get(petId);
     }
 
     public TIntObjectHashMap<ArrayList<PetBreedingReward>> getBreedingRewards(int petType) {

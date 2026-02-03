@@ -9,13 +9,18 @@ import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 
 public class GuildForumThreadsEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int guildId = packet.readInt();
         int index = packet.readInt();
 
         Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(guildId);
 
-        if (guild == null) {
+        if (guild == null || !guild.hasForum()) {
             this.client.sendResponse(new ConnectionErrorComposer(404));
             return;
         }

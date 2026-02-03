@@ -15,6 +15,11 @@ public class RequestInventoryItemsEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestInventoryItemsEvent.class);
 
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int totalItems = this.client.getHabbo().getInventory().getItemsComponent().getItems().size();
 
@@ -59,7 +64,7 @@ public class RequestInventoryItemsEvent extends MessageHandler {
                 }
             }
 
-            if(count > 0 && items.size() > 0) this.client.sendResponse(new InventoryItemsComposer(fragmentNumber, totalFragments, items));
+            if(count > 0 && !items.isEmpty()) this.client.sendResponse(new InventoryItemsComposer(fragmentNumber, totalFragments, items));
         }
     }
 }

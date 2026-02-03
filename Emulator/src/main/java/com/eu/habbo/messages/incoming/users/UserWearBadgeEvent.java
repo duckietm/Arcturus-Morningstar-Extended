@@ -10,6 +10,11 @@ import java.util.ArrayList;
 
 public class UserWearBadgeEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 250;
+    }
+
+    @Override
     public void handle() throws Exception {
         BadgesComponent.resetSlots(this.client.getHabbo());
 
@@ -22,7 +27,7 @@ public class UserWearBadgeEvent extends MessageHandler {
 
             String badgeId = this.packet.readString();
 
-            if (badgeId.length() == 0)
+            if (badgeId.isEmpty())
                 continue;
 
             HabboBadge badge = this.client.getHabbo().getInventory().getBadgesComponent().getBadge(badgeId);

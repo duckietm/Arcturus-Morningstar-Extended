@@ -20,14 +20,16 @@ public class GuildSetAdminEvent extends MessageHandler {
 
         if (guild != null) {
             if (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_GUILD_ADMIN)) {
-                Emulator.getGameEnvironment().getGuildManager().setAdmin(guild, userId);
 
                 Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
 
                 GuildGivenAdminEvent adminEvent = new GuildGivenAdminEvent(guild, userId, habbo, this.client.getHabbo());
                 Emulator.getPluginManager().fireEvent(adminEvent);
+
                 if (adminEvent.isCancelled())
                     return;
+
+                Emulator.getGameEnvironment().getGuildManager().setAdmin(guild, userId);
 
                 if (habbo != null) {
                     Room room = habbo.getHabboInfo().getCurrentRoom();

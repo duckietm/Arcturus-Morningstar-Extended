@@ -19,7 +19,7 @@ public class UpdateRoomPromotionEvent extends MessageHandler {
 
         Room room = Emulator.getGameEnvironment().getRoomManager().loadRoom(id);
 
-        if (room == null || room.getOwnerId() != this.client.getHabbo().getHabboInfo().getId() || !this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)) {
+        if (room == null || (room.getOwnerId() != this.client.getHabbo().getHabboInfo().getId() && !this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER))) {
             return;
         }
 

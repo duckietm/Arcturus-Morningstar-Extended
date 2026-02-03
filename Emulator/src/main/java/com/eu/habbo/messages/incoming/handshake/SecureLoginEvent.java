@@ -19,18 +19,18 @@ import com.eu.habbo.messages.outgoing.gamecenter.GameCenterGameListComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.MessagesForYouComposer;
 import com.eu.habbo.messages.outgoing.habboway.nux.NewUserIdentityComposer;
-import com.eu.habbo.messages.outgoing.handshake.EnableNotificationsComposer;
-import com.eu.habbo.messages.outgoing.handshake.SecureLoginOKComposer;
 import com.eu.habbo.messages.outgoing.handshake.AvailabilityStatusMessageComposer;
+import com.eu.habbo.messages.outgoing.handshake.EnableNotificationsComposer;
 import com.eu.habbo.messages.outgoing.handshake.PingComposer;
+import com.eu.habbo.messages.outgoing.handshake.SecureLoginOKComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryAchievementsComposer;
 import com.eu.habbo.messages.outgoing.inventory.UserEffectsListComposer;
 import com.eu.habbo.messages.outgoing.modtool.CfhTopicsMessageComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolSanctionInfoComposer;
-import com.eu.habbo.messages.outgoing.navigator.*;
-import com.eu.habbo.messages.outgoing.unknown.BuildersClubExpiredComposer;
 import com.eu.habbo.messages.outgoing.mysterybox.MysteryBoxKeysComposer;
+import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSavedSearchesComposer;
+import com.eu.habbo.messages.outgoing.unknown.BuildersClubExpiredComposer;
 import com.eu.habbo.messages.outgoing.users.*;
 import com.eu.habbo.plugin.events.emulator.SSOAuthenticationEvent;
 import com.eu.habbo.plugin.events.users.UserLoginEvent;
@@ -45,7 +45,10 @@ import java.util.Date;
 public class SecureLoginEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureLoginEvent.class);
 
-
+    @Override
+    public int getRatelimit() {
+        return 500;
+    }
 
     @Override
     public void handle() throws Exception {
@@ -159,7 +162,7 @@ public class SecureLoginEvent extends MessageHandler {
                     THashMap<Integer, ArrayList<ModToolSanctionItem>> modToolSanctionItemsHashMap = Emulator.getGameEnvironment().getModToolSanctions().getSanctions(habbo.getHabboInfo().getId());
                     ArrayList<ModToolSanctionItem> modToolSanctionItems = modToolSanctionItemsHashMap.get(habbo.getHabboInfo().getId());
 
-                    if (modToolSanctionItems != null && modToolSanctionItems.size() > 0) {
+                    if (modToolSanctionItems != null && !modToolSanctionItems.isEmpty()) {
                         ModToolSanctionItem item = modToolSanctionItems.get(modToolSanctionItems.size() - 1);
 
                         if (item.sanctionLevel > 0 && item.probationTimestamp != 0 && item.probationTimestamp > Emulator.getIntUnixTimestamp()) {

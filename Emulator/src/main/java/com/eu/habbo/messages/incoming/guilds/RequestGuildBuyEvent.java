@@ -20,12 +20,23 @@ public class RequestGuildBuyEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestGuildBuyEvent.class);
 
     @Override
-    public void handle() throws Exception {
-        String name = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
-        String description = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+    public int getRatelimit() {
+        return 500;
+    }
 
-        if(name.length() > 29 || description.length() > 254)
+    @Override
+    public void handle() throws Exception {
+        final String name = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+        final String description = Emulator.getGameEnvironment().getWordFilter().filter(this.packet.readString(), this.client.getHabbo());
+
+        if(name.length() > 29){
+            this.client.sendResponse(new GuildEditFailComposer(GuildEditFailComposer.INVALID_GUILD_NAME));
             return;
+        }
+        if(description.length() > 254){
+            return;
+        }
+
 
         if (Emulator.getConfig().getBoolean("catalog.guild.hc_required", true) && !this.client.getHabbo().getHabboStats().hasActiveClub()) {
             this.client.sendResponse(new GuildEditFailComposer(GuildEditFailComposer.HC_REQUIRED));
@@ -59,7 +70,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
 
                     int count = this.packet.readInt();
 
-                    String badge = "";
+                    StringBuilder badge = new StringBuilder();
 
                     byte base = 1;
 
@@ -69,24 +80,17 @@ public class RequestGuildBuyEvent extends MessageHandler {
                         int pos = this.packet.readInt();
 
                         if (base == 1) {
-                            badge += "b";
+                            badge.append("b");
                         } else {
-                            badge += "s";
+                            badge.append("s");
                         }
 
-                        badge += (id < 100 ? "0" : "") + (id < 10 ? "0" : "") + id + (color < 10 ? "0" : "") + color + "" + pos;
+                        badge.append(id < 100 ? "0" : "").append(id < 10 ? "0" : "").append(id).append(color < 10 ? "0" : "").append(color).append(pos);
 
                         base += 3;
                     }
 
-                    if(name.length() > 29){
-                        this.client.sendResponse(new GuildEditFailComposer(GuildEditFailComposer.INVALID_GUILD_NAME));
-                        return;
-                    }
-                    if(description.length() > 254){
-                        return;
-                    }
-                    Guild guild = Emulator.getGameEnvironment().getGuildManager().createGuild(this.client.getHabbo(), roomId, r.getName(), name, description, badge, colorOne, colorTwo);
+                    Guild guild = Emulator.getGameEnvironment().getGuildManager().createGuild(this.client.getHabbo(), roomId, r.getName(), name, description, badge.toString(), colorOne, colorTwo);
 
                     r.setGuild(guild.getId());
                     r.removeAllRights();

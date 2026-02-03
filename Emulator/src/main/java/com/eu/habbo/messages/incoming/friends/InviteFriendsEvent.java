@@ -7,9 +7,17 @@ import com.eu.habbo.messages.outgoing.friends.RoomInviteComposer;
 
 public class InviteFriendsEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         if (this.client.getHabbo().getHabboStats().allowTalk()) {
-            int[] userIds = new int[this.packet.readInt()];
+            final int count = this.packet.readInt();
+            if (count <= 0 || count > 100) return;
+
+            final int[] userIds = new int[count];
 
             for (int i = 0; i < userIds.length; i++) {
                 userIds[i] = this.packet.readInt();
@@ -21,6 +29,9 @@ public class InviteFriendsEvent extends MessageHandler {
 
             for (int i : userIds) {
                 if (i == 0)
+                    continue;
+
+                if (!this.client.getHabbo().getMessenger().getFriends().containsKey(i))
                     continue;
 
                 Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(i);

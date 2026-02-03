@@ -8,6 +8,11 @@ import gnu.trove.set.hash.THashSet;
 
 public class RequestOwnGuildsEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         THashSet<Guild> guilds = new THashSet<Guild>();
 

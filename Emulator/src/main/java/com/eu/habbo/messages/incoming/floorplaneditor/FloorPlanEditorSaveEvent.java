@@ -12,11 +12,19 @@ import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
 import gnu.trove.set.hash.THashSet;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.StringJoiner;
 
 public class FloorPlanEditorSaveEvent extends MessageHandler {
     public static int MAXIMUM_FLOORPLAN_WIDTH_LENGTH = 64;
     public static int MAXIMUM_FLOORPLAN_SIZE = 64 * 64;
+
+    @Override
+    public int getRatelimit() {
+        return 500;
+    }
 
     @Override
     public void handle() throws Exception {
@@ -56,7 +64,7 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
                 }
 
                 if (mapRows.length > MAXIMUM_FLOORPLAN_WIDTH_LENGTH) errors.add("${notification.floorplan_editor.error.message.too_large_height}");
-                else if (Arrays.stream(mapRows).anyMatch(l -> l.length() > MAXIMUM_FLOORPLAN_WIDTH_LENGTH || l.length() == 0)) errors.add("${notification.floorplan_editor.error.message.too_large_width}");
+                else if (Arrays.stream(mapRows).anyMatch(l -> l.length() > MAXIMUM_FLOORPLAN_WIDTH_LENGTH || l.isEmpty())) errors.add("${notification.floorplan_editor.error.message.too_large_width}");
 
                 if (errors.length() > 0) {
                     this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FLOORPLAN_EDITOR_ERROR.key, errors.toString()));

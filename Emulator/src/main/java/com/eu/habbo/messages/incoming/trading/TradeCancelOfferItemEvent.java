@@ -9,6 +9,8 @@ public class TradeCancelOfferItemEvent extends MessageHandler {
     public void handle() throws Exception {
         int itemId = this.packet.readInt();
 
+        if (this.client.getHabbo().getHabboInfo().getCurrentRoom() == null) return;
+
         RoomTrade trade = this.client.getHabbo().getHabboInfo().getCurrentRoom().getActiveTradeForHabbo(this.client.getHabbo());
         if (trade != null) {
             HabboItem item = trade.getRoomTradeUserForHabbo(this.client.getHabbo()).getItem(itemId);

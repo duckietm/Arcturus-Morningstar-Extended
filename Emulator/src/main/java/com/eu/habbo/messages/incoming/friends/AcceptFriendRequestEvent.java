@@ -20,8 +20,14 @@ public class AcceptFriendRequestEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(AcceptFriendRequestEvent.class);
 
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+
+    @Override
     public void handle() throws Exception {
-        int count = this.packet.readInt();
+        int count = Math.min(this.packet.readInt(), 100);
         int userId;
 
         for (int i = 0; i < count; i++) {

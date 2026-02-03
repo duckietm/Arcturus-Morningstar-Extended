@@ -8,6 +8,11 @@ import com.eu.habbo.messages.outgoing.guilds.GuildFurniWidgetComposer;
 
 public class RequestGuildFurniWidgetEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int itemId = this.packet.readInt();
         int guildId = this.packet.readInt();

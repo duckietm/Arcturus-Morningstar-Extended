@@ -16,6 +16,11 @@ import java.sql.SQLException;
 import java.util.Set;
 
 public class GuildForumListEvent extends MessageHandler {
+    @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GuildForumListEvent.class);
 
     @Override
