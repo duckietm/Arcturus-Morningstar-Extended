@@ -9,5 +9,5 @@ public class GameServerAttributes {
     public static final AttributeKey<GameClient> CLIENT = AttributeKey.valueOf("GameClient");
     public static final AttributeKey<HabboRC4> CRYPTO_CLIENT = AttributeKey.valueOf("CryptoClient");
     public static final AttributeKey<HabboRC4> CRYPTO_SERVER = AttributeKey.valueOf("CryptoServer");
-
+    public static final AttributeKey<String> WS_IP = AttributeKey.valueOf("WebSocketIP");
 }

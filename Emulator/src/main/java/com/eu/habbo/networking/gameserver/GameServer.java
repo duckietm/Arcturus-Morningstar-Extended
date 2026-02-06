@@ -8,13 +8,24 @@ import com.eu.habbo.networking.gameserver.decoders.*;
 import com.eu.habbo.networking.gameserver.encoders.GameServerMessageEncoder;
 import com.eu.habbo.networking.gameserver.encoders.GameServerMessageLogger;
 import com.eu.habbo.networking.gameserver.handlers.IdleTimeoutHandler;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GameServer extends Server {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameServer.class);
+
     private final PacketManager packetManager;
     private final GameClientManager gameClientManager;
+    private ServerBootstrap webSocketBootstrap;
 
     public GameServer(String host, int port) throws Exception {
         super("Game Server", host, port, Emulator.getConfig().getInt("io.bossgroup.threads"), Emulator.getConfig().getInt("io.workergroup.threads"));
@@ -51,6 +62,41 @@ public class GameServer extends Server {
                 }
             }
         });
+
+        initializeWebSocketServer();
+    }
+
+    private void initializeWebSocketServer() {
+        if (!Emulator.getConfig().getBoolean("ws.enabled", false)) {
+            return;
+        }
+
+        String wsHost = Emulator.getConfig().getValue("ws.host", "0.0.0.0");
+        int wsPort = Emulator.getConfig().getInt("ws.port", 2096);
+
+        WebSocketChannelInitializer wsInitializer = new WebSocketChannelInitializer();
+
+        this.webSocketBootstrap = new ServerBootstrap();
+        this.webSocketBootstrap.group(this.getBossGroup(), this.getWorkerGroup());
+        this.webSocketBootstrap.channel(NioServerSocketChannel.class);
+        this.webSocketBootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+        this.webSocketBootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
+        this.webSocketBootstrap.childOption(ChannelOption.SO_REUSEADDR, true);
+        this.webSocketBootstrap.childOption(ChannelOption.SO_RCVBUF, 4096);
+        this.webSocketBootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(4096));
+        this.webSocketBootstrap.childOption(ChannelOption.ALLOCATOR, new UnpooledByteBufAllocator(false));
+        this.webSocketBootstrap.childHandler(wsInitializer);
+
+        ChannelFuture wsFuture = this.webSocketBootstrap.bind(wsHost, wsPort);
+
+        while (!wsFuture.isDone()) {
+        }
+
+        if (!wsFuture.isSuccess()) {
+            LOGGER.error("Failed to start WebSocket server on {}:{}", wsHost, wsPort);
+        } else {
+            LOGGER.info("WebSocket server started on {}:{} (SSL: {})", wsHost, wsPort, wsInitializer.isSslEnabled());
+        }
     }
 
     public PacketManager getPacketManager() {

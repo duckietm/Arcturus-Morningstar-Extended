@@ -14,6 +14,7 @@ import com.eu.habbo.messages.outgoing.rooms.FloodCounterComposer;
 import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.messages.outgoing.users.*;
+import com.eu.habbo.networking.gameserver.GameServerAttributes;
 import com.eu.habbo.plugin.events.users.UserCreditsEvent;
 import com.eu.habbo.plugin.events.users.UserDisconnectEvent;
 import com.eu.habbo.plugin.events.users.UserGetIPAddressEvent;
@@ -118,15 +119,20 @@ public class Habbo implements Runnable {
 
     public boolean connect() {
         String ip = "";
-        String ProxyIP = "";
+        String proxyInfo = "";
 
-        if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
+        String wsIp = this.client.getChannel().attr(GameServerAttributes.WS_IP).get();
+        if (wsIp != null && !wsIp.isEmpty()) {
+            ip = wsIp;
+            SocketAddress address = this.client.getChannel().remoteAddress();
+            proxyInfo = ((InetSocketAddress) address).getAddress().getHostAddress();
+        } else if (!Emulator.getConfig().getBoolean("networking.tcp.proxy") && this.client.getChannel().remoteAddress() != null) {
             SocketAddress address = this.client.getChannel().remoteAddress();
             ip = ((InetSocketAddress) address).getAddress().getHostAddress();
-            ProxyIP = "- no proxy server used";
+            proxyInfo = "- no proxy server used";
         } else {
             SocketAddress address = this.client.getChannel().remoteAddress();
-            ProxyIP = ((InetSocketAddress) address).getAddress().getHostAddress();
+            proxyInfo = ((InetSocketAddress) address).getAddress().getHostAddress();
         }
 
         if (Emulator.getPluginManager().isRegistered(UserGetIPAddressEvent.class, true)) {
@@ -170,7 +176,7 @@ public class Habbo implements Runnable {
         this.messenger.connectionChanged(this, true, false);
 
         Emulator.getGameEnvironment().getRoomManager().loadRoomsForHabbo(this);
-        LOGGER.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), ProxyIP);
+        LOGGER.info("{} logged in from IP {} using proxyserver {}", this.habboInfo.getUsername(), this.habboInfo.getIpLogin(), proxyInfo);
         LOGGER.info("{} client MachineId = {}", this.habboInfo.getUsername(), this.client.getMachineId());
         return true;
     }
