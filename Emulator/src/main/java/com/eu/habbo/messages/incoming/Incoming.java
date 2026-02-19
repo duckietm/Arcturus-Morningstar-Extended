@@ -407,4 +407,5 @@ public class Incoming {
 
 	// CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
+    public static final int RequestInventoryPetDelete = 10030;
 }

@@ -368,6 +368,7 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestInventoryItemsEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.HotelViewInventoryEvent, RequestInventoryItemsEvent.class);
         this.registerHandler(Incoming.RequestInventoryPetsEvent, RequestInventoryPetsEvent.class);
+        this.registerHandler(Incoming.RequestInventoryPetDelete, RequestInventoryPetDelete.class);
     }
 
     void registerRooms() throws Exception {
