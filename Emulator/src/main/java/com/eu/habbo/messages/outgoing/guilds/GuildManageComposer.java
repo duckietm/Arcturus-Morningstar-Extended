@@ -5,6 +5,9 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class GuildManageComposer extends MessageComposer {
     private final Guild guild;
 
@@ -32,28 +35,30 @@ public class GuildManageComposer extends MessageComposer {
         this.response.appendString("");
         this.response.appendInt(5);
         String badge = this.guild.getBadge();
-        badge = badge.replace("b", "");
-        String[] data = badge.split("s");
-        int req = 5 - data.length;
-        int i = 0;
+        Matcher matcher = Pattern.compile("[bst][0-9]{4,6}").matcher(badge);
+        int partsWritten = 0;
 
-        for (String s : data) {
-            this.response.appendInt((s.length() >= 6 ? Integer.parseInt(s.substring(0, 3)) : Integer.parseInt(s.substring(0, 2))));
-            this.response.appendInt((s.length() >= 6 ? Integer.parseInt(s.substring(3, 5)) : Integer.parseInt(s.substring(2, 4))));
+        while (matcher.find() && partsWritten < 5) {
+            String partCode = matcher.group();
+            char type = partCode.charAt(0);
+            boolean shortMethod = (partCode.length() == 6);
 
-            if (s.length() < 5)
-                this.response.appendInt(0);
-            else if (s.length() >= 6)
-                this.response.appendInt(Integer.parseInt(s.substring(5, 6)));
-            else
-                this.response.appendInt(Integer.parseInt(s.substring(4, 5)));
+            int parsedPartId = Integer.parseInt(partCode.substring(1, shortMethod ? 3 : 4));
+            int partId = ((type == 't') ? (parsedPartId + 100) : parsedPartId);
+            int color = Integer.parseInt(partCode.substring(shortMethod ? 3 : 4, shortMethod ? 5 : 6));
+            int position = (partCode.length() < 6) ? 0 : Integer.parseInt(partCode.substring(shortMethod ? 5 : 6, shortMethod ? 6 : 7));
+
+            this.response.appendInt(partId);
+            this.response.appendInt(color);
+            this.response.appendInt(position);
+            partsWritten++;
         }
 
-        while (i != req) {
+        while (partsWritten < 5) {
             this.response.appendInt(0);
             this.response.appendInt(0);
             this.response.appendInt(0);
-            i++;
+            partsWritten++;
         }
         this.response.appendString(this.guild.getBadge());
         this.response.appendInt(this.guild.getMemberCount());
