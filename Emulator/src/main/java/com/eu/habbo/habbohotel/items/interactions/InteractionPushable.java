@@ -159,4 +159,16 @@ public abstract class InteractionPushable extends InteractionDefault {
 
     public abstract boolean canStillMove(Room room, RoomTile from, RoomTile to, RoomUserRotation direction, RoomUnit kicker, int nextRoll, int currentStep, int totalSteps);
 
+    public boolean isMoving() {
+        return this.currentThread != null && !this.currentThread.dead;
+    }
+
+    protected void initiateKick(Room room, RoomUnit kicker, int velocity, RoomUserRotation direction) {
+        if (velocity <= 0) return;
+        if (this.currentThread != null)
+            this.currentThread.dead = true;
+        this.currentThread = new KickBallAction(this, room, kicker, direction, velocity, false);
+        Emulator.getThreading().run(this.currentThread, 0);
+    }
+
 }

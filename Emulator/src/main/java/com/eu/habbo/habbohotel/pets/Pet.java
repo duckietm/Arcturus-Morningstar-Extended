@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.pets;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.games.football.InteractionFootball;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTree;
 import com.eu.habbo.habbohotel.rooms.*;
@@ -25,10 +26,12 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Pet implements ISerialize, Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Pet.class);
 
+    public static final AtomicInteger GLOBAL_FOOTBALL_PET_COUNT = new AtomicInteger(0);
     public int levelThirst;
     public int levelHunger;
     public boolean needsUpdate = false;
@@ -56,7 +59,8 @@ public class Pet implements ISerialize, Runnable {
     private int stayStartedAt = 0;
     private int idleCommandTicks = 0;
     private int freeCommandTicks = -1;
-    
+    private InteractionFootball cachedBall = null;
+
     // Command cooldown tracking to prevent spam
     private int lastCommandId = -1;
     private long lastCommandTime = 0;
@@ -321,6 +325,10 @@ public class Pet implements ISerialize, Runnable {
                     this.task = null;
                     this.getRoomUnit().setCanWalk(true);
                 }
+
+                if (this.task == PetTasks.PLAY_FOOTBALL) {
+                    this.chaseBall();
+                }
             } else {
                 int timeout = Emulator.getRandom().nextInt(10) * 2;
                 this.roomUnit.setWalkTimeOut(timeout < 20 ? 20 + time : timeout + time);
@@ -389,9 +397,64 @@ public class Pet implements ISerialize, Runnable {
             this.getRoomUnit().setCanWalk(true);
         }
 
+        if (this.task == PetTasks.PLAY_FOOTBALL) {
+            this.setTask(null);
+            this.getRoomUnit().setCanWalk(true);
+        }
+
         command.handle(this, habbo, data);
 
 
+    }
+
+    private void chaseBall() {
+        RoomTile petTile = this.roomUnit.getCurrentLocation();
+        if (petTile == null) {
+            this.setTask(PetTasks.FREE);
+            return;
+        }
+
+        if (this.cachedBall != null && this.cachedBall.getRoomId() != this.room.getId()) {
+            this.cachedBall = null;
+            this.setTask(PetTasks.FREE);
+            return;
+        }
+
+        if (this.cachedBall != null && this.cachedBall.isMoving()) {
+            return;
+        }
+
+        if (this.cachedBall == null) {
+            InteractionFootball nearest = null;
+            double nearestDistance = Double.MAX_VALUE;
+            for (HabboItem item : this.room.getFloorItems()) {
+                if (item instanceof InteractionFootball ball) {
+                    RoomTile ballTile = this.room.getLayout().getTile(ball.getX(), ball.getY());
+                    if (ballTile != null) {
+                        double dist = petTile.distance(ballTile);
+                        if (dist < nearestDistance) {
+                            nearestDistance = dist;
+                            nearest = ball;
+                        }
+                    }
+                }
+            }
+            if (nearest == null) {
+                // No ball in room — stop playing
+                this.setTask(PetTasks.FREE);
+                return;
+            }
+            this.cachedBall = nearest;
+        }
+
+        RoomTile ballTile = this.room.getLayout().getTile(this.cachedBall.getX(), this.cachedBall.getY());
+        if (RoomLayout.tilesAdjecent(petTile, ballTile)) {
+            // Adjacent — kick the ball
+            this.cachedBall.petKick(this.room, this.roomUnit);
+        } else {
+            // Still walking toward the ball
+            this.roomUnit.setGoalLocation(ballTile);
+        }
     }
 
     public boolean canWalk() {
@@ -506,7 +569,7 @@ public class Pet implements ISerialize, Runnable {
         } else {
             this.roomUnit.setStatus(RoomUnitStatus.LAY, this.room.getStackHeight(this.roomUnit.getX(), this.roomUnit.getY(), false) + "");
             this.say(this.petData.randomVocal(PetVocalsType.SLEEPING));
-            this.task = PetTasks.DOWN;
+            this.setTask(PetTasks.DOWN);
         }
     }
 
@@ -706,7 +769,7 @@ public class Pet implements ISerialize, Runnable {
 
 
     public void freeCommand() {
-        this.task = null;
+        this.setTask(null);
         this.roomUnit.setGoalLocation(this.getRoomUnit().getCurrentLocation());
         this.roomUnit.clearStatus();
         this.roomUnit.setCanWalk(true);
@@ -840,6 +903,12 @@ public class Pet implements ISerialize, Runnable {
     }
 
     public void setTask(PetTasks newTask) {
+        if (this.task == PetTasks.PLAY_FOOTBALL && newTask != PetTasks.PLAY_FOOTBALL) {
+            GLOBAL_FOOTBALL_PET_COUNT.decrementAndGet();
+            this.cachedBall = null; // release cached ball reference
+        } else if (this.task != PetTasks.PLAY_FOOTBALL && newTask == PetTasks.PLAY_FOOTBALL) {
+            GLOBAL_FOOTBALL_PET_COUNT.incrementAndGet();
+        }
         this.task = newTask;
     }
 

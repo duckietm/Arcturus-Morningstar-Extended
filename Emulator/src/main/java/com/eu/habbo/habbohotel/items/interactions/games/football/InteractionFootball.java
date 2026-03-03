@@ -7,6 +7,8 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionPushable;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTeamItem;
 import com.eu.habbo.habbohotel.items.interactions.games.football.goals.InteractionFootballGoal;
+import com.eu.habbo.habbohotel.pets.Pet;
+import com.eu.habbo.habbohotel.pets.PetTasks;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
@@ -15,9 +17,12 @@ import com.eu.habbo.util.pathfinding.Rotation;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 
 
 public class InteractionFootball extends InteractionPushable {
+
+    public static final int MAX_FOOTBALL_PETS = 5;
 
     public InteractionFootball(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -194,6 +199,28 @@ public class InteractionFootball extends InteractionPushable {
 
     //Events
 
+    private void triggerPetFollowBall(Room room, RoomTile ballTile) {
+        if (ballTile == null) return;
+
+        Collection<Pet> pets = room.getUnitManager().getPets();
+        if (pets.isEmpty()) return;
+
+        for (Pet pet : pets) {
+            if (pet.getRoomUnit() == null) continue;
+            if (pet.getTask() == PetTasks.PLAY_FOOTBALL) {
+                pet.getRoomUnit().setGoalLocation(ballTile);
+            }
+        }
+    }
+
+    public void petKick(Room room, RoomUnit petUnit) {
+        if (isMoving()) return;
+        int velocity = this.getWalkOnVelocity(petUnit, room);
+        RoomUserRotation direction = this.getWalkOnDirection(petUnit, room);
+        this.onKick(room, petUnit, velocity, direction);
+        this.initiateKick(room, petUnit, velocity, direction);
+    }
+
     @Override
     public void onDrag(Room room, RoomUnit roomUnit, int velocity, RoomUserRotation direction) {
 
@@ -201,7 +228,7 @@ public class InteractionFootball extends InteractionPushable {
 
     @Override
     public void onKick(Room room, RoomUnit roomUnit, int velocity, RoomUserRotation direction) {
-
+        triggerPetFollowBall(room, room.getLayout().getTile(this.getX(), this.getY()));
     }
 
     @Override
@@ -243,6 +270,8 @@ public class InteractionFootball extends InteractionPushable {
     public void onStop(Room room, RoomUnit kicker, int currentStep, int totalSteps) {
         this.setExtradata("0");
         room.sendComposer(new ItemStateComposer(this).compose());
+
+        triggerPetFollowBall(room, room.getLayout().getTile(this.getX(), this.getY()));
     }
 
     @Override

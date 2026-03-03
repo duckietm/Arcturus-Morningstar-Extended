@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.pets.actions;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionPushable;
+import com.eu.habbo.habbohotel.items.interactions.games.football.InteractionFootball;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetAction;
 import com.eu.habbo.habbohotel.pets.PetTasks;
@@ -9,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 
 public class ActionPlayFootball extends PetAction {
     public ActionPlayFootball() {
@@ -22,12 +24,20 @@ public class ActionPlayFootball extends PetAction {
         if (room == null || room.getLayout() == null) {
             return false;
         }
-        
+
         if (pet.getRoomUnit() == null) {
             return false;
         }
 
-        // Find the nearest ball to the pet
+        if (pet.getTask() != PetTasks.PLAY_FOOTBALL
+                && Pet.GLOBAL_FOOTBALL_PET_COUNT.get() >= InteractionFootball.MAX_FOOTBALL_PETS) {
+            if (habbo != null && habbo.getClient() != null) {
+                habbo.getClient().sendResponse(new GenericAlertComposer(
+                        "Sorry, you already have 5 pets playing football in the rooms"));
+            }
+            return false;
+        }
+
         HabboItem nearestBall = null;
         double nearestDistance = Double.MAX_VALUE;
         RoomTile petTile = pet.getRoomUnit().getCurrentLocation();
@@ -50,12 +60,10 @@ public class ActionPlayFootball extends PetAction {
         }
 
         if (nearestBall == null) {
-            // No ball in room - disobey
             pet.say(pet.getPetData().randomVocal(PetVocalsType.DISOBEY));
             return false;
         }
 
-        // Set task and pathfind to the ball
         pet.setTask(PetTasks.PLAY_FOOTBALL);
         pet.getRoomUnit().setCanWalk(true);
         pet.getRoomUnit().setGoalLocation(room.getLayout().getTile(nearestBall.getX(), nearestBall.getY()));

@@ -80,7 +80,6 @@ public class PetCommand implements Comparable<PetCommand> {
 
         if (Emulator.getRandom().nextInt(100) >= obeyChance) {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.DISOBEY));
-            pet.recordCommandExecution(this.id);
             return;
         }
 
