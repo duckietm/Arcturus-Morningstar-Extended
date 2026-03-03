@@ -52,14 +52,14 @@ public class RoomChatMessageBubbles {
     public static final RoomChatMessageBubbles UNKNOWN_43 = new RoomChatMessageBubbles(43, "UNKNOWN_43", "", true, false);
     public static final RoomChatMessageBubbles UNKNOWN_44 = new RoomChatMessageBubbles(44, "UNKNOWN_44", "", true, false);
     public static final RoomChatMessageBubbles UNKNOWN_45 = new RoomChatMessageBubbles(45, "UNKNOWN_45", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_46 = new RoomChatMessageBubbles(45, "UNKNOWN_46", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_47 = new RoomChatMessageBubbles(45, "UNKNOWN_47", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_48 = new RoomChatMessageBubbles(45, "UNKNOWN_48", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_49 = new RoomChatMessageBubbles(45, "UNKNOWN_49", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_50 = new RoomChatMessageBubbles(45, "UNKNOWN_50", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_51 = new RoomChatMessageBubbles(45, "UNKNOWN_51", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_52 = new RoomChatMessageBubbles(45, "UNKNOWN_52", "", true, false);
-	public static final RoomChatMessageBubbles UNKNOWN_53 = new RoomChatMessageBubbles(45, "UNKNOWN_53", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_46 = new RoomChatMessageBubbles(46, "UNKNOWN_46", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_47 = new RoomChatMessageBubbles(47, "UNKNOWN_47", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_48 = new RoomChatMessageBubbles(48, "UNKNOWN_48", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_49 = new RoomChatMessageBubbles(49, "UNKNOWN_49", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_50 = new RoomChatMessageBubbles(50, "UNKNOWN_50", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_51 = new RoomChatMessageBubbles(51, "UNKNOWN_51", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_52 = new RoomChatMessageBubbles(52, "UNKNOWN_52", "", true, false);
+	public static final RoomChatMessageBubbles UNKNOWN_53 = new RoomChatMessageBubbles(53, "UNKNOWN_53", "", true, false);
 
 
     static {
