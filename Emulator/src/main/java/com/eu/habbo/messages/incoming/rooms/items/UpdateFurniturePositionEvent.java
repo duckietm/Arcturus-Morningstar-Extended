@@ -5,6 +5,9 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
+import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
+import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
 
 public class UpdateFurniturePositionEvent extends MessageHandler {
     @Override
@@ -24,11 +27,17 @@ public class UpdateFurniturePositionEvent extends MessageHandler {
         RoomTile tile = room.getLayout().getTile((short) x, (short) y);
         if (tile == null) return;
 
-        FurnitureMovementError result =
-                room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), true, true);
-
-        if (result != FurnitureMovementError.NONE) {
+        FurnitureMovementError error = room.canPlaceFurnitureAt(item, this.client.getHabbo(), tile, rotation);
+        if (error != FurnitureMovementError.NONE) {
+            this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, error.errorCode));
+            this.client.sendResponse(new FloorItemUpdateComposer(item));
             return;
+        }
+
+        error = room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), true, true);
+        if (error != FurnitureMovementError.NONE) {
+            this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, error.errorCode));
+            this.client.sendResponse(new FloorItemUpdateComposer(item));
         }
     }
 }
