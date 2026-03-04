@@ -27,7 +27,8 @@ public enum WiredEffectType {
     BOT_FOLLOW_AVATAR(25),
     BOT_CLOTHES(26),
     BOT_TALK_TO_AVATAR(27),
-    FURNI_AREA_SELECTOR(28);
+    FURNI_AREA_SELECTOR(28),
+    FURNI_NEIGHBORHOOD_SELECTOR(29);
 
     public final int code;
 
