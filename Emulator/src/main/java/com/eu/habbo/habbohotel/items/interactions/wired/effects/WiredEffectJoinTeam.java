@@ -40,9 +40,11 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-        if (habbo != null) {
+        for (RoomUnit unit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(unit);
+            if (habbo == null) continue;
+
             WiredGame game = (WiredGame) room.getGameOrCreate(WiredGame.class);
 
             if (habbo.getHabboInfo().getGamePlayer() != null && habbo.getHabboInfo().getCurrentGame() != null && (habbo.getHabboInfo().getCurrentGame() != WiredGame.class || (habbo.getHabboInfo().getCurrentGame() == WiredGame.class && habbo.getHabboInfo().getGamePlayer().getTeamColor() != this.teamColor))) {

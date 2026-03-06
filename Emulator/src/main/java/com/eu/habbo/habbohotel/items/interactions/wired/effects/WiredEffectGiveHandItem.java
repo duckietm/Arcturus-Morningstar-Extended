@@ -23,10 +23,12 @@ public class WiredEffectGiveHandItem extends WiredEffectWhisper {
             int itemId = Integer.parseInt(this.message);
 
             Room room = ctx.room();
-            Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-            if (habbo != null) {
-                room.giveHandItem(habbo, itemId);
+            for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : ctx.targets().users()) {
+                Habbo habbo = room.getHabbo(unit);
+                if (habbo != null) {
+                    room.giveHandItem(habbo, itemId);
+                }
             }
         } catch (Exception e) {
         }

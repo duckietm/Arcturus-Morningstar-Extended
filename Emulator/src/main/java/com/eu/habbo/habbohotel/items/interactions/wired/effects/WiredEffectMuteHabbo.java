@@ -64,16 +64,13 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
 
     @Override
     public void execute(WiredContext ctx) {
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null)
-            return;
-
         Room room = ctx.room();
-        Habbo habbo = room.getHabbo(roomUnit);
 
-        if (habbo != null) {
-            if (room.hasRights(habbo))
-                return;
+        for (RoomUnit roomUnit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo == null) continue;
+
+            if (room.hasRights(habbo)) continue;
 
             room.muteHabbo(habbo, 60);
 

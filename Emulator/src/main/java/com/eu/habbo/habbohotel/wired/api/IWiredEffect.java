@@ -72,7 +72,11 @@ public interface IWiredEffect {
     default long getCooldown() {
         return 0L;
     }
-    
+
+    default boolean isSelector() {
+        return false;
+    }
+
     /**
      * Simulate this effect's execution and record intended state changes.
      * <p>

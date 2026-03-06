@@ -46,13 +46,15 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-        if (habbo != null && habbo.getHabboInfo().getCurrentGame() != null) {
+        for (RoomUnit unit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(unit);
+            if (habbo == null || habbo.getHabboInfo().getCurrentGame() == null) continue;
+
             Game game = room.getGame(habbo.getHabboInfo().getCurrentGame());
 
             if (game == null)
-                return;
+                continue;
 
             int gameStartTime = game.getStartTime();
 
@@ -60,6 +62,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
             TObjectIntIterator<Map.Entry<Integer, Integer>> iterator = dataClone.iterator();
 
+            boolean alreadyCounted = false;
             for (int i = dataClone.size(); i-- > 0; ) {
                 iterator.advance();
 
@@ -72,7 +75,8 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
                             habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
 
-                            return;
+                            alreadyCounted = true;
+                            break;
                         }
                     } else {
                         iterator.remove();
@@ -80,16 +84,17 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
                 }
             }
 
-            try {
-                this.data.put(new AbstractMap.SimpleEntry<>(gameStartTime, habbo.getHabboInfo().getId()), 1);
-            }
-            catch(IllegalArgumentException e) {
+            if (!alreadyCounted) {
+                try {
+                    this.data.put(new AbstractMap.SimpleEntry<>(gameStartTime, habbo.getHabboInfo().getId()), 1);
+                }
+                catch(IllegalArgumentException e) {
 
-            }
+                }
 
-
-            if (habbo.getHabboInfo().getGamePlayer() != null) {
-                habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
+                if (habbo.getHabboInfo().getGamePlayer() != null) {
+                    habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
+                }
             }
         }
     }

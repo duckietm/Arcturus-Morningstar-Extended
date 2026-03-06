@@ -21,9 +21,11 @@ public class WiredEffectAlert extends WiredEffectWhisper {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-        if (habbo != null) {
+        for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(unit);
+            if (habbo == null) continue;
+
             habbo.alert(this.message
                     .replace("%online%", Emulator.getGameEnvironment().getHabboManager().getOnlineCount() + "")
                     .replace("%username%", habbo.getHabboInfo().getUsername())

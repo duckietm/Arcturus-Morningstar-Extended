@@ -111,12 +111,15 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null) return;
 
-        Habbo habbo = room.getHabbo(roomUnit);
+        List<Bot> bots = room.getBots(this.botName);
+        if (bots.size() != 1) return;
+        Bot bot = bots.get(0);
 
-        if (habbo != null) {
+        for (RoomUnit roomUnit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo == null) continue;
+
             String m = this.message;
             m = m.replace(Emulator.getTexts().getValue("wired.variable.username", "%username%"), habbo.getHabboInfo().getUsername())
                     .replace(Emulator.getTexts().getValue("wired.variable.credits", "%credits%"), habbo.getHabboInfo().getCredits() + "")
@@ -128,15 +131,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
                     .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), room.getName())
                     .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), room.getUserCount() + "");
 
-            List<Bot> bots = room.getBots(this.botName);
-
-            if (bots.size() != 1) {
-                return;
-            }
-
-            Bot bot = bots.get(0);
-
-            if(!WiredManager.triggerUserSays(room, bot.getRoomUnit(), m)) {
+            if (!WiredManager.triggerUserSays(room, bot.getRoomUnit(), m)) {
                 if (this.mode == 1) {
                     bot.whisper(m, habbo);
                 } else {
@@ -192,7 +187,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return false;
     }
 
     static class JsonData {

@@ -52,13 +52,12 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null) return;
 
-        Habbo habbo = room.getHabbo(roomUnit);
-
-        if (habbo != null) {
-            WiredManager.getReward(habbo, this);
+        for (RoomUnit roomUnit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo != null) {
+                WiredManager.getReward(habbo, this);
+            }
         }
     }
 

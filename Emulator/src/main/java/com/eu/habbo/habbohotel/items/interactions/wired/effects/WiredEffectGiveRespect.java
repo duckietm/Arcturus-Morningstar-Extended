@@ -88,13 +88,14 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-        if (habbo == null)
-            return;
+        for (RoomUnit unit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(unit);
+            if (habbo == null) continue;
 
-        habbo.getHabboStats().respectPointsReceived += this.respects;
-        AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectEarned"), this.respects);
+            habbo.getHabboStats().respectPointsReceived += this.respects;
+            AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectEarned"), this.respects);
+        }
     }
 
     @Override

@@ -348,24 +348,48 @@ public final class WiredEngine {
             return;
         }
 
-        // Determine which effects to execute
+        // Separate selectors from regular effects.
+        // Selectors must always run first so ctx.targets() is populated before
+        // regular effects consume it.
+        List<IWiredEffect> selectors = new ArrayList<>();
+        List<IWiredEffect> regulars = new ArrayList<>();
+        for (IWiredEffect e : effects) {
+            if (e.isSelector()) selectors.add(e);
+            else regulars.add(e);
+        }
+
+        // Determine which (regular) effects to execute
         List<IWiredEffect> toExecute;
-        
+
         if (stack.useRandom()) {
-            // Random mode: pick one random effect
-            int randomIndex = new Random().nextInt(effects.size());
-            toExecute = Collections.singletonList(effects.get(randomIndex));
-            debug(ctx.room(), "Random mode: selected effect {}/{}", randomIndex + 1, effects.size());
+            // Random mode: pick one random regular effect
+            if (regulars.isEmpty()) {
+                toExecute = new ArrayList<>();
+            } else {
+                int randomIndex = new Random().nextInt(regulars.size());
+                toExecute = Collections.singletonList(regulars.get(randomIndex));
+                debug(ctx.room(), "Random mode: selected effect {}/{}", randomIndex + 1, regulars.size());
+            }
         } else if (stack.useUnseen()) {
-            // Unseen mode: round-robin selection
-            int index = getNextUnseenIndex(stack, effects.size());
-            toExecute = Collections.singletonList(effects.get(index));
-            debug(ctx.room(), "Unseen mode: selected effect {}/{}", index + 1, effects.size());
+            // Unseen mode: round-robin among regular effects
+            if (regulars.isEmpty()) {
+                toExecute = new ArrayList<>();
+            } else {
+                int index = getNextUnseenIndex(stack, regulars.size());
+                toExecute = Collections.singletonList(regulars.get(index));
+                debug(ctx.room(), "Unseen mode: selected effect {}/{}", index + 1, regulars.size());
+            }
         } else {
-            // Normal mode: execute all in random order
-            toExecute = new ArrayList<>(effects);
+            // Normal mode: regular effects in random order
+            toExecute = new ArrayList<>(regulars);
             Collections.shuffle(toExecute);
         }
+
+        // Selectors always run first (in their natural tile order), then regular effects
+        List<IWiredEffect> ordered = new ArrayList<>(selectors.size() + toExecute.size());
+        ordered.addAll(selectors);
+        ordered.addAll(toExecute);
+        toExecute = ordered;
 
         // Execute selected effects
         for (IWiredEffect effect : toExecute) {

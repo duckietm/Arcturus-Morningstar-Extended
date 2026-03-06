@@ -28,10 +28,11 @@ public class WiredEffectGiveEffect extends WiredEffectWhisper {
         }
 
         Room room = ctx.room();
-        RoomUnit roomUnit = ctx.actor().orElse(null);
 
-        if (effectId >= 0 && roomUnit != null) {
-            room.giveEffect(roomUnit, effectId, Integer.MAX_VALUE);
+        if (effectId >= 0) {
+            for (RoomUnit roomUnit : ctx.targets().users()) {
+                room.giveEffect(roomUnit, effectId, Integer.MAX_VALUE);
+            }
         }
     }
 }

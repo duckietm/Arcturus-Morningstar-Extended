@@ -42,17 +42,19 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        Habbo habbo = ctx.actor().map(room::getHabbo).orElse(null);
 
-        if (habbo != null) {
+        for (RoomUnit unit : ctx.targets().users()) {
+            Habbo habbo = room.getHabbo(unit);
+            if (habbo == null) continue;
+
             if (habbo.hasPermission(Permission.ACC_UNKICKABLE)) {
                 habbo.whisper(Emulator.getTexts().getValue("hotel.wired.kickexception.unkickable"));
-                return;
+                continue;
             }
 
             if (habbo.getHabboInfo().getId() == room.getOwnerId()) {
                 habbo.whisper(Emulator.getTexts().getValue("hotel.wired.kickexception.owner"));
-                return;
+                continue;
             }
 
             room.giveEffect(habbo, 4, 2);
