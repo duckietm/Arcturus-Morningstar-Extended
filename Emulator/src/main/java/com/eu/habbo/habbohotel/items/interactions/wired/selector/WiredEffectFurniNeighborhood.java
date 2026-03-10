@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.selector;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -12,6 +13,8 @@ import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectFurniNeighborhood.class);
 
     public static final WiredEffectType type = WiredEffectType.FURNI_NEIGHBORHOOD_SELECTOR;
 
@@ -58,16 +62,30 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         List<int[]> sourcePositions = resolveSourcePositions(ctx, room);
         if (sourcePositions.isEmpty()) return;
 
+        int totalRaw = 0;
+        int wiredSkipped = 0;
         Set<HabboItem> result = new LinkedHashSet<>();
         for (int[] src : sourcePositions) {
+            LOGGER.info("[FurniNeighborhood] Source: ({},{}), offsets: {}", src[0], src[1], tileOffsets.size());
             for (int[] offset : tileOffsets) {
                 int tx = src[0] + offset[0];
                 int ty = src[1] + offset[1];
                 for (HabboItem item : room.getItemsAt(tx, ty)) {
-                    if (item != null) result.add(item);
+                    if (item == null) continue;
+                    totalRaw++;
+                    if (item instanceof InteractionWired) {
+                        wiredSkipped++;
+                        LOGGER.info("[FurniNeighborhood]   SKIP wired item {} ({}) at ({},{})",
+                                item.getId(), item.getClass().getSimpleName(), tx, ty);
+                    } else {
+                        result.add(item);
+                        LOGGER.info("[FurniNeighborhood]   KEEP item {} ({}) at ({},{})",
+                                item.getId(), item.getClass().getSimpleName(), tx, ty);
+                    }
                 }
             }
         }
+        LOGGER.info("[FurniNeighborhood] Raw={}, wiredSkipped={}, kept={}", totalRaw, wiredSkipped, result.size());
 
         if (filterExisting) {
             result.retainAll(ctx.targets().items());
@@ -75,17 +93,29 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
 
         if (invert) {
             Set<HabboItem> all = new LinkedHashSet<>();
-            room.getFloorItems().forEach(all::add);
+            room.getFloorItems().forEach(item -> {
+                if (!(item instanceof InteractionWired)) all.add(item);
+            });
             all.removeAll(result);
             result = all;
         }
 
+        // Always set the selector result — even if empty.
+        // An empty result means no items matched the neighborhood, so downstream
+        // effects should target nothing rather than falling back to the original targets.
         ctx.targets().setItems(result);
+        LOGGER.info("[FurniNeighborhood] Set {} items as targets", result.size());
     }
 
     private List<int[]> resolveSourcePositions(WiredContext ctx, Room room) {
 
         if (isUserGroup(sourceType)) {
+            // Prefer the event tile for user-based sources because during walk-on/walk-off
+            // events the user's position (getX/getY) hasn't been updated yet (stale position).
+            // The event tile correctly represents where the triggering action occurred.
+            if (ctx.tile().isPresent()) {
+                return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
+            }
             List<int[]> positions = ctx.targets().users().stream()
                     .map(u -> new int[]{ u.getX(), u.getY() })
                     .collect(Collectors.toList());
@@ -149,6 +179,14 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         }
 
         this.setDelay(settings.getDelay());
+
+        LOGGER.info("[FurniNeighborhood] saveData: sourceType={}, filterExisting={}, invert={}, offsets={}, pickedFurniIds={}",
+                sourceType, filterExisting, invert, tileOffsets.size(), pickedFurniIds);
+        for (int[] o : tileOffsets) {
+            LOGGER.info("[FurniNeighborhood]   offset: ({}, {})", o[0], o[1]);
+        }
+        LOGGER.info("[FurniNeighborhood]   raw intParams (len={}): {}", params.length, java.util.Arrays.toString(params));
+
         return true;
     }
 
@@ -189,6 +227,11 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
 
     @Override
     public WiredEffectType getType() { return type; }
+
+    @Override
+    public boolean isSelector() {
+        return true;
+    }
 
     @Override
     public String getWiredData() {

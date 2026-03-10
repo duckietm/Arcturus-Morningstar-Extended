@@ -49,21 +49,38 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         if (room == null || room.getLayout() == null) return;
-        
-        THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items.keySet()) {
-            if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
-                items.add(item);
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        THashMap<HabboItem, WiredChangeDirectionSetting> effectiveItems;
+
+        if (useSelector) {
+            effectiveItems = new THashMap<>();
+            for (HabboItem item : ctx.targets().items()) {
+                if (item != null) {
+                    // Check if we already have settings for this item, otherwise create defaults
+                    WiredChangeDirectionSetting setting = this.items.get(item);
+                    if (setting == null) {
+                        setting = new WiredChangeDirectionSetting(item.getId(), item.getRotation(), this.startRotation);
+                    }
+                    effectiveItems.put(item, setting);
+                }
+            }
+        } else {
+            THashSet<HabboItem> toRemove = new THashSet<>();
+            for (HabboItem item : this.items.keySet()) {
+                if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
+                    toRemove.add(item);
+            }
+            for (HabboItem item : toRemove) {
+                this.items.remove(item);
+            }
+            effectiveItems = this.items;
         }
 
-        for (HabboItem item : items) {
-            this.items.remove(item);
-        }
+        if (effectiveItems.isEmpty()) return;
 
-        if (this.items.isEmpty()) return;
-
-        for (Map.Entry<HabboItem, WiredChangeDirectionSetting> entry : this.items.entrySet()) {
+        for (Map.Entry<HabboItem, WiredChangeDirectionSetting> entry : effectiveItems.entrySet()) {
             HabboItem item = entry.getKey();
             if (item == null || entry.getValue() == null) continue;
             
@@ -85,7 +102,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             }
         }
 
-        for (Map.Entry<HabboItem, WiredChangeDirectionSetting> entry : this.items.entrySet()) {
+        for (Map.Entry<HabboItem, WiredChangeDirectionSetting> entry : effectiveItems.entrySet()) {
             HabboItem item = entry.getKey();
             if (item == null || entry.getValue() == null) continue;
             

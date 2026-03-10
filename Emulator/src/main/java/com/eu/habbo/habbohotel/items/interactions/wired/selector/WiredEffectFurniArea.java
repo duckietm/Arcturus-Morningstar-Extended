@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.selector;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -42,7 +43,9 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         if (room == null || areaWidth <= 0 || areaHeight <= 0) return;
 
         List<HabboItem> furniInArea = getFurniInArea(room);
-        ctx.targets().setItems(furniInArea);
+        if (!furniInArea.isEmpty()) {
+            ctx.targets().setItems(furniInArea);
+        }
     }
 
     private List<HabboItem> getFurniInArea(Room room) {
@@ -54,7 +57,7 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         for (int x = rootX; x <= maxX; x++) {
             for (int y = rootY; y <= maxY; y++) {
                 for (HabboItem item : room.getItemsAt(x, y)) {
-                    if (item != null && !result.contains(item)) {
+                    if (item != null && !(item instanceof InteractionWired) && !result.contains(item)) {
                         result.add(item);
                     }
                 }
@@ -83,6 +86,11 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
     @Override
     public WiredEffectType getType() {
         return type;
+    }
+
+    @Override
+    public boolean isSelector() {
+        return true;
     }
 
     @Override

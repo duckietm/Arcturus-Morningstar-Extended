@@ -29,6 +29,8 @@ public final class WiredTargets {
     
     private final Set<RoomUnit> users = new LinkedHashSet<>();
     private final Set<HabboItem> items = new LinkedHashSet<>();
+    private boolean itemsModifiedBySelector = false;
+    private boolean usersModifiedBySelector = false;
 
     /**
      * Get all targeted users (read-only view).
@@ -60,6 +62,24 @@ public final class WiredTargets {
      */
     public boolean hasItems() {
         return !items.isEmpty();
+    }
+
+    /**
+     * Check if item targets were explicitly set by a selector.
+     * Effects should use this to determine whether to use selector targets
+     * instead of their own manually configured items.
+     * @return true if a selector has called setItems()
+     */
+    public boolean isItemsModifiedBySelector() {
+        return itemsModifiedBySelector;
+    }
+
+    /**
+     * Check if user targets were explicitly set by a selector.
+     * @return true if a selector has called setUsers()
+     */
+    public boolean isUsersModifiedBySelector() {
+        return usersModifiedBySelector;
     }
 
     /**
@@ -118,6 +138,7 @@ public final class WiredTargets {
      */
     public void setUsers(Iterable<RoomUnit> newUsers) {
         users.clear();
+        usersModifiedBySelector = true;
         if (newUsers != null) {
             for (RoomUnit u : newUsers) {
                 if (u != null) users.add(u);
@@ -131,6 +152,7 @@ public final class WiredTargets {
      */
     public void setItems(Iterable<HabboItem> newItems) {
         items.clear();
+        itemsModifiedBySelector = true;
         if (newItems != null) {
             for (HabboItem i : newItems) {
                 if (i != null) items.add(i);

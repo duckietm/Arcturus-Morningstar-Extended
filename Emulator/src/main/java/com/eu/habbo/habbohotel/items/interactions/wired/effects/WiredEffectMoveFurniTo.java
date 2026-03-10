@@ -74,26 +74,34 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         if (room == null || room.getLayout() == null) return;
-        
-        List<HabboItem> items = new ArrayList<>();
 
-        for (HabboItem item : this.items) {
-            if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
-                items.add(item);
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        List<HabboItem> effectiveItems;
+
+        if (useSelector) {
+            effectiveItems = new ArrayList<>(ctx.targets().items());
+        } else {
+            List<HabboItem> toRemove = new ArrayList<>();
+            List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
+            for (HabboItem item : itemsSnapshot) {
+                if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
+                    toRemove.add(item);
+            }
+            for (HabboItem item : toRemove) {
+                this.items.remove(item);
+            }
+            effectiveItems = new ArrayList<>(this.items);
         }
 
-        for (HabboItem item : items) {
-            this.items.remove(item);
-        }
-
-        if (this.items.isEmpty())
+        if (effectiveItems.isEmpty())
             return;
 
         Object[] stuff = ctx.legacySettings();
         if (stuff != null && stuff.length > 0) {
             for (Object object : stuff) {
                 if (object instanceof HabboItem) {
-                    HabboItem targetItem = this.items.get(Emulator.getRandom().nextInt(this.items.size()));
+                    HabboItem targetItem = effectiveItems.get(Emulator.getRandom().nextInt(effectiveItems.size()));
 
                     if (targetItem != null) {
                         int indexOffset = 0;
@@ -181,8 +189,9 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         THashSet<HabboItem> itemsToRemove = new THashSet<>();
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 itemsToRemove.add(item);
         }
@@ -191,19 +200,21 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
             this.items.remove(item);
         }
 
+        itemsSnapshot = new ArrayList<>(this.items);
         return WiredManager.getGson().toJson(new JsonData(
                 this.direction,
                 this.spacing,
                 this.getDelay(),
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
@@ -212,10 +223,11 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
             this.items.remove(item);
         }
 
+        itemsSnapshot = new ArrayList<>(this.items);
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items)
+        message.appendInt(itemsSnapshot.size());
+        for (HabboItem item : itemsSnapshot)
             message.appendInt(item.getId());
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());

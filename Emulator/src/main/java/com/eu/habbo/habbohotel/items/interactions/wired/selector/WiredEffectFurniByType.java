@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.items.interactions.wired.selector;
 
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -60,6 +61,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
         Set<HabboItem> result = new LinkedHashSet<>();
         room.getFloorItems().forEach(item -> {
+            if (item instanceof InteractionWired) return;
             String key = matchState
                 ? item.getBaseItem().getId() + ":" + item.getExtradata()
                 : String.valueOf(item.getBaseItem().getId());
@@ -74,10 +76,14 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
         if (invert) {
             Set<HabboItem> all = new LinkedHashSet<>();
-            room.getFloorItems().forEach(all::add);
+            room.getFloorItems().forEach(item -> {
+                if (!(item instanceof InteractionWired)) all.add(item);
+            });
             all.removeAll(result);
-            ctx.targets().setItems(all);
-        } else {
+            if (!all.isEmpty()) {
+                ctx.targets().setItems(all);
+            }
+        } else if (!result.isEmpty()) {
             ctx.targets().setItems(result);
         }
     }
@@ -159,6 +165,11 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public WiredEffectType getType() { return type; }
+
+    @Override
+    public boolean isSelector() {
+        return true;
+    }
 
     @Override
     public String getWiredData() {

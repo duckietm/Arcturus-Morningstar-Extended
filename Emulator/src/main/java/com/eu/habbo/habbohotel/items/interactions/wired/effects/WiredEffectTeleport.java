@@ -113,9 +113,10 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
@@ -123,10 +124,11 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
         for (HabboItem item : items) {
             this.items.remove(item);
         }
+        itemsSnapshot = new ArrayList<>(this.items);
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items)
+        message.appendInt(itemsSnapshot.size());
+        for (HabboItem item : itemsSnapshot)
             message.appendInt(item.getId());
 
         message.appendInt(this.getBaseItem().getSpriteId());
@@ -196,14 +198,22 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
             return;
         }
 
-        this.items.removeIf(item -> item == null || item.getRoomId() != this.getRoomId()
-                || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        List<HabboItem> effectiveItems;
 
-        if (this.items.isEmpty()) return;
+        if (ctx.targets().isItemsModifiedBySelector()) {
+            effectiveItems = new ArrayList<>(ctx.targets().items());
+        } else {
+            this.items.removeIf(item -> item == null || item.getRoomId() != this.getRoomId()
+                    || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
+            effectiveItems = new ArrayList<>(this.items);
+        }
+
+        if (effectiveItems.isEmpty()) return;
 
         for (RoomUnit roomUnit : ctx.targets().users()) {
-            int i = Emulator.getRandom().nextInt(this.items.size());
-            HabboItem item = this.items.get(i);
+            int i = Emulator.getRandom().nextInt(effectiveItems.size());
+            HabboItem item = effectiveItems.get(i);
 
             if (item == null) continue;
 
@@ -222,9 +232,10 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         return WiredManager.getGson().toJson(new JsonData(
             this.getDelay(),
-            this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+            itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
 

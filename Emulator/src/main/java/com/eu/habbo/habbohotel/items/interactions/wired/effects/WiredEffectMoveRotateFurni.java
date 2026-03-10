@@ -46,10 +46,20 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        // remove items that are no longer in the room
-        this.items.removeIf(item -> Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
 
-        for (HabboItem item : this.items) {
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        Iterable<HabboItem> effectiveItems;
+
+        if (useSelector) {
+            effectiveItems = ctx.targets().items();
+        } else {
+            // remove items that are no longer in the room
+            this.items.removeIf(item -> Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
+            effectiveItems = this.items;
+        }
+
+        for (HabboItem item : effectiveItems) {
             if(this.itemCooldowns.contains(item))
                 continue;
 

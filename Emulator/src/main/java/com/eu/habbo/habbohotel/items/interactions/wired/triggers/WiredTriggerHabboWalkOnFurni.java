@@ -36,9 +36,23 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
         HabboItem sourceItem = event.getSourceItem().orElse(null);
-        if (sourceItem != null) {
-            return this.items.contains(sourceItem);
+        if (sourceItem == null) {
+            return false;
         }
+
+        if (this.items.contains(sourceItem)) {
+            return true;
+        }
+
+        Room room = event.getRoom();
+        if (room != null) {
+            for (HabboItem item : room.getItemsAt(sourceItem.getX(), sourceItem.getY())) {
+                if (this.items.contains(item)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

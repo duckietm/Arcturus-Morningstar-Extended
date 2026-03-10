@@ -64,7 +64,9 @@ public class WiredEffectUsersArea extends InteractionWiredEffect {
             usersInArea.retainAll(ctx.targets().users());
         }
 
-        ctx.targets().setUsers(usersInArea);
+        if (!usersInArea.isEmpty()) {
+            ctx.targets().setUsers(usersInArea);
+        }
     }
 
     @Override

@@ -120,16 +120,27 @@ public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
         RoomUnit roomUnit = event.getActor().orElse(null);
         Room room = event.getRoom();
-        
+
         // Get the furniture item the bot walked onto
         HabboItem sourceItem = event.getSourceItem().orElse(null);
-        if (sourceItem == null || roomUnit == null) {
+        if (sourceItem == null || roomUnit == null || room == null) {
             return false;
         }
-        
-        // Check if this furniture is in our monitored list AND the actor is the correct bot
-        return this.items.contains(sourceItem) && 
-               room.getBots(this.botName).stream().anyMatch(bot -> bot.getRoomUnit() == roomUnit);
+
+        boolean isCorrectBot = room.getBots(this.botName).stream().anyMatch(bot -> bot.getRoomUnit() == roomUnit);
+        if (!isCorrectBot) {
+            return false;
+        }
+
+        if (this.items.contains(sourceItem)) {
+            return true;
+        }
+        for (HabboItem item : room.getItemsAt(sourceItem.getX(), sourceItem.getY())) {
+            if (this.items.contains(item)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Deprecated

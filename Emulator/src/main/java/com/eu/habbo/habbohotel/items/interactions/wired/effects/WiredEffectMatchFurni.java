@@ -55,7 +55,19 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         if (room.getLayout() == null)
             return;
 
+        // When a selector provides items, only apply matching to items in both the selector targets and settings
+        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        java.util.Set<Integer> selectorItemIds = null;
+        if (useSelector) {
+            selectorItemIds = new java.util.HashSet<>();
+            for (HabboItem si : ctx.targets().items()) {
+                selectorItemIds.add(si.getId());
+            }
+        }
+
         for (WiredMatchFurniSetting setting : this.settings) {
+            if (useSelector && !selectorItemIds.contains(setting.item_id)) continue;
+
             HabboItem item = room.getHabboItem(setting.item_id);
             if (item != null) {
                 if (this.state && (this.checkForWiredResetPermission && item.allowWiredResetState())) {

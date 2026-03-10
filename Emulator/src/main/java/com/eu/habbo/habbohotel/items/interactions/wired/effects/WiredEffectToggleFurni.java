@@ -95,21 +95,26 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
-        THashSet<HabboItem> items = new THashSet<>();
+        // Snapshot items to avoid concurrent modification with execute() on room cycle thread
+        List<HabboItem> snapshot = new ArrayList<>(this.items);
 
-        for (HabboItem item : this.items) {
+        List<HabboItem> invalidItems = new ArrayList<>();
+        for (HabboItem item : snapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
-                items.add(item);
+                invalidItems.add(item);
         }
 
-        for (HabboItem item : items) {
+        for (HabboItem item : invalidItems) {
             this.items.remove(item);
         }
 
+        List<HabboItem> validItems = new ArrayList<>(snapshot);
+        validItems.removeAll(invalidItems);
+
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items) {
+        message.appendInt(validItems.size());
+        for (HabboItem item : validItems) {
             message.appendInt(item.getId());
         }
         message.appendInt(this.getBaseItem().getSpriteId());
@@ -177,8 +182,15 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         Room room = ctx.room();
         Habbo habbo = ctx.actor().map(unit -> room.getHabbo(unit)).orElse(null);
 
+        // Use selector targets if a selector has modified them, otherwise use manually picked items.
+        // Snapshot this.items into a new list to avoid undefined behavior from concurrent
+        // THashSet access (serializeWiredData can modify items from the network thread).
+        Iterable<HabboItem> effectiveItems = ctx.targets().isItemsModifiedBySelector()
+                ? ctx.targets().items()
+                : new ArrayList<>(this.items);
+
         THashSet<HabboItem> itemsToRemove = new THashSet<>();
-        for (HabboItem item : this.items) {
+        for (HabboItem item : effectiveItems) {
             if (item == null || item.getRoomId() == 0 || FORBIDDEN_TYPES.stream().anyMatch(a -> a.isAssignableFrom(item.getClass()))) {
                 itemsToRemove.add(item);
                 continue;
@@ -201,7 +213,9 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
             }
         }
 
-        this.items.removeAll(itemsToRemove);
+        if (!ctx.targets().isItemsModifiedBySelector()) {
+            this.items.removeAll(itemsToRemove);
+        }
     }
 
     @Deprecated
@@ -214,7 +228,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                new ArrayList<>(this.items).stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
 

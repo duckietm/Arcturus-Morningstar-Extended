@@ -41,9 +41,10 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
@@ -51,10 +52,11 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
         for (HabboItem item : items) {
             this.items.remove(item);
         }
+        itemsSnapshot = new ArrayList<>(this.items);
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items) {
+        message.appendInt(itemsSnapshot.size());
+        for (HabboItem item : itemsSnapshot) {
             message.appendInt(item.getId());
         }
         message.appendInt(this.getBaseItem().getSpriteId());
@@ -135,9 +137,14 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             return;
         }
 
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        Iterable<HabboItem> effectiveItems = ctx.targets().isItemsModifiedBySelector()
+                ? ctx.targets().items()
+                : new ArrayList<>(this.items);
+
         THashSet<RoomTile> usedTiles = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : effectiveItems) {
             if (item == null) continue;
             
             boolean found = false;
@@ -169,9 +176,10 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
 

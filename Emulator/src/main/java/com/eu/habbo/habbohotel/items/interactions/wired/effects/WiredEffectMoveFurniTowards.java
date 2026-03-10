@@ -90,18 +90,26 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        THashSet<HabboItem> items = new THashSet<>();
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        Iterable<HabboItem> effectiveItems;
 
-        for (HabboItem item : this.items) {
-            if (Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
-                items.add(item);
+        if (useSelector) {
+            effectiveItems = ctx.targets().items();
+        } else {
+            THashSet<HabboItem> toRemove = new THashSet<>();
+            List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
+            for (HabboItem item : itemsSnapshot) {
+                if (Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
+                    toRemove.add(item);
+            }
+            for (HabboItem item : toRemove) {
+                this.items.remove(item);
+            }
+            effectiveItems = new ArrayList<>(this.items);
         }
 
-        for (HabboItem item : items) {
-            this.items.remove(item);
-        }
-
-        for (HabboItem item : this.items) {
+        for (HabboItem item : effectiveItems) {
 
             if (item == null)
                 continue;
@@ -249,9 +257,9 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
         RoomLayout layout = room.getLayout();
         if (layout == null) return true;
         
-        for (HabboItem item : this.items) {
+        for (HabboItem item : new ArrayList<>(this.items)) {
             if (item == null) continue;
-            
+
             WiredSimulation.SimulatedPosition currentPos = simulation.getItemPosition(item);
             RoomTile currentTile = layout.getTile(currentPos.x, currentPos.y);
             if (currentTile == null) continue;
@@ -311,9 +319,10 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
 
@@ -364,9 +373,10 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
@@ -374,10 +384,11 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
         for (HabboItem item : items) {
             this.items.remove(item);
         }
+        itemsSnapshot = new ArrayList<>(this.items);
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items)
+        message.appendInt(itemsSnapshot.size());
+        for (HabboItem item : itemsSnapshot)
             message.appendInt(item.getId());
 
         message.appendInt(this.getBaseItem().getSpriteId());

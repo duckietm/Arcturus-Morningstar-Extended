@@ -86,9 +86,10 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
+        List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         THashSet<HabboItem> items = new THashSet<>();
 
-        for (HabboItem item : this.items) {
+        for (HabboItem item : itemsSnapshot) {
             if (item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                 items.add(item);
         }
@@ -97,10 +98,11 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             this.items.remove(item);
         }
 
+        itemsSnapshot = new ArrayList<>(this.items);
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items)
+        message.appendInt(itemsSnapshot.size());
+        for (HabboItem item : itemsSnapshot)
             message.appendInt(item.getId());
 
         message.appendInt(this.getBaseItem().getSpriteId());
@@ -156,11 +158,18 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        if (this.items.isEmpty())
-            return;
+        // Use selector targets if a selector has modified them, otherwise use manually picked items
+        Iterable<HabboItem> effectiveItems = ctx.targets().isItemsModifiedBySelector()
+                ? ctx.targets().items()
+                : new ArrayList<>(this.items);
 
-        if (room.getLayout() == null)
-            return;
+        List<HabboItem> validItems = new ArrayList<>();
+        for (HabboItem item : effectiveItems) {
+            if (item != null && item.getRoomId() != 0) validItems.add(item);
+        }
+
+        if (validItems.isEmpty()) return;
+        if (room.getLayout() == null) return;
 
         List<Bot> bots = room.getBots(this.botName);
 
@@ -170,20 +179,12 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
         Bot bot = bots.get(0);
 
-        int i = Emulator.getRandom().nextInt(this.items.size()) + 1;
-        int j = 1;
+        HabboItem targetItem = validItems.get(Emulator.getRandom().nextInt(validItems.size()));
 
-        for (HabboItem item : this.items) {
-            if (item.getRoomId() != 0 && item.getRoomId() == bot.getRoom().getId()) {
-                if (i == j) {
-                    RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
-                    if (tile != null) {
-                        teleportUnitToTile(bot.getRoomUnit(), tile);
-                    }
-                    return;
-                } else {
-                    j++;
-                }
+        if (targetItem.getRoomId() == bot.getRoom().getId()) {
+            RoomTile tile = room.getLayout().getTile(targetItem.getX(), targetItem.getY());
+            if (tile != null) {
+                teleportUnitToTile(bot.getRoomUnit(), tile);
             }
         }
     }
@@ -199,7 +200,8 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         ArrayList<Integer> itemIds = new ArrayList<>();
 
         if (this.items != null) {
-            for (HabboItem item : this.items) {
+            List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
+            for (HabboItem item : itemsSnapshot) {
                 if (item.getRoomId() != 0) {
                     itemIds.add(item.getId());
                 }

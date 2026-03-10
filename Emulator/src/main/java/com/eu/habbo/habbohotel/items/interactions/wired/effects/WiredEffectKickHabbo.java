@@ -21,12 +21,16 @@ import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
 import com.eu.habbo.threading.runnables.RoomUnitKick;
 import gnu.trove.procedure.TObjectProcedure;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WiredEffectKickHabbo extends InteractionWiredEffect {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectKickHabbo.class);
     public static final WiredEffectType type = WiredEffectType.KICK_USER;
 
     private String message = "";
@@ -43,8 +47,13 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
+        LOGGER.debug("[KickHabbo] targets.users().size={} usersModifiedBySelector={}",
+                ctx.targets().users().size(), ctx.targets().isUsersModifiedBySelector());
+
         for (RoomUnit unit : ctx.targets().users()) {
             Habbo habbo = room.getHabbo(unit);
+            LOGGER.debug("[KickHabbo] RoomUnit id={} type={} -> Habbo={}", unit.getId(), unit.getRoomUnitType(),
+                    habbo != null ? habbo.getHabboInfo().getUsername() : "null");
             if (habbo == null) continue;
 
             if (habbo.hasPermission(Permission.ACC_UNKICKABLE)) {
