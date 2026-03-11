@@ -21,6 +21,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetFood;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTree;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendSignal;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
@@ -340,11 +341,46 @@ public class RoomSpecialTypes {
      * Adds a wired trigger to the room.
      * @param trigger The trigger to add
      */
+    public static final int MAX_SIGNAL_SENDERS_PER_ROOM = 25;
+    public static final int MAX_SIGNAL_RECEIVERS_PER_ROOM = 5;
+    public static final int MAX_SENDERS_PER_RECEIVER = 5;
+
+    public boolean isSignalSenderLimitReached() {
+        Set<InteractionWiredEffect> existing = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        return existing != null && existing.size() >= MAX_SIGNAL_SENDERS_PER_ROOM;
+    }
+
+    public boolean isSignalReceiverLimitReached() {
+        Set<InteractionWiredTrigger> existing = this.wiredTriggers.get(WiredTriggerType.RECEIVE_SIGNAL);
+        return existing != null && existing.size() >= MAX_SIGNAL_RECEIVERS_PER_ROOM;
+    }
+
+    public int countSendersTargetingReceiver(int receiverItemId, InteractionWiredEffect excludeSender) {
+        Set<InteractionWiredEffect> senders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        if (senders == null) return 0;
+
+        int count = 0;
+        for (InteractionWiredEffect effect : senders) {
+            if (excludeSender != null && effect.getId() == excludeSender.getId()) continue;
+            if (effect instanceof WiredEffectSendSignal) {
+                WiredEffectSendSignal sender = (WiredEffectSendSignal) effect;
+                if (sender.hasPickedItem(receiverItemId)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int countSendersTargetingReceiver(int receiverItemId) {
+        return countSendersTargetingReceiver(receiverItemId, null);
+    }
+
     public void addTrigger(InteractionWiredTrigger trigger) {
         // Add to type-based index
         this.wiredTriggers.computeIfAbsent(trigger.getType(), k -> ConcurrentHashMap.newKeySet())
                 .add(trigger);
-        
+
         // Add to spatial index
         long key = coordinateKey(trigger.getX(), trigger.getY());
         this.wiredTriggersByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
@@ -464,7 +500,7 @@ public class RoomSpecialTypes {
         // Add to type-based index
         this.wiredEffects.computeIfAbsent(effect.getType(), k -> ConcurrentHashMap.newKeySet())
                 .add(effect);
-        
+
         // Add to spatial index
         long key = coordinateKey(effect.getX(), effect.getY());
         this.wiredEffectsByLocation.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())

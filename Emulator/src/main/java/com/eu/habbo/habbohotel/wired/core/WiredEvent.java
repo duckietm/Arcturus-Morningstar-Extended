@@ -94,6 +94,9 @@ public final class WiredEvent {
         /** Team loses a game */
         TEAM_LOSES(WiredTriggerType.CUSTOM),
         
+        /** Signal received from a Send Signal effect */
+        SIGNAL_RECEIVED(WiredTriggerType.RECEIVE_SIGNAL),
+
         /** Custom trigger type for plugins */
         CUSTOM(WiredTriggerType.CUSTOM);
 
@@ -137,6 +140,7 @@ public final class WiredEvent {
     private final int scoreAdded;       // amount added for score achieved events
     private final boolean triggeredByEffect; // true if triggered by a wired effect (to prevent loops)
     private final int callStackDepth;   // recursion depth for trigger stacks effect
+    private final int signalChannel;    // channel for signal routing (0-based)
     private final long createdAtMs;
 
     private WiredEvent(Builder builder) {
@@ -151,6 +155,7 @@ public final class WiredEvent {
         this.scoreAdded = builder.scoreAdded;
         this.triggeredByEffect = builder.triggeredByEffect;
         this.callStackDepth = builder.callStackDepth;
+        this.signalChannel = builder.signalChannel;
         this.createdAtMs = builder.createdAtMs;
     }
 
@@ -249,6 +254,10 @@ public final class WiredEvent {
         return callStackDepth;
     }
 
+    public int getSignalChannel() {
+        return signalChannel;
+    }
+
     /**
      * Get the timestamp when this event was created.
      * @return milliseconds since epoch
@@ -303,6 +312,7 @@ public final class WiredEvent {
         private int scoreAdded;
         private boolean triggeredByEffect;
         private int callStackDepth;
+        private int signalChannel;
         private long createdAtMs = System.currentTimeMillis();
 
         private Builder(Type type, Room room) {
@@ -399,6 +409,11 @@ public final class WiredEvent {
          */
         public Builder callStackDepth(int callStackDepth) {
             this.callStackDepth = callStackDepth;
+            return this;
+        }
+
+        public Builder signalChannel(int signalChannel) {
+            this.signalChannel = signalChannel;
             return this;
         }
 

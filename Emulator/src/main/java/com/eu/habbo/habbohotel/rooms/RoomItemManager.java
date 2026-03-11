@@ -14,7 +14,9 @@ import com.eu.habbo.habbohotel.items.interactions.games.freeze.InteractionFreeze
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagField;
 import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagPole;
 import com.eu.habbo.habbohotel.items.interactions.pets.*;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendSignal;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
@@ -1261,6 +1263,16 @@ public class RoomItemManager {
      * Places a floor furniture item at a position.
      */
     public FurnitureMovementError placeFloorFurniAt(HabboItem item, RoomTile tile, int rotation, Habbo owner) {
+        RoomSpecialTypes specialTypes = this.room.getRoomSpecialTypes();
+        if (specialTypes != null) {
+            if (item instanceof WiredEffectSendSignal && specialTypes.isSignalSenderLimitReached()) {
+                return FurnitureMovementError.MAX_SIGNAL_SENDERS;
+            }
+            if (item instanceof WiredTriggerReceiveSignal && specialTypes.isSignalReceiverLimitReached()) {
+                return FurnitureMovementError.MAX_SIGNAL_RECEIVERS;
+            }
+        }
+
         boolean pluginHelper = false;
         if (Emulator.getPluginManager().isRegistered(FurniturePlacedEvent.class, true)) {
             FurniturePlacedEvent event = Emulator.getPluginManager()

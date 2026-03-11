@@ -14,7 +14,9 @@ public enum FurnitureMovementError {
     MAX_DIMMERS("${room.error.max_dimmers}"),
     MAX_SOUNDFURNI("${room.errors.max_soundfurni}"),
     MAX_ITEMS("${room.error.max_furniture}"),
-    MAX_STICKIES("${room.error.max_stickies}");
+    MAX_STICKIES("${room.error.max_stickies}"),
+    MAX_SIGNAL_SENDERS("${room.error.max_signal_senders}"),
+    MAX_SIGNAL_RECEIVERS("${room.error.max_signal_receivers}");
 
 
     public final String errorCode;

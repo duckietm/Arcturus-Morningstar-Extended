@@ -20,7 +20,8 @@ public enum WiredTriggerType {
     UNIDLES(11),
     CUSTOM(13),
     STARTS_DANCING(11),
-    STOPS_DANCING(11);
+    STOPS_DANCING(11),
+    RECEIVE_SIGNAL(15);
 
     public final int code;
 
