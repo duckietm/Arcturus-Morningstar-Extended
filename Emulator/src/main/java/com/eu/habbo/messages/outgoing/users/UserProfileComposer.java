@@ -112,6 +112,10 @@ public class UserProfileComposer extends MessageComposer {
         this.response.appendInt(Emulator.getIntUnixTimestamp() - this.habboInfo.getLastOnline()); //Secs ago.
         this.response.appendBoolean(true);
 
+        this.response.appendInt(this.habboInfo.getInfostandBg());
+        this.response.appendInt(this.habboInfo.getInfostandStand());
+        this.response.appendInt(this.habboInfo.getInfostandOverlay());
+
         return this.response;
     }
 
