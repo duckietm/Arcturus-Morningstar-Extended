@@ -30,7 +30,6 @@ public class RoomRollerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomRollerManager.class);
 
     private final Room room;
-    private long rollerCycle = System.currentTimeMillis();
 
     public RoomRollerManager(Room room) {
         this.room = room;
@@ -43,22 +42,13 @@ public class RoomRollerManager {
      * @return true if roller cycle was processed
      */
     public boolean processRollerCycle(THashSet<RoomUnit> updatedUnit, long cycleTimestamp) {
-        int rollerSpeed = this.room.getRollerSpeed();
-        
-        if (rollerSpeed == -1) {
-            return false;
-        }
-        
-        if (this.rollerCycle < rollerSpeed) {
-            this.rollerCycle++;
-            return false;
-        }
-
-        this.rollerCycle = 0;
+        // Note: cycle gating is handled by RoomCycleManager.processRollers().
+        // Do not add a second gate here — it would cause rollers to fire at
+        // speed^2 intervals instead of the intended speed.
 
         THashSet<MessageComposer> messages = new THashSet<>();
-        List<Integer> rollerFurniIds = new ArrayList<>();
-        List<Integer> rolledUnitIds = new ArrayList<>();
+        THashSet<Integer> rollerFurniIds = new THashSet<>();
+        THashSet<Integer> rolledUnitIds = new THashSet<>();
 
         this.room.getRoomSpecialTypes().getRollers().forEachValue(roller -> {
             processRoller(roller, messages, rollerFurniIds, rolledUnitIds, updatedUnit);
@@ -82,12 +72,12 @@ public class RoomRollerManager {
      * Processes a single roller and its contents.
      */
     private void processRoller(InteractionRoller roller, THashSet<MessageComposer> messages,
-                               List<Integer> rollerFurniIds, List<Integer> rolledUnitIds,
+                               THashSet<Integer> rollerFurniIds, THashSet<Integer> rolledUnitIds,
                                THashSet<RoomUnit> updatedUnit) {
-        
+
         HabboItem newRoller = null;
         RoomLayout layout = this.room.getLayout();
-        
+
         RoomTile rollerTile = layout.getTile(roller.getX(), roller.getY());
         if (rollerTile == null) {
             return;
@@ -150,8 +140,8 @@ public class RoomRollerManager {
         }
 
         if (!tileInFront.getAllowStack() && !(tileInFront.isWalkable()
-            || tileInFront.state == RoomTileState.SIT
-            || tileInFront.state == RoomTileState.LAY)) {
+                || tileInFront.state == RoomTileState.SIT
+                || tileInFront.state == RoomTileState.LAY)) {
             return;
         }
 
@@ -166,7 +156,7 @@ public class RoomRollerManager {
         List<HabboItem> toRemove = new ArrayList<>();
         for (HabboItem item : itemsOnRoller) {
             if (item.getX() != roller.getX() || item.getY() != roller.getY()
-                || rollerFurniIds.contains(item.getId())) {
+                    || rollerFurniIds.contains(item.getId())) {
                 toRemove.add(item);
             }
         }
@@ -179,7 +169,7 @@ public class RoomRollerManager {
 
         for (HabboItem item : itemsNewTile) {
             if (!(item.getBaseItem().allowWalk() || item.getBaseItem().allowSit()) && !(
-                item instanceof InteractionGate && item.getExtradata().equals("1"))) {
+                    item instanceof InteractionGate && item.getExtradata().equals("1"))) {
                 allowUsers = false;
             }
             if (item instanceof InteractionRoller) {
@@ -189,7 +179,7 @@ public class RoomRollerManager {
                 double rollerRelativeZ = roller.getZ() - rollerTile.z;
                 double newRollerRelativeZ = item.getZ() - tileInFront.z;
                 if ((Math.abs(rollerRelativeZ - newRollerRelativeZ) > 0.1 || (itemsNewTile.size() > 1 && item != topItem))
-                    && !InteractionRoller.NO_RULES) {
+                        && !InteractionRoller.NO_RULES) {
                     allowUsers = false;
                     allowFurniture = false;
                     continue;
@@ -218,19 +208,11 @@ public class RoomRollerManager {
             zOffset = -Item.getCurrentHeight(roller) + tileInFront.getStackHeight() - rollerTile.z;
         }
 
-        if (rollerTile.hasUnits()) {
-            StringBuilder allRollers = new StringBuilder();
-            this.room.getRoomSpecialTypes().getRollers().forEachValue(r -> {
-                allRollers.append(String.format("id=%d@(%d,%d)rot=%d ", r.getId(), r.getX(), r.getY(), r.getRotation()));
-                return true;
-            });
-        }
-
         // Process units on roller
         if (allowUsers) {
             processUnitsOnRoller(roller, rollerTile, tileInFront, topItem,
-                itemsOnRoller, itemsNewTile, stackContainsRoller, allowFurniture,
-                zOffset, messages, rolledUnitIds, updatedUnit);
+                    itemsOnRoller, itemsNewTile, stackContainsRoller, allowFurniture,
+                    zOffset, messages, rolledUnitIds, updatedUnit);
         }
 
         // Send unit messages
@@ -244,7 +226,7 @@ public class RoomRollerManager {
         // Process furniture on roller
         if (allowFurniture || !stackContainsRoller || InteractionRoller.NO_RULES) {
             processFurnitureOnRoller(roller, itemsOnRoller, newRoller, topItem,
-                tileInFront, zOffset, messages, rollerFurniIds);
+                    tileInFront, zOffset, messages, rollerFurniIds);
         }
 
         // Send furniture messages
@@ -265,7 +247,7 @@ public class RoomRollerManager {
                                       THashSet<HabboItem> itemsNewTile,
                                       boolean stackContainsRoller, boolean allowFurniture,
                                       double zOffset, THashSet<MessageComposer> messages,
-                                      List<Integer> rolledUnitIds, THashSet<RoomUnit> updatedUnit) {
+                                      THashSet<Integer> rolledUnitIds, THashSet<RoomUnit> updatedUnit) {
 
         Event roomUserRolledEvent = null;
 
@@ -340,8 +322,8 @@ public class RoomRollerManager {
 
                         // Compose and send pet roller message first
                         RoomUnitOnRollerComposer petRollerComposer = new RoomUnitOnRollerComposer(
-                            ridingUnit, roller, ridingUnit.getCurrentLocation(), petOldZ,
-                            tileInFront, petNewZ, this.room);
+                                ridingUnit, roller, ridingUnit.getCurrentLocation(), petOldZ,
+                                tileInFront, petNewZ, this.room);
                         messages.add(petRollerComposer);
 
                         // Update newZ for the rider (1 unit above pet)
@@ -356,7 +338,7 @@ public class RoomRollerManager {
             updatedUnit.remove(unit);
 
             messages.add(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(),
-                unit.getZ(), tileInFront, newZ, this.room));
+                    unit.getZ(), tileInFront, newZ, this.room));
 
             if (itemsOnRoller.isEmpty()) {
                 HabboItem item = this.room.getTopItemAt(tileInFront.x, tileInFront.y);
@@ -388,8 +370,8 @@ public class RoomRollerManager {
     private void processFurnitureOnRoller(InteractionRoller roller, THashSet<HabboItem> itemsOnRoller,
                                           HabboItem newRoller, HabboItem topItem, RoomTile tileInFront,
                                           double zOffset, THashSet<MessageComposer> messages,
-                                          List<Integer> rollerFurniIds) {
-        
+                                          THashSet<Integer> rollerFurniIds) {
+
         Event furnitureRolledEvent = null;
 
         if (Emulator.getPluginManager().isRegistered(FurnitureRolledEvent.class, true)) {
@@ -438,17 +420,4 @@ public class RoomRollerManager {
         return this.room.getLayout().getFloorAltitude(targetTile.x, targetTile.y);
     }
 
-    /**
-     * Gets the current roller cycle value.
-     */
-    public long getRollerCycle() {
-        return this.rollerCycle;
-    }
-
-    /**
-     * Resets the roller cycle.
-     */
-    public void resetRollerCycle() {
-        this.rollerCycle = 0;
-    }
 }
