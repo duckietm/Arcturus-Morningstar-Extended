@@ -75,6 +75,7 @@ public class RoomCycleManager {
 
         boolean loaded = this.room.isLoaded();
         this.room.tileCache.clear();
+        this.room.getItemManager().tileCache.clear();
 
         if (loaded) {
             processScheduledTasks();

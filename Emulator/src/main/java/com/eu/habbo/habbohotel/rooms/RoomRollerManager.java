@@ -107,6 +107,40 @@ public class RoomRollerManager {
 
         RoomTile tileInFront = layout.getTileInFront(layout.getTile(roller.getX(), roller.getY()), roller.getRotation());
 
+        //   - Rot 2 (East) / Rot 4 (South): skip only when going uphill
+        //   - Rot 0 (North) / Rot 6 (West): skip only when going downhill
+        int rot = roller.getRotation();
+        boolean isEastSouth = (rot == 2 || rot == 4);
+        boolean isNorthWest = (rot == 0 || rot == 6);
+        if ((isEastSouth || isNorthWest) && tileInFront != null && layout.tileExists(tileInFront.x, tileInFront.y)) {
+            double baseHeight = layout.getHeightAtSquare(tileInFront.x, tileInFront.y);
+            double floorAlt = layout.getFloorAltitude(tileInFront.x, tileInFront.y);
+
+            if (Math.abs(floorAlt - baseHeight) > 0.1) {
+                boolean hasRollerOnTile = false;
+                for (HabboItem item : this.room.getItemsAt(tileInFront)) {
+                    if (item instanceof InteractionRoller) {
+                        hasRollerOnTile = true;
+                        break;
+                    }
+                }
+
+                if (!hasRollerOnTile) {
+                    RoomTile nextTile = layout.getTileInFront(tileInFront, roller.getRotation());
+                    if (nextTile != null && layout.tileExists(nextTile.x, nextTile.y)) {
+                        double rollerZ = layout.getHeightAtSquare(rollerTile.x, rollerTile.y);
+                        double destZ = layout.getHeightAtSquare(nextTile.x, nextTile.y);
+                        boolean goingUphill = destZ > rollerZ;
+                        boolean goingDownhill = destZ < rollerZ;
+
+                        if ((isEastSouth && goingUphill) || (isNorthWest && goingDownhill)) {
+                            tileInFront = nextTile;
+                        }
+                    }
+                }
+            }
+        }
+
         if (tileInFront == null || !layout.tileExists(tileInFront.x, tileInFront.y)) {
             return;
         }
@@ -152,7 +186,9 @@ public class RoomRollerManager {
                 newRoller = item;
                 stackContainsRoller = true;
 
-                if ((item.getZ() != roller.getZ() || (itemsNewTile.size() > 1 && item != topItem))
+                double rollerRelativeZ = roller.getZ() - rollerTile.z;
+                double newRollerRelativeZ = item.getZ() - tileInFront.z;
+                if ((Math.abs(rollerRelativeZ - newRollerRelativeZ) > 0.1 || (itemsNewTile.size() > 1 && item != topItem))
                     && !InteractionRoller.NO_RULES) {
                     allowUsers = false;
                     allowFurniture = false;
@@ -174,13 +210,25 @@ public class RoomRollerManager {
             if ((!itemsNewTile.isEmpty() && (itemsNewTile.size() > 1)) && !InteractionRoller.NO_RULES) {
                 return;
             }
+
+            double oldRollerTop = roller.getZ() + Item.getCurrentHeight(roller);
+            double newRollerTop = newRoller.getZ() + Item.getCurrentHeight(newRoller);
+            zOffset = newRollerTop - oldRollerTop;
         } else {
             zOffset = -Item.getCurrentHeight(roller) + tileInFront.getStackHeight() - rollerTile.z;
         }
 
+        if (rollerTile.hasUnits()) {
+            StringBuilder allRollers = new StringBuilder();
+            this.room.getRoomSpecialTypes().getRollers().forEachValue(r -> {
+                allRollers.append(String.format("id=%d@(%d,%d)rot=%d ", r.getId(), r.getX(), r.getY(), r.getRotation()));
+                return true;
+            });
+        }
+
         // Process units on roller
         if (allowUsers) {
-            processUnitsOnRoller(roller, rollerTile, tileInFront, topItem, 
+            processUnitsOnRoller(roller, rollerTile, tileInFront, topItem,
                 itemsOnRoller, itemsNewTile, stackContainsRoller, allowFurniture,
                 zOffset, messages, rolledUnitIds, updatedUnit);
         }
@@ -211,14 +259,14 @@ public class RoomRollerManager {
     /**
      * Processes units (Habbos, Pets) on a roller.
      */
-    private void processUnitsOnRoller(InteractionRoller roller, RoomTile rollerTile, 
+    private void processUnitsOnRoller(InteractionRoller roller, RoomTile rollerTile,
                                       RoomTile tileInFront, HabboItem topItem,
-                                      THashSet<HabboItem> itemsOnRoller, 
+                                      THashSet<HabboItem> itemsOnRoller,
                                       THashSet<HabboItem> itemsNewTile,
                                       boolean stackContainsRoller, boolean allowFurniture,
                                       double zOffset, THashSet<MessageComposer> messages,
                                       List<Integer> rolledUnitIds, THashSet<RoomUnit> updatedUnit) {
-        
+
         Event roomUserRolledEvent = null;
 
         if (Emulator.getPluginManager().isRegistered(UserRolledEvent.class, true)) {
@@ -235,6 +283,8 @@ public class RoomRollerManager {
                 }
             }
         }
+
+        double targetZ = this.calculateTargetZ(tileInFront, itemsOnRoller);
 
         this.room.getTallestChair(tileInFront);
 
@@ -262,7 +312,7 @@ public class RoomRollerManager {
                 continue;
             }
 
-            double newZ = unit.getZ() + zOffset;
+            double newZ = targetZ;
 
             if (roomUserRolledEvent != null && unit.getRoomUnitType() == RoomUnitType.USER) {
                 roomUserRolledEvent = new UserRolledEvent(this.room.getHabbo(unit), roller, tileInFront);
@@ -282,18 +332,18 @@ public class RoomRollerManager {
                     if (riding != null && riding.getRoomUnit() != null) {
                         RoomUnit ridingUnit = riding.getRoomUnit();
                         double petOldZ = ridingUnit.getZ();
-                        double petNewZ = tileInFront.getStackHeight();
-                        
+                        double petNewZ = targetZ;
+
                         // Update pet position immediately before composing messages to prevent desync
                         rolledUnitIds.add(ridingUnit.getId());
                         updatedUnit.remove(ridingUnit);
-                        
+
                         // Compose and send pet roller message first
                         RoomUnitOnRollerComposer petRollerComposer = new RoomUnitOnRollerComposer(
-                            ridingUnit, roller, ridingUnit.getCurrentLocation(), petOldZ, 
+                            ridingUnit, roller, ridingUnit.getCurrentLocation(), petOldZ,
                             tileInFront, petNewZ, this.room);
                         messages.add(petRollerComposer);
-                        
+
                         // Update newZ for the rider (1 unit above pet)
                         newZ = petNewZ + 1.0;
                         isRiding = true;
@@ -304,12 +354,9 @@ public class RoomRollerManager {
             usersRolledThisTile.add(unit.getId());
             rolledUnitIds.add(unit.getId());
             updatedUnit.remove(unit);
-            
-            // For riding users, use pet-relative Z values
-            double riderOldZ = isRiding ? unit.getZ() : unit.getZ();
-            double riderNewZ = isRiding ? newZ : (unit.getZ() + zOffset);
+
             messages.add(new RoomUnitOnRollerComposer(unit, roller, unit.getCurrentLocation(),
-                riderOldZ, tileInFront, riderNewZ, this.room));
+                unit.getZ(), tileInFront, newZ, this.room));
 
             if (itemsOnRoller.isEmpty()) {
                 HabboItem item = this.room.getTopItemAt(tileInFront.x, tileInFront.y);
@@ -371,6 +418,24 @@ public class RoomRollerManager {
                 }
             }
         }
+    }
+
+    private double calculateTargetZ(RoomTile targetTile, THashSet<HabboItem> itemsBeingRolled) {
+        HabboItem topItem = this.room.getTopItemAt(targetTile.x, targetTile.y);
+
+        // Ignore items that are being rolled along with the unit
+        if (topItem != null && itemsBeingRolled.contains(topItem)) {
+            topItem = null;
+        }
+
+        if (topItem != null) {
+            if (topItem.getBaseItem().allowSit() || topItem.getBaseItem().allowLay()) {
+                return topItem.getZ();
+            }
+            return topItem.getZ() + Item.getCurrentHeight(topItem);
+        }
+
+        return this.room.getLayout().getFloorAltitude(targetTile.x, targetTile.y);
     }
 
     /**

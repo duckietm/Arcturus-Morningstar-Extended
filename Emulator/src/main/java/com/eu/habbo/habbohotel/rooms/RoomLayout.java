@@ -238,6 +238,22 @@ public class RoomLayout {
     return this.roomTiles[x][y].relativeHeight();
   }
 
+  public double getFloorAltitude(int x, int y) {
+    short baseHeight = this.getHeightAtSquare(x, y);
+    int target = baseHeight + 1;
+
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0) continue;
+        if (this.getHeightAtSquare(x + dx, y + dy) == target) {
+          return baseHeight + 0.5;
+        }
+      }
+    }
+
+    return baseHeight;
+  }
+
   public RoomTile getTile(short x, short y) {
     if (this.tileExists(x, y)) {
       return this.roomTiles[x][y];
