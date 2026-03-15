@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
@@ -25,6 +26,7 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
 
     private int length = 5;
     private String message = "";
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectMuteHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -42,8 +44,9 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.message);
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.length);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -52,9 +55,10 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 1) throw new WiredSaveException("invalid data");
+        if(settings.getIntParams().length < 2) throw new WiredSaveException("invalid data");
 
         this.length = settings.getIntParams()[0];
+        this.userSource = settings.getIntParams()[1];
         this.message = settings.getStringParam();
 
         this.setDelay(settings.getDelay());
@@ -66,7 +70,7 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (RoomUnit roomUnit : ctx.targets().users()) {
+        for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(roomUnit);
             if (habbo == null) continue;
 
@@ -89,7 +93,8 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
                 this.length,
-                this.message
+                this.message,
+                this.userSource
         ));
     }
 
@@ -102,6 +107,7 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
             this.setDelay(data.delay);
             this.length = data.length;
             this.message = data.message;
+            this.userSource = data.userSource;
         } else {
             String[] data = wiredData.split("\t");
 
@@ -121,6 +127,7 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
         this.setDelay(0);
         this.message = "";
         this.length = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -130,18 +137,20 @@ public class WiredEffectMuteHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         int delay;
         int length;
         String message;
+        int userSource;
 
-        public JsonData(int delay, int length, String message) {
+        public JsonData(int delay, int length, String message, int userSource) {
             this.delay = delay;
             this.length = length;
             this.message = message;
+            this.userSource = userSource;
         }
     }
 }

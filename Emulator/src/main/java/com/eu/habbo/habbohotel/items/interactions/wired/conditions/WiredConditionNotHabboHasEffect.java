@@ -8,15 +8,18 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
     private static final WiredConditionType type = WiredConditionType.NOT_ACTOR_WEARS_EFFECT;
 
     protected int effectId;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredConditionNotHabboHasEffect(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -28,9 +31,15 @@ public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null) return false;
-        return roomUnit.getEffectId() != this.effectId;
+        List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
+        if (targets.isEmpty()) return false;
+        for (RoomUnit roomUnit : targets) {
+            if (roomUnit == null) return false;
+            if (roomUnit.getEffectId() == this.effectId) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Deprecated
@@ -42,7 +51,8 @@ public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
-                this.effectId
+                this.effectId,
+                this.userSource
         ));
     }
 
@@ -53,14 +63,17 @@ public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.effectId = data.effectId;
+            this.userSource = data.userSource;
         } else {
             this.effectId = Integer.parseInt(wiredData);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.effectId = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -76,7 +89,9 @@ public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.effectId + "");
-        message.appendInt(0);
+        message.appendInt(2);
+        message.appendInt(this.effectId);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -87,15 +102,19 @@ public class WiredConditionNotHabboHasEffect extends InteractionWiredCondition {
     public boolean saveData(WiredSettings settings) {
         if(settings.getIntParams().length < 1) return false;
         this.effectId = settings.getIntParams()[0];
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
 
         return true;
     }
 
     static class JsonData {
         int effectId;
+        int userSource;
 
-        public JsonData(int effectId) {
+        public JsonData(int effectId, int userSource) {
             this.effectId = effectId;
+            this.userSource = userSource;
         }
     }
 }

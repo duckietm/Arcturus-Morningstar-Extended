@@ -15,6 +15,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
@@ -34,6 +35,7 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.KICK_USER;
 
     private String message = "";
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectKickHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -50,7 +52,7 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
         LOGGER.debug("[KickHabbo] targets.users().size={} usersModifiedBySelector={}",
                 ctx.targets().users().size(), ctx.targets().isUsersModifiedBySelector());
 
-        for (RoomUnit unit : ctx.targets().users()) {
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
             LOGGER.debug("[KickHabbo] RoomUnit id={} type={} -> Habbo={}", unit.getId(), unit.getRoomUnitType(),
                     habbo != null ? habbo.getHabboInfo().getUsername() : "null");
@@ -83,7 +85,7 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -94,6 +96,7 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.message = data.message;
+            this.userSource = data.userSource;
         }
         else {
             try {
@@ -112,12 +115,14 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.message = "";
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -134,7 +139,8 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.message);
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -162,6 +168,8 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         String message = settings.getStringParam();
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
         int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
@@ -175,16 +183,18 @@ public class WiredEffectKickHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         String message;
         int delay;
+        int userSource;
 
-        public JsonData(String message, int delay) {
+        public JsonData(String message, int delay, int userSource) {
             this.message = message;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

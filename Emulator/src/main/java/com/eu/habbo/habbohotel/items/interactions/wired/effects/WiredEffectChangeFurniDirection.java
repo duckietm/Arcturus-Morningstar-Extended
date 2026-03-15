@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.*;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -36,6 +37,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     private final THashMap<HabboItem, WiredChangeDirectionSetting> items = new THashMap<>(0);
     private RoomUserRotation startRotation = RoomUserRotation.NORTH;
     private int blockedAction = 0;
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectChangeFurniDirection(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -50,23 +52,10 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null || room.getLayout() == null) return;
 
-        // Use selector targets if a selector has modified them, otherwise use manually picked items
-        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
+        List<HabboItem> resolvedItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items.keySet());
         THashMap<HabboItem, WiredChangeDirectionSetting> effectiveItems;
 
-        if (useSelector) {
-            effectiveItems = new THashMap<>();
-            for (HabboItem item : ctx.targets().items()) {
-                if (item != null) {
-                    // Check if we already have settings for this item, otherwise create defaults
-                    WiredChangeDirectionSetting setting = this.items.get(item);
-                    if (setting == null) {
-                        setting = new WiredChangeDirectionSetting(item.getId(), item.getRotation(), this.startRotation);
-                    }
-                    effectiveItems.put(item, setting);
-                }
-            }
-        } else {
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             THashSet<HabboItem> toRemove = new THashSet<>();
             for (HabboItem item : this.items.keySet()) {
                 if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
@@ -76,6 +65,17 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
                 this.items.remove(item);
             }
             effectiveItems = this.items;
+        } else {
+            effectiveItems = new THashMap<>();
+            for (HabboItem item : resolvedItems) {
+                if (item != null) {
+                    WiredChangeDirectionSetting setting = this.items.get(item);
+                    if (setting == null) {
+                        setting = new WiredChangeDirectionSetting(item.getId(), item.getRotation(), this.startRotation);
+                    }
+                    effectiveItems.put(item, setting);
+                }
+            }
         }
 
         if (effectiveItems.isEmpty()) return;
@@ -157,7 +157,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         ArrayList<WiredChangeDirectionSetting> settings = new ArrayList<>(this.items.values());
-        return WiredManager.getGson().toJson(new JsonData(this.startRotation, this.blockedAction, settings, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.startRotation, this.blockedAction, settings, this.getDelay(), this.furniSource));
     }
 
     @Override
@@ -172,6 +172,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             this.setDelay(data.delay);
             this.startRotation = data.start_direction;
             this.blockedAction = data.blocked_action;
+            this.furniSource = data.furniSource;
 
             for(WiredChangeDirectionSetting setting : data.items) {
                 HabboItem item = room.getHabboItem(setting.item_id);
@@ -179,6 +180,9 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
                 if (item != null) {
                     this.items.put(item, setting);
                 }
+            }
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         }
         else {
@@ -212,6 +216,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
                 }
             }
 
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
             this.needsUpdate(true);
         }
     }
@@ -222,6 +227,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         this.items.clear();
         this.blockedAction = 0;
         this.startRotation = RoomUserRotation.NORTH;
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -240,9 +246,10 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.startRotation != null ? this.startRotation.getValue() : 0);
         message.appendInt(this.blockedAction);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -251,7 +258,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 2) throw new WiredSaveException("Invalid data");
+        if(settings.getIntParams().length < 3) throw new WiredSaveException("Invalid data");
 
         int startDirectionInt = settings.getIntParams()[0];
 
@@ -262,6 +269,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         RoomUserRotation startDirection = RoomUserRotation.fromValue(startDirectionInt);
 
         int blockedActionInt = settings.getIntParams()[1];
+        this.furniSource = settings.getIntParams()[2];
 
         if(blockedActionInt < 0 || blockedActionInt > 6) {
             throw new WiredSaveException("Blocked action is invalid");
@@ -291,7 +299,9 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.items.clear();
-        this.items.putAll(newItems);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            this.items.putAll(newItems);
+        }
         this.startRotation = startDirection;
         this.blockedAction = blockedActionInt;
         this.setDelay(delay);
@@ -329,12 +339,14 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         int blocked_action;
         List<WiredChangeDirectionSetting> items;
         int delay;
+        int furniSource;
 
-        public JsonData(RoomUserRotation start_direction, int blocked_action, List<WiredChangeDirectionSetting> items, int delay) {
+        public JsonData(RoomUserRotation start_direction, int blocked_action, List<WiredChangeDirectionSetting> items, int delay, int furniSource) {
             this.start_direction = start_direction;
             this.blocked_action = blocked_action;
             this.items = items;
             this.delay = delay;
+            this.furniSource = furniSource;
         }
     }
 }

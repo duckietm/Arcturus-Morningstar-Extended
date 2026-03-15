@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -34,6 +35,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     private boolean state = false;
     private boolean direction = false;
     private boolean position = false;
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectMatchFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -55,18 +57,21 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         if (room.getLayout() == null)
             return;
 
-        // When a selector provides items, only apply matching to items in both the selector targets and settings
-        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
-        java.util.Set<Integer> selectorItemIds = null;
-        if (useSelector) {
-            selectorItemIds = new java.util.HashSet<>();
-            for (HabboItem si : ctx.targets().items()) {
-                selectorItemIds.add(si.getId());
+        java.util.Set<Integer> allowedItemIds = null;
+        if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
+            allowedItemIds = new java.util.HashSet<>();
+            for (HabboItem si : WiredSourceUtil.resolveItems(ctx, this.furniSource, null)) {
+                if (si != null) {
+                    allowedItemIds.add(si.getId());
+                }
+            }
+            if (allowedItemIds.isEmpty()) {
+                return;
             }
         }
 
         for (WiredMatchFurniSetting setting : this.settings) {
-            if (useSelector && !selectorItemIds.contains(setting.item_id)) continue;
+            if (allowedItemIds != null && !allowedItemIds.contains(setting.item_id)) continue;
 
             HabboItem item = room.getHabboItem(setting.item_id);
             if (item != null) {
@@ -113,7 +118,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     @Override
     public String getWiredData() {
         this.refresh();
-        return WiredManager.getGson().toJson(new JsonData(this.state, this.direction, this.position, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.state, this.direction, this.position, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay(), this.furniSource));
     }
 
     @Override
@@ -128,6 +133,10 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             this.position = data.position;
             this.settings.clear();
             this.settings.addAll(data.items);
+            this.furniSource = data.furniSource;
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.settings.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+            }
         }
         else {
             String[] data = set.getString("wired_data").split(":");
@@ -154,6 +163,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             this.direction = data[3].equals("1");
             this.position = data[4].equals("1");
             this.setDelay(Integer.parseInt(data[5]));
+            this.furniSource = this.settings.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
             this.needsUpdate(true);
         }
     }
@@ -164,6 +174,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.state = false;
         this.direction = false;
         this.position = false;
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -186,10 +197,11 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(3);
+        message.appendInt(4);
         message.appendInt(this.state ? 1 : 0);
         message.appendInt(this.direction ? 1 : 0);
         message.appendInt(this.position ? 1 : 0);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -198,32 +210,34 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 3) throw new WiredSaveException("Invalid data");
+        if(settings.getIntParams().length < 4) throw new WiredSaveException("Invalid data");
         boolean setState = settings.getIntParams()[0] == 1;
         boolean setDirection = settings.getIntParams()[1] == 1;
         boolean setPosition = settings.getIntParams()[2] == 1;
+        this.furniSource = settings.getIntParams()[3];
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
         if (room == null)
             throw new WiredSaveException("Trying to save wired in unloaded room");
 
-        int itemsCount = settings.getFurniIds().length;
-
-        if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
-            throw new WiredSaveException("Too many furni selected");
-        }
-
         List<WiredMatchFurniSetting> newSettings = new ArrayList<>();
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            int itemsCount = settings.getFurniIds().length;
 
-        for (int i = 0; i < itemsCount; i++) {
-            int itemId = settings.getFurniIds()[i];
-            HabboItem it = room.getHabboItem(itemId);
+            if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
+                throw new WiredSaveException("Too many furni selected");
+            }
 
-            if(it == null)
-                throw new WiredSaveException(String.format("Item %s not found", itemId));
+            for (int i = 0; i < itemsCount; i++) {
+                int itemId = settings.getFurniIds()[i];
+                HabboItem it = room.getHabboItem(itemId);
 
-            newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
+                if(it == null)
+                    throw new WiredSaveException(String.format("Item %s not found", itemId));
+
+                newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
+            }
         }
 
         int delay = settings.getDelay();
@@ -235,7 +249,9 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.direction = setDirection;
         this.position = setPosition;
         this.settings.clear();
-        this.settings.addAll(newSettings);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            this.settings.addAll(newSettings);
+        }
         this.setDelay(delay);
 
         return true;
@@ -276,13 +292,15 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         boolean position;
         List<WiredMatchFurniSetting> items;
         int delay;
+        int furniSource;
 
-        public JsonData(boolean state, boolean direction, boolean position, List<WiredMatchFurniSetting> items, int delay) {
+        public JsonData(boolean state, boolean direction, boolean position, List<WiredMatchFurniSetting> items, int delay, int furniSource) {
             this.state = state;
             this.direction = direction;
             this.position = position;
             this.items = items;
             this.delay = delay;
+            this.furniSource = furniSource;
         }
     }
 }

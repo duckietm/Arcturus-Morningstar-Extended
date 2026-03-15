@@ -15,6 +15,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -28,6 +29,7 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.JOIN_TEAM;
 
     private GameTeamColors teamColor = GameTeamColors.RED;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectJoinTeam(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -41,7 +43,7 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (RoomUnit unit : ctx.targets().users()) {
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
             if (habbo == null) continue;
 
@@ -67,7 +69,7 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.teamColor, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.teamColor, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -78,6 +80,7 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.teamColor = data.team;
+            this.userSource = data.userSource;
         }
         else {
             String[] data = set.getString("wired_data").split("\t");
@@ -91,12 +94,14 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.teamColor = GameTeamColors.RED;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -113,8 +118,9 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.teamColor.type);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -141,9 +147,10 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 1) throw new WiredSaveException("invalid data");
+        if(settings.getIntParams().length < 2) throw new WiredSaveException("invalid data");
 
         int team = settings.getIntParams()[0];
+        this.userSource = settings.getIntParams()[1];
 
         if(team < 1 || team > 4)
             throw new WiredSaveException("Team is invalid");
@@ -161,16 +168,18 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         GameTeamColors team;
         int delay;
+        int userSource;
 
-        public JsonData(GameTeamColors team, int delay) {
+        public JsonData(GameTeamColors team, int delay, int userSource) {
             this.team = team;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

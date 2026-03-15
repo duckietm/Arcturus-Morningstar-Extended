@@ -11,11 +11,13 @@ import com.eu.habbo.habbohotel.wired.WiredConditionOperator;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,8 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.TRIGGER_ON_FURNI;
 
     protected THashSet<HabboItem> items = new THashSet<>();
+    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredConditionTriggerOnFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -34,18 +38,19 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        RoomUnit roomUnit = ctx.actor().orElse(null);
         Room room = ctx.room();
-
-        if (roomUnit == null)
-            return false;
 
         this.refresh();
 
-        if (this.items.isEmpty())
+        List<RoomUnit> userTargets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
+        if (userTargets.isEmpty())
             return false;
 
-        return triggerOnFurni(roomUnit, room);
+        List<HabboItem> itemTargets = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+        if (itemTargets.isEmpty())
+            return false;
+
+        return isAnyUserOnFurni(userTargets, itemTargets, room);
     }
 
     @Deprecated
@@ -54,16 +59,24 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         return false;
     }
 
-    protected boolean triggerOnFurni(RoomUnit roomUnit, Room room) {
-        THashSet<HabboItem> itemsAtUser = room.getItemsAt(roomUnit.getCurrentLocation());
-        return this.items.stream().anyMatch(itemsAtUser::contains);
+    protected boolean isAnyUserOnFurni(Collection<RoomUnit> users, Collection<HabboItem> items, Room room) {
+        for (RoomUnit roomUnit : users) {
+            if (roomUnit == null) continue;
+            THashSet<HabboItem> itemsAtUser = room.getItemsAt(roomUnit.getCurrentLocation());
+            if (items.stream().anyMatch(itemsAtUser::contains)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public String getWiredData() {
         this.refresh();
         return WiredManager.getGson().toJson(new JsonData(
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                this.items.stream().map(HabboItem::getId).collect(Collectors.toList()),
+                this.furniSource,
+                this.userSource
         ));
     }
 
@@ -74,6 +87,8 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
 
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            this.furniSource = data.furniSource;
+            this.userSource = data.userSource;
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -92,12 +107,19 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
                     this.items.add(item);
                 }
             }
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+        }
+        if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -119,7 +141,9 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(2);
+        message.appendInt(this.furniSource);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -131,16 +155,22 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         int count = settings.getFurniIds().length;
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) return false;
 
+        int[] params = settings.getIntParams();
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
+
         this.items.clear();
 
-        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
-        if (room != null) {
-            for (int i = 0; i < count; i++) {
-                HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
+            if (room != null) {
+                for (int i = 0; i < count; i++) {
+                    HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
 
-                if (item != null) {
-                    this.items.add(item);
+                    if (item != null) {
+                        this.items.add(item);
+                    }
                 }
             }
         }
@@ -171,9 +201,13 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
 
     static class JsonData {
         List<Integer> itemIds;
+        int furniSource;
+        int userSource;
 
-        public JsonData(List<Integer> itemIds) {
+        public JsonData(List<Integer> itemIds, int furniSource, int userSource) {
             this.itemIds = itemIds;
+            this.furniSource = furniSource;
+            this.userSource = userSource;
         }
     }
 }

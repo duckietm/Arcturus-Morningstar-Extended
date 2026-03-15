@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.iterator.TObjectIntIterator;
@@ -32,6 +33,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
     private int score;
     private int count;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     private TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
 
@@ -47,7 +49,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (RoomUnit unit : ctx.targets().users()) {
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
             if (habbo == null || habbo.getHabboInfo().getCurrentGame() == null) continue;
 
@@ -107,7 +109,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.score, this.count, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.score, this.count, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -119,6 +121,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             this.score = data.score;
             this.count = data.count;
             this.setDelay(data.delay);
+            this.userSource = data.userSource;
         }
         else {
             String[] data = wiredData.split(";");
@@ -130,6 +133,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
@@ -138,6 +142,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         this.score = 0;
         this.count = 0;
         this.setDelay(0);
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -153,9 +158,10 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.score);
         message.appendInt(this.count);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -182,7 +188,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 2) throw new WiredSaveException("Invalid data");
+        if(settings.getIntParams().length < 3) throw new WiredSaveException("Invalid data");
 
         int score = settings.getIntParams()[0];
 
@@ -194,6 +200,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         if(timesPerGame < 1 || timesPerGame > 10)
             throw new WiredSaveException("Times per game is invalid");
 
+        this.userSource = settings.getIntParams()[2];
         int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
@@ -208,18 +215,20 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         int score;
         int count;
         int delay;
+        int userSource;
 
-        public JsonData(int score, int count, int delay) {
+        public JsonData(int score, int count, int delay, int userSource) {
             this.score = score;
             this.count = count;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

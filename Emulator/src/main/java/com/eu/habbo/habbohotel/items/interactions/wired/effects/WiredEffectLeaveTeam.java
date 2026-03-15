@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -25,6 +26,7 @@ import java.util.List;
 
 public class WiredEffectLeaveTeam extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.LEAVE_TEAM;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectLeaveTeam(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -38,7 +40,7 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (RoomUnit unit : ctx.targets().users()) {
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
             if (habbo == null) continue;
 
@@ -64,7 +66,7 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.getDelay(), this.userSource));
     }
 
     @Override
@@ -74,15 +76,18 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
         if(wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
+            this.userSource = data.userSource;
         }
         else {
             this.setDelay(Integer.parseInt(wiredData));
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.setDelay(0);
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -98,7 +103,8 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -125,6 +131,9 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+
         int delay = settings.getDelay();
 
         if(delay > Emulator.getConfig().getInt("hotel.wired.max_delay", 20))
@@ -134,11 +143,18 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
         return true;
     }
 
+    @Override
+    public boolean requiresTriggeringUser() {
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
+    }
+
     static class JsonData {
         int delay;
+        int userSource;
 
-        public JsonData(int delay) {
+        public JsonData(int delay, int userSource) {
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

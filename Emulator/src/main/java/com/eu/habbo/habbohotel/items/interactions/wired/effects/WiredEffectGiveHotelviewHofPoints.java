@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.procedure.TObjectProcedure;
 
@@ -24,6 +25,7 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.SHOW_MESSAGE;
 
     private int amount = 0;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectGiveHotelviewHofPoints(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -41,7 +43,8 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.amount + "");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(type.code);
         message.appendInt(this.getDelay());
@@ -74,6 +77,9 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
             return false;
         }
 
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+
         this.setDelay(settings.getDelay());
 
         return true;
@@ -86,12 +92,12 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
 
     @Override
     public void execute(WiredContext ctx) {
-        Habbo habbo = ctx.actor().map(unit -> ctx.room().getHabbo(unit)).orElse(null);
+        if (this.amount <= 0) return;
 
-        if (habbo == null)
-            return;
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
+            Habbo habbo = ctx.room().getHabbo(unit);
+            if (habbo == null) continue;
 
-        if (this.amount > 0) {
             habbo.getHabboStats().hofPoints += this.amount;
             Emulator.getThreading().run(habbo.getHabboStats());
         }
@@ -105,7 +111,7 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.amount, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.amount, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -116,6 +122,7 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.amount = data.amount;
             this.setDelay(data.delay);
+            this.userSource = data.userSource;
         }
         else {
             this.amount = 0;
@@ -130,27 +137,31 @@ public class WiredEffectGiveHotelviewHofPoints extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.amount = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         int amount;
         int delay;
+        int userSource;
 
-        public JsonData(int amount, int delay) {
+        public JsonData(int amount, int delay, int userSource) {
             this.amount = amount;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }
