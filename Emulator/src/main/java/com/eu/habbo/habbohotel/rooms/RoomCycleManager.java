@@ -75,7 +75,6 @@ public class RoomCycleManager {
 
         boolean loaded = this.room.isLoaded();
         this.room.tileCache.clear();
-        this.room.getItemManager().tileCache.clear();
 
         if (loaded) {
             processScheduledTasks();
@@ -471,14 +470,15 @@ public class RoomCycleManager {
                 }
             } else {
                 if (!unit.hasStatus(RoomUnitStatus.LAY)) {
-                    unit.setStatus(RoomUnitStatus.LAY, Item.getCurrentHeight(topItem) * 1.0D + "");
+                    BedProfile bedProfile = new BedProfile(topItem);
+                    double layHeight = Item.getCurrentHeight(topItem) * 1.0D + bedProfile.getLayZOffset();
+                    LOGGER.info("[BedProfile] item={} stackHeight={} isFlat={} isDouble={} X={} Y={} Z={}",
+                        topItem.getBaseItem().getName(), topItem.getBaseItem().getHeight(),
+                        bedProfile.isFlat(), bedProfile.isDouble(),
+                        bedProfile.getLayXOffset(), bedProfile.getLayYOffset(), bedProfile.getLayZOffset());
+                    unit.setStatus(RoomUnitStatus.LAY, layHeight + ";" + bedProfile.getLayXOffset() + ";" + bedProfile.getLayYOffset());
                     unit.setRotation(RoomUserRotation.values()[topItem.getRotation() % 4]);
-
-                    if (topItem.getRotation() == 0 || topItem.getRotation() == 4) {
-                        unit.setLocation(this.room.getLayout().getTile(unit.getX(), topItem.getY()));
-                    } else {
-                        unit.setLocation(this.room.getLayout().getTile(topItem.getX(), unit.getY()));
-                    }
+                    unit.setLocation(bedProfile.snapToLay(this.room, topItem, unit.getX(), unit.getY()));
                     update = true;
                 }
             }

@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
+import com.eu.habbo.habbohotel.rooms.BedProfile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -123,7 +124,13 @@ public class RoomUserWalkEvent extends MessageHandler {
     HabboItem bed = room.getTopItemAt(tile.x, tile.y);
 
     if (bed != null && bed.getBaseItem().allowLay()) {
-      RoomTile pillow = getPillow(room, x, y, bed);
+      BedProfile profile = new BedProfile(bed);
+      RoomTile pillow = profile.getPillow(room, x, y, bed);
+
+      // If pillow position is occupied, try the other side (double beds only)
+      if (pillow != null && !room.canLayAt(pillow.x, pillow.y)) {
+        pillow = profile.getOtherSide(room, bed, pillow);
+      }
 
       if (pillow != null && room.canLayAt(pillow.x, pillow.y)) {
         roomUnit.setGoalLocation(pillow);
@@ -131,21 +138,6 @@ public class RoomUserWalkEvent extends MessageHandler {
       }
     }
     return false;
-  }
-
-  private static RoomTile getPillow(Room room, short x, short y, HabboItem bed) {
-    RoomTile pillow = room.getLayout().getTile(bed.getX(), bed.getY());
-    switch (bed.getRotation()) {
-      case 0:
-      case 4:
-        pillow = room.getLayout().getTile(x, bed.getY());
-        break;
-      case 2:
-      case 8:
-        pillow = room.getLayout().getTile(bed.getX(), y);
-        break;
-    }
-    return pillow;
   }
 
   private static void fireIdleEvent(Habbo habbo, RoomUnit roomUnit) {
