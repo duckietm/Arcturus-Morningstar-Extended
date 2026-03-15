@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -29,6 +30,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
     private int mode;
     private String botName = "";
     private String message = "";
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectBotTalkToHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -46,8 +48,9 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.mode);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -74,8 +77,9 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 1) throw new WiredSaveException("Missing mode");
+        if(settings.getIntParams().length < 2) throw new WiredSaveException("Missing mode");
         int mode = settings.getIntParams()[0];
+        this.userSource = settings.getIntParams()[1];
 
         if(mode != 0 && mode != 1)
             throw new WiredSaveException("Mode is invalid");
@@ -116,7 +120,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         if (bots.size() != 1) return;
         Bot bot = bots.get(0);
 
-        for (RoomUnit roomUnit : ctx.targets().users()) {
+        for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(roomUnit);
             if (habbo == null) continue;
 
@@ -149,7 +153,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -162,6 +166,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
             this.mode = data.mode;
             this.botName = data.bot_name;
             this.message = data.message;
+            this.userSource = data.userSource;
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
@@ -174,6 +179,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
@@ -182,12 +188,13 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         this.botName = "";
         this.message = "";
         this.mode = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return false;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
@@ -195,12 +202,14 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         int mode;
         String message;
         int delay;
+        int userSource;
 
-        public JsonData(String bot_name, int mode, String message, int delay) {
+        public JsonData(String bot_name, int mode, String message, int delay, int userSource) {
             this.bot_name = bot_name;
             this.mode = mode;
             this.message = message;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

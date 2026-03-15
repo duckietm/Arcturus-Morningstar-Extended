@@ -30,7 +30,7 @@ public class WiredEffectGiveEffect extends WiredEffectWhisper {
         Room room = ctx.room();
 
         if (effectId >= 0) {
-            for (RoomUnit roomUnit : ctx.targets().users()) {
+            for (RoomUnit roomUnit : resolveUsers(ctx)) {
                 room.giveEffect(roomUnit, effectId, Integer.MAX_VALUE);
             }
         }

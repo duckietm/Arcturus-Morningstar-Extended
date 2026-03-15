@@ -24,7 +24,7 @@ public class WiredEffectGiveHandItem extends WiredEffectWhisper {
 
             Room room = ctx.room();
 
-            for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : ctx.targets().users()) {
+            for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : resolveUsers(ctx)) {
                 Habbo habbo = room.getHabbo(unit);
                 if (habbo != null) {
                     room.giveHandItem(habbo, itemId);

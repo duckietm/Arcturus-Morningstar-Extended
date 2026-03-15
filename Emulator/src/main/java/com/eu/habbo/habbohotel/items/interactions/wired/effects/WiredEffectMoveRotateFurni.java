@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -30,6 +31,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
     private final Set<HabboItem> items = new LinkedHashSet<>(WiredManager.MAXIMUM_FURNI_SELECTION / 2);
     private int direction;
     private int rotation;
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     // Use thread-safe set for cooldowns since execute() can be called from async threads
     private final Set<HabboItem> itemCooldowns = ConcurrentHashMap.newKeySet();
     // Pre-selected directions from simulation (itemId -> direction)
@@ -47,16 +49,9 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        // Use selector targets if a selector has modified them, otherwise use manually picked items
-        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
-        Iterable<HabboItem> effectiveItems;
-
-        if (useSelector) {
-            effectiveItems = ctx.targets().items();
-        } else {
-            // remove items that are no longer in the room
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             this.items.removeIf(item -> Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
-            effectiveItems = this.items;
         }
 
         for (HabboItem item : effectiveItems) {
@@ -99,7 +94,8 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         // Clear any previous pre-selected directions
         this.preSelectedDirections.clear();
         
-        for (HabboItem item : this.items) {
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+        for (HabboItem item : effectiveItems) {
             if (item == null) continue;
             
             WiredSimulation.SimulatedPosition currentPos = simulation.getItemPosition(item);
@@ -156,7 +152,8 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
                 this.direction,
                 this.rotation,
                 this.getDelay(),
-                this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+                this.items.stream().map(HabboItem::getId).collect(Collectors.toList()),
+                this.furniSource
         ));
     }
 
@@ -170,11 +167,15 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
             this.setDelay(data.delay);
             this.direction = data.direction;
             this.rotation = data.rotation;
+            this.furniSource = data.furniSource;
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
                 if (item != null) {
                     this.items.add(item);
                 }
+            }
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         } else {
             String[] data = wiredData.split("\t");
@@ -195,6 +196,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
                         this.items.add(item);
                 }
             }
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
@@ -203,6 +205,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         this.direction = 0;
         this.rotation = 0;
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -232,9 +235,10 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.direction);
         message.appendInt(this.rotation);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -248,19 +252,22 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         if (room == null)
             return false;
 
-        if(settings.getIntParams().length < 2) throw new WiredSaveException("invalid data");
+        if(settings.getIntParams().length < 3) throw new WiredSaveException("invalid data");
 
         this.direction = settings.getIntParams()[0];
         this.rotation = settings.getIntParams()[1];
+        this.furniSource = settings.getIntParams()[2];
 
         int count = settings.getFurniIds().length;
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count", 5)) return false;
 
         this.items.clear();
-        for (int i = 0; i < count; i++) {
-            HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
-            if (item != null) {
-                this.items.add(item);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            for (int i = 0; i < count; i++) {
+                HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
+                if (item != null) {
+                    this.items.add(item);
+                }
             }
         }
 
@@ -384,12 +391,14 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         int rotation;
         int delay;
         List<Integer> itemIds;
+        int furniSource;
 
-        public JsonData(int direction, int rotation, int delay, List<Integer> itemIds) {
+        public JsonData(int direction, int rotation, int delay, List<Integer> itemIds, int furniSource) {
             this.direction = direction;
             this.rotation = rotation;
             this.delay = delay;
             this.itemIds = itemIds;
+            this.furniSource = furniSource;
         }
     }
 }

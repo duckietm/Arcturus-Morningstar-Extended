@@ -8,12 +8,14 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredConditionHabboHasHandItem.class);
@@ -21,6 +23,7 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.ACTOR_HAS_HANDITEM;
 
     private int handItem;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredConditionHabboHasHandItem(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -43,8 +46,9 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.handItem);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -55,15 +59,22 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     public boolean saveData(WiredSettings settings) {
         if(settings.getIntParams().length < 1) return false;
         this.handItem = settings.getIntParams()[0];
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
 
         return true;
     }
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null) return false;
-        return roomUnit.getHandItem() == this.handItem;
+        List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
+        if (targets.isEmpty()) return false;
+        for (RoomUnit roomUnit : targets) {
+            if (roomUnit != null && roomUnit.getHandItem() == this.handItem) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Deprecated
@@ -75,7 +86,8 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
-                this.handItem
+                this.handItem,
+                this.userSource
         ));
     }
 
@@ -87,8 +99,10 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
             if (wiredData.startsWith("{")) {
                 JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
                 this.handItem = data.handItemId;
+                this.userSource = data.userSource;
             } else {
                 this.handItem = Integer.parseInt(wiredData);
+                this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
             }
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
@@ -98,13 +112,16 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
     @Override
     public void onPickUp() {
         this.handItem = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         int handItemId;
+        int userSource;
 
-        public JsonData(int handItemId) {
+        public JsonData(int handItemId, int userSource) {
             this.handItemId = handItemId;
+            this.userSource = userSource;
         }
     }
 }

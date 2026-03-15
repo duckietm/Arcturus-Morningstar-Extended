@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.procedure.TObjectProcedure;
 
@@ -25,6 +26,7 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.SHOW_MESSAGE;
 
     private int respects = 0;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectGiveRespect(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -42,7 +44,8 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.respects + "");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(type.code);
         message.appendInt(this.getDelay());
@@ -75,6 +78,9 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
             return false;
         }
 
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+
         this.setDelay(settings.getDelay());
 
         return true;
@@ -89,7 +95,7 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (RoomUnit unit : ctx.targets().users()) {
+        for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
             if (habbo == null) continue;
 
@@ -106,7 +112,7 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.respects, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.respects, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -117,6 +123,7 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.respects = data.amount;
             this.setDelay(data.delay);
+            this.userSource = data.userSource;
         }
         else {
             String[] data = wiredData.split("\t");
@@ -132,27 +139,31 @@ public class WiredEffectGiveRespect extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
     @Override
     public void onPickUp() {
         this.respects = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         int amount;
         int delay;
+        int userSource;
 
-        public JsonData(int amount, int delay) {
+        public JsonData(int amount, int delay, int userSource) {
             this.amount = amount;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

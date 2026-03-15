@@ -229,6 +229,11 @@ public final class WiredEngine {
         // Activate extras (for their animation)
         activateExtras(room, stack.triggerItem(), event.getActor().orElse(null), currentTime);
 
+        // Run selectors before conditions so targets are available
+        if (stack.hasEffects()) {
+            executeSelectors(stack, ctx, currentTime);
+        }
+
         // Evaluate conditions
         if (stack.hasConditions()) {
             debug(room, "Evaluating {} conditions...", stack.conditions().size());
@@ -347,15 +352,11 @@ public final class WiredEngine {
         if (effects.isEmpty()) {
             return;
         }
-
-        // Separate selectors from regular effects.
-        // Selectors must always run first so ctx.targets() is populated before
-        // regular effects consume it.
-        List<IWiredEffect> selectors = new ArrayList<>();
+        
+        // Selectors already executed before conditions; only run regular effects here
         List<IWiredEffect> regulars = new ArrayList<>();
         for (IWiredEffect e : effects) {
-            if (e.isSelector()) selectors.add(e);
-            else regulars.add(e);
+            if (!e.isSelector()) regulars.add(e);
         }
 
         // Determine which (regular) effects to execute
@@ -385,12 +386,6 @@ public final class WiredEngine {
             Collections.shuffle(toExecute);
         }
 
-        // Selectors always run first (in their natural tile order), then regular effects
-        List<IWiredEffect> ordered = new ArrayList<>(selectors.size() + toExecute.size());
-        ordered.addAll(selectors);
-        ordered.addAll(toExecute);
-        toExecute = ordered;
-
         // Execute selected effects
         for (IWiredEffect effect : toExecute) {
             // Check if effect requires actor
@@ -418,6 +413,34 @@ public final class WiredEngine {
                 } catch (Exception e) {
                     LOGGER.warn("Error executing effect: {}", e.getMessage());
                 }
+            }
+        }
+    }
+
+    /**
+     * Execute selector effects before conditions so ctx.targets() is populated.
+     */
+    private void executeSelectors(WiredStack stack, WiredContext ctx, long currentTime) {
+        List<IWiredEffect> effects = stack.effects();
+        if (effects.isEmpty()) return;
+
+        for (IWiredEffect effect : effects) {
+            if (!effect.isSelector()) continue;
+            if (effect.requiresActor() && !ctx.hasActor()) {
+                continue;
+            }
+
+            ctx.state().step();
+            try {
+                effect.execute(ctx);
+
+                if (effect instanceof InteractionWiredEffect) {
+                    InteractionWiredEffect wiredEffect = (InteractionWiredEffect) effect;
+                    wiredEffect.setCooldown(currentTime);
+                    wiredEffect.activateBox(ctx.room(), ctx.actor().orElse(null), currentTime);
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Error executing selector: {}", e.getMessage());
             }
         }
     }

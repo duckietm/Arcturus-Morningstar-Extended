@@ -22,6 +22,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -41,6 +42,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.TOGGLE_RANDOM;
 
     private final THashSet<HabboItem> items = new THashSet<>();
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES = new ArrayList<Class<? extends HabboItem>>() {
         {
@@ -114,7 +116,8 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -141,6 +144,9 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        int[] params = settings.getIntParams();
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+
         int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
@@ -149,14 +155,16 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
 
         List<HabboItem> newItems = new ArrayList<>();
 
-        for (int i = 0; i < itemsCount; i++) {
-            int itemId = settings.getFurniIds()[i];
-            HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            for (int i = 0; i < itemsCount; i++) {
+                int itemId = settings.getFurniIds()[i];
+                HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
 
-            if(it == null)
-                throw new WiredSaveException(String.format("Item %s not found", itemId));
+                if(it == null)
+                    throw new WiredSaveException(String.format("Item %s not found", itemId));
 
-            newItems.add(it);
+                newItems.add(it);
+            }
         }
 
         int delay = settings.getDelay();
@@ -165,7 +173,9 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.items.clear();
-        this.items.addAll(newItems);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            this.items.addAll(newItems);
+        }
         this.setDelay(delay);
 
         return true;
@@ -175,14 +185,11 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        // Use selector targets if a selector has modified them, otherwise use manually picked items
-        Iterable<HabboItem> effectiveItems = ctx.targets().isItemsModifiedBySelector()
-                ? ctx.targets().items()
-                : new ArrayList<>(this.items);
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
 
         for (HabboItem item : effectiveItems) {
             if (item.getRoomId() == 0 || FORBIDDEN_TYPES.stream().anyMatch(a -> a.isAssignableFrom(item.getClass()))) {
-                if (!ctx.targets().isItemsModifiedBySelector()) {
+                if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
                     this.items.remove(item);
                 }
                 continue;
@@ -208,7 +215,8 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
         List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
-                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
+                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList()),
+                this.furniSource
         ));
     }
 
@@ -220,6 +228,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
+            this.furniSource = data.furniSource;
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
                 
@@ -228,6 +237,9 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
 
                 if (item != null)
                     this.items.add(item);
+            }
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         } else {
             String[] wiredDataOld = wiredData.split("\t");
@@ -248,12 +260,14 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
                     }
                 }
             }
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -265,10 +279,12 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     static class JsonData {
         int delay;
         List<Integer> itemIds;
+        int furniSource;
 
-        public JsonData(int delay, List<Integer> itemIds) {
+        public JsonData(int delay, List<Integer> itemIds, int furniSource) {
             this.delay = delay;
             this.itemIds = itemIds;
+            this.furniSource = furniSource;
         }
     }
 }
