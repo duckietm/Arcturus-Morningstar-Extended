@@ -175,6 +175,7 @@ public class CommandHandler {
     }
 
     public void reloadCommands() {
+        UpdateAllCommand.initialise();
         addCommand(new AboutCommand());
         addCommand(new AlertCommand());
         addCommand(new AllowTradingCommand());
@@ -275,6 +276,7 @@ public class CommandHandler {
         addCommand(new UnbanCommand());
         addCommand(new UnloadRoomCommand());
         addCommand(new UnmuteCommand());
+        addCommand(new UpdateAllCommand());
         addCommand(new UpdateAchievements());
         addCommand(new UpdateBotsCommand());
         addCommand(new UpdateCalendarCommand());
