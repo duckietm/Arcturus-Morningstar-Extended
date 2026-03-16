@@ -49,4 +49,20 @@ public class RoomUserPetComposer extends MessageComposer {
         this.response.appendString("");
         return this.response;
     }
+
+    public int getPetType() {
+        return petType;
+    }
+
+    public int getRace() {
+        return race;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public Habbo getHabbo() {
+        return habbo;
+    }
 }
