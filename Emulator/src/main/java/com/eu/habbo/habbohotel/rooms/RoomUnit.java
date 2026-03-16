@@ -235,7 +235,7 @@ public class RoomUnit {
         }
       }
 
-      HabboItem item = room.getTopItemAt(next.x, next.y);
+      HabboItem item = room.getItemManager().getWalkableItemAt(next.x, next.y);
       boolean canSitNextTile = room.canSitAt(next.x, next.y);
       boolean canLayNextTile = room.canLayAt(next.x, next.y);
 
