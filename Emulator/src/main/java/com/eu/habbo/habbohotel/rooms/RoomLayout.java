@@ -19,6 +19,7 @@ public class RoomLayout {
   protected static final int DIAGONALMOVEMENTCOST = 14;
   public static double MAXIMUM_STEP_HEIGHT = 1.5;
   public static boolean ALLOW_FALLING = true;
+  public static double UNDERPASS_HEIGHT = 1.5;
   public boolean CANMOVEDIAGONALY = true;
   private String name;
   private short doorX;

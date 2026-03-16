@@ -449,6 +449,43 @@ public class RoomItemManager {
     }
 
     /**
+     * Gets the top walkable item at a position, considering underpass.
+     * If the topmost item is elevated enough to walk under, returns the highest item at walk surface level instead.
+     */
+    public HabboItem getWalkableItemAt(int x, int y) {
+        HabboItem topItem = this.getTopItemAt(x, y);
+        if (topItem == null) {
+            return null;
+        }
+
+        // If the top item is walkable, just return it
+        if (topItem.isWalkable() || topItem.getBaseItem().allowWalk() || topItem.getBaseItem().allowSit() || topItem.getBaseItem().allowLay()) {
+            return topItem;
+        }
+
+        // Check for underpass: get the walk surface height
+        double walkSurface = this.room.getLayout() != null ? this.room.getLayout().getHeightAtSquare(x, y) : 0;
+        HabboItem walkSurfaceItem = null;
+
+        for (HabboItem item : this.getItemsAt(x, y)) {
+            if (item.isWalkable() || item.getBaseItem().allowWalk() || item.getBaseItem().allowSit() || item.getBaseItem().allowLay()) {
+                double itemTop = item.getZ() + Item.getCurrentHeight(item);
+                if (itemTop > walkSurface) {
+                    walkSurface = itemTop;
+                    walkSurfaceItem = item;
+                }
+            }
+        }
+
+        // If there's enough clearance under the top blocking item, return the walk surface item
+        if (topItem.getZ() - walkSurface >= RoomLayout.UNDERPASS_HEIGHT) {
+            return walkSurfaceItem;
+        }
+
+        return topItem;
+    }
+
+    /**
      * Gets the top item from a set of tiles.
      */
     public HabboItem getTopItemAt(THashSet<RoomTile> tiles, HabboItem exclude) {
