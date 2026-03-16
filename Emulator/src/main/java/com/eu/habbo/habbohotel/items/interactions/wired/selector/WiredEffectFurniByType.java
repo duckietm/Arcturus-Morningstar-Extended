@@ -112,17 +112,17 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        if (params == null || params.length < 1) {
-            throw new WiredSaveException("wf_slc_furni_bytype: intParams must have at least 1 element");
+        if (params == null || params.length < 4) {
+            throw new WiredSaveException("wf_slc_furni_bytype: intParams must have at least 4 elements");
         }
 
-        this.sourceType    = params[0];
+        this.sourceType    = SOURCE_FURNI_PICKED;
         this.matchState    = params.length > 1 && params[1] == 1;
         this.filterExisting = params.length > 2 && params[2] == 1;
         this.invert        = params.length > 3 && params[3] == 1;
 
         this.pickedFurniIds = new ArrayList<>();
-        if (this.sourceType == SOURCE_FURNI_PICKED && settings.getFurniIds() != null) {
+        if (settings.getFurniIds() != null) {
             for (int id : settings.getFurniIds()) {
                 if (pickedFurniIds.size() >= MAX_PICKED_FURNI) break;
                 pickedFurniIds.add(id);
@@ -135,12 +135,10 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
-        boolean pickMode = (sourceType == SOURCE_FURNI_PICKED);
+        message.appendBoolean(true);
+        message.appendInt(MAX_PICKED_FURNI);
 
-        message.appendBoolean(pickMode);
-        message.appendInt(pickMode ? MAX_PICKED_FURNI : 0);
-
-        if (pickMode && !pickedFurniIds.isEmpty()) {
+        if (!pickedFurniIds.isEmpty()) {
             message.appendInt(pickedFurniIds.size());
             pickedFurniIds.forEach(message::appendInt);
         } else {
@@ -152,7 +150,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         message.appendString("");
 
         message.appendInt(4);
-        message.appendInt(sourceType);
+        message.appendInt(SOURCE_FURNI_PICKED);
         message.appendInt(matchState      ? 1 : 0);
         message.appendInt(filterExisting  ? 1 : 0);
         message.appendInt(invert          ? 1 : 0);

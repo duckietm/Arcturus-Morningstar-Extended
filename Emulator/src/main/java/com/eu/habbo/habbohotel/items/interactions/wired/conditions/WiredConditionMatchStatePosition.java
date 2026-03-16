@@ -19,9 +19,7 @@ import gnu.trove.set.hash.THashSet;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class WiredConditionMatchStatePosition extends InteractionWiredCondition implements InteractionWiredMatchFurniSettings {
     public static final WiredConditionType type = WiredConditionType.MATCH_SSHOT;
@@ -92,14 +90,12 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
 
         this.settings.clear();
 
-        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
-            for (int i = 0; i < count; i++) {
-                int itemId = settings.getFurniIds()[i];
-                HabboItem item = room.getHabboItem(itemId);
+        for (int i = 0; i < count; i++) {
+            int itemId = settings.getFurniIds()[i];
+            HabboItem item = room.getHabboItem(itemId);
 
-                if (item != null)
-                    this.settings.add(new WiredMatchFurniSetting(item.getId(), item.getExtradata(), item.getRotation(), item.getX(), item.getY()));
-            }
+            if (item != null)
+                this.settings.add(new WiredMatchFurniSetting(item.getId(), item.getExtradata(), item.getRotation(), item.getX(), item.getY()));
         }
 
         return true;
@@ -108,63 +104,69 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
     @Override
     public boolean evaluate(WiredContext ctx) {
         Room room = ctx.room();
+        this.refresh();
+
         if (this.settings.isEmpty())
             return true;
 
-        List<HabboItem> targets = null;
-        Set<Integer> targetIds = null;
-
         if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
-            targets = WiredSourceUtil.resolveItems(ctx, this.furniSource, null);
+            List<HabboItem> targets = WiredSourceUtil.resolveItems(ctx, this.furniSource, null);
             if (targets.isEmpty()) return false;
-            targetIds = new HashSet<>();
-            for (HabboItem item : targets) {
-                if (item != null) targetIds.add(item.getId());
-            }
-            if (targetIds.isEmpty()) return false;
-        }
 
-        THashSet<WiredMatchFurniSetting> toRemove = new THashSet<>();
-        Set<Integer> settingsIds = new HashSet<>();
+            for (HabboItem item : targets) {
+                if (item == null) return false;
+
+                WiredMatchFurniSetting setting = this.resolveSettingForTarget(room, item);
+                if (setting == null) {
+                    return false;
+                }
+
+                if (!this.matchesSetting(item, setting)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         for (WiredMatchFurniSetting setting : this.settings) {
-            if (targetIds != null && !targetIds.contains(setting.item_id)) {
-                continue;
-            }
             HabboItem item = room.getHabboItem(setting.item_id);
-
-            if (item != null) {
-                settingsIds.add(setting.item_id);
-                if (this.state) {
-                    if (!item.getExtradata().equals(setting.state))
-                        return false;
-                }
-
-                if (this.position) {
-                    if (!(setting.x == item.getX() && setting.y == item.getY()))
-                        return false;
-                }
-
-                if (this.direction) {
-                    if (setting.rotation != item.getRotation())
-                        return false;
-                }
-            } else {
-                toRemove.add(setting);
-            }
-        }
-
-        if (targetIds != null && !settingsIds.containsAll(targetIds)) {
-            return false;
-        }
-
-        if (!toRemove.isEmpty()) {
-            for (WiredMatchFurniSetting setting : toRemove) {
-                this.settings.remove(setting);
-            }
+            if (item == null) continue;
+            if (!this.matchesSetting(item, setting))
+                return false;
         }
 
         return true;
+    }
+
+    private WiredMatchFurniSetting resolveSettingForTarget(Room room, HabboItem target) {
+        WiredMatchFurniSetting fallback = null;
+
+        for (WiredMatchFurniSetting setting : this.settings) {
+            HabboItem sourceItem = room.getHabboItem(setting.item_id);
+            if (sourceItem == null) continue;
+            if (sourceItem.getBaseItem().getId() != target.getBaseItem().getId()) continue;
+
+            if (setting.state.equals(target.getExtradata())) {
+                return setting;
+            }
+
+            if (fallback == null) {
+                fallback = setting;
+            }
+        }
+
+        return fallback;
+    }
+
+    private boolean matchesSetting(HabboItem item, WiredMatchFurniSetting setting) {
+        if (this.state && !item.getExtradata().equals(setting.state))
+            return false;
+
+        if (this.position && !(setting.x == item.getX() && setting.y == item.getY()))
+            return false;
+
+        return !this.direction || setting.rotation == item.getRotation();
     }
 
     @Deprecated
@@ -213,9 +215,6 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition 
             this.direction = data[3].equals("1");
             this.position = data[4].equals("1");
             this.furniSource = this.settings.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
-        }
-        if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.settings.isEmpty()) {
-            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
