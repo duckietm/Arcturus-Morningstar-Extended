@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserWhisperComposer;
@@ -26,6 +27,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.SHOW_MESSAGE;
 
     protected String message = "";
+    protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectWhisper(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -43,7 +45,8 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.message);
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(type.code);
         message.appendInt(this.getDelay());
@@ -71,6 +74,8 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         String message = settings.getStringParam();
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
 
         if(gameClient.getHabbo() == null || !gameClient.getHabbo().hasPermission(Permission.ACC_SUPERWIRED)) {
             message = Emulator.getGameEnvironment().getWordFilter().filter(message, null);
@@ -87,11 +92,15 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
         return true;
     }
 
+    protected List<RoomUnit> resolveUsers(WiredContext ctx) {
+        return WiredSourceUtil.resolveUsers(ctx, this.userSource);
+    }
+
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         if (this.message.length() > 0) {
-            for (RoomUnit roomUnit : ctx.targets().users()) {
+            for (RoomUnit roomUnit : resolveUsers(ctx)) {
                 Habbo habbo = room.getHabbo(roomUnit);
                 if (habbo == null) continue;
 
@@ -113,7 +122,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.message, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -124,6 +133,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.message = data.message;
+            this.userSource = data.userSource;
         }
         else {
             this.message = "";
@@ -133,6 +143,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
                 this.message = wiredData.split("\t")[1];
             }
 
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
             this.needsUpdate(true);
         }
     }
@@ -140,6 +151,7 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.message = "";
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -150,16 +162,18 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         String message;
         int delay;
+        int userSource;
 
-        public JsonData(String message, int delay) {
+        public JsonData(String message, int delay, int userSource) {
             this.message = message;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

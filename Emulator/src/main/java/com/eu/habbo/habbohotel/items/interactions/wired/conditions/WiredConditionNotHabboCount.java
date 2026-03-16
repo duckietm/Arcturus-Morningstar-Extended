@@ -8,6 +8,7 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredConditionType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 
 import java.sql.ResultSet;
@@ -18,6 +19,7 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
 
     private int lowerLimit = 10;
     private int upperLimit = 20;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredConditionNotHabboCount(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -29,7 +31,9 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        int count = ctx.room().getUserCount();
+        int count = (this.userSource == WiredSourceUtil.SOURCE_TRIGGER)
+                ? ctx.room().getUserCount()
+                : WiredSourceUtil.resolveUsers(ctx, this.userSource).size();
 
         return count < this.lowerLimit || count > this.upperLimit;
     }
@@ -44,7 +48,8 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
                 this.lowerLimit,
-                this.upperLimit
+                this.upperLimit,
+                this.userSource
         ));
     }
 
@@ -56,10 +61,12 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
             WiredConditionHabboCount.JsonData data = WiredManager.getGson().fromJson(wiredData, WiredConditionHabboCount.JsonData.class);
             this.lowerLimit = data.lowerLimit;
             this.upperLimit = data.upperLimit;
+            this.userSource = data.userSource;
         } else {
             String[] data = wiredData.split(":");
             this.lowerLimit = Integer.parseInt(data[0]);
             this.upperLimit = Integer.parseInt(data[1]);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
@@ -67,6 +74,7 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
     public void onPickUp() {
         this.upperLimit = 0;
         this.lowerLimit = 20;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -82,9 +90,10 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.lowerLimit);
         message.appendInt(this.upperLimit);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -96,6 +105,8 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
         if(settings.getIntParams().length < 2) return false;
         this.lowerLimit = settings.getIntParams()[0];
         this.upperLimit = settings.getIntParams()[1];
+        int[] params = settings.getIntParams();
+        this.userSource = (params.length > 2) ? params[2] : WiredSourceUtil.SOURCE_TRIGGER;
 
         return true;
     }
@@ -103,10 +114,12 @@ public class WiredConditionNotHabboCount extends InteractionWiredCondition {
     static class JsonData {
         int lowerLimit;
         int upperLimit;
+        int userSource;
 
-        public JsonData(int lowerLimit, int upperLimit) {
+        public JsonData(int lowerLimit, int upperLimit, int userSource) {
             this.lowerLimit = lowerLimit;
             this.upperLimit = upperLimit;
+            this.userSource = userSource;
         }
     }
 }

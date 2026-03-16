@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserEffectComposer;
@@ -32,6 +33,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
     private THashSet<HabboItem> items;
     private String botName = "";
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectBotTeleport(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -108,7 +110,8 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName);
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -118,6 +121,8 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         String botName = settings.getStringParam();
+        int[] params = settings.getIntParams();
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
         int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
@@ -126,14 +131,16 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
         List<HabboItem> newItems = new ArrayList<>();
 
-        for (int i = 0; i < itemsCount; i++) {
-            int itemId = settings.getFurniIds()[i];
-            HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            for (int i = 0; i < itemsCount; i++) {
+                int itemId = settings.getFurniIds()[i];
+                HabboItem it = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(itemId);
 
-            if(it == null)
-                throw new WiredSaveException(String.format("Item %s not found", itemId));
+                if(it == null)
+                    throw new WiredSaveException(String.format("Item %s not found", itemId));
 
-            newItems.add(it);
+                newItems.add(it);
+            }
         }
 
         int delay = settings.getDelay();
@@ -142,7 +149,9 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.items.clear();
-        this.items.addAll(newItems);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            this.items.addAll(newItems);
+        }
         this.botName = botName.substring(0, Math.min(botName.length(), Emulator.getConfig().getInt("hotel.wired.message.max_length", 100)));
         this.setDelay(delay);
 
@@ -158,10 +167,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        // Use selector targets if a selector has modified them, otherwise use manually picked items
-        Iterable<HabboItem> effectiveItems = ctx.targets().isItemsModifiedBySelector()
-                ? ctx.targets().items()
-                : new ArrayList<>(this.items);
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
 
         List<HabboItem> validItems = new ArrayList<>();
         for (HabboItem item : effectiveItems) {
@@ -208,7 +214,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             }
         }
 
-        return WiredManager.getGson().toJson(new JsonData(this.botName, itemIds, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, itemIds, this.getDelay(), this.furniSource));
     }
 
     @Override
@@ -221,12 +227,16 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.botName = data.bot_name;
+            this.furniSource = data.furniSource;
 
             for(int itemId : data.items) {
                 HabboItem item = room.getHabboItem(itemId);
 
                 if (item != null)
                     this.items.add(item);
+            }
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         }
         else {
@@ -249,6 +259,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
@@ -256,6 +267,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     public void onPickUp() {
         this.botName = "";
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
@@ -263,11 +275,13 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
         String bot_name;
         List<Integer> items;
         int delay;
+        int furniSource;
 
-        public JsonData(String bot_name, List<Integer> items, int delay) {
+        public JsonData(String bot_name, List<Integer> items, int delay, int furniSource) {
             this.bot_name = bot_name;
             this.items = items;
             this.delay = delay;
+            this.furniSource = furniSource;
         }
     }
 }

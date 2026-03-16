@@ -22,7 +22,7 @@ public class WiredEffectAlert extends WiredEffectWhisper {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : ctx.targets().users()) {
+        for (com.eu.habbo.habbohotel.rooms.RoomUnit unit : resolveUsers(ctx)) {
             Habbo habbo = room.getHabbo(unit);
             if (habbo == null) continue;
 

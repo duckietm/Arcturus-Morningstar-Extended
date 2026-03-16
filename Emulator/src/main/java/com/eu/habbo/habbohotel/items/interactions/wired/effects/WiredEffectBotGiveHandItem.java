@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.threading.runnables.RoomUnitGiveHanditem;
@@ -30,6 +31,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
 
     private String botName = "";
     private int itemId;
+    private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectBotGiveHandItem(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -47,8 +49,9 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName);
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.itemId);
+        message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -75,9 +78,10 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
-        if(settings.getIntParams().length < 1) throw new WiredSaveException("Missing item id");
+        if(settings.getIntParams().length < 2) throw new WiredSaveException("Missing item id");
 
         int itemId = settings.getIntParams()[0];
+        this.userSource = settings.getIntParams()[1];
 
         if(itemId < 0)
             itemId = 0;
@@ -104,8 +108,9 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        RoomUnit roomUnit = ctx.actor().orElse(null);
-        if (roomUnit == null) return;
+        List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
+        if (targets.isEmpty()) return;
+        RoomUnit roomUnit = targets.get(0);
 
         Habbo habbo = room.getHabbo(roomUnit);
         List<Bot> bots = room.getBots(this.botName);
@@ -141,7 +146,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.itemId, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.itemId, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -153,6 +158,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
             this.setDelay(data.delay);
             this.itemId = data.item_id;
             this.botName = data.bot_name;
+            this.userSource = data.userSource;
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
@@ -164,6 +170,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
@@ -171,23 +178,26 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
     public void onPickUp() {
         this.botName = "";
         this.itemId = 0;
+        this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return true;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {
         String bot_name;
         int item_id;
         int delay;
+        int userSource;
 
-        public JsonData(String bot_name, int item_id, int delay) {
+        public JsonData(String bot_name, int item_id, int delay, int userSource) {
             this.bot_name = bot_name;
             this.item_id = item_id;
             this.delay = delay;
+            this.userSource = userSource;
         }
     }
 }

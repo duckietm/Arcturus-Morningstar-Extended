@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
@@ -32,6 +33,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     private int direction;
     private int spacing = 1;
     private Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectMoveFurniTo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -51,13 +53,16 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         this.items.clear();
         this.indexOffset.clear();
 
-        if(settings.getIntParams().length < 2) throw new WiredSaveException("invalid data");
+        if(settings.getIntParams().length < 3) throw new WiredSaveException("invalid data");
         this.direction = settings.getIntParams()[0];
         this.spacing = settings.getIntParams()[1];
+        this.furniSource = settings.getIntParams()[2];
 
         int count = settings.getFurniIds().length;
-        for (int i = 0; i < count; i++) {
-            this.items.add(room.getHabboItem(settings.getFurniIds()[i]));
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            for (int i = 0; i < count; i++) {
+                this.items.add(room.getHabboItem(settings.getFurniIds()[i]));
+            }
         }
 
         this.setDelay(settings.getDelay());
@@ -75,23 +80,16 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null || room.getLayout() == null) return;
 
-        // Use selector targets if a selector has modified them, otherwise use manually picked items
-        boolean useSelector = ctx.targets().isItemsModifiedBySelector();
-        List<HabboItem> effectiveItems;
-
-        if (useSelector) {
-            effectiveItems = new ArrayList<>(ctx.targets().items());
-        } else {
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             List<HabboItem> toRemove = new ArrayList<>();
-            List<HabboItem> itemsSnapshot = new ArrayList<>(this.items);
-            for (HabboItem item : itemsSnapshot) {
+            for (HabboItem item : effectiveItems) {
                 if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
                     toRemove.add(item);
             }
             for (HabboItem item : toRemove) {
                 this.items.remove(item);
             }
-            effectiveItems = new ArrayList<>(this.items);
         }
 
         if (effectiveItems.isEmpty())
@@ -158,12 +156,13 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         Object[] stuff = ctx.legacySettings();
         if (stuff == null || stuff.length == 0) return true;
         
+        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
         for (Object object : stuff) {
             if (object instanceof HabboItem) {
                 HabboItem item = (HabboItem) object;
                 
-                if (this.items.isEmpty()) continue;
-                HabboItem targetItem = this.items.get(0);
+                if (effectiveItems.isEmpty()) continue;
+                HabboItem targetItem = effectiveItems.get(0);
                 if (targetItem == null) continue;
                 
                 WiredSimulation.SimulatedPosition targetPos = simulation.getItemPosition(targetItem);
@@ -205,7 +204,8 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                 this.direction,
                 this.spacing,
                 this.getDelay(),
-                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList())
+                itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList()),
+                this.furniSource
         ));
     }
 
@@ -232,9 +232,10 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.direction);
         message.appendInt(this.spacing);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -251,12 +252,16 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
             this.direction = data.direction;
             this.spacing = data.spacing;
             this.setDelay(data.delay);
+            this.furniSource = data.furniSource;
 
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
                 if (item != null) {
                     this.items.add(item);
                 }
+            }
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         } else {
             String[] data = wiredData.split("\t");
@@ -276,6 +281,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                         this.items.add(item);
                 }
             }
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
@@ -286,6 +292,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         this.direction = 0;
         this.spacing = 0;
         this.indexOffset.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -298,12 +305,14 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         int spacing;
         int delay;
         List<Integer> itemIds;
+        int furniSource;
 
-        public JsonData(int direction, int spacing, int delay, List<Integer> itemIds) {
+        public JsonData(int direction, int spacing, int delay, List<Integer> itemIds, int furniSource) {
             this.direction = direction;
             this.spacing = spacing;
             this.delay = delay;
             this.itemIds = itemIds;
+            this.furniSource = furniSource;
         }
     }
 }
