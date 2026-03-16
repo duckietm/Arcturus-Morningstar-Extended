@@ -435,11 +435,11 @@ public class RoomCycleManager {
 
             if (!unit.isWalking() && !unit.cmdSit) {
                 // Don't override special pet statuses with SIT
-                boolean hasSpecialPetStatus = unit.hasStatus(RoomUnitStatus.HANG) 
-                    || unit.hasStatus(RoomUnitStatus.SWING) 
-                    || unit.hasStatus(RoomUnitStatus.FLAME)
-                    || unit.hasStatus(RoomUnitStatus.PLAY);
-                
+                boolean hasSpecialPetStatus = unit.hasStatus(RoomUnitStatus.HANG)
+                        || unit.hasStatus(RoomUnitStatus.SWING)
+                        || unit.hasStatus(RoomUnitStatus.FLAME)
+                        || unit.hasStatus(RoomUnitStatus.PLAY);
+
                 RoomTile thisTile = this.room.getLayout().getTile(unit.getX(), unit.getY());
                 HabboItem topItem = this.room.getTallestChair(thisTile);
 
@@ -473,12 +473,16 @@ public class RoomCycleManager {
                     BedProfile bedProfile = new BedProfile(topItem);
                     double layHeight = Item.getCurrentHeight(topItem) * 1.0D + bedProfile.getLayZOffset();
                     LOGGER.info("[BedProfile] item={} stackHeight={} isFlat={} isDouble={} X={} Y={} Z={}",
-                        topItem.getBaseItem().getName(), topItem.getBaseItem().getHeight(),
-                        bedProfile.isFlat(), bedProfile.isDouble(),
-                        bedProfile.getLayXOffset(), bedProfile.getLayYOffset(), bedProfile.getLayZOffset());
+                            topItem.getBaseItem().getName(), topItem.getBaseItem().getHeight(),
+                            bedProfile.isFlat(), bedProfile.isDouble(),
+                            bedProfile.getLayXOffset(), bedProfile.getLayYOffset(), bedProfile.getLayZOffset());
                     unit.setStatus(RoomUnitStatus.LAY, layHeight + ";" + bedProfile.getLayXOffset() + ";" + bedProfile.getLayYOffset());
                     unit.setRotation(RoomUserRotation.values()[topItem.getRotation() % 4]);
                     unit.setLocation(bedProfile.snapToLay(this.room, topItem, unit.getX(), unit.getY()));
+
+                    // Check love effect when a user enters a bed
+                    this.room.getUnitManager().checkBedLoveEffect(topItem);
+
                     update = true;
                 }
             }

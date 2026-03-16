@@ -17,6 +17,7 @@ import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.scoreboards
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.scoreboards.InteractionBattleBanzaiScoreboardYellow;
 import com.eu.habbo.habbohotel.items.interactions.games.football.InteractionFootball;
 import com.eu.habbo.habbohotel.items.interactions.games.football.InteractionFootballGate;
+import com.eu.habbo.habbohotel.items.interactions.games.football.InteractionRebugFootball;
 import com.eu.habbo.habbohotel.items.interactions.games.football.goals.InteractionFootballGoalBlue;
 import com.eu.habbo.habbohotel.items.interactions.games.football.goals.InteractionFootballGoalGreen;
 import com.eu.habbo.habbohotel.items.interactions.games.football.goals.InteractionFootballGoalRed;
@@ -345,6 +346,7 @@ public class ItemManager {
 
 
         this.interactionsList.add(new ItemInteraction("football", InteractionFootball.class));
+        this.interactionsList.add(new ItemInteraction("rebug_football", InteractionRebugFootball.class));
         this.interactionsList.add(new ItemInteraction("football_gate", InteractionFootballGate.class));
         this.interactionsList.add(new ItemInteraction("football_counter_blue", InteractionFootballScoreboardBlue.class));
         this.interactionsList.add(new ItemInteraction("football_counter_green", InteractionFootballScoreboardGreen.class));
