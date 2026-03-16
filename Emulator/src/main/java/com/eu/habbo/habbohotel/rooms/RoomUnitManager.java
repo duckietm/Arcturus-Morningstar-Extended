@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.pets.PetVocalsType;
 import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  */
 public class RoomUnitManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomUnitManager.class);
+    static final int BED_LOVE_EFFECT_ID = 9;
 
     private final Room room;
 
@@ -419,6 +421,10 @@ public class RoomUnitManager {
                 roomUnits.add(habbo.getRoomUnit());
             }
             this.room.sendComposer(new RoomUserStatusComposer(roomUnits, true).compose());
+        }
+
+        if (topItem != null && topItem.getBaseItem().allowLay()) {
+            this.checkBedLoveEffect(topItem);
         }
     }
 
@@ -1161,6 +1167,31 @@ public class RoomUnitManager {
         if (this.room.isAllowEffects() && roomUnit != null) {
             roomUnit.setEffectId(effectId, duration);
             this.room.sendComposer(new RoomUserEffectComposer(roomUnit).compose());
+        }
+    }
+
+    public void checkBedLoveEffect(HabboItem bed) {
+        if (bed == null || !bed.getBaseItem().allowLay()) return;
+
+        BedProfile bedProfile = new BedProfile(bed);
+        if (!bedProfile.isDouble()) return;
+
+        THashSet<Habbo> habbosOnBed = this.getHabbosOnItem(bed);
+
+        Habbo male = null;
+        Habbo female = null;
+        for (Habbo h : habbosOnBed) {
+            if (h.getRoomUnit() == null || !h.getRoomUnit().hasStatus(RoomUnitStatus.LAY)) continue;
+            if (h.getHabboInfo().getGender() == HabboGender.M && male == null) {
+                male = h;
+            } else if (h.getHabboInfo().getGender() == HabboGender.F && female == null) {
+                female = h;
+            }
+        }
+
+        if (male != null && female != null) {
+            this.giveEffect(male.getRoomUnit(), BED_LOVE_EFFECT_ID, 5);
+            this.giveEffect(female.getRoomUnit(), BED_LOVE_EFFECT_ID, 5);
         }
     }
 
