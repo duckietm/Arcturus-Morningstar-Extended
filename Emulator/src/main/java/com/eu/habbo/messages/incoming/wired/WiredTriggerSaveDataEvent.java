@@ -34,17 +34,21 @@ public class WiredTriggerSaveDataEvent extends MessageHandler {
                         if (saveMethod.get().getParameterTypes()[0] == WiredSettings.class) {
                             WiredSettings settings = InteractionWired.readSettings(this.packet, false);
 
-                            if (trigger.saveData(settings)) {
-                                this.client.sendResponse(new WiredSavedComposer());
+                            try {
+                                if (trigger.saveData(settings)) {
+                                    this.client.sendResponse(new WiredSavedComposer());
 
-                                trigger.needsUpdate(true);
+                                    trigger.needsUpdate(true);
 
-                                Emulator.getThreading().run(trigger);
-                                
-                                // Invalidate wired cache when trigger is saved
-                                WiredManager.invalidateRoom(room);
-                            } else {
-                                this.client.sendResponse(new UpdateFailedComposer("There was an error while saving that trigger"));
+                                    Emulator.getThreading().run(trigger);
+                                    
+                                    // Invalidate wired cache when trigger is saved
+                                    WiredManager.invalidateRoom(room);
+                                } else {
+                                    this.client.sendResponse(new UpdateFailedComposer("There was an error while saving that trigger"));
+                                }
+                            } catch (WiredTriggerSaveException e) {
+                                this.client.sendResponse(new UpdateFailedComposer(e.getMessage()));
                             }
                         } else {
                             if ((boolean) saveMethod.get().invoke(trigger, this.packet)) {
