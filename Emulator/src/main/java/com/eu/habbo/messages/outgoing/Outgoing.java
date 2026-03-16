@@ -553,5 +553,6 @@ public class Outgoing {
     public static final int SnowStormGenericErrorComposer = 5028;
     public static final int SnowStormUserRematchedComposer = 5029;
 
+    public static final int AvailableCommandsComposer = 4050;
 
 }
