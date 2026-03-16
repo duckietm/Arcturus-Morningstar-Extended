@@ -4,11 +4,16 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomTileState;
+import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import com.eu.habbo.util.pathfinding.Direction8;
 import gnu.trove.set.hash.THashSet;
 
+/**
+ * Alternative football physics based on the Rebug plugin.
+ * Uses momentum decay (ball slows down over time) and simple 180-degree bounce.
+ */
 public class RebugKickBallAction implements Runnable {
 
     private final HabboItem ball;
@@ -17,6 +22,9 @@ public class RebugKickBallAction implements Runnable {
     private int momentum;
     private boolean isDribble;
     public boolean dead = false;
+
+    // Track tiles traveled since last wall bounce for user-bounce logic
+    private int tilesSinceBounce = -1; // -1 = no bounce has happened yet
 
     public RebugKickBallAction(HabboItem ball, Room room, Direction8 direction, int momentum) {
         this.ball = ball;
@@ -42,6 +50,7 @@ public class RebugKickBallAction implements Runnable {
 
             if (isTileBlocked(nextX, nextY)) {
                 this.direction = this.direction.rotateDirection180Degrees();
+                this.tilesSinceBounce = 0;
                 nextX = this.ball.getX() + this.direction.getDiffX();
                 nextY = this.ball.getY() + this.direction.getDiffY();
             }
@@ -57,6 +66,20 @@ public class RebugKickBallAction implements Runnable {
             this.ball.setY(nextTile.y);
             this.ball.setZ(nextTile.getStackHeight());
             this.ball.needsUpdate(true);
+
+            // Count tiles since bounce
+            if (this.tilesSinceBounce >= 0) {
+                this.tilesSinceBounce++;
+            }
+
+            // After bouncing, if ball has traveled more than 1 tile from the wall, bounce off users
+            if (this.tilesSinceBounce > 1 && !this.isDribble) {
+                THashSet<Habbo> habbos = this.room.getHabbosAt(nextTile.x, nextTile.y);
+                if (!habbos.isEmpty()) {
+                    this.direction = this.direction.rotateDirection180Degrees();
+                    this.tilesSinceBounce = 0;
+                }
+            }
 
             // Schedule next movement
             if (!this.isDribble) {
