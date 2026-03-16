@@ -4,38 +4,31 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomTileState;
-import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import com.eu.habbo.util.pathfinding.Direction8;
 import gnu.trove.set.hash.THashSet;
 
-/**
- * Alternative football physics based on the Rebug plugin.
- * Uses momentum decay (ball slows down over time) and simple 180-degree bounce.
- */
 public class RebugKickBallAction implements Runnable {
 
     private final HabboItem ball;
     private final Room room;
     private Direction8 direction;
     private int momentum;
+    private boolean isDribble;
     public boolean dead = false;
 
-    public RebugKickBallAction(HabboItem ball, Room room, RoomUnit kicker, boolean hasPath) {
+    public RebugKickBallAction(HabboItem ball, Room room, Direction8 direction, int momentum) {
         this.ball = ball;
         this.room = room;
-        this.direction = Direction8.fromDelta(
-                ball.getX() - kicker.getX(),
-                ball.getY() - kicker.getY()
-        );
-        this.momentum = hasPath ? 55 : 0;
+        this.direction = direction;
+        this.momentum = momentum;
+        this.isDribble = (momentum == 0);
     }
 
     private boolean isTileBlocked(int x, int y) {
         RoomTile tile = this.room.getLayout().getTile((short) x, (short) y);
         if (tile == null) return true;
-        if (tile.hasUnits()) return true;
         return tile.getState() != RoomTileState.OPEN;
     }
 
@@ -65,10 +58,16 @@ public class RebugKickBallAction implements Runnable {
             this.ball.setZ(nextTile.getStackHeight());
             this.ball.needsUpdate(true);
 
-            // Schedule next movement based on momentum
-            long delay = getDelayForMomentum(this.momentum);
-            if (delay > 0) {
-                Emulator.getThreading().run(this, delay);
+            // Schedule next movement
+            if (!this.isDribble) {
+                long delay = getDelayForMomentum(this.momentum);
+                if (delay > 0) {
+                    Emulator.getThreading().run(this, delay);
+                } else {
+                    this.dead = true;
+                }
+            } else {
+                this.dead = true;
             }
 
             // Update tiles
