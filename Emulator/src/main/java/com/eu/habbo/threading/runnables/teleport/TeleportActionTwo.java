@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionTeleportTile;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.threading.runnables.HabboItemNewState;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ class TeleportActionTwo implements Runnable {
         if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != this.room) {
             this.client.getHabbo().getHabboInfo().setLoadingRoom(0);
             this.client.getHabbo().getRoomUnit().isTeleporting = false;
-            this.client.getHabbo().getRoomUnit().setCanWalk(true);
+            WiredFreezeUtil.restoreWalkState(this.client.getHabbo().getRoomUnit());
             return;
         }
 
