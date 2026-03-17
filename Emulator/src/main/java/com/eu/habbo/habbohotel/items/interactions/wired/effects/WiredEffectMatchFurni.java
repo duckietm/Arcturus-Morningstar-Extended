@@ -108,6 +108,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         if (this.state && (this.checkForWiredResetPermission && item.allowWiredResetState())) {
             if (!setting.state.equals(" ") && !item.getExtradata().equals(setting.state)) {
                 item.setExtradata(setting.state);
+                item.needsUpdate(true);
                 room.updateItemState(item);
             }
         }

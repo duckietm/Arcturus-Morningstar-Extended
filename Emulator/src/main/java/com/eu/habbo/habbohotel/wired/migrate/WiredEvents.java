@@ -68,6 +68,70 @@ public final class WiredEvents {
     }
 
     /**
+     * Create an event for when a user clicks furniture.
+     * @param room the room
+     * @param user the clicking user
+     * @param item the clicked furniture
+     * @return the event
+     */
+    public static WiredEvent userClicksFurni(Room room, RoomUnit user, HabboItem item) {
+        RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_FURNI, room)
+                .actor(user)
+                .sourceItem(item)
+                .tile(tile)
+                .build();
+    }
+
+    /**
+     * Create an event for when a user clicks invisible click tile furniture.
+     * @param room the room
+     * @param user the clicking user
+     * @param item the clicked furniture
+     * @return the event
+     */
+    public static WiredEvent userClicksTile(Room room, RoomUnit user, HabboItem item) {
+        RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_TILE, room)
+                .actor(user)
+                .sourceItem(item)
+                .tile(tile)
+                .build();
+    }
+
+    /**
+     * Create an event for when a user clicks another user.
+     * @param room the room
+     * @param clickingUser the user performing the click
+     * @param clickedUser the user who was clicked
+     * @return the event
+     */
+    public static WiredEvent userClicksUser(Room room, RoomUnit clickingUser, RoomUnit clickedUser) {
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_USER, room)
+                .actor(clickedUser)
+                .targetUnit(clickingUser)
+                .tile(clickedUser.getCurrentLocation())
+                .build();
+    }
+
+    /**
+     * Create an event for when a user performs an avatar action.
+     * @param room the room
+     * @param user the acting user
+     * @param actionId the wired action id
+     * @param actionParameter sign/dance parameter, or -1 when unused
+     * @return the event
+     */
+    public static WiredEvent userPerformsAction(Room room, RoomUnit user, int actionId, int actionParameter) {
+        return WiredEvent.builder(WiredEvent.Type.USER_PERFORMS_ACTION, room)
+                .actor(user)
+                .tile(user.getCurrentLocation())
+                .actionId(actionId)
+                .actionParameter(actionParameter)
+                .build();
+    }
+
+    /**
      * Create an event for when a user enters the room.
      * @param room the room
      * @param user the user who entered
@@ -75,6 +139,19 @@ public final class WiredEvents {
      */
     public static WiredEvent userEntersRoom(Room room, RoomUnit user) {
         return WiredEvent.builder(WiredEvent.Type.USER_ENTERS_ROOM, room)
+                .actor(user)
+                .tile(user.getCurrentLocation())
+                .build();
+    }
+
+    /**
+     * Create an event for when a user leaves the room.
+     * @param room the room
+     * @param user the user who left
+     * @return the event
+     */
+    public static WiredEvent userLeavesRoom(Room room, RoomUnit user) {
+        return WiredEvent.builder(WiredEvent.Type.USER_LEAVES_ROOM, room)
                 .actor(user)
                 .tile(user.getCurrentLocation())
                 .build();
@@ -149,6 +226,18 @@ public final class WiredEvents {
      */
     public static WiredEvent timerRepeatLong(Room room, HabboItem timerItem) {
         return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT_LONG, room)
+                .sourceItem(timerItem)
+                .build();
+    }
+
+    /**
+     * Create an event for a short periodic timer.
+     * @param room the room
+     * @param timerItem the timer furniture
+     * @return the event
+     */
+    public static WiredEvent timerRepeatShort(Room room, HabboItem timerItem) {
+        return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT_SHORT, room)
                 .sourceItem(timerItem)
                 .build();
     }
