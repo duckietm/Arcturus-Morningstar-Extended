@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
@@ -220,6 +221,9 @@ public class RoomUnitManager {
 
         if (habbo.getRoomUnit() != null) {
             WiredManager.triggerUserLeavesRoom(this.room, habbo.getRoomUnit());
+            if (WiredFreezeUtil.isFrozen(habbo.getRoomUnit())) {
+                WiredFreezeUtil.unfreeze(this.room, habbo.getRoomUnit());
+            }
         }
 
         if (habbo.getRoomUnit() != null && habbo.getRoomUnit().getCurrentLocation() != null) {
@@ -1309,6 +1313,8 @@ public class RoomUnitManager {
      */
     public void teleportRoomUnitToLocation(RoomUnit roomUnit, short x, short y, double z) {
         if (this.room.isLoaded()) {
+            WiredFreezeUtil.onTeleport(this.room, roomUnit);
+
             RoomTile tile = this.room.getLayout().getTile(x, y);
 
             if (z < tile.z) {
@@ -1320,6 +1326,7 @@ public class RoomUnitManager {
             roomUnit.setZ(z);
             roomUnit.setPreviousLocationZ(z);
             this.room.updateRoomUnit(roomUnit);
+            WiredFreezeUtil.restoreWalkState(roomUnit);
         }
     }
 
