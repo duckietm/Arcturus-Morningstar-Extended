@@ -84,6 +84,7 @@ public class PluginManager {
         Room.MUTEAREA_CAN_WHISPER = Emulator.getConfig().getBoolean("room.chat.mutearea.allow_whisper", false);
         RoomChatMessage.SAVE_ROOM_CHATS = Emulator.getConfig().getBoolean("save.room.chats", false);
         RoomLayout.MAXIMUM_STEP_HEIGHT = Emulator.getConfig().getDouble("pathfinder.step.maximum.height", 1.1);
+        RoomLayout.UNDERPASS_HEIGHT = Emulator.getConfig().getDouble("pathfinder.underpass.height", 1.5);
         RoomLayout.ALLOW_FALLING = Emulator.getConfig().getBoolean("pathfinder.step.allow.falling", true);
         RoomTrade.TRADING_ENABLED = Emulator.getConfig().getBoolean("hotel.trading.enabled") && !ShutdownEmulator.instantiated;
         RoomTrade.TRADING_REQUIRES_PERK = Emulator.getConfig().getBoolean("hotel.trading.requires.perk");
