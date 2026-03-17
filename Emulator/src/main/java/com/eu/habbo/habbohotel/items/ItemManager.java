@@ -202,16 +202,24 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("random_state", InteractionRandomState.class));
         this.interactionsList.add(new ItemInteraction("vendingmachine_no_sides", InteractionNoSidesVendingMachine.class));
         this.interactionsList.add(new ItemInteraction("tile_walkmagic", InteractionTileWalkMagic.class));
+        this.interactionsList.add(new ItemInteraction("room_invisible_click_tile", InteractionDefault.class));
 
         this.interactionsList.add(new ItemInteraction("game_timer", InteractionGameTimer.class));
 
         this.interactionsList.add(new ItemInteraction("wf_trg_walks_on_furni", WiredTriggerHabboWalkOnFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_walks_off_furni", WiredTriggerHabboWalkOffFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_click_furni", WiredTriggerHabboClicksFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_click_tile", WiredTriggerHabboClicksTile.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_click_user", WiredTriggerHabboClicksUser.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_user_performs_action", WiredTriggerHabboPerformsAction.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_enter_room", WiredTriggerHabboEntersRoom.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_leave_room", WiredTriggerHabboLeavesRoom.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_says_something", WiredTriggerHabboSaysKeyword.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_periodically", WiredTriggerRepeater.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_period_short", WiredTriggerRepeaterShort.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_period_long", WiredTriggerRepeaterLong.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_state_changed", WiredTriggerFurniStateToggled.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_stuff_state", WiredTriggerFurniStateToggled.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_at_given_time", WiredTriggerAtSetTime.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_at_time_long", WiredTriggerAtTimeLong.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_collision", WiredTriggerCollision.class));

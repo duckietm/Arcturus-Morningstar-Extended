@@ -3,8 +3,9 @@ package com.eu.habbo.messages.incoming.rooms.users;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDanceComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
 
 public class RoomUserDanceEvent extends MessageHandler {
@@ -14,7 +15,7 @@ public class RoomUserDanceEvent extends MessageHandler {
             return;
 
         int danceId = this.packet.readInt();
-        if (danceId >= 0 && danceId <= 5) {
+        if (danceId >= 0 && danceId <= 4) {
             if (this.client.getHabbo().getRoomUnit().isInRoom()) {
 
                 Habbo habbo = this.client.getHabbo();
@@ -29,8 +30,6 @@ public class RoomUserDanceEvent extends MessageHandler {
                     }
                 }
 
-                habbo.getRoomUnit().setDanceType(DanceType.values()[danceId]);
-
                 UserIdleEvent event = new UserIdleEvent(this.client.getHabbo(), UserIdleEvent.IdleReason.DANCE, false);
                 Emulator.getPluginManager().fireEvent(event);
 
@@ -40,7 +39,11 @@ public class RoomUserDanceEvent extends MessageHandler {
                     }
                 }
 
-                this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserDanceComposer(habbo.getRoomUnit()).compose());
+                this.client.getHabbo().getHabboInfo().getCurrentRoom().dance(habbo, DanceType.values()[danceId]);
+
+                if (danceId > 0) {
+                    WiredManager.triggerUserPerformsAction(this.client.getHabbo().getHabboInfo().getCurrentRoom(), habbo.getRoomUnit(), WiredUserActionType.DANCE, danceId);
+                }
             }
         }
     }

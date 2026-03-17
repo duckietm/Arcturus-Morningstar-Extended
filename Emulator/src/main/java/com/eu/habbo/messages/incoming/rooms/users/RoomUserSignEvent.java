@@ -5,6 +5,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionVoteCounter;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.plugin.events.users.UserSignEvent;
 
@@ -22,6 +24,7 @@ public class RoomUserSignEvent extends MessageHandler {
         if (!Emulator.getPluginManager().fireEvent(event).isCancelled()) {
             this.client.getHabbo().getRoomUnit().setStatus(RoomUnitStatus.SIGN, event.sign + "");
             this.client.getHabbo().getHabboInfo().getCurrentRoom().unIdle(this.client.getHabbo());
+            WiredManager.triggerUserPerformsAction(room, this.client.getHabbo().getRoomUnit(), WiredUserActionType.SIGN, event.sign);
 
             if(signId <= 10) {
 

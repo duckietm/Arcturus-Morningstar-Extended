@@ -13,6 +13,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
 import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
@@ -217,6 +218,10 @@ public class RoomUnitManager {
             return;
         }
 
+        if (habbo.getRoomUnit() != null) {
+            WiredManager.triggerUserLeavesRoom(this.room, habbo.getRoomUnit());
+        }
+
         if (habbo.getRoomUnit() != null && habbo.getRoomUnit().getCurrentLocation() != null) {
             habbo.getRoomUnit().getCurrentLocation().removeUnit(habbo.getRoomUnit());
         }
@@ -352,6 +357,7 @@ public class RoomUnitManager {
             }
 
             double z = habbo.getRoomUnit().getCurrentLocation().getStackHeight();
+            boolean hadLayStatus = habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY);
 
             if (habbo.getRoomUnit().hasStatus(RoomUnitStatus.SIT)
                     || (topItem != null && topItem.getBaseItem().allowSit())) {
@@ -413,6 +419,10 @@ public class RoomUnitManager {
             }
 
             habbo.getRoomUnit().statusUpdate(true);
+
+            if (!hadLayStatus && habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY)) {
+                WiredManager.triggerUserPerformsAction(this.room, habbo.getRoomUnit(), WiredUserActionType.LAY, -1);
+            }
         }
 
         if (!habbos.isEmpty()) {

@@ -42,6 +42,18 @@ public final class WiredEvent {
         
         /** User walks off furniture */
         USER_WALKS_OFF(WiredTriggerType.WALKS_OFF_FURNI),
+
+        /** User clicks furniture */
+        USER_CLICKS_FURNI(WiredTriggerType.CLICKS_FURNI),
+
+        /** User clicks invisible click tile furniture */
+        USER_CLICKS_TILE(WiredTriggerType.CLICKS_TILE),
+
+        /** User clicks another user */
+        USER_CLICKS_USER(WiredTriggerType.CLICKS_USER),
+
+        /** User performs an avatar action */
+        USER_PERFORMS_ACTION(WiredTriggerType.USER_PERFORMS_ACTION),
         
         /** Furniture state is toggled/changed */
         FURNI_STATE_CHANGED(WiredTriggerType.STATE_CHANGED),
@@ -54,9 +66,15 @@ public final class WiredEvent {
         
         /** Long timer repeat */
         TIMER_REPEAT_LONG(WiredTriggerType.PERIODICALLY_LONG),
+
+        /** Short timer repeat */
+        TIMER_REPEAT_SHORT(WiredTriggerType.PERIODICALLY_SHORT),
         
         /** User enters the room */
         USER_ENTERS_ROOM(WiredTriggerType.ENTER_ROOM),
+
+        /** User leaves the room */
+        USER_LEAVES_ROOM(WiredTriggerType.LEAVE_ROOM),
         
         /** Game starts */
         GAME_STARTS(WiredTriggerType.GAME_STARTS),
@@ -141,6 +159,8 @@ public final class WiredEvent {
     private final boolean triggeredByEffect; // true if triggered by a wired effect (to prevent loops)
     private final int callStackDepth;   // recursion depth for trigger stacks effect
     private final int signalChannel;    // channel for signal routing (0-based)
+    private final int actionId;         // user action id for USER_PERFORMS_ACTION
+    private final int actionParameter;  // sign/dance parameter when relevant
     private final long createdAtMs;
 
     private WiredEvent(Builder builder) {
@@ -156,6 +176,8 @@ public final class WiredEvent {
         this.triggeredByEffect = builder.triggeredByEffect;
         this.callStackDepth = builder.callStackDepth;
         this.signalChannel = builder.signalChannel;
+        this.actionId = builder.actionId;
+        this.actionParameter = builder.actionParameter;
         this.createdAtMs = builder.createdAtMs;
     }
 
@@ -258,6 +280,14 @@ public final class WiredEvent {
         return signalChannel;
     }
 
+    public int getActionId() {
+        return actionId;
+    }
+
+    public int getActionParameter() {
+        return actionParameter;
+    }
+
     /**
      * Get the timestamp when this event was created.
      * @return milliseconds since epoch
@@ -313,6 +343,8 @@ public final class WiredEvent {
         private boolean triggeredByEffect;
         private int callStackDepth;
         private int signalChannel;
+        private int actionId;
+        private int actionParameter = -1;
         private long createdAtMs = System.currentTimeMillis();
 
         private Builder(Type type, Room room) {
@@ -414,6 +446,16 @@ public final class WiredEvent {
 
         public Builder signalChannel(int signalChannel) {
             this.signalChannel = signalChannel;
+            return this;
+        }
+
+        public Builder actionId(int actionId) {
+            this.actionId = actionId;
+            return this;
+        }
+
+        public Builder actionParameter(int actionParameter) {
+            this.actionParameter = actionParameter;
             return this;
         }
 

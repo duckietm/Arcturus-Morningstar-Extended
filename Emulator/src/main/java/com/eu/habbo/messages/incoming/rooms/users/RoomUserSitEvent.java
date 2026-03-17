@@ -7,11 +7,18 @@ import com.eu.habbo.plugin.events.users.UserIdleEvent;
 public class RoomUserSitEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
+        int posture = this.packet.readInt();
+
         if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != null) {
             if (this.client.getHabbo().getRoomUnit().isWalking()) {
                 this.client.getHabbo().getRoomUnit().stopWalking();
             }
-            this.client.getHabbo().getHabboInfo().getCurrentRoom().makeSit(this.client.getHabbo());
+
+            if (posture == 0) {
+                this.client.getHabbo().getHabboInfo().getCurrentRoom().makeStand(this.client.getHabbo());
+            } else {
+                this.client.getHabbo().getHabboInfo().getCurrentRoom().makeSit(this.client.getHabbo());
+            }
 
             UserIdleEvent event = new UserIdleEvent(this.client.getHabbo(), UserIdleEvent.IdleReason.WALKED, false);
             Emulator.getPluginManager().fireEvent(event);
