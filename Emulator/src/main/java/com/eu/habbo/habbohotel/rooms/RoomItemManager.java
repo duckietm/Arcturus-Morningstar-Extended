@@ -458,6 +458,11 @@ public class RoomItemManager {
             return null;
         }
 
+        // If underpass is disabled for this room, just return the top item
+        if (!this.room.isAllowUnderpass()) {
+            return topItem;
+        }
+
         // If the top item is walkable, just return it
         if (topItem.isWalkable() || topItem.getBaseItem().allowWalk() || topItem.getBaseItem().allowSit() || topItem.getBaseItem().allowLay()) {
             return topItem;
