@@ -466,7 +466,7 @@ public class WiredHandler {
         room.getRoomSpecialTypes().getTriggers().forEach(t -> {
             if (t == null) return;
             
-            if (t.getType() == WiredTriggerType.AT_GIVEN_TIME || t.getType() == WiredTriggerType.PERIODICALLY || t.getType() == WiredTriggerType.PERIODICALLY_LONG) {
+            if (t.getType() == WiredTriggerType.AT_GIVEN_TIME || t.getType() == WiredTriggerType.PERIODICALLY || t.getType() == WiredTriggerType.PERIODICALLY_LONG || t.getType() == WiredTriggerType.PERIODICALLY_SHORT) {
                 ((WiredTriggerReset) t).resetTimer();
             }
         });
