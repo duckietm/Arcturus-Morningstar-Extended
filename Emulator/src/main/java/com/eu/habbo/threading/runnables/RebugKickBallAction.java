@@ -165,14 +165,14 @@ public class RebugKickBallAction implements Runnable {
                 this.dead = true;
             }
 
-            this.room.updateTile(oldTile);
-            this.room.updateTile(nextTile);
-
             THashSet<HabboItem> oldItems = this.room.getItemsAt(oldTile);
             if (oldItems != null && !oldItems.isEmpty()) {
                 oldItems.remove(this.ball);
             }
             this.room.getItemsAt(nextTile).add(this.ball);
+
+            this.room.updateTile(oldTile);
+            this.room.updateTile(nextTile);
 
             this.room.sendComposer(new FloorItemOnRollerComposer(
                     this.ball, null, oldTile, oldZ, nextTile, this.ball.getZ(), 0.0D, this.room
