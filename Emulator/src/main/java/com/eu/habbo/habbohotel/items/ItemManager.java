@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.items;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
+import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameUpCounter;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiPuck;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiSphere;
 import com.eu.habbo.habbohotel.items.interactions.games.battlebanzai.InteractionBattleBanzaiTeleporter;
@@ -206,6 +207,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("room_invisible_click_tile", InteractionDefault.class));
 
         this.interactionsList.add(new ItemInteraction("game_timer", InteractionGameTimer.class));
+        this.interactionsList.add(new ItemInteraction("game_upcounter", InteractionGameUpCounter.class));
 
         this.interactionsList.add(new ItemInteraction("wf_trg_walks_on_furni", WiredTriggerHabboWalkOnFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_walks_off_furni", WiredTriggerHabboWalkOffFurni.class));
@@ -216,6 +218,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_trg_enter_room", WiredTriggerHabboEntersRoom.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_leave_room", WiredTriggerHabboLeavesRoom.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_says_something", WiredTriggerHabboSaysKeyword.class));
+        this.interactionsList.add(new ItemInteraction("wf_trg_clock_counter", WiredTriggerClockCounter.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_periodically", WiredTriggerRepeater.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_period_short", WiredTriggerRepeaterShort.class));
         this.interactionsList.add(new ItemInteraction("wf_trg_period_long", WiredTriggerRepeaterLong.class));
@@ -271,6 +274,8 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_act_furni_to_furni", WiredEffectFurniToFurni.class));
         this.interactionsList.add(new ItemInteraction("wf_act_set_altitude", WiredEffectSetAltitude.class));
         this.interactionsList.add(new ItemInteraction("wf_act_rel_mov", WiredEffectRelativeMove.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_control_clock", WiredEffectControlClock.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_adjust_clock", WiredEffectAdjustClock.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_area", WiredEffectFurniArea.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_neighborhood", WiredEffectFurniNeighborhood.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_bytype", WiredEffectFurniByType.class));
@@ -303,6 +308,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_handitem", WiredConditionHabboHasHandItem.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_date_rng_active", WiredConditionDateRangeActive.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_valid_moves", WiredConditionMovementValidation.class));
+        this.interactionsList.add(new ItemInteraction("wf_cnd_counter_time_matches", WiredConditionCounterTimeMatches.class));
 
 
         this.interactionsList.add(new ItemInteraction("wf_xtra_random", WiredExtraRandom.class));

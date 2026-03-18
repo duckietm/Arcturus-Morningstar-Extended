@@ -218,6 +218,12 @@ public final class WiredEvents {
                 .build();
     }
 
+    public static WiredEvent clockCounter(Room room, HabboItem counterItem) {
+        return WiredEvent.builder(WiredEvent.Type.CLOCK_COUNTER_REACHED, room)
+                .sourceItem(counterItem)
+                .build();
+    }
+
     /**
      * Create an event for a long periodic timer.
      * @param room the room

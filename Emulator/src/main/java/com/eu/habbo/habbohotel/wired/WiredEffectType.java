@@ -39,7 +39,9 @@ public enum WiredEffectType {
     USER_TO_FURNI(37),
     FURNI_TO_FURNI(38),
     SET_ALTITUDE(39),
-    RELATIVE_MOVE(40);
+    RELATIVE_MOVE(40),
+    CONTROL_CLOCK(41),
+    ADJUST_CLOCK(42);
 
     public final int code;
 

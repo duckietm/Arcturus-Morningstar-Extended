@@ -355,6 +355,15 @@ public final class WiredManager {
         return handleEvent(event);
     }
 
+    public static boolean triggerClockCounter(Room room, HabboItem counterItem) {
+        if (!isEnabled() || room == null || counterItem == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.clockCounter(room, counterItem);
+        return handleEvent(event);
+    }
+
     /**
      * Trigger a long periodic timer.
      */

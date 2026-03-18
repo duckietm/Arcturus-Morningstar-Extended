@@ -9,6 +9,7 @@ import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
+import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameUpCounter;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.PetManager;
@@ -898,7 +899,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
           }
 
           for (InteractionGameTimer timer : this.getRoomSpecialTypes().getGameTimers().values()) {
-            timer.setRunning(false);
+            if (timer instanceof InteractionGameUpCounter) {
+              ((InteractionGameUpCounter) timer).resetOnRoomUnload(this);
+            } else {
+              timer.setRunning(false);
+            }
           }
 
           for (Game game : this.games) {
