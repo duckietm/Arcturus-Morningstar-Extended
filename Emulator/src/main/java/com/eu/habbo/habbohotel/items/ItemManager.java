@@ -203,6 +203,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("vendingmachine_no_sides", InteractionNoSidesVendingMachine.class));
         this.interactionsList.add(new ItemInteraction("tile_walkmagic", InteractionTileWalkMagic.class));
         this.interactionsList.add(new ItemInteraction("room_invisible_click_tile", InteractionDefault.class));
+        this.interactionsList.add(new ItemInteraction("antenna", InteractionDefault.class));
 
         this.interactionsList.add(new ItemInteraction("game_timer", InteractionGameTimer.class));
 

@@ -52,6 +52,7 @@ public class RoomSettingsComposer extends MessageComposer {
         this.response.appendInt(this.room.getMuteOption());
         this.response.appendInt(this.room.getKickOption());
         this.response.appendInt(this.room.getBanOption());
+        this.response.appendInt(this.room.isAllowUnderpass() ? 1 : 0);
         return this.response;
     }
 

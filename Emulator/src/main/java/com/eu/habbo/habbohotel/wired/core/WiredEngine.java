@@ -214,24 +214,16 @@ public final class WiredEngine {
         // Initial step for trigger
         state.step();
         
-        // Activate the trigger box animation
-        if (stack.triggerItem() instanceof InteractionWiredTrigger) {
-            InteractionWiredTrigger trigger = (InteractionWiredTrigger) stack.triggerItem();
-            trigger.activateBox(room, event.getActor().orElse(null), currentTime);
-        }
-
         debug(room, "Trigger matched: {} at item {} (conditions: {}, effects: {})", 
               event.getType(), 
               stack.triggerItem() != null ? stack.triggerItem().getId() : "null",
               stack.conditions().size(),
               stack.effects().size());
-        
-        // Activate extras (for their animation)
-        activateExtras(room, stack.triggerItem(), event.getActor().orElse(null), currentTime);
 
         // Run selectors before conditions so targets are available
+        List<InteractionWiredEffect> executedSelectors = Collections.emptyList();
         if (stack.hasEffects()) {
-            executeSelectors(stack, ctx, currentTime);
+            executedSelectors = executeSelectors(stack, ctx);
         }
 
         // Evaluate conditions
@@ -252,6 +244,17 @@ public final class WiredEngine {
             debug(room, "Stack cancelled by plugin");
             return false;
         }
+
+        RoomUnit actor = event.getActor().orElse(null);
+
+        // Only show the trigger/selector activation when the stack is actually allowed to continue.
+        if (stack.triggerItem() instanceof InteractionWiredTrigger) {
+            InteractionWiredTrigger trigger = (InteractionWiredTrigger) stack.triggerItem();
+            trigger.activateBox(room, actor, currentTime);
+        }
+
+        activateExtras(room, stack.triggerItem(), actor, currentTime);
+        finalizeSelectors(executedSelectors, ctx, currentTime);
 
         // Execute effects
         if (stack.hasEffects()) {
@@ -420,9 +423,11 @@ public final class WiredEngine {
     /**
      * Execute selector effects before conditions so ctx.targets() is populated.
      */
-    private void executeSelectors(WiredStack stack, WiredContext ctx, long currentTime) {
+    private List<InteractionWiredEffect> executeSelectors(WiredStack stack, WiredContext ctx) {
         List<IWiredEffect> effects = stack.effects();
-        if (effects.isEmpty()) return;
+        if (effects.isEmpty()) return Collections.emptyList();
+
+        List<InteractionWiredEffect> executedSelectors = new ArrayList<>();
 
         for (IWiredEffect effect : effects) {
             if (!effect.isSelector()) continue;
@@ -433,15 +438,28 @@ public final class WiredEngine {
             ctx.state().step();
             try {
                 effect.execute(ctx);
-
                 if (effect instanceof InteractionWiredEffect) {
-                    InteractionWiredEffect wiredEffect = (InteractionWiredEffect) effect;
-                    wiredEffect.setCooldown(currentTime);
-                    wiredEffect.activateBox(ctx.room(), ctx.actor().orElse(null), currentTime);
+                    executedSelectors.add((InteractionWiredEffect) effect);
                 }
             } catch (Exception e) {
                 LOGGER.warn("Error executing selector: {}", e.getMessage());
             }
+        }
+
+        return executedSelectors;
+    }
+
+    private void finalizeSelectors(List<InteractionWiredEffect> executedSelectors, WiredContext ctx, long currentTime) {
+        if (executedSelectors == null || executedSelectors.isEmpty()) {
+            return;
+        }
+
+        Room room = ctx.room();
+        RoomUnit actor = ctx.actor().orElse(null);
+
+        for (InteractionWiredEffect wiredEffect : executedSelectors) {
+            wiredEffect.setCooldown(currentTime);
+            wiredEffect.activateBox(room, actor, currentTime);
         }
     }
     

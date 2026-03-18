@@ -129,6 +129,11 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 room.setChatSpeed(this.packet.readInt());
                 room.setChatDistance(Math.abs(this.packet.readInt()));
                 room.setChatProtection(this.packet.readInt());
+
+                if (this.packet.bytesAvailable() > 0) {
+                    room.setAllowUnderpass(this.packet.readBoolean());
+                }
+
                 room.setNeedsUpdate(true);
 
                 room.sendComposer(new RoomThicknessComposer(room).compose());

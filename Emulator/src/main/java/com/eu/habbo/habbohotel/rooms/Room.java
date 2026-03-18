@@ -158,6 +158,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private volatile boolean promoted;
   private volatile int tradeMode;
   private volatile boolean moveDiagonally;
+  private volatile boolean allowUnderpass;
   private volatile boolean jukeboxActive;
   private volatile boolean hideWired;
   private RoomPromotion promotion;
@@ -241,6 +242,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     this.tradeMode = set.getInt("trade_mode");
     this.moveDiagonally = set.getString("move_diagonally").equals("1");
+    this.allowUnderpass = set.getString("allow_underpass").equals("1");
 
     this.preLoaded = true;
     this.allowBotsWalk = true;
@@ -1079,7 +1081,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     if (this.needsUpdate) {
       try (Connection connection = Emulator.getDatabase().getDataSource()
           .getConnection(); PreparedStatement statement = connection.prepareStatement(
-          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ? WHERE id = ?")) {
+          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ?, allow_underpass = ? WHERE id = ?")) {
         statement.setString(1, this.name);
         statement.setString(2, this.description);
         statement.setString(3, this.password);
@@ -1128,7 +1130,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         statement.setString(37, this.ownerName);
         statement.setString(38, this.jukeboxActive ? "1" : "0");
         statement.setString(39, this.hideWired ? "1" : "0");
-        statement.setInt(40, this.id);
+        statement.setString(40, this.allowUnderpass ? "1" : "0");
+        statement.setInt(41, this.id);
         statement.executeUpdate();
         this.needsUpdate = false;
       } catch (SQLException e) {
@@ -1408,6 +1411,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
   public void setAllowWalkthrough(boolean allowWalkthrough) {
     this.allowWalkthrough = allowWalkthrough;
+  }
+
+  public boolean isAllowUnderpass() {
+    return this.allowUnderpass;
+  }
+
+  public void setAllowUnderpass(boolean allowUnderpass) {
+    this.allowUnderpass = allowUnderpass;
   }
 
   public boolean isAllowBotsWalk() {
