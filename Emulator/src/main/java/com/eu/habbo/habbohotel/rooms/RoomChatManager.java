@@ -157,6 +157,15 @@ public class RoomChatManager {
     }
 
     /**
+     * Removes a room mute from a Habbo.
+     */
+    public void unmuteHabbo(Habbo habbo) {
+        synchronized (this.mutedHabbos) {
+            this.mutedHabbos.remove(habbo.getHabboInfo().getId());
+        }
+    }
+
+    /**
      * Checks if a Habbo is muted.
      */
     public boolean isMuted(Habbo habbo) {
@@ -183,7 +192,8 @@ public class RoomChatManager {
      */
     public int getMuteTimeRemaining(Habbo habbo) {
         if (this.mutedHabbos.containsKey(habbo.getHabboInfo().getId())) {
-            return this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp();
+            return Math.max(0,
+                this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp());
         }
         return 0;
     }
@@ -298,7 +308,7 @@ public class RoomChatManager {
 
             if (this.isMuted(habbo)) {
                 habbo.getClient().sendResponse(new MutedWhisperComposer(
-                    this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp()));
+                    Math.max(1, this.getMuteTimeRemaining(habbo))));
                 return;
             }
         }
