@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.camera;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.camera.CameraPublishWaitMessageComposer;
 import com.eu.habbo.messages.outgoing.catalog.NotEnoughPointsTypeComposer;
@@ -16,49 +17,54 @@ import java.sql.SQLException;
 public class CameraPublishToWebEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CameraPublishToWebEvent.class);
 
-    public static int CAMERA_PUBLISH_POINTS = 5;
-    public static int CAMERA_PUBLISH_POINTS_TYPE = 0;
+    public static int CAMERA_PUBLISH_POINTS = 1;
+    public static int CAMERA_PUBLISH_POINTS_TYPE = 5;
+    public static int CAMERA_PUBLISH_DELAY = 180;
 
     @Override
-    public void handle() throws Exception {
+    public void handle() {
         Habbo habbo = this.client.getHabbo();
-
         if (habbo == null) return;
-        if (habbo.getHabboInfo().getPhotoTimestamp() == 0) return;
-        if (habbo.getHabboInfo().getPhotoJSON().isEmpty()) return;
-        if (!habbo.getHabboInfo().getPhotoJSON().contains(habbo.getHabboInfo().getPhotoTimestamp() + "")) return;
 
-        if (habbo.getHabboInfo().getCurrencyAmount(CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS_TYPE) < CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS) {
-            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS));
+        HabboInfo habboInfo = habbo.getHabboInfo();
+
+        int points = habboInfo.getCurrencyAmount(CAMERA_PUBLISH_POINTS_TYPE);
+        if (points < CAMERA_PUBLISH_POINTS) {
+            String currencyName = Emulator.getTexts().getValue("seasonal.name." + CAMERA_PUBLISH_POINTS_TYPE, "currency");
+            habbo.alert("You don't have enough " + currencyName + "!");
+            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, CAMERA_PUBLISH_POINTS_TYPE));
             return;
         }
 
-        int timestamp = Emulator.getIntUnixTimestamp();
+        int photoTimestamp = habboInfo.getPhotoTimestamp();
+        String photoJSON = habboInfo.getPhotoJSON();
+        if (photoTimestamp == 0 || photoJSON.isEmpty() || !photoJSON.contains(Integer.toString(photoTimestamp)))
+            return;
 
-        boolean isOk = false;
-        int cooldownLeft = Math.max(0, Emulator.getConfig().getInt("camera.publish.delay") - (timestamp - this.client.getHabbo().getHabboInfo().getWebPublishTimestamp()));
+        int currentTimestamp = Emulator.getIntUnixTimestamp();
+        int timeSinceLastPublish = currentTimestamp - habboInfo.getWebPublishTimestamp();
 
-        if (cooldownLeft == 0) {
-            UserPublishPictureEvent publishPictureEvent = new UserPublishPictureEvent(this.client.getHabbo(), this.client.getHabbo().getHabboInfo().getPhotoURL(), timestamp, this.client.getHabbo().getHabboInfo().getPhotoRoomId());
+        if (timeSinceLastPublish < CAMERA_PUBLISH_DELAY) {
+            int wait = CAMERA_PUBLISH_DELAY - timeSinceLastPublish;
+            this.client.sendResponse(new CameraPublishWaitMessageComposer(false, wait, habboInfo.getPhotoURL()));
+        } else {
+            UserPublishPictureEvent publishPictureEvent = new UserPublishPictureEvent(habbo, habboInfo.getPhotoURL(), currentTimestamp, habboInfo.getPhotoRoomId());
 
             if (!Emulator.getPluginManager().fireEvent(publishPictureEvent).isCancelled()) {
-                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO camera_web (user_id, room_id, timestamp, url) VALUES (?, ?, ?, ?)")) {
-                    statement.setInt(1, this.client.getHabbo().getHabboInfo().getId());
+                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+                     PreparedStatement statement = connection.prepareStatement("INSERT INTO camera_web (user_id, room_id, timestamp, url) VALUES (?, ?, ?, ?)")) {
+                    statement.setInt(1, habboInfo.getId());
                     statement.setInt(2, publishPictureEvent.roomId);
                     statement.setInt(3, publishPictureEvent.timestamp);
                     statement.setString(4, publishPictureEvent.URL);
                     statement.execute();
-
-                    this.client.getHabbo().getHabboInfo().setWebPublishTimestamp(timestamp);
-                    this.client.getHabbo().givePoints(CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS_TYPE, -CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS);
-
-                    isOk = true;
+                    habboInfo.setWebPublishTimestamp(currentTimestamp);
+                    habbo.givePoints(CAMERA_PUBLISH_POINTS_TYPE, -CAMERA_PUBLISH_POINTS);
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
                 }
             }
+            this.client.sendResponse(new CameraPublishWaitMessageComposer(true, 0, ""));
         }
-
-        this.client.sendResponse(new CameraPublishWaitMessageComposer(isOk, cooldownLeft, isOk ? this.client.getHabbo().getHabboInfo().getPhotoURL() : ""));
     }
 }
