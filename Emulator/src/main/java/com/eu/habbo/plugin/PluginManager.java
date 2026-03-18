@@ -28,8 +28,6 @@ import com.eu.habbo.habbohotel.wired.core.WiredEngine;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.messages.PacketManager;
-import com.eu.habbo.messages.incoming.camera.CameraPublishToWebEvent;
-import com.eu.habbo.messages.incoming.camera.CameraPurchaseEvent;
 import com.eu.habbo.messages.incoming.catalog.CheckPetNameEvent;
 import com.eu.habbo.messages.incoming.floorplaneditor.FloorPlanEditorSaveEvent;
 import com.eu.habbo.messages.incoming.hotelview.HotelViewRequestLTDAvailabilityEvent;
@@ -161,11 +159,6 @@ public class PluginManager {
 
 
         ChangeNameCheckUsernameEvent.VALID_CHARACTERS = Emulator.getConfig().getValue("allowed.username.characters", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-=!?@:,.");
-        CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS = Emulator.getConfig().getInt("camera.price.points.publish", 5);
-        CameraPublishToWebEvent.CAMERA_PUBLISH_POINTS_TYPE = Emulator.getConfig().getInt("camera.price.points.publish.type", 0);
-        CameraPurchaseEvent.CAMERA_PURCHASE_CREDITS = Emulator.getConfig().getInt("camera.price.credits", 5);
-        CameraPurchaseEvent.CAMERA_PURCHASE_POINTS = Emulator.getConfig().getInt("camera.price.points", 5);
-        CameraPurchaseEvent.CAMERA_PURCHASE_POINTS_TYPE = Emulator.getConfig().getInt("camera.price.points.type", 0);
 
         BuyRoomPromotionEvent.ROOM_PROMOTION_BADGE = Emulator.getConfig().getValue("room.promotion.badge", "RADZZ");
         BotManager.MAXIMUM_BOT_INVENTORY_SIZE = Emulator.getConfig().getInt("hotel.bots.max.inventory");
