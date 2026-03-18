@@ -8,6 +8,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomLayout;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
 import com.eu.habbo.threading.runnables.RebugKickBallAction;
 import com.eu.habbo.util.pathfinding.Direction8;
 
@@ -46,12 +47,10 @@ public class InteractionRebugFootball extends InteractionDefault {
         Direction8 userDir = Direction8.getDirection(roomUnit.getBodyRotation().getValue());
         this.lastDribbleDirection = userDir;
 
-        // If this tile is the user's final destination, they'll stop here → long shot
         RoomTile goal = roomUnit.getGoal();
         if (goal != null && goal.x == this.getX() && goal.y == this.getY()) {
             this.kick(room, roomUnit, 55);
         } else {
-            // Dribble: ball moves 1 tile ahead of the user
             this.kick(room, roomUnit, 0);
         }
     }
@@ -68,18 +67,18 @@ public class InteractionRebugFootball extends InteractionDefault {
             int dy = nextTile.y - fromTile.y;
             Direction8 walkDir = Direction8.fromDelta(dx, dy);
 
-            // User is walking in the same direction as the ball was dribbled → long shot
             if (this.lastDribbleDirection != null && walkDir.getRot() == this.lastDribbleDirection.getRot()) {
                 this.kick(room, roomUnit, 55);
                 return;
             }
         }
 
-        // Walking sideways or away → just stop the ball
         if (this.currentThread != null) {
             this.currentThread.dead = true;
             this.currentThread = null;
         }
+        this.setExtradata("0");
+        room.sendComposer(new ItemStateComposer(this).compose());
     }
 
     @Override
@@ -89,18 +88,21 @@ public class InteractionRebugFootball extends InteractionDefault {
         if (client == null) return;
         RoomUnit unit = client.getHabbo().getRoomUnit();
         if (RoomLayout.tilesAdjecent(unit.getCurrentLocation(), room.getLayout().getTile(this.getX(), this.getY()))) {
-            // Long shot when clicking the ball
             this.kick(room, unit, 55);
         }
     }
 
     private void kick(Room room, RoomUnit kicker, int momentum) {
+        boolean wasMoving = this.currentThread != null && !this.currentThread.dead && !this.currentThread.isDribble();
+
         if (this.currentThread != null) {
             this.currentThread.dead = true;
         }
 
         Direction8 direction = Direction8.getDirection(kicker.getBodyRotation().getValue());
-        this.currentThread = new RebugKickBallAction(this, room, direction, momentum);
+        boolean zigzag = wasMoving && momentum > 0;
+
+        this.currentThread = new RebugKickBallAction(this, room, direction, momentum, zigzag);
         Emulator.getThreading().run(this.currentThread, 50);
     }
 }

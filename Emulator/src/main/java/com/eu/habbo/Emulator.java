@@ -7,7 +7,6 @@ import com.eu.habbo.core.*;
 import com.eu.habbo.core.consolecommands.ConsoleCommand;
 import com.eu.habbo.database.Database;
 import com.eu.habbo.habbohotel.GameEnvironment;
-import com.eu.habbo.networking.camera.CameraClient;
 import com.eu.habbo.networking.gameserver.GameServer;
 import com.eu.habbo.networking.rconserver.RCONServer;
 import com.eu.habbo.plugin.PluginManager;
@@ -64,7 +63,6 @@ public final class Emulator {
     private static TextsManager texts;
     private static GameServer gameServer;
     private static RCONServer rconServer;
-    private static CameraClient cameraClient;
     private static Logging logging;
     private static Database database;
     private static DatabaseLogger databaseLogger;
@@ -132,6 +130,26 @@ public final class Emulator {
             Emulator.pluginManager.reload();
             Emulator.getPluginManager().fireEvent(new EmulatorConfigUpdatedEvent());
             Emulator.texts = new TextsManager();
+
+            Emulator.config.register("camera.url", "http://localhost/camera/");
+            Emulator.config.register("imager.location.output.camera", "/public/camera/");
+            Emulator.config.register("imager.location.output.thumbnail", "/public/camera/thumbnails/");
+            Emulator.config.register("camera.price.points.publish", "1");
+            Emulator.config.register("camera.price.points.publish.type", "5");
+            Emulator.config.register("camera.publish.delay", "180");
+            Emulator.config.register("camera.price.credits", "2");
+            Emulator.config.register("camera.price.points", "0");
+            Emulator.config.register("camera.price.points.type", "5");
+            Emulator.config.register("camera.render.delay", "5");
+            Emulator.texts.register("camera.permission", "You don't have permission to use the camera!");
+            Emulator.texts.register("camera.wait", "Please wait %seconds% seconds before making another picture.");
+            Emulator.texts.register("camera.error.creation", "Failed to create your picture. *sadpanda*");
+
+            File thumbnailDir = new File(Emulator.config.getValue("imager.location.output.thumbnail"));
+            if (!thumbnailDir.exists()) {
+                thumbnailDir.mkdirs();
+            }
+
             new CleanerThread();
             Emulator.gameServer = new GameServer(getConfig().getValue("game.host", "127.0.0.1"), getConfig().getInt("game.port", 30000));
             Emulator.rconServer = new RCONServer(getConfig().getValue("rcon.host", "127.0.0.1"), getConfig().getInt("rcon.port", 30001));
@@ -231,7 +249,6 @@ public final class Emulator {
 
         if (Emulator.pluginManager != null)
             tryShutdown(() -> Emulator.pluginManager.fireEvent(new EmulatorStartShutdownEvent()));
-        if (Emulator.cameraClient != null) tryShutdown(() -> Emulator.cameraClient.disconnect());
         if (Emulator.rconServer != null) tryShutdown(() -> Emulator.rconServer.stop());
         if (Emulator.gameEnvironment != null) tryShutdown(() -> Emulator.gameEnvironment.dispose());
         if (Emulator.pluginManager != null)
@@ -316,14 +333,6 @@ public final class Emulator {
     }
     public static BadgeImager getBadgeImager() {
         return badgeImager;
-    }
-
-    public static CameraClient getCameraClient() {
-        return cameraClient;
-    }
-
-    public static synchronized void setCameraClient(CameraClient client) {
-        cameraClient = client;
     }
 
     public static int getTimeStarted() {

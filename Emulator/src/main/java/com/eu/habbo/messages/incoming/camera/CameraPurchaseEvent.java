@@ -2,6 +2,9 @@ package com.eu.habbo.messages.incoming.camera;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.achievements.AchievementManager;
+import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.camera.CameraPurchaseSuccesfullComposer;
@@ -11,47 +14,53 @@ import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.plugin.events.users.UserPurchasePictureEvent;
 
 public class CameraPurchaseEvent extends MessageHandler {
-    public static int CAMERA_PURCHASE_CREDITS = 5;
-    public static int CAMERA_PURCHASE_POINTS = 5;
-    public static int CAMERA_PURCHASE_POINTS_TYPE = 0;
+    public static int CAMERA_PURCHASE_CREDITS = 2;
+    public static int CAMERA_PURCHASE_POINTS = 0;
+    public static int CAMERA_PURCHASE_POINTS_TYPE = 5;
 
     @Override
-    public void handle() throws Exception {
-        if (this.client.getHabbo().getHabboInfo().getCredits() < CameraPurchaseEvent.CAMERA_PURCHASE_CREDITS) {
+    public void handle() {
+        Habbo habbo = this.client.getHabbo();
+        HabboInfo habboInfo = habbo.getHabboInfo();
+
+        if (habboInfo.getCredits() < CAMERA_PURCHASE_CREDITS) {
+            habbo.alert("You don't have enough credits!");
             this.client.sendResponse(new NotEnoughPointsTypeComposer(true, false, 0));
             return;
         }
 
-        if (this.client.getHabbo().getHabboInfo().getCurrencyAmount(CameraPurchaseEvent.CAMERA_PURCHASE_POINTS_TYPE) < CameraPurchaseEvent.CAMERA_PURCHASE_POINTS) {
-            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, CameraPurchaseEvent.CAMERA_PURCHASE_POINTS_TYPE));
+        if (habboInfo.getCurrencyAmount(CAMERA_PURCHASE_POINTS_TYPE) < CAMERA_PURCHASE_POINTS) {
+            String alertMessage = "You don't have enough " + Emulator.getTexts().getValue("seasonal.name." + CAMERA_PURCHASE_POINTS_TYPE, "currency") + "!";
+            habbo.alert(alertMessage);
+            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, CAMERA_PURCHASE_POINTS_TYPE));
             return;
         }
 
-        if (this.client.getHabbo().getHabboInfo().getPhotoTimestamp() == 0) return;
-        if (this.client.getHabbo().getHabboInfo().getPhotoJSON().isEmpty()) return;
-        if (!this.client.getHabbo().getHabboInfo().getPhotoJSON().contains(this.client.getHabbo().getHabboInfo().getPhotoTimestamp() + ""))
+        if (habboInfo.getPhotoTimestamp() == 0 || habboInfo.getPhotoJSON().isEmpty()
+                || !habboInfo.getPhotoJSON().contains(Integer.toString(habboInfo.getPhotoTimestamp())))
             return;
 
-        if (Emulator.getPluginManager().fireEvent(new UserPurchasePictureEvent(this.client.getHabbo(), this.client.getHabbo().getHabboInfo().getPhotoURL(), this.client.getHabbo().getHabboInfo().getCurrentRoom().getId(), this.client.getHabbo().getHabboInfo().getPhotoTimestamp())).isCancelled()) {
+        if (Emulator.getPluginManager().fireEvent(new UserPurchasePictureEvent(habbo, habboInfo.getPhotoURL(), habboInfo.getCurrentRoom().getId(), habboInfo.getPhotoTimestamp())).isCancelled())
             return;
-        }
 
-        HabboItem photoItem = Emulator.getGameEnvironment().getItemManager().createItem(this.client.getHabbo().getHabboInfo().getId(), Emulator.getGameEnvironment().getItemManager().getItem(Emulator.getConfig().getInt("camera.item_id")), 0, 0, this.client.getHabbo().getHabboInfo().getPhotoJSON());
+        Item item = Emulator.getGameEnvironment().getItemManager().getItem(Emulator.getConfig().getInt("camera.item_id"));
+        if (item == null || !item.getInteractionType().getName().equals("external_image"))
+            return;
 
+        HabboItem photoItem = Emulator.getGameEnvironment().getItemManager().createItem(habboInfo.getId(), item, 0, 0, habboInfo.getPhotoJSON());
         if (photoItem != null) {
-            photoItem.setExtradata(photoItem.getExtradata().replace("%id%", photoItem.getId() + ""));
+            photoItem.setExtradata(photoItem.getExtradata().replace("%id%", Integer.toString(photoItem.getId())));
             photoItem.needsUpdate(true);
-
-            this.client.getHabbo().getInventory().getItemsComponent().addItem(photoItem);
+            habbo.getInventory().getItemsComponent().addItem(photoItem);
 
             this.client.sendResponse(new CameraPurchaseSuccesfullComposer());
             this.client.sendResponse(new AddHabboItemComposer(photoItem));
             this.client.sendResponse(new InventoryRefreshComposer());
 
-            this.client.getHabbo().giveCredits(-CameraPurchaseEvent.CAMERA_PURCHASE_CREDITS);
-            this.client.getHabbo().givePoints(CameraPurchaseEvent.CAMERA_PURCHASE_POINTS_TYPE, -CameraPurchaseEvent.CAMERA_PURCHASE_POINTS);
+            habbo.giveCredits(-CAMERA_PURCHASE_CREDITS);
+            habbo.givePoints(CAMERA_PURCHASE_POINTS_TYPE, -CAMERA_PURCHASE_POINTS);
 
-            AchievementManager.progressAchievement(this.client.getHabbo(), Emulator.getGameEnvironment().getAchievementManager().getAchievement("CameraPhotoCount"));
+            AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("CameraPhotoCount"));
         }
     }
 }
