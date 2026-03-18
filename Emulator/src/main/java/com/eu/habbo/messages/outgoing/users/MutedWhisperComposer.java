@@ -8,7 +8,7 @@ public class MutedWhisperComposer extends MessageComposer {
     private final int seconds;
 
     public MutedWhisperComposer(int seconds) {
-        this.seconds = seconds;
+        this.seconds = Math.max(0, seconds);
     }
 
     @Override
