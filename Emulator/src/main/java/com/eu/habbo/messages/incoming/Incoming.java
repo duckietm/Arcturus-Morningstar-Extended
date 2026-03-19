@@ -205,6 +205,7 @@ public class Incoming {
     public static final int RequestRoomDataEvent = 2230;
     public static final int RequestRoomHeightmapEvent = 2300;
     public static final int RequestGuildFurniWidgetEvent = 2651;
+    public static final int ClickFurniEvent = 6002;
     public static final int RequestOwnItemsEvent = 2105;
     public static final int RequestReportRoomEvent = 3267;
     public static final int ReportEvent = 1691;
@@ -379,7 +380,7 @@ public class Incoming {
 
     public static final int UNKNOWN_SNOWSTORM_6000 = 6000;
     public static final int UNKNOWN_SNOWSTORM_6001 = 6001;
-    public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
+    // public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
     public static final int UNKNOWN_SNOWSTORM_6003 = 6003;
     public static final int UNKNOWN_SNOWSTORM_6004 = 6004;
     public static final int UNKNOWN_SNOWSTORM_6005 = 6005;
@@ -407,6 +408,7 @@ public class Incoming {
 
 	// CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
+    public static final int ClickUserEvent = 10020;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
 }

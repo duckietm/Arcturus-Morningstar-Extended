@@ -115,6 +115,14 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
+    protected int getHandItem() {
+        return this.handItem;
+    }
+
+    protected int getUserSource() {
+        return this.userSource;
+    }
+
     static class JsonData {
         int handItemId;
         int userSource;

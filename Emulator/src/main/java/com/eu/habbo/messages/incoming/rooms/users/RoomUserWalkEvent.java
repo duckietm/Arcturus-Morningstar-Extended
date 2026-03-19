@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.BedProfile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
@@ -46,7 +47,7 @@ public class RoomUserWalkEvent extends MessageHandler {
     Room room = habboInfo.getCurrentRoom();
 
     try {
-      if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk()) {
+      if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk() && !WiredFreezeUtil.isFrozen(roomUnit)) {
         if (roomUnit.cmdTeleport) {
           handleTeleport(room, (short) x, (short) y, roomUnit, habboInfo);
           return;

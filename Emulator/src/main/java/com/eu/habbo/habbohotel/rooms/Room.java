@@ -15,6 +15,8 @@ import com.eu.habbo.habbohotel.pets.PetManager;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
@@ -1874,11 +1876,15 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public void muteHabbo(Habbo habbo, int minutes) {
-    this.rightsManager.muteHabbo(habbo, minutes);
+    this.chatManager.muteHabbo(habbo, minutes);
+  }
+
+  public void unmuteHabbo(Habbo habbo) {
+    this.chatManager.unmuteHabbo(habbo);
   }
 
   public boolean isMuted(Habbo habbo) {
-    return this.rightsManager.isMuted(habbo);
+    return this.chatManager.isMuted(habbo);
   }
 
   public void habboEntered(Habbo habbo) {
@@ -2162,6 +2168,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             - habbo.getRoomUnit().getBodyRotation().getValue() % 2]);
     habbo.getRoomUnit().setStatus(RoomUnitStatus.SIT, 0.5 + "");
     this.sendComposer(new RoomUserStatusComposer(habbo.getRoomUnit()).compose());
+    WiredManager.triggerUserPerformsAction(this, habbo.getRoomUnit(), WiredUserActionType.SIT, -1);
   }
 
   public void makeStand(Habbo habbo) {
@@ -2171,12 +2178,19 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     HabboItem item = this.getTopItemAt(habbo.getRoomUnit().getX(), habbo.getRoomUnit().getY());
     if (item == null || !item.getBaseItem().allowSit() || !item.getBaseItem().allowLay()) {
+      boolean wasSittingOrLaying = habbo.getRoomUnit().hasStatus(RoomUnitStatus.SIT)
+          || habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY);
       habbo.getRoomUnit().cmdStand = true;
       habbo.getRoomUnit().setBodyRotation(
           RoomUserRotation.values()[habbo.getRoomUnit().getBodyRotation().getValue()
               - habbo.getRoomUnit().getBodyRotation().getValue() % 2]);
       habbo.getRoomUnit().removeStatus(RoomUnitStatus.SIT);
+      habbo.getRoomUnit().removeStatus(RoomUnitStatus.LAY);
       this.sendComposer(new RoomUserStatusComposer(habbo.getRoomUnit()).compose());
+
+      if (wasSittingOrLaying) {
+        WiredManager.triggerUserPerformsAction(this, habbo.getRoomUnit(), WiredUserActionType.STAND, -1);
+      }
     }
   }
 

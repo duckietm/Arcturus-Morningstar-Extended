@@ -4,6 +4,8 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUserAction;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserActionComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
@@ -26,6 +28,7 @@ public class RoomUserActionEvent extends MessageHandler {
             }
 
             int action = this.packet.readInt();
+            int wiredAction = 0;
 
             if (action == 5) {
                 UserIdleEvent event = new UserIdleEvent(this.client.getHabbo(), UserIdleEvent.IdleReason.ACTION, true);
@@ -34,8 +37,10 @@ public class RoomUserActionEvent extends MessageHandler {
                 if (!event.isCancelled()) {
                     if (event.idle) {
                         room.idle(habbo);
+                        wiredAction = WiredUserActionType.RELAX;
                     } else {
                         room.unIdle(habbo);
+                        wiredAction = WiredUserActionType.AWAKE;
                     }
                 }
             } else {
@@ -51,6 +56,29 @@ public class RoomUserActionEvent extends MessageHandler {
             }
 
             room.sendComposer(new RoomUserActionComposer(habbo.getRoomUnit(), RoomUserAction.fromValue(action)).compose());
+
+            if (wiredAction == 0) {
+                switch (action) {
+                    case 1:
+                        wiredAction = WiredUserActionType.WAVE;
+                        break;
+                    case 2:
+                        wiredAction = WiredUserActionType.BLOW_KISS;
+                        break;
+                    case 3:
+                        wiredAction = WiredUserActionType.LAUGH;
+                        break;
+                    case 7:
+                        wiredAction = WiredUserActionType.THUMB_UP;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (wiredAction != 0) {
+                WiredManager.triggerUserPerformsAction(room, habbo.getRoomUnit(), wiredAction, -1);
+            }
         }
     }
 }

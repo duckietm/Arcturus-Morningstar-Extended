@@ -87,6 +87,7 @@ public class ConfigurationManager {
             // Runtime
             envMapping.put("runtime.threads", "RT_THREADS");
             envMapping.put("logging.errors.runtime", "RT_LOG_ERRORS");
+            envMapping.put("hotel.timezone", "HOTEL_TIMEZONE");
 
             for (Map.Entry<String, String> entry : envMapping.entrySet()) {
                 String envValue = System.getenv(entry.getValue());
