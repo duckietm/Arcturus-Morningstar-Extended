@@ -141,15 +141,6 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
     }
 
     @Override
-    public void onClick(GameClient client, Room room, Object[] objects) throws Exception {
-        super.onClick(client, room, objects);
-
-        if (client.getHabbo().hasPermission(Permission.ACC_SUPERWIRED)) {
-            client.getHabbo().whisper(Emulator.getTexts().getValue("hotel.wired.superwired.info"), RoomChatMessageBubbles.BOT);
-        }
-    }
-
-    @Override
     public void serializeWiredData(ServerMessage message, Room room) {
         message.appendBoolean(false);
         message.appendInt(this.rewardItems.size());
