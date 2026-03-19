@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,8 @@ public class RoomUnitTeleport implements Runnable {
             return;
         }
 
+        WiredFreezeUtil.onTeleport(this.room, this.roomUnit);
+
         RoomTile lastLocation = this.roomUnit.getCurrentLocation();
         RoomTile newLocation = this.room.getLayout().getTile((short) this.x, (short) this.y);
 
@@ -60,6 +63,7 @@ public class RoomUnitTeleport implements Runnable {
         //this.room.sendComposer(teleportMessage);
         this.roomUnit.statusUpdate(true);
         roomUnit.isWiredTeleporting = false;
+        WiredFreezeUtil.restoreWalkState(this.roomUnit);
 
         this.room.updateHabbosAt(newLocation.x, newLocation.y);
         this.room.updateBotsAt(newLocation.x, newLocation.y);

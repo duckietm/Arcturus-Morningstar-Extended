@@ -1876,11 +1876,15 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public void muteHabbo(Habbo habbo, int minutes) {
-    this.rightsManager.muteHabbo(habbo, minutes);
+    this.chatManager.muteHabbo(habbo, minutes);
+  }
+
+  public void unmuteHabbo(Habbo habbo) {
+    this.chatManager.unmuteHabbo(habbo);
   }
 
   public boolean isMuted(Habbo habbo) {
-    return this.rightsManager.isMuted(habbo);
+    return this.chatManager.isMuted(habbo);
   }
 
   public void habboEntered(Habbo habbo) {
