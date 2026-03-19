@@ -8,6 +8,11 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 
 public class ModToolIssueDefaultSanctionEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 2000;
+    }
+
+    @Override
     public void handle() throws Exception {
         if (this.client.getHabbo().hasPermission(Permission.ACC_SUPPORTTOOL)) {
             int issueId = this.packet.readInt();

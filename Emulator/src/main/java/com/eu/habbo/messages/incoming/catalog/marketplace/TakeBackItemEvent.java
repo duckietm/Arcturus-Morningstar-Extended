@@ -5,6 +5,11 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 
 public class TakeBackItemEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 500;
+    }
+
+    @Override
     public void handle() throws Exception {
         int offerId = this.packet.readInt();
         MarketPlace.takeBackItem(this.client.getHabbo(), offerId);
