@@ -26,7 +26,17 @@ public enum WiredConditionType {
     DATE_RANGE(24),
     ACTOR_HAS_HANDITEM(25),
     MOVEMENT_VALIDATION(26), // i dont know what type it is but its needed
-    COUNTER_TIME_MATCHES(27);
+    COUNTER_TIME_MATCHES(27),
+    USER_PERFORMS_ACTION(28),
+    HAS_ALTITUDE(29),
+    NOT_USER_PERFORMS_ACTION(30),
+    NOT_ACTOR_HAS_HANDITEM(31),
+    TRIGGERER_MATCH(32),
+    NOT_TRIGGERER_MATCH(33),
+    TEAM_HAS_SCORE(34),
+    TEAM_HAS_RANK(35),
+    MATCH_TIME(36),
+    MATCH_DATE(37);
 
     public final int code;
 
