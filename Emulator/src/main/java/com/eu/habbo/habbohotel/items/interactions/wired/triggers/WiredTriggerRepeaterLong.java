@@ -139,7 +139,7 @@ public class WiredTriggerRepeaterLong extends InteractionWiredTrigger implements
         // Fire when elapsed time is a multiple of repeat time
         if (elapsedMs % this.repeatTime == 0) {
             if (this.getRoomId() != 0 && room.isLoaded()) {
-                WiredManager.triggerTimerRepeat(room, this);
+                WiredManager.triggerTimerRepeatLong(room, this);
             }
         }
     }

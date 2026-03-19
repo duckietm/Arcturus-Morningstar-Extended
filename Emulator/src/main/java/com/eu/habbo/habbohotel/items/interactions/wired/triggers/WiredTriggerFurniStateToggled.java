@@ -15,36 +15,48 @@ import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     private static final WiredTriggerType type = WiredTriggerType.STATE_CHANGED;
+    private static final int MODE_ALL_STATES = 0;
+    private static final int MODE_SAVED_STATE = 1;
 
-    private THashSet<HabboItem> items;
+    private THashSet<StateSnapshot> snapshots;
+    private int triggerMode = MODE_ALL_STATES;
 
     public WiredTriggerFurniStateToggled(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
-        this.items = new THashSet<>();
+        this.snapshots = new THashSet<>();
     }
 
     public WiredTriggerFurniStateToggled(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
-        this.items = new THashSet<>();
+        this.snapshots = new THashSet<>();
     }
 
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
-        // Reject if this was triggered by a wired effect (to prevent loops)
         if (event.isTriggeredByEffect()) {
             return false;
         }
 
         HabboItem sourceItem = event.getSourceItem().orElse(null);
-        if (sourceItem != null) {
-            return this.items.contains(sourceItem);
+        if (sourceItem == null) {
+            return false;
         }
-        return false;
+
+        StateSnapshot snapshot = this.getSnapshot(sourceItem.getId());
+        if (snapshot == null) {
+            return false;
+        }
+
+        if (this.triggerMode == MODE_SAVED_STATE) {
+            return snapshot.state.equals(this.normalizeState(sourceItem.getExtradata()));
+        }
+
+        return true;
     }
 
     @Deprecated
@@ -56,21 +68,36 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
-            this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
+            this.triggerMode,
+            new ArrayList<>(this.snapshots)
         ));
     }
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
-        this.items = new THashSet<>();
+        this.snapshots = new THashSet<>();
+        this.triggerMode = MODE_ALL_STATES;
         String wiredData = set.getString("wired_data");
 
-        if (wiredData.startsWith("{")) {
+        if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            for (Integer id: data.itemIds) {
-                HabboItem item = room.getHabboItem(id);
-                if (item != null) {
-                    this.items.add(item);
+            this.triggerMode = (data != null) ? data.triggerMode : MODE_ALL_STATES;
+
+            if (data != null && data.snapshots != null && !data.snapshots.isEmpty()) {
+                for (StateSnapshot snapshot : data.snapshots) {
+                    if (snapshot == null) continue;
+
+                    HabboItem item = room.getHabboItem(snapshot.itemId);
+                    if (item != null) {
+                        this.snapshots.add(new StateSnapshot(item.getId(), snapshot.state));
+                    }
+                }
+            } else if (data != null && data.itemIds != null) {
+                for (Integer id : data.itemIds) {
+                    HabboItem item = room.getHabboItem(id);
+                    if (item != null) {
+                        this.snapshots.add(this.captureSnapshot(item));
+                    }
                 }
             }
         } else {
@@ -79,10 +106,15 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
                 if (!wiredData.split(":")[2].equals("\t")) {
                     for (String s : wiredData.split(":")[2].split(";")) {
+                        if (s.isEmpty()) {
+                            continue;
+                        }
+
                         HabboItem item = room.getHabboItem(Integer.parseInt(s));
 
-                        if (item != null)
-                            this.items.add(item);
+                        if (item != null) {
+                            this.snapshots.add(this.captureSnapshot(item));
+                        }
                     }
                 }
             }
@@ -91,7 +123,8 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
     @Override
     public void onPickUp() {
-        this.items.clear();
+        this.snapshots.clear();
+        this.triggerMode = MODE_ALL_STATES;
     }
 
     @Override
@@ -101,33 +134,31 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
-        THashSet<HabboItem> items = new THashSet<>();
+        THashSet<StateSnapshot> snapshotsToRemove = new THashSet<>();
 
-        for (HabboItem item : this.items) {
-            if (item.getRoomId() != this.getRoomId()) {
-                items.add(item);
+        for (StateSnapshot snapshot : this.snapshots) {
+            HabboItem item = room.getHabboItem(snapshot.itemId);
+            if (item == null || item.getRoomId() != this.getRoomId()) {
+                snapshotsToRemove.add(snapshot);
                 continue;
-            }
-
-            if (room.getHabboItem(item.getId()) == null) {
-                items.add(item);
             }
         }
 
-        for (HabboItem item : items) {
-            this.items.remove(item);
+        for (StateSnapshot snapshot : snapshotsToRemove) {
+            this.snapshots.remove(snapshot);
         }
 
         message.appendBoolean(false);
         message.appendInt(WiredManager.MAXIMUM_FURNI_SELECTION);
-        message.appendInt(this.items.size());
-        for (HabboItem item : this.items) {
-            message.appendInt(item.getId());
+        message.appendInt(this.snapshots.size());
+        for (StateSnapshot snapshot : this.snapshots) {
+            message.appendInt(snapshot.itemId);
         }
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.triggerMode);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -135,14 +166,22 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
     @Override
     public boolean saveData(WiredSettings settings) {
-        this.items.clear();
+        this.snapshots.clear();
+        this.triggerMode = (settings.getIntParams().length > 0 && settings.getIntParams()[0] == MODE_SAVED_STATE)
+                ? MODE_SAVED_STATE
+                : MODE_ALL_STATES;
+
+        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (room == null) {
+            return true;
+        }
 
         int count = settings.getFurniIds().length;
 
         for (int i = 0; i < count; i++) {
-            HabboItem item = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]);
+            HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
             if (item != null) {
-                this.items.add(item);
+                this.snapshots.add(this.captureSnapshot(item));
             }
         }
 
@@ -154,11 +193,71 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
         return true;
     }
 
+    private StateSnapshot captureSnapshot(HabboItem item) {
+        return new StateSnapshot(item.getId(), this.normalizeState(item.getExtradata()));
+    }
+
+    private StateSnapshot getSnapshot(int itemId) {
+        for (StateSnapshot snapshot : this.snapshots) {
+            if (snapshot.itemId == itemId) {
+                return snapshot;
+            }
+        }
+
+        return null;
+    }
+
+    private String normalizeState(String state) {
+        return (state == null) ? "" : state;
+    }
+
     static class JsonData {
+        int triggerMode;
+        List<StateSnapshot> snapshots;
         List<Integer> itemIds;
+
+        public JsonData() {
+        }
 
         public JsonData(List<Integer> itemIds) {
             this.itemIds = itemIds;
+        }
+
+        public JsonData(int triggerMode, List<StateSnapshot> snapshots) {
+            this.triggerMode = triggerMode;
+            this.snapshots = snapshots;
+        }
+    }
+
+    static class StateSnapshot {
+        int itemId;
+        String state;
+
+        public StateSnapshot() {
+        }
+
+        public StateSnapshot(int itemId, String state) {
+            this.itemId = itemId;
+            this.state = (state == null) ? "" : state;
+        }
+
+        @Override
+        public int hashCode() {
+            return Integer.hashCode(this.itemId);
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) {
+                return true;
+            }
+
+            if (!(object instanceof StateSnapshot)) {
+                return false;
+            }
+
+            StateSnapshot that = (StateSnapshot) object;
+            return this.itemId == that.itemId;
         }
     }
 }

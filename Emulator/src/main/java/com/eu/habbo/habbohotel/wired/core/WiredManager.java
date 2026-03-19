@@ -236,6 +236,54 @@ public final class WiredManager {
     }
 
     /**
+     * Trigger when a user clicks furniture.
+     */
+    public static boolean triggerUserClicksFurni(Room room, RoomUnit user, HabboItem item) {
+        if (!isEnabled() || room == null || user == null || item == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userClicksFurni(room, user, item);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger when a user clicks invisible click tile furniture.
+     */
+    public static boolean triggerUserClicksTile(Room room, RoomUnit user, HabboItem item) {
+        if (!isEnabled() || room == null || user == null || item == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userClicksTile(room, user, item);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger when a user clicks another user.
+     */
+    public static boolean triggerUserClicksUser(Room room, RoomUnit clickingUser, RoomUnit clickedUser) {
+        if (!isEnabled() || room == null || clickingUser == null || clickedUser == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userClicksUser(room, clickingUser, clickedUser);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger when a user performs an avatar action.
+     */
+    public static boolean triggerUserPerformsAction(Room room, RoomUnit user, int actionId, int actionParameter) {
+        if (!isEnabled() || room == null || user == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userPerformsAction(room, user, actionId, actionParameter);
+        return handleEvent(event);
+    }
+
+    /**
      * Trigger when a user says something.
      */
     public static boolean triggerUserSays(Room room, RoomUnit user, String message) {
@@ -256,6 +304,18 @@ public final class WiredManager {
         }
         
         WiredEvent event = WiredEvents.userEntersRoom(room, user);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger when a user leaves the room.
+     */
+    public static boolean triggerUserLeavesRoom(Room room, RoomUnit user) {
+        if (!isEnabled() || room == null || user == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userLeavesRoom(room, user);
         return handleEvent(event);
     }
 
@@ -292,6 +352,30 @@ public final class WiredManager {
         }
         
         WiredEvent event = WiredEvents.timerRepeat(room, timerItem);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger a long periodic timer.
+     */
+    public static boolean triggerTimerRepeatLong(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerRepeatLong(room, timerItem);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger a short periodic timer.
+     */
+    public static boolean triggerTimerRepeatShort(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerRepeatShort(room, timerItem);
         return handleEvent(event);
     }
 
