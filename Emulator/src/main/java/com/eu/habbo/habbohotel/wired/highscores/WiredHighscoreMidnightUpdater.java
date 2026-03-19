@@ -4,11 +4,10 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredHighscore;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.util.HotelDateTimeUtil;
 import gnu.trove.set.hash.THashSet;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 
 public class WiredHighscoreMidnightUpdater implements Runnable {
@@ -30,6 +29,7 @@ public class WiredHighscoreMidnightUpdater implements Runnable {
     }
 
     public static int getNextUpdaterRun() {
-        return Math.toIntExact(LocalDateTime.now().with(LocalTime.MIDNIGHT).plusDays(1).plusSeconds(-1).atZone(ZoneId.systemDefault()).toEpochSecond() - Emulator.getIntUnixTimestamp()) + 5;
+        long nextRunTimestamp = HotelDateTimeUtil.toEpochSecond(HotelDateTimeUtil.localDateTimeNow().with(LocalTime.MIDNIGHT).plusDays(1).plusSeconds(-1));
+        return Math.toIntExact(nextRunTimestamp - Emulator.getIntUnixTimestamp()) + 5;
     }
 }

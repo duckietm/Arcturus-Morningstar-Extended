@@ -64,6 +64,9 @@ import java.sql.SQLException;
  * @see WiredEvents
  */
 public final class WiredManager {
+    private static final String CACHE_LAST_ACTION_ID = "wired.last_user_action.id";
+    private static final String CACHE_LAST_ACTION_PARAMETER = "wired.last_user_action.parameter";
+    private static final String CACHE_LAST_ACTION_TIMESTAMP = "wired.last_user_action.timestamp";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredManager.class);
 
@@ -278,6 +281,10 @@ public final class WiredManager {
         if (!isEnabled() || room == null || user == null) {
             return false;
         }
+
+        user.getCacheable().put(CACHE_LAST_ACTION_ID, actionId);
+        user.getCacheable().put(CACHE_LAST_ACTION_PARAMETER, actionParameter);
+        user.getCacheable().put(CACHE_LAST_ACTION_TIMESTAMP, System.currentTimeMillis());
 
         WiredEvent event = WiredEvents.userPerformsAction(room, user, actionId, actionParameter);
         return handleEvent(event);
