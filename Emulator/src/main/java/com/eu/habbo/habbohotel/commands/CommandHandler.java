@@ -298,6 +298,10 @@ public class CommandHandler {
         addCommand(new SubscriptionCommand());
         addCommand(new UpdateChatBubblesCommand());
         addCommand(new WiredCommand());
+        addCommand(new GivePrefixCommand());
+        addCommand(new ListPrefixesCommand());
+        addCommand(new RemovePrefixCommand());
+        addCommand(new PrefixBlacklistCommand());
 
         addCommand(new TestCommand());
     }

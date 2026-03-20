@@ -556,4 +556,9 @@ public class Outgoing {
 
     public static final int AvailableCommandsComposer = 4050;
 
+    // Custom Prefixes
+    public static final int UserPrefixesComposer = 7001;
+    public static final int PrefixReceivedComposer = 7002;
+    public static final int ActivePrefixUpdatedComposer = 7003;
+
 }
