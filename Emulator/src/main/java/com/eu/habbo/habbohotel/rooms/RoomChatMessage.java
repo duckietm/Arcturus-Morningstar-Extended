@@ -202,6 +202,25 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendInt(0);
 			message.appendString(this.RoomChatColour); //Added packet for room chat
             message.appendInt(this.getMessage().length());
+
+            // Custom prefix data
+            String prefixText = "";
+            String prefixColor = "";
+            String prefixIcon = "";
+            String prefixEffect = "";
+            if (this.habbo != null && this.habbo.getInventory() != null && this.habbo.getInventory().getPrefixesComponent() != null) {
+                com.eu.habbo.habbohotel.users.UserPrefix activePrefix = this.habbo.getInventory().getPrefixesComponent().getActivePrefix();
+                if (activePrefix != null) {
+                    prefixText = activePrefix.getText();
+                    prefixColor = activePrefix.getColor();
+                    prefixIcon = activePrefix.getIcon();
+                    prefixEffect = activePrefix.getEffect();
+                }
+            }
+            message.appendString(prefixText);
+            message.appendString(prefixColor);
+            message.appendString(prefixIcon);
+            message.appendString(prefixEffect);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }
