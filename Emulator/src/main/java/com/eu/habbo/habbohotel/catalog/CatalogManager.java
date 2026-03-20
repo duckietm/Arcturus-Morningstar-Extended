@@ -173,6 +173,9 @@ public class CatalogManager {
                     case mad_money:
                         this.put(layout.name().toLowerCase(), MadMoneyLayout.class);
                         break;
+                    case custom_prefix:
+                        this.put(layout.name().toLowerCase(), CustomPrefixLayout.class);
+                        break;
                     case default_3x3:
                     default:
                         this.put("default_3x3", Default_3x3Layout.class);

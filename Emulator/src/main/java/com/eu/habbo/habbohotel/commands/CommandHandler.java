@@ -205,6 +205,7 @@ public class CommandHandler {
         addCommand(new FreezeBotsCommand());
         addCommand(new FreezeCommand());
         addCommand(new GiftCommand());
+        addCommand(new GivePrefixCommand());
         addCommand(new GiveRankCommand());
         addCommand(new HabnamCommand());
         addCommand(new HandItemCommand());
@@ -228,6 +229,8 @@ public class CommandHandler {
         addCommand(new MuteBotsCommand());
         addCommand(new MuteCommand());
         addCommand(new MutePetsCommand());
+        addCommand(new ListPrefixesCommand());
+        addCommand(new PrefixBlacklistCommand());
         addCommand(new PetInfoCommand());
         addCommand(new PickallCommand());
 		addCommand(new PingCommand());
@@ -238,6 +241,7 @@ public class CommandHandler {
         addCommand(new PullCommand());
         addCommand(new PushCommand());
         addCommand(new RedeemCommand());
+        addCommand(new RemovePrefixCommand());
         addCommand(new ReloadRoomCommand());
         addCommand(new RoomAlertCommand());
         addCommand(new RoomBundleCommand());
