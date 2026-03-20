@@ -116,6 +116,22 @@ public class GameClientManager {
     }
 
 
+    /**
+     * Find an existing GameClient that authenticated with the given SSO ticket.
+     * Used to detect reconnections where the old connection hasn't been closed yet.
+     */
+    public GameClient findClientBySsoTicket(String ssoTicket) {
+        if (ssoTicket == null || ssoTicket.isEmpty()) return null;
+
+        for (GameClient client : this.clients.values()) {
+            if (ssoTicket.equals(client.getSsoTicket()) && client.getHabbo() != null) {
+                return client;
+            }
+        }
+        return null;
+    }
+
+
     public List<Habbo> getHabbosWithMachineId(String machineId) {
         List<Habbo> habbos = new ArrayList<>();
 

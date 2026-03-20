@@ -7,6 +7,7 @@ import com.eu.habbo.core.*;
 import com.eu.habbo.core.consolecommands.ConsoleCommand;
 import com.eu.habbo.database.Database;
 import com.eu.habbo.habbohotel.GameEnvironment;
+import com.eu.habbo.habbohotel.gameclients.SessionResumeManager;
 import com.eu.habbo.networking.gameserver.GameServer;
 import com.eu.habbo.networking.rconserver.RCONServer;
 import com.eu.habbo.plugin.PluginManager;
@@ -319,6 +320,7 @@ public final class Emulator {
         if (Emulator.pluginManager != null)
             tryShutdown(() -> Emulator.pluginManager.fireEvent(new EmulatorStartShutdownEvent()));
         if (Emulator.rconServer != null) tryShutdown(() -> Emulator.rconServer.stop());
+        tryShutdown(() -> SessionResumeManager.getInstance().disposeAll());
         if (Emulator.gameEnvironment != null) tryShutdown(() -> Emulator.gameEnvironment.dispose());
         if (Emulator.pluginManager != null)
             tryShutdown(() -> Emulator.pluginManager.fireEvent(new EmulatorStoppedEvent()));

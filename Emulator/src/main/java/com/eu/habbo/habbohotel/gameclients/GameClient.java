@@ -26,6 +26,7 @@ public class GameClient {
     private Habbo habbo;
     private boolean handshakeFinished;
     private String machineId = "";
+    private String ssoTicket = "";
 
     public final ConcurrentHashMap<Integer, Integer> incomingPacketCounter = new ConcurrentHashMap<>(25);
     public final ConcurrentHashMap<Class<? extends MessageHandler>, Long> messageTimestamps = new ConcurrentHashMap<>();
@@ -80,6 +81,14 @@ public class GameClient {
         }
 
         this.machineId = machineId;
+    }
+
+    public String getSsoTicket() {
+        return this.ssoTicket;
+    }
+
+    public void setSsoTicket(String ssoTicket) {
+        this.ssoTicket = ssoTicket != null ? ssoTicket : "";
     }
 
     public void sendResponse(MessageComposer composer) {
@@ -145,8 +154,15 @@ public class GameClient {
 
             if (this.habbo != null) {
                 if (this.habbo.isOnline()) {
-                    this.habbo.getHabboInfo().setOnline(false);
-                    this.habbo.disconnect();
+                    // Try to park the habbo in the grace period instead of immediate disconnect
+                    boolean parked = SessionResumeManager.getInstance().parkHabbo(this.habbo, this.ssoTicket);
+
+                    if (!parked) {
+                        // No grace period configured — immediate disconnect as before
+                        this.habbo.getHabboInfo().setOnline(false);
+                        this.habbo.disconnect();
+                    }
+                    // If parked, do NOT call disconnect() — the habbo stays in the room
                 }
 
                 this.habbo = null;
