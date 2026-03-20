@@ -8,6 +8,16 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
+/**
+ * Manages a grace period for disconnected users. Instead of immediately
+ * disposing a Habbo when their WebSocket drops, the Habbo is held in
+ * a "ghost" state for a configurable number of seconds. If the same
+ * user reconnects (via SSO ticket) within the grace window, their
+ * existing Habbo object is resumed on the new connection — keeping
+ * them in their room, preserving inventory state, etc.
+ *
+ * Config key: session.reconnect.grace.seconds (default: 30)
+ */
 public class SessionResumeManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionResumeManager.class);
@@ -27,6 +37,12 @@ public class SessionResumeManager {
         return Emulator.getConfig().getInt("session.reconnect.grace.seconds", 30);
     }
 
+    /**
+     * Park a disconnected Habbo in ghost mode. Their room presence is
+     * preserved, but the old GameClient channel is closed.
+     *
+     * @return true if the habbo was parked (grace period > 0), false if immediate dispose should happen
+     */
     public boolean parkHabbo(Habbo habbo, String ssoTicket) {
         int graceSeconds = getGracePeriodSeconds();
         if (graceSeconds <= 0) {
@@ -35,6 +51,7 @@ public class SessionResumeManager {
 
         int userId = habbo.getHabboInfo().getId();
 
+        // Cancel any existing ghost session for this user
         GhostSession existing = ghostSessions.remove(userId);
         if (existing != null && existing.disposeFuture != null) {
             existing.disposeFuture.cancel(false);
@@ -43,10 +60,12 @@ public class SessionResumeManager {
         LOGGER.info("[SessionResume] Parking {} (id={}) for {}s grace period",
                 habbo.getHabboInfo().getUsername(), userId, graceSeconds);
 
+        // Restore the SSO ticket so the client can reconnect with the same ticket
         if (ssoTicket != null && !ssoTicket.isEmpty()) {
             restoreSsoTicket(userId, ssoTicket);
         }
 
+        // Schedule the final disconnect after the grace period
         ScheduledFuture<?> future = Emulator.getThreading().run(() -> {
             GhostSession ghost = ghostSessions.remove(userId);
             if (ghost != null) {
@@ -60,12 +79,18 @@ public class SessionResumeManager {
         return true;
     }
 
+    /**
+     * Try to resume a ghost session for the given user ID.
+     *
+     * @return the parked Habbo if found within grace period, null otherwise
+     */
     public Habbo resumeSession(int userId) {
         GhostSession ghost = ghostSessions.remove(userId);
         if (ghost == null) {
             return null;
         }
 
+        // Cancel the scheduled dispose
         if (ghost.disposeFuture != null) {
             ghost.disposeFuture.cancel(false);
         }
@@ -76,10 +101,16 @@ public class SessionResumeManager {
         return ghost.habbo;
     }
 
+    /**
+     * Check if a user has a ghost session (is in grace period).
+     */
     public boolean hasGhostSession(int userId) {
         return ghostSessions.containsKey(userId);
     }
 
+    /**
+     * Immediately expire all ghost sessions (e.g. on emulator shutdown).
+     */
     public void disposeAll() {
         for (GhostSession ghost : ghostSessions.values()) {
             if (ghost.disposeFuture != null) {
@@ -90,6 +121,9 @@ public class SessionResumeManager {
         ghostSessions.clear();
     }
 
+    /**
+     * Perform the actual full disconnect that normally happens in Habbo.disconnect().
+     */
     private void performFullDisconnect(Habbo habbo) {
         try {
             habbo.getHabboInfo().setOnline(false);
@@ -97,6 +131,8 @@ public class SessionResumeManager {
         } catch (Exception e) {
             LOGGER.error("[SessionResume] Error during deferred disconnect", e);
         }
+
+        // Clear the SSO ticket now that the grace period is truly over
         clearSsoTicket(habbo.getHabboInfo().getId());
     }
 

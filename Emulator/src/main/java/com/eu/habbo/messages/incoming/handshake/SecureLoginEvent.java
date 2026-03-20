@@ -1,9 +1,9 @@
 package com.eu.habbo.messages.incoming.handshake;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.messenger.Messenger;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.gameclients.SessionResumeManager;
-import com.eu.habbo.habbohotel.messenger.Messenger;
 import com.eu.habbo.habbohotel.modtool.ModToolSanctionItem;
 import com.eu.habbo.habbohotel.modtool.ModToolSanctions;
 import com.eu.habbo.habbohotel.navigation.NavigatorSavedSearch;
@@ -84,14 +84,21 @@ public class SecureLoginEvent extends MessageHandler {
         }
 
         if (this.client.getHabbo() == null) {
+            // Store SSO ticket on client for grace period tracking
             this.client.setSsoTicket(sso);
 
+            // Race condition fix: if the old WebSocket connection is still alive on the
+            // server when the client reconnects, the SSO ticket won't be in the DB yet
+            // (it was cleared on first login, and parkHabbo hasn't run because the old
+            // channel hasn't closed). Find the old client by SSO ticket and force-dispose
+            // it, which parks the habbo and restores the ticket to the DB.
             GameClient existingClient = Emulator.getGameServer().getGameClientManager().findClientBySsoTicket(sso);
             if (existingClient != null && existingClient != this.client) {
                 LOGGER.info("[SessionResume] Found existing client with same SSO ticket — disposing old connection to trigger parking");
                 Emulator.getGameServer().getGameClientManager().disposeClient(existingClient);
             }
 
+            // First, look up the user ID to check for ghost sessions
             int lookupUserId = 0;
             try (java.sql.Connection conn = Emulator.getDatabase().getDataSource().getConnection();
                  java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users WHERE auth_ticket = ? LIMIT 1")) {
@@ -105,6 +112,7 @@ public class SecureLoginEvent extends MessageHandler {
                 LOGGER.error("Caught exception looking up user for session resume", e);
             }
 
+            // Check if this user has a ghost session (disconnected within grace period)
             Habbo habbo = null;
             boolean isSessionResume = false;
 
@@ -113,6 +121,7 @@ public class SecureLoginEvent extends MessageHandler {
             }
 
             if (habbo != null) {
+                // Session resume — reattach the existing Habbo to the new client
                 isSessionResume = true;
                 LOGGER.info("[SessionResume] Resuming session for {} (id={})",
                         habbo.getHabboInfo().getUsername(), habbo.getHabboInfo().getId());
@@ -121,6 +130,7 @@ public class SecureLoginEvent extends MessageHandler {
                 this.client.setHabbo(habbo);
                 this.client.setMachineId(habbo.getHabboInfo().getMachineID());
 
+                // Clear the SSO ticket now that session is resumed (prevent reuse)
                 if (!Emulator.debugging) {
                     try (java.sql.Connection conn = Emulator.getDatabase().getDataSource().getConnection();
                          java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE users SET auth_ticket = ? WHERE id = ? LIMIT 1")) {
@@ -132,6 +142,7 @@ public class SecureLoginEvent extends MessageHandler {
                     }
                 }
             } else {
+                // Normal login — load from database
                 habbo = Emulator.getGameEnvironment().getHabboManager().loadHabbo(sso);
             }
 
@@ -177,6 +188,11 @@ public class SecureLoginEvent extends MessageHandler {
                 int roomIdToEnter = 0;
 
                 if (isSessionResume) {
+                    // On session resume, DON'T set roomIdToEnter. The client keeps its
+                    // existing room view alive and the habbo is already in the room on
+                    // the server. Setting roomIdToEnter = 0 prevents UserHomeRoomComposer
+                    // from triggering a full room re-entry on the client (which would
+                    // tear down and rebuild the room view).
                     Room currentRoom = habbo.getHabboInfo().getCurrentRoom();
                     if (currentRoom != null) {
                         LOGGER.info("[SessionResume] {} is still in room {} — client will resume in-place",
@@ -213,6 +229,8 @@ public class SecureLoginEvent extends MessageHandler {
 
                 this.client.sendResponses(messages);
 
+                //Hardcoded
+                //this.client.sendResponse(new ForumsTestComposer());
                 this.client.sendResponse(new InventoryAchievementsComposer());
 
                 ModToolSanctions modToolSanctions = Emulator.getGameEnvironment().getModToolSanctions();
@@ -248,6 +266,7 @@ public class SecureLoginEvent extends MessageHandler {
                     }
                 }
 
+                // Skip login-only events on session resume (welcome alerts, login events, etc.)
                 if (!isSessionResume) {
                     UserLoginEvent userLoginEvent = new UserLoginEvent(habbo, this.client.getHabbo().getHabboInfo().getIpLogin());
                     Emulator.getPluginManager().fireEvent(userLoginEvent);

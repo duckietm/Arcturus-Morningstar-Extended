@@ -292,7 +292,7 @@ public class RoomManager {
     /**
      * Loads a room, optionally loading its data.
      * If the room is already being loaded in the background, this will wait for that to complete.
-     * 
+     *
      * @param id The room ID
      * @param loadData Whether to load room data (items, bots, pets, etc.)
      * @return The loaded room, or null if not found
@@ -499,14 +499,18 @@ public class RoomManager {
     }
 
     public void enterRoom(Habbo habbo, int roomId, String password) {
-        this.enterRoom(habbo, roomId, password, false, null);
+        this.enterRoom(habbo, roomId, password, false, null, false);
     }
 
     public void enterRoom(Habbo habbo, int roomId, String password, boolean overrideChecks) {
-        this.enterRoom(habbo, roomId, password, overrideChecks, null);
+        this.enterRoom(habbo, roomId, password, overrideChecks, null, false);
     }
 
     public void enterRoom(Habbo habbo, int roomId, String password, boolean overrideChecks, RoomTile doorLocation) {
+        this.enterRoom(habbo, roomId, password, overrideChecks, doorLocation, false);
+    }
+
+    public void enterRoom(Habbo habbo, int roomId, String password, boolean overrideChecks, RoomTile doorLocation, boolean isReconnectSpawn) {
         Room room = this.loadRoom(roomId, true);
 
         if (room == null)
@@ -547,7 +551,7 @@ public class RoomManager {
                 room.hasRights(habbo) ||
                 (room.getState().equals(RoomState.INVISIBLE) && room.hasRights(habbo)) ||
                 (room.hasGuild() && room.getGuildRightLevel(habbo).isGreaterThan(RoomRightLevels.GUILD_RIGHTS))) {
-            this.openRoom(habbo, room, doorLocation);
+            this.openRoom(habbo, room, doorLocation, isReconnectSpawn);
         } else if (room.getState() == RoomState.LOCKED) {
             boolean rightsFound = false;
 
@@ -572,7 +576,7 @@ public class RoomManager {
             room.addToQueue(habbo);
         } else if (room.getState() == RoomState.PASSWORD) {
             if (room.getPassword().equalsIgnoreCase(password))
-                this.openRoom(habbo, room, doorLocation);
+                this.openRoom(habbo, room, doorLocation, isReconnectSpawn);
             else {
                 habbo.getClient().sendResponse(new GenericErrorMessagesComposer(GenericErrorMessagesComposer.WRONG_PASSWORD_USED));
                 habbo.getClient().sendResponse(new HotelViewComposer());
@@ -585,6 +589,10 @@ public class RoomManager {
     }
 
     void openRoom(Habbo habbo, Room room, RoomTile doorLocation) {
+        this.openRoom(habbo, room, doorLocation, false);
+    }
+
+    void openRoom(Habbo habbo, Room room, RoomTile doorLocation, boolean isReconnectSpawn) {
         if (room == null || room.getLayout() == null)
             return;
 
@@ -623,7 +631,13 @@ public class RoomManager {
             if (doorLocation == null) {
                 habbo.getRoomUnit().setBodyRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
                 habbo.getRoomUnit().setHeadRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
+            } else if (isReconnectSpawn) {
+                // Reconnect spawn: place at tile but keep normal room behavior
+                // (user can still leave by door, no teleport flags)
+                habbo.getRoomUnit().setBodyRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
+                habbo.getRoomUnit().setHeadRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
             } else {
+                // Furniture teleport spawn
                 habbo.getRoomUnit().setCanLeaveRoomByDoor(false);
                 habbo.getRoomUnit().isTeleporting = true;
                 HabboItem topItem = room.getTopItemAt(doorLocation.x, doorLocation.y);
