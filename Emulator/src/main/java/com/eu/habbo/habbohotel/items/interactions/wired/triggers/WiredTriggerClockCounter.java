@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameUpCounter;
@@ -12,7 +13,9 @@ import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTriggerSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveException;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -53,7 +56,8 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
             return false;
         }
 
-        return (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) || this.items.contains(sourceItem);
+        return WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, this.items).stream()
+                .anyMatch(item -> item != null && item.getId() == sourceItem.getId());
     }
 
     @Deprecated
@@ -94,11 +98,18 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
 
     @Override
     public boolean saveData(WiredSettings settings) {
+        return this.saveData(settings, null);
+    }
+
+    @Override
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
         int[] params = settings.getIntParams();
 
         this.minutes = (params.length > 0) ? this.normalizeMinutes(params[0]) : 0;
         this.halfSecondSteps = (params.length > 1) ? this.normalizeHalfSecondSteps(params[1]) : 0;
-        this.furniSource = (params.length > 2) ? this.normalizeFurniSource(params[2]) : WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = (params.length > 2)
+                ? this.normalizeFurniSource(params[2])
+                : ((settings.getFurniIds().length > 0) ? WiredSourceUtil.SOURCE_SELECTED : WiredSourceUtil.SOURCE_TRIGGER);
 
         this.items.clear();
 
@@ -119,9 +130,11 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
         for (int itemId : settings.getFurniIds()) {
             HabboItem item = room.getHabboItem(itemId);
 
-            if (item instanceof InteractionGameUpCounter) {
-                this.items.add(item);
+            if (!(item instanceof InteractionGameUpCounter)) {
+                throw new WiredTriggerSaveException("wiredfurni.error.require_counter_furni");
             }
+
+            this.items.add(item);
         }
 
         return true;
@@ -172,6 +185,10 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
                 this.items.add(item);
             }
         }
+
+        if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
     }
 
     @Override
@@ -210,7 +227,11 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
     }
 
     private int normalizeFurniSource(int value) {
-        return (value == WiredSourceUtil.SOURCE_SELECTED) ? WiredSourceUtil.SOURCE_SELECTED : WiredSourceUtil.SOURCE_TRIGGER;
+        if (value == WiredSourceUtil.SOURCE_SELECTED || value == WiredSourceUtil.SOURCE_SELECTOR) {
+            return value;
+        }
+
+        return WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     static class JsonData {

@@ -3,8 +3,10 @@ package com.eu.habbo.messages.incoming.rooms.users;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.users.InClientLinkComposer;
 
 public class ClickUserEvent extends MessageHandler {
     @Override
@@ -29,5 +31,13 @@ public class ClickUserEvent extends MessageHandler {
         }
 
         WiredManager.triggerUserClicksUser(room, clickingUser, clickedHabbo.getRoomUnit());
+
+        if (WiredTriggerHabboClicksUser.hasPendingIgnoreLook(clickingUser)) {
+            this.client.sendResponse(new InClientLinkComposer("avatar-info/block-rotate"));
+        }
+
+        if (WiredTriggerHabboClicksUser.consumeBlockMenuOpen(clickingUser)) {
+            this.client.sendResponse(new InClientLinkComposer("avatar-info/block-menu"));
+        }
     }
 }

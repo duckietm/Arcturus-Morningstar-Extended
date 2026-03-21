@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
@@ -10,7 +11,10 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTriggerSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveException;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -21,7 +25,8 @@ import java.util.stream.Collectors;
 public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
     public static final WiredTriggerType type = WiredTriggerType.CLICKS_FURNI;
 
-    private THashSet<HabboItem> items;
+    protected final THashSet<HabboItem> items;
+    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredTriggerHabboClicksFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -36,7 +41,21 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
         HabboItem sourceItem = event.getSourceItem().orElse(null);
-        return sourceItem != null && this.items.contains(sourceItem);
+        if (sourceItem == null) {
+            return false;
+        }
+
+        switch (this.furniSource) {
+            case WiredSourceUtil.SOURCE_SELECTED:
+                return this.matchesSourceItem(this.items, sourceItem);
+            case WiredSourceUtil.SOURCE_SELECTOR:
+                return this.matchesSourceItem(
+                        WiredTriggerSourceUtil.resolveItems(this, event, WiredSourceUtil.SOURCE_SELECTOR, this.items),
+                        sourceItem);
+            case WiredSourceUtil.SOURCE_TRIGGER:
+            default:
+                return true;
+        }
     }
 
     @Deprecated
@@ -77,7 +96,8 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -86,13 +106,32 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
 
     @Override
     public boolean saveData(WiredSettings settings) {
+        return this.saveData(settings, null);
+    }
+
+    @Override
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
         this.items.clear();
+        this.furniSource = (settings.getIntParams().length > 0)
+                ? this.normalizeFurniSource(settings.getIntParams()[0])
+                : ((settings.getFurniIds().length > 0) ? WiredSourceUtil.SOURCE_SELECTED : WiredSourceUtil.SOURCE_TRIGGER);
+
+        if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
+            return true;
+        }
 
         int count = settings.getFurniIds().length;
+        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (room == null) {
+            return false;
+        }
 
         for (int i = 0; i < count; i++) {
-            HabboItem item = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]);
+            HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
             if (item != null) {
+                if (!this.isSelectableItem(item)) {
+                    throw new WiredTriggerSaveException(this.getInvalidSelectionErrorKey());
+                }
                 this.items.add(item);
             }
         }
@@ -103,6 +142,7 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
+                this.furniSource,
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -110,10 +150,12 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            this.furniSource = this.normalizeFurniSource(data.furniSource);
             for (Integer id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
                 if (item != null) {
@@ -141,12 +183,15 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
                     }
                 }
             }
+
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -155,10 +200,42 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
     }
 
     static class JsonData {
+        int furniSource;
         List<Integer> itemIds;
 
-        public JsonData(List<Integer> itemIds) {
+        public JsonData(int furniSource, List<Integer> itemIds) {
+            this.furniSource = furniSource;
             this.itemIds = itemIds;
         }
+    }
+
+    protected boolean isSelectableItem(HabboItem item) {
+        return item != null;
+    }
+
+    protected String getInvalidSelectionErrorKey() {
+        return "There was an error while saving that trigger";
+    }
+
+    protected int normalizeFurniSource(int value) {
+        if (value == WiredSourceUtil.SOURCE_SELECTED || value == WiredSourceUtil.SOURCE_SELECTOR) {
+            return value;
+        }
+
+        return WiredSourceUtil.SOURCE_TRIGGER;
+    }
+
+    private boolean matchesSourceItem(Iterable<HabboItem> candidateItems, HabboItem sourceItem) {
+        if (candidateItems == null || sourceItem == null) {
+            return false;
+        }
+
+        for (HabboItem item : candidateItems) {
+            if (item != null && item.getId() == sourceItem.getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

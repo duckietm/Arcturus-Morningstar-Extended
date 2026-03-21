@@ -108,8 +108,8 @@ public final class WiredEvents {
      */
     public static WiredEvent userClicksUser(Room room, RoomUnit clickingUser, RoomUnit clickedUser) {
         return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_USER, room)
-                .actor(clickedUser)
-                .targetUnit(clickingUser)
+                .actor(clickingUser)
+                .targetUnit(clickedUser)
                 .tile(clickedUser.getCurrentLocation())
                 .build();
     }

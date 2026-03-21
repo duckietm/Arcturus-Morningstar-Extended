@@ -24,6 +24,8 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
     private static final int COMPARISON_LESS = 0;
     private static final int COMPARISON_EQUAL = 1;
     private static final int COMPARISON_GREATER = 2;
+    private static final int QUANTIFIER_ALL = 0;
+    private static final int QUANTIFIER_ANY = 1;
     private static final int MAX_MINUTES = 99;
     private static final int MAX_HALF_SECOND_STEPS = 119;
 
@@ -34,6 +36,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
     private int minutes = 0;
     private int halfSecondSteps = 0;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionCounterTimeMatches(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -61,29 +64,27 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
 
         int targetTimeInMs = this.getTargetTimeInMs();
 
+        if (this.quantifier == QUANTIFIER_ANY) {
+            for (HabboItem item : targets) {
+                if (!(item instanceof InteractionGameUpCounter)) {
+                    continue;
+                }
+
+                if (this.matchesCounter((InteractionGameUpCounter) item, targetTimeInMs)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         for (HabboItem item : targets) {
             if (!(item instanceof InteractionGameUpCounter)) {
                 return false;
             }
 
-            int currentTimeInMs = ((InteractionGameUpCounter) item).getCurrentTimeInMs();
-
-            switch (this.comparison) {
-                case COMPARISON_LESS:
-                    if (currentTimeInMs >= targetTimeInMs) {
-                        return false;
-                    }
-                    break;
-                case COMPARISON_GREATER:
-                    if (currentTimeInMs <= targetTimeInMs) {
-                        return false;
-                    }
-                    break;
-                default:
-                    if (currentTimeInMs != targetTimeInMs) {
-                        return false;
-                    }
-                    break;
+            if (!this.matchesCounter((InteractionGameUpCounter) item, targetTimeInMs)) {
+                return false;
             }
         }
 
@@ -103,6 +104,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
                 this.minutes,
                 this.halfSecondSteps,
                 this.furniSource,
+                this.quantifier,
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -114,6 +116,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.minutes = 0;
         this.halfSecondSteps = 0;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.quantifier = QUANTIFIER_ALL;
 
         String wiredData = set.getString("wired_data");
         if (wiredData == null || wiredData.isEmpty() || !wiredData.startsWith("{")) {
@@ -129,6 +132,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.minutes = this.normalizeMinutes(data.minutes);
         this.halfSecondSteps = this.normalizeHalfSecondSteps(data.halfSecondSteps);
         this.furniSource = data.furniSource;
+        this.quantifier = this.normalizeQuantifier(data.quantifier);
 
         if (data.itemIds == null) {
             return;
@@ -149,6 +153,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.minutes = 0;
         this.halfSecondSteps = 0;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.quantifier = QUANTIFIER_ALL;
     }
 
     @Override
@@ -171,11 +176,12 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(4);
+        message.appendInt(5);
         message.appendInt(this.comparison);
         message.appendInt(this.minutes);
         message.appendInt(this.halfSecondSteps);
         message.appendInt(this.furniSource);
+        message.appendInt(this.quantifier);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -190,6 +196,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.minutes = (params.length > 1) ? this.normalizeMinutes(params[1]) : 0;
         this.halfSecondSteps = (params.length > 2) ? this.normalizeHalfSecondSteps(params[2]) : 0;
         this.furniSource = (params.length > 3) ? params[3] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.quantifier = (params.length > 4) ? this.normalizeQuantifier(params[4]) : QUANTIFIER_ALL;
 
         this.items.clear();
 
@@ -236,6 +243,19 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         return (this.minutes * 60_000) + (this.halfSecondSteps * 500);
     }
 
+    private boolean matchesCounter(InteractionGameUpCounter counter, int targetTimeInMs) {
+        int currentTimeInMs = counter.getCurrentTimeInMs();
+
+        switch (this.comparison) {
+            case COMPARISON_LESS:
+                return currentTimeInMs < targetTimeInMs;
+            case COMPARISON_GREATER:
+                return currentTimeInMs > targetTimeInMs;
+            default:
+                return currentTimeInMs == targetTimeInMs;
+        }
+    }
+
     private int normalizeComparison(int value) {
         if (value < COMPARISON_LESS || value > COMPARISON_GREATER) {
             return COMPARISON_EQUAL;
@@ -252,18 +272,24 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         return Math.max(0, Math.min(MAX_HALF_SECOND_STEPS, value));
     }
 
+    private int normalizeQuantifier(int value) {
+        return (value == QUANTIFIER_ANY) ? QUANTIFIER_ANY : QUANTIFIER_ALL;
+    }
+
     static class JsonData {
         int comparison;
         int minutes;
         int halfSecondSteps;
         int furniSource;
+        int quantifier;
         List<Integer> itemIds;
 
-        public JsonData(int comparison, int minutes, int halfSecondSteps, int furniSource, List<Integer> itemIds) {
+        public JsonData(int comparison, int minutes, int halfSecondSteps, int furniSource, int quantifier, List<Integer> itemIds) {
             this.comparison = comparison;
             this.minutes = minutes;
             this.halfSecondSteps = halfSecondSteps;
             this.furniSource = furniSource;
+            this.quantifier = quantifier;
             this.itemIds = itemIds;
         }
     }

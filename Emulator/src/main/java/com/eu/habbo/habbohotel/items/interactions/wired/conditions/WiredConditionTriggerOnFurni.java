@@ -22,11 +22,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
+    protected static final int QUANTIFIER_ALL = 0;
+    protected static final int QUANTIFIER_ANY = 1;
+
     public static final WiredConditionType type = WiredConditionType.TRIGGER_ON_FURNI;
 
     protected THashSet<HabboItem> items = new THashSet<>();
     protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionTriggerOnFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -38,8 +42,6 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        Room room = ctx.room();
-
         this.refresh();
 
         List<RoomUnit> userTargets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
@@ -50,7 +52,11 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         if (itemTargets.isEmpty())
             return false;
 
-        return isAnyUserOnFurni(userTargets, itemTargets, room);
+        if (this.quantifier == QUANTIFIER_ANY) {
+            return this.isAnyUserOnFurni(userTargets, itemTargets, ctx.room());
+        }
+
+        return this.areAllUsersOnFurni(userTargets, itemTargets, ctx.room());
     }
 
     @Deprecated
@@ -70,13 +76,29 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         return false;
     }
 
+    protected boolean areAllUsersOnFurni(Collection<RoomUnit> users, Collection<HabboItem> items, Room room) {
+        for (RoomUnit roomUnit : users) {
+            if (roomUnit == null) {
+                return false;
+            }
+
+            THashSet<HabboItem> itemsAtUser = room.getItemsAt(roomUnit.getCurrentLocation());
+            if (itemsAtUser == null || items.stream().noneMatch(itemsAtUser::contains)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @Override
     public String getWiredData() {
         this.refresh();
         return WiredManager.getGson().toJson(new JsonData(
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList()),
                 this.furniSource,
-                this.userSource
+                this.userSource,
+                this.quantifier
         ));
     }
 
@@ -89,6 +111,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.furniSource = data.furniSource;
             this.userSource = data.userSource;
+            this.quantifier = this.normalizeQuantifier(data.quantifier);
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -109,6 +132,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
             }
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+            this.quantifier = QUANTIFIER_ALL;
         }
         if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
             this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
@@ -120,6 +144,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         this.items.clear();
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.quantifier = QUANTIFIER_ALL;
     }
 
     @Override
@@ -141,9 +166,10 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.furniSource);
         message.appendInt(this.userSource);
+        message.appendInt(this.quantifier);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -158,6 +184,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         int[] params = settings.getIntParams();
         this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
         this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.quantifier = (params.length > 2) ? this.normalizeQuantifier(params[2]) : QUANTIFIER_ALL;
 
         this.items.clear();
 
@@ -194,6 +221,14 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         this.items.removeAll(items);
     }
 
+    protected int getQuantifier() {
+        return this.quantifier;
+    }
+
+    protected int normalizeQuantifier(int value) {
+        return (value == QUANTIFIER_ANY) ? QUANTIFIER_ANY : QUANTIFIER_ALL;
+    }
+
     @Override
     public WiredConditionOperator operator() {
         return WiredConditionOperator.AND;
@@ -203,11 +238,13 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         List<Integer> itemIds;
         int furniSource;
         int userSource;
+        int quantifier;
 
-        public JsonData(List<Integer> itemIds, int furniSource, int userSource) {
+        public JsonData(List<Integer> itemIds, int furniSource, int userSource, int quantifier) {
             this.itemIds = itemIds;
             this.furniSource = furniSource;
             this.userSource = userSource;
+            this.quantifier = quantifier;
         }
     }
 }

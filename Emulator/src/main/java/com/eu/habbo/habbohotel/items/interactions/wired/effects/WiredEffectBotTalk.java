@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
+import com.eu.habbo.habbohotel.wired.core.WiredBotSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
@@ -26,6 +27,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
     private int mode;
     private String botName = "";
     private String message = "";
+    private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
 
     public WiredEffectBotTalk(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -43,8 +45,9 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.mode);
+        message.appendInt(this.botSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -55,6 +58,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         if(settings.getIntParams().length < 1) throw new WiredSaveException("Mode is invalid");
         int mode = settings.getIntParams()[0];
+        this.botSource = (settings.getIntParams().length > 1) ? WiredBotSourceUtil.normalizeBotSource(settings.getIntParams()[1]) : WiredBotSourceUtil.SOURCE_BOT_NAME;
 
         if(mode != 0 && mode != 1)
             throw new WiredSaveException("Mode is invalid");
@@ -103,21 +107,20 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
                     .replace(Emulator.getTexts().getValue("wired.variable.points", "%points%"), habbo.getHabboInfo().getCurrencyAmount(Emulator.getConfig().getInt("seasonal.primary.type")) + "")
                     .replace(Emulator.getTexts().getValue("wired.variable.owner", "%owner%"), room.getOwnerName())
                     .replace(Emulator.getTexts().getValue("wired.variable.item_count", "%item_count%"), room.itemCount() + "")
-                    .replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), this.botName)
                     .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), room.getName())
                     .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), room.getUserCount() + "");
         }
 
-        List<Bot> bots = room.getBots(this.botName);
+        List<Bot> bots = WiredBotSourceUtil.resolveBots(ctx, room, this.botSource, this.botName);
 
-        if (bots.size() == 1) {
-            Bot bot = bots.get(0);
+        for (Bot bot : bots) {
+            String botMessage = message.replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), bot.getName());
 
-            if(!WiredManager.triggerUserSays(room, bot.getRoomUnit(), message)) {
+            if(!WiredManager.triggerUserSays(room, bot.getRoomUnit(), botMessage)) {
                 if (this.mode == 1) {
-                    bot.shout(message);
+                    bot.shout(botMessage);
                 } else {
-                    bot.talk(message);
+                    bot.talk(botMessage);
                 }
             }
         }
@@ -131,7 +134,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay(), this.botSource));
     }
 
     @Override
@@ -144,6 +147,9 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
             this.mode = data.mode;
             this.botName = data.bot_name;
             this.message = data.message;
+            this.botSource = (data.botSource != null)
+                    ? WiredBotSourceUtil.normalizeBotSource(data.botSource)
+                    : WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
@@ -156,6 +162,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
     }
 
@@ -164,7 +171,13 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         this.mode = 0;
         this.botName = "";
         this.message = "";
+        this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.setDelay(0);
+    }
+
+    @Override
+    public boolean requiresTriggeringUser() {
+        return WiredBotSourceUtil.requiresTriggeringUser(this.botSource);
     }
 
     public int getMode() {
@@ -201,12 +214,14 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         int mode;
         String message;
         int delay;
+        Integer botSource;
 
-        public JsonData(String bot_name, int mode, String message, int delay) {
+        public JsonData(String bot_name, int mode, String message, int delay, int botSource) {
             this.bot_name = bot_name;
             this.mode = mode;
             this.message = message;
             this.delay = delay;
+            this.botSource = botSource;
         }
     }
 }

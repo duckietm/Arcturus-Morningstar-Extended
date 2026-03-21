@@ -352,27 +352,32 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
      * @return direction
      */
     private RoomUserRotation getMovementDirection() {
-        RoomUserRotation movemementDirection = RoomUserRotation.NORTH;
-        if (this.direction == 1) {
-            movemementDirection = RoomUserRotation.values()[Emulator.getRandom().nextInt(RoomUserRotation.values().length / 2) * 2];
-        } else if (this.direction == 2) {
-            if (Emulator.getRandom().nextInt(2) == 1) {
-                movemementDirection = RoomUserRotation.EAST;
-            } else {
-                movemementDirection = RoomUserRotation.WEST;
-            }
-        } else if (this.direction == 3) {
-            if (Emulator.getRandom().nextInt(2) != 1) {
-                movemementDirection = RoomUserRotation.SOUTH;
-            }
-        } else if (this.direction == 4) {
-            movemementDirection = RoomUserRotation.SOUTH;
-        } else if (this.direction == 5) {
-            movemementDirection = RoomUserRotation.EAST;
-        } else if (this.direction == 7) {
-            movemementDirection = RoomUserRotation.WEST;
+        switch (this.direction) {
+            case 1:
+                return RoomUserRotation.values()[Emulator.getRandom().nextInt(RoomUserRotation.values().length / 2) * 2];
+            case 2:
+                return Emulator.getRandom().nextInt(2) == 1 ? RoomUserRotation.EAST : RoomUserRotation.WEST;
+            case 3:
+                return Emulator.getRandom().nextInt(2) == 1 ? RoomUserRotation.NORTH : RoomUserRotation.SOUTH;
+            case 4:
+                return RoomUserRotation.SOUTH;
+            case 5:
+                return RoomUserRotation.EAST;
+            case 6:
+                return RoomUserRotation.NORTH;
+            case 7:
+                return RoomUserRotation.WEST;
+            case 8:
+                return RoomUserRotation.NORTH_EAST;
+            case 9:
+                return RoomUserRotation.SOUTH_EAST;
+            case 10:
+                return RoomUserRotation.SOUTH_WEST;
+            case 11:
+                return RoomUserRotation.NORTH_WEST;
+            default:
+                return RoomUserRotation.NORTH;
         }
-        return movemementDirection;
     }
 
     @Override

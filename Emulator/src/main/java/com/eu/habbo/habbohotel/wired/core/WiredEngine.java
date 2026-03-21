@@ -4,7 +4,11 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboSaysKeyword;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -172,6 +176,7 @@ public final class WiredEngine {
         debug(room, "Processing {} stacks for event type {}", stacks.size(), event.getType());
 
         boolean anyTriggered = false;
+        boolean suppressSaysOutput = false;
         long currentTime = System.currentTimeMillis();
 
         for (WiredStack stack : stacks) {
@@ -179,6 +184,12 @@ public final class WiredEngine {
                 boolean triggered = processStack(stack, event, currentTime);
                 if (triggered) {
                     anyTriggered = true;
+
+                    if ((event.getType() == WiredEvent.Type.USER_SAYS)
+                            && (stack.triggerItem() instanceof WiredTriggerHabboSaysKeyword)
+                            && ((WiredTriggerHabboSaysKeyword) stack.triggerItem()).isHideMessage()) {
+                        suppressSaysOutput = true;
+                    }
                 }
             } catch (WiredLimitException limitEx) {
                 debug(room, "Stack execution stopped (limit): {}", limitEx.getMessage());
@@ -186,6 +197,10 @@ public final class WiredEngine {
                 LOGGER.error("Error processing wired stack in room {}: {}", room.getId(), ex.getMessage(), ex);
                 debug(room, "Stack error: {}", ex.getMessage());
             }
+        }
+
+        if (event.getType() == WiredEvent.Type.USER_SAYS) {
+            return suppressSaysOutput;
         }
 
         return anyTriggered;
@@ -224,6 +239,7 @@ public final class WiredEngine {
         List<InteractionWiredEffect> executedSelectors = Collections.emptyList();
         if (stack.hasEffects()) {
             executedSelectors = executeSelectors(stack, ctx);
+            applySelectionFilterExtras(stack, ctx, executedSelectors);
         }
 
         // Evaluate conditions
@@ -243,6 +259,16 @@ public final class WiredEngine {
         if (!fireTriggeredEvent(stack, event)) {
             debug(room, "Stack cancelled by plugin");
             return false;
+        }
+
+        if ((event.getType() == WiredEvent.Type.USER_CLICKS_USER)
+                && (stack.triggerItem() instanceof WiredTriggerHabboClicksUser)
+                && event.getActor().isPresent()) {
+            WiredTriggerHabboClicksUser clickUserTrigger = (WiredTriggerHabboClicksUser) stack.triggerItem();
+            WiredTriggerHabboClicksUser.applyRuntimeOptions(
+                    event.getActor().get(),
+                    clickUserTrigger.isBlockMenuOpen(),
+                    clickUserTrigger.isDoNotRotate());
         }
 
         RoomUnit actor = event.getActor().orElse(null);
@@ -461,6 +487,65 @@ public final class WiredEngine {
             wiredEffect.setCooldown(currentTime);
             wiredEffect.activateBox(room, actor, currentTime);
         }
+    }
+
+    private void applySelectionFilterExtras(WiredStack stack, WiredContext ctx, List<InteractionWiredEffect> executedSelectors) {
+        if (executedSelectors == null || executedSelectors.isEmpty()) {
+            return;
+        }
+
+        Room room = ctx.room();
+        if (room == null || stack.triggerItem() == null || room.getRoomSpecialTypes() == null) {
+            return;
+        }
+
+        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(
+                stack.triggerItem().getX(),
+                stack.triggerItem().getY());
+
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+
+        int furniLimit = Integer.MAX_VALUE;
+        int userLimit = Integer.MAX_VALUE;
+
+        for (InteractionWiredExtra extra : extras) {
+            if (extra instanceof WiredExtraFilterFurni) {
+                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
+            } else if (extra instanceof WiredExtraFilterUser) {
+                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
+            }
+        }
+
+        if (ctx.targets().isItemsModifiedBySelector() && furniLimit != Integer.MAX_VALUE) {
+            ctx.targets().setItems(limitIterable(ctx.targets().items(), furniLimit));
+        }
+
+        if (ctx.targets().isUsersModifiedBySelector() && userLimit != Integer.MAX_VALUE) {
+            ctx.targets().setUsers(limitIterable(ctx.targets().users(), userLimit));
+        }
+    }
+
+    private <T> List<T> limitIterable(Iterable<T> values, int limit) {
+        List<T> result = new ArrayList<>();
+
+        if (values == null || limit <= 0) {
+            return result;
+        }
+
+        for (T value : values) {
+            if (value != null) {
+                result.add(value);
+            }
+        }
+
+        if (result.size() <= limit) {
+            return result;
+        }
+
+        Collections.shuffle(result, Emulator.getRandom());
+        return new ArrayList<>(result.subList(0, limit));
     }
     
     /**

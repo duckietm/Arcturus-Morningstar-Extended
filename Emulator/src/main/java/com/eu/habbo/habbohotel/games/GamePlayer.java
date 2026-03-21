@@ -36,8 +36,16 @@ public class GamePlayer {
 
             if (this.score < 0) this.score = 0;
 
-            if(isWired && this.score > 0) {
+            if(isWired) {
                 this.wiredScore += amount;
+
+                if (this.wiredScore < 0) {
+                    this.wiredScore = 0;
+                }
+
+                if (this.wiredScore > this.score) {
+                    this.wiredScore = this.score;
+                }
             }
 
             WiredManager.triggerScoreAchieved(this.habbo.getHabboInfo().getCurrentRoom(), this.habbo.getRoomUnit(), this.score, amount);

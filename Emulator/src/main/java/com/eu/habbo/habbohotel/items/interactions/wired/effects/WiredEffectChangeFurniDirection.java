@@ -38,6 +38,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     private RoomUserRotation startRotation = RoomUserRotation.NORTH;
     private int blockedAction = 0;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private boolean blockOnUserCollision = false;
 
     public WiredEffectChangeFurniDirection(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -90,7 +91,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             RoomTile targetTile = room.getLayout().getTileInFront(itemTile, entry.getValue().direction.getValue());
 
             int count = 1;
-            while ((targetTile == null || targetTile.state == RoomTileState.INVALID || room.furnitureFitsAt(targetTile, item, item.getRotation(), false) != FurnitureMovementError.NONE) && count < 8) {
+            while (this.shouldSearchNextDirection(room, item, targetTile) && count < 8) {
                 entry.getValue().direction = this.nextRotation(entry.getValue().direction);
 
                 RoomTile tile = room.getLayout().getTileInFront(itemTile, entry.getValue().direction.getValue());
@@ -157,7 +158,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         ArrayList<WiredChangeDirectionSetting> settings = new ArrayList<>(this.items.values());
-        return WiredManager.getGson().toJson(new JsonData(this.startRotation, this.blockedAction, settings, this.getDelay(), this.furniSource));
+        return WiredManager.getGson().toJson(new JsonData(this.startRotation, this.blockedAction, settings, this.getDelay(), this.furniSource, this.blockOnUserCollision));
     }
 
     @Override
@@ -173,6 +174,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             this.startRotation = data.start_direction;
             this.blockedAction = data.blocked_action;
             this.furniSource = data.furniSource;
+            this.blockOnUserCollision = data.blockOnUserCollision;
 
             for(WiredChangeDirectionSetting setting : data.items) {
                 HabboItem item = room.getHabboItem(setting.item_id);
@@ -217,6 +219,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             }
 
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
+            this.blockOnUserCollision = false;
             this.needsUpdate(true);
         }
     }
@@ -228,6 +231,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         this.blockedAction = 0;
         this.startRotation = RoomUserRotation.NORTH;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.blockOnUserCollision = false;
     }
 
     @Override
@@ -246,10 +250,11 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(3);
+        message.appendInt(4);
         message.appendInt(this.startRotation != null ? this.startRotation.getValue() : 0);
         message.appendInt(this.blockedAction);
         message.appendInt(this.furniSource);
+        message.appendInt(this.blockOnUserCollision ? 1 : 0);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -262,7 +267,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
 
         int startDirectionInt = settings.getIntParams()[0];
 
-        if(startDirectionInt < 0 || startDirectionInt > 7 || (startDirectionInt % 2) != 0) {
+        if(startDirectionInt < 0 || startDirectionInt > 7) {
             throw new WiredSaveException("Start direction is invalid");
         }
 
@@ -270,6 +275,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
 
         int blockedActionInt = settings.getIntParams()[1];
         this.furniSource = settings.getIntParams()[2];
+        this.blockOnUserCollision = settings.getIntParams().length > 3 && settings.getIntParams()[3] == 1;
 
         if(blockedActionInt < 0 || blockedActionInt > 6) {
             throw new WiredSaveException("Blocked action is invalid");
@@ -309,6 +315,23 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         return true;
     }
 
+    private boolean shouldSearchNextDirection(Room room, HabboItem item, RoomTile targetTile) {
+        if (targetTile == null || targetTile.state == RoomTileState.INVALID) {
+            return true;
+        }
+
+        if (room.furnitureFitsAt(targetTile, item, item.getRotation(), false) != FurnitureMovementError.NONE) {
+            return true;
+        }
+
+        if (this.blockOnUserCollision) {
+            return false;
+        }
+
+        FurnitureMovementError unitCollision = room.furnitureFitsAt(targetTile, item, item.getRotation(), true);
+        return unitCollision == FurnitureMovementError.TILE_HAS_HABBOS;
+    }
+
     private RoomUserRotation nextRotation(RoomUserRotation currentRotation) {
         switch (this.blockedAction) {
             case ACTION_TURN_BACK:
@@ -340,13 +363,15 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         List<WiredChangeDirectionSetting> items;
         int delay;
         int furniSource;
+        boolean blockOnUserCollision;
 
-        public JsonData(RoomUserRotation start_direction, int blocked_action, List<WiredChangeDirectionSetting> items, int delay, int furniSource) {
+        public JsonData(RoomUserRotation start_direction, int blocked_action, List<WiredChangeDirectionSetting> items, int delay, int furniSource, boolean blockOnUserCollision) {
             this.start_direction = start_direction;
             this.blocked_action = blocked_action;
             this.items = items;
             this.delay = delay;
             this.furniSource = furniSource;
+            this.blockOnUserCollision = blockOnUserCollision;
         }
     }
 }

@@ -54,7 +54,21 @@ import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUser
 import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersNeighborhood;
 import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniNeighborhood;
 import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniByType;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniAltitude;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniOnFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniPicks;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectFurniSignal;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersSignal;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersByType;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersTeam;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersByAction;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersByName;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersHandItem;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersOnFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.selector.WiredEffectUsersGroup;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
@@ -276,11 +290,24 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_act_rel_mov", WiredEffectRelativeMove.class));
         this.interactionsList.add(new ItemInteraction("wf_act_control_clock", WiredEffectControlClock.class));
         this.interactionsList.add(new ItemInteraction("wf_act_adjust_clock", WiredEffectAdjustClock.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_move_rotate_user", WiredEffectMoveRotateUser.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_area", WiredEffectFurniArea.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_neighborhood", WiredEffectFurniNeighborhood.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_bytype", WiredEffectFurniByType.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_furni_altitude", WiredEffectFurniAltitude.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_furni_onfurni", WiredEffectFurniOnFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_furni_picks", WiredEffectFurniPicks.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_furni_signal", WiredEffectFurniSignal.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_users_area", WiredEffectUsersArea.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_users_neighborhood", WiredEffectUsersNeighborhood.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_signal", WiredEffectUsersSignal.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_bytype", WiredEffectUsersByType.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_team", WiredEffectUsersTeam.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_byaction", WiredEffectUsersByAction.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_byname", WiredEffectUsersByName.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_handitem", WiredEffectUsersHandItem.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_onfurni", WiredEffectUsersOnFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_slc_users_group", WiredEffectUsersGroup.class));
         this.interactionsList.add(new ItemInteraction("wf_act_send_signal", WiredEffectSendSignal.class));
 
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_furni_on", WiredConditionFurniHaveFurni.class));
@@ -312,6 +339,8 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_cnd_counter_time_matches", WiredConditionCounterTimeMatches.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_match_time", WiredConditionMatchTime.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_match_date", WiredConditionMatchDate.class));
+        this.interactionsList.add(new ItemInteraction("wf_cnd_actor_dir", WiredConditionActorDir.class));
+        this.interactionsList.add(new ItemInteraction("wf_cnd_slc_quantity", WiredConditionSelectionQuantity.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_user_performs_action", WiredConditionUserPerformsAction.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_not_user_performs_action", WiredConditionNotUserPerformsAction.class));
         this.interactionsList.add(new ItemInteraction("wf_cnd_has_altitude", WiredConditionHasAltitude.class));
@@ -325,6 +354,9 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_xtra_unseen", WiredExtraUnseen.class));
         this.interactionsList.add(new ItemInteraction("wf_blob", WiredBlob.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_or_eval", WiredExtraOrEval.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_filter_furni", WiredExtraFilterFurni.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_filter_user", WiredExtraFilterUser.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_filter_users", WiredExtraFilterUser.class));
 
 
         this.interactionsList.add(new ItemInteraction("wf_highscore", InteractionWiredHighscore.class));

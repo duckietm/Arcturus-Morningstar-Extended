@@ -3,6 +3,7 @@ package com.eu.habbo.messages.incoming.rooms.items;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.furniture.FurnitureToggleEvent;
@@ -22,6 +23,8 @@ public class ToggleWallItemEvent extends MessageHandler {
 
         if (item == null)
             return;
+
+        WiredManager.cancelPendingUserClicksFurni(room, this.client.getHabbo().getRoomUnit(), item);
 
         Event furnitureToggleEvent = new FurnitureToggleEvent(item, this.client.getHabbo(), state);
         Emulator.getPluginManager().fireEvent(furnitureToggleEvent);

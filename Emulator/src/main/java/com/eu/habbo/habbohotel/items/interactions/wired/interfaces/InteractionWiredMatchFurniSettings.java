@@ -8,4 +8,5 @@ public interface InteractionWiredMatchFurniSettings {
     public boolean shouldMatchState();
     public boolean shouldMatchRotation();
     public boolean shouldMatchPosition();
+    public boolean shouldMatchAltitude();
 }
