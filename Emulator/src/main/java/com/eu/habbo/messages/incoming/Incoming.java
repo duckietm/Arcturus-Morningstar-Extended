@@ -380,7 +380,7 @@ public class Incoming {
 
     public static final int UNKNOWN_SNOWSTORM_6000 = 6000;
     public static final int UNKNOWN_SNOWSTORM_6001 = 6001;
-    public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
+    // public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
     public static final int UNKNOWN_SNOWSTORM_6003 = 6003;
     public static final int UNKNOWN_SNOWSTORM_6004 = 6004;
     public static final int UNKNOWN_SNOWSTORM_6005 = 6005;
@@ -411,4 +411,10 @@ public class Incoming {
     public static final int ClickUserEvent = 10020;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
+
+    // Custom Prefixes
+    public static final int RequestUserPrefixesEvent = 7011;
+    public static final int SetActivePrefixEvent = 7012;
+    public static final int DeletePrefixEvent = 7013;
+    public static final int PurchasePrefixEvent = 7014;
 }

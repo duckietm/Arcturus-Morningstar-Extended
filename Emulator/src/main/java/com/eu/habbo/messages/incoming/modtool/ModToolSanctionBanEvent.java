@@ -12,6 +12,11 @@ import gnu.trove.map.hash.THashMap;
 import java.util.ArrayList;
 
 public class ModToolSanctionBanEvent extends MessageHandler {
+    @Override
+    public int getRatelimit() {
+        return 2000;
+    }
+
     public static final int BAN_18_HOURS = 3;
     public static final int BAN_7_DAYS = 4;
     public static final int BAN_30_DAYS_STEP_1 = 5;

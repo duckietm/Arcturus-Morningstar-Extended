@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 public class RequestCreateRoomEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestCreateRoomEvent.class);
 
+    @Override
+    public int getRatelimit() {
+        return 3000;
+    }
 
     @Override
     public void handle() throws Exception {

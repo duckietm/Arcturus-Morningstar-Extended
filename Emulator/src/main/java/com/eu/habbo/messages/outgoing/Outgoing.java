@@ -555,4 +555,10 @@ public class Outgoing {
     public static final int SnowStormUserRematchedComposer = 5029;
 
 
+    // Custom Prefixes
+    public static final int UserPrefixesComposer = 7001;
+    public static final int PrefixReceivedComposer = 7002;
+    public static final int ActivePrefixUpdatedComposer = 7003;
+    public static final int AvailableCommandsComposer = 4050;
+
 }

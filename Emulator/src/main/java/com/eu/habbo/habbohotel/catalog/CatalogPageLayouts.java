@@ -43,5 +43,6 @@ public enum CatalogPageLayouts {
     builders_club_loyalty,
     monkey,
     niko,
-    mad_money
+    mad_money,
+    custom_prefix
 }

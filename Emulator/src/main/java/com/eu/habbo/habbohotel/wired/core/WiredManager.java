@@ -296,7 +296,6 @@ public final class WiredManager {
     private static String getPendingFurniClickKey(Room room, RoomUnit user, HabboItem item) {
         return room.getId() + ":" + user.getId() + ":" + item.getId();
     }
-
     /**
      * Trigger when a user clicks invisible click tile furniture.
      */
@@ -318,7 +317,6 @@ public final class WiredManager {
         }
 
         WiredTriggerHabboClicksUser.clearRuntimeFlags(clickingUser);
-
         WiredEvent event = WiredEvents.userClicksUser(room, clickingUser, clickedUser);
         return handleEvent(event);
     }
@@ -417,6 +415,30 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.clockCounter(room, counterItem);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger a long periodic timer.
+     */
+    public static boolean triggerTimerRepeatLong(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerRepeatLong(room, timerItem);
+        return handleEvent(event);
+    }
+
+    /**
+     * Trigger a short periodic timer.
+     */
+    public static boolean triggerTimerRepeatShort(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerRepeatShort(room, timerItem);
         return handleEvent(event);
     }
 

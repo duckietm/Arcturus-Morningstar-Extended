@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     private static final WiredTriggerType type = WiredTriggerType.STATE_CHANGED;
@@ -60,7 +59,6 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
             if (snapshot == null) {
                 return false;
             }
-
             return snapshot.state.equals(this.normalizeState(sourceItem.getExtradata()));
         }
 
@@ -234,15 +232,24 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     }
 
     private boolean matchesSourceItem(WiredEvent event, HabboItem sourceItem) {
-        List<HabboItem> selectedItems = event.getRoom() == null
-                ? new ArrayList<>()
-                : this.snapshots.stream()
-                .map(snapshot -> event.getRoom().getHabboItem(snapshot.itemId))
-                .filter(item -> item != null)
-                .collect(Collectors.toList());
+        List<HabboItem> selectedItems = new ArrayList<>();
 
-        return WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, selectedItems).stream()
-                .anyMatch(item -> item != null && item.getId() == sourceItem.getId());
+        if (event.getRoom() != null) {
+            for (StateSnapshot snapshot : this.snapshots) {
+                HabboItem item = event.getRoom().getHabboItem(snapshot.itemId);
+                if (item != null) {
+                    selectedItems.add(item);
+                }
+            }
+        }
+
+        for (HabboItem item : WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, selectedItems)) {
+            if (item != null && item.getId() == sourceItem.getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private int normalizeFurniSource(int value) {
