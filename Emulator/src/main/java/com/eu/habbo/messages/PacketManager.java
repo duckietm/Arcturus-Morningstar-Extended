@@ -34,6 +34,7 @@ import com.eu.habbo.messages.incoming.helper.MySanctionStatusEvent;
 import com.eu.habbo.messages.incoming.helper.RequestTalentTrackEvent;
 import com.eu.habbo.messages.incoming.hotelview.*;
 import com.eu.habbo.messages.incoming.inventory.*;
+import com.eu.habbo.messages.incoming.inventory.prefixes.*;
 import com.eu.habbo.messages.incoming.modtool.*;
 import com.eu.habbo.messages.incoming.navigator.*;
 import com.eu.habbo.messages.incoming.polls.AnswerPollEvent;
@@ -370,6 +371,12 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestInventoryPetsEvent, RequestInventoryPetsEvent.class);
         this.registerHandler(Incoming.RequestInventoryPetDelete, RequestInventoryPetDelete.class);
         this.registerHandler(Incoming.RequestInventoryBadgeDelete, RequestInventoryBadgeDelete.class);
+
+        // Custom Prefixes
+        this.registerHandler(Incoming.RequestUserPrefixesEvent, RequestUserPrefixesEvent.class);
+        this.registerHandler(Incoming.SetActivePrefixEvent, SetActivePrefixEvent.class);
+        this.registerHandler(Incoming.DeletePrefixEvent, DeletePrefixEvent.class);
+        this.registerHandler(Incoming.PurchasePrefixEvent, PurchasePrefixEvent.class);
     }
 
     void registerRooms() throws Exception {

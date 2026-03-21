@@ -10,6 +10,11 @@ import com.eu.habbo.messages.incoming.MessageHandler;
 public class PurchaseTargetOfferEvent extends MessageHandler {
 
     @Override
+    public int getRatelimit() {
+        return 1000;
+    }
+
+    @Override
     public void handle() throws Exception {
         final int offerId = this.packet.readInt();
         int amount = this.packet.readInt();
