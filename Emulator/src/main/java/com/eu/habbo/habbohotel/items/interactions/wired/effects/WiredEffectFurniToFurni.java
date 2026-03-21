@@ -15,6 +15,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
+import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -64,9 +65,18 @@ public class WiredEffectFurniToFurni extends InteractionWiredEffect {
             return;
         }
 
-        FurnitureMovementError error = room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), null, true, false);
-        if (error != FurnitureMovementError.NONE) {
-            room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), targetItem.getZ(), null, true, false);
+        RoomTile oldLocation = room.getLayout().getTile(moveItem.getX(), moveItem.getY());
+        double oldZ = moveItem.getZ();
+
+        FurnitureMovementError error = room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), null, false, false);
+        if (error == FurnitureMovementError.NONE) {
+            this.sendRollerAnimation(room, moveItem, oldLocation, oldZ, targetTile);
+            return;
+        }
+
+        error = room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), targetItem.getZ(), null, false, false);
+        if (error == FurnitureMovementError.NONE) {
+            this.sendRollerAnimation(room, moveItem, oldLocation, oldZ, targetTile);
         }
     }
 
@@ -220,6 +230,14 @@ public class WiredEffectFurniToFurni extends InteractionWiredEffect {
     @Override
     public WiredEffectType getType() {
         return type;
+    }
+
+    private void sendRollerAnimation(Room room, HabboItem item, RoomTile oldLocation, double oldZ, RoomTile newLocation) {
+        if (room == null || item == null || oldLocation == null || newLocation == null) {
+            return;
+        }
+
+        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
     }
 
     @Override

@@ -25,7 +25,7 @@ public class ClickFurniEvent extends MessageHandler {
             return;
         }
 
-        WiredManager.triggerUserClicksFurni(room, this.client.getHabbo().getRoomUnit(), item);
+        WiredManager.queueUserClicksFurni(room, this.client.getHabbo().getRoomUnit(), item);
 
         if (isClickTileItem(item)) {
             WiredManager.triggerUserClicksTile(room, this.client.getHabbo().getRoomUnit(), item);

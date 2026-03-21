@@ -39,6 +39,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.TELEPORT;
 
     protected List<HabboItem> items;
+    private boolean fastTeleport = false;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
@@ -53,6 +54,10 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
     }
 
     public static void teleportUnitToTile(RoomUnit roomUnit, RoomTile tile) {
+        teleportUnitToTile(roomUnit, tile, false);
+    }
+
+    public static void teleportUnitToTile(RoomUnit roomUnit, RoomTile tile, boolean fastTeleport) {
         if (roomUnit == null || tile == null || roomUnit.isWiredTeleporting)
             return;
 
@@ -85,9 +90,10 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
 
         // makes a temporary effect
 
+        int teleportDelay = getTeleportDelay(fastTeleport);
+
         roomUnit.getRoom().unIdle(roomUnit.getRoom().getHabbo(roomUnit));
-        room.sendComposer(new RoomUserEffectComposer(roomUnit, 4).compose());
-        Emulator.getThreading().run(new SendRoomUnitEffectComposer(room, roomUnit), WiredManager.TELEPORT_DELAY + 1000);
+        sendTeleportEffect(room, roomUnit, fastTeleport);
 
         if (tile == roomUnit.getCurrentLocation()) {
             return;
@@ -110,8 +116,8 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
             }
         }
 
-        Emulator.getThreading().run(() -> { roomUnit.isWiredTeleporting = true; }, Math.max(0, WiredManager.TELEPORT_DELAY - 500));
-        Emulator.getThreading().run(new RoomUnitTeleport(roomUnit, room, tile.x, tile.y, tile.getStackHeight() + (tile.state == RoomTileState.SIT ? -0.5 : 0), roomUnit.getEffectId()), WiredManager.TELEPORT_DELAY);
+        Emulator.getThreading().run(() -> { roomUnit.isWiredTeleporting = true; }, Math.max(0, teleportDelay - 500));
+        Emulator.getThreading().run(new RoomUnitTeleport(roomUnit, room, tile.x, tile.y, tile.getStackHeight() + (tile.state == RoomTileState.SIT ? -0.5 : 0), roomUnit.getEffectId()), teleportDelay);
     }
 
     @Override
@@ -137,7 +143,8 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(2);
+        message.appendInt(3);
+        message.appendInt(this.fastTeleport ? 1 : 0);
         message.appendInt(this.furniSource);
         message.appendInt(this.userSource);
         message.appendInt(0);
@@ -166,8 +173,15 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
-        this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
+        if (params.length > 2) {
+            this.fastTeleport = params[0] == 1;
+            this.furniSource = params[1];
+            this.userSource = params[2];
+        } else {
+            this.fastTeleport = false;
+            this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+            this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
+        }
 
         int itemsCount = settings.getFurniIds().length;
 
@@ -227,7 +241,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
 
             RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
             if (tile != null) {
-                teleportUnitToTile(roomUnit, tile);
+                teleportUnitToTile(roomUnit, tile, this.fastTeleport);
             }
         }
     }
@@ -244,6 +258,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
         return WiredManager.getGson().toJson(new JsonData(
             this.getDelay(),
             itemsSnapshot.stream().map(HabboItem::getId).collect(Collectors.toList()),
+            this.fastTeleport,
             this.furniSource,
             this.userSource
         ));
@@ -257,6 +272,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
+            this.fastTeleport = data.fastTeleport;
             this.furniSource = data.furniSource;
             this.userSource = data.userSource;
             for (Integer id: data.itemIds) {
@@ -284,6 +300,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
                     }
                 }
             }
+            this.fastTeleport = false;
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
@@ -292,6 +309,7 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.fastTeleport = false;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
@@ -312,15 +330,30 @@ public class WiredEffectTeleport extends InteractionWiredEffect {
         return COOLDOWN_DEFAULT;
     }
 
+    private static int getTeleportDelay(boolean fastTeleport) {
+        return fastTeleport ? Math.max(75, WiredManager.TELEPORT_DELAY / 5) : WiredManager.TELEPORT_DELAY;
+    }
+
+    private static int getTeleportEffectDuration(boolean fastTeleport) {
+        return fastTeleport ? Math.max(300, (WiredManager.TELEPORT_DELAY + 1000) / 3) : (WiredManager.TELEPORT_DELAY + 1000);
+    }
+
+    private static void sendTeleportEffect(Room room, RoomUnit roomUnit, boolean fastTeleport) {
+        room.sendComposer(new RoomUserEffectComposer(roomUnit, 4).compose());
+        Emulator.getThreading().run(new SendRoomUnitEffectComposer(room, roomUnit), getTeleportEffectDuration(fastTeleport));
+    }
+
     static class JsonData {
         int delay;
         List<Integer> itemIds;
+        boolean fastTeleport;
         int furniSource;
         int userSource;
 
-        public JsonData(int delay, List<Integer> itemIds, int furniSource, int userSource) {
+        public JsonData(int delay, List<Integer> itemIds, boolean fastTeleport, int furniSource, int userSource) {
             this.delay = delay;
             this.itemIds = itemIds;
+            this.fastTeleport = fastTeleport;
             this.furniSource = furniSource;
             this.userSource = userSource;
         }

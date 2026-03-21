@@ -22,7 +22,17 @@ public class WiredConditionNotMatchStatePosition extends WiredConditionMatchStat
 
     @Override
     public boolean evaluate(WiredContext ctx) {
-        return !super.evaluate(ctx);
+        this.refresh();
+
+        if (this.getMatchFurniSettings().isEmpty()) {
+            return false;
+        }
+
+        if (this.getQuantifier() == QUANTIFIER_ANY) {
+            return !this.evaluateAnyTargetMatches(ctx);
+        }
+
+        return !this.evaluateAllTargetsMatch(ctx);
     }
 
     @Deprecated

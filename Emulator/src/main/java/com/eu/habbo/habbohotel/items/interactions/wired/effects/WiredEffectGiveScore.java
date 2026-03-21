@@ -16,26 +16,21 @@ import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import gnu.trove.iterator.TObjectIntIterator;
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class WiredEffectGiveScore extends InteractionWiredEffect {
+    private static final int OPERATION_ADD = 0;
+    private static final int OPERATION_REMOVE = 1;
     public static final WiredEffectType type = WiredEffectType.GIVE_SCORE;
 
     private int score;
-    private int count;
+    private int operation = OPERATION_ADD;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
-
-    private TObjectIntMap<Map.Entry<Integer, Integer>> data = new TObjectIntHashMap<>();
 
     public WiredEffectGiveScore(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -58,45 +53,8 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             if (game == null)
                 continue;
 
-            int gameStartTime = game.getStartTime();
-
-            TObjectIntMap<Map.Entry<Integer, Integer>> dataClone = new TObjectIntHashMap<>(this.data);
-
-            TObjectIntIterator<Map.Entry<Integer, Integer>> iterator = dataClone.iterator();
-
-            boolean alreadyCounted = false;
-            for (int i = dataClone.size(); i-- > 0; ) {
-                iterator.advance();
-
-                Map.Entry<Integer, Integer> map = iterator.key();
-
-                if (map.getValue() == habbo.getHabboInfo().getId()) {
-                    if (map.getKey() == gameStartTime) {
-                        if (iterator.value() < this.count) {
-                            iterator.setValue(iterator.value() + 1);
-
-                            habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
-
-                            alreadyCounted = true;
-                            break;
-                        }
-                    } else {
-                        iterator.remove();
-                    }
-                }
-            }
-
-            if (!alreadyCounted) {
-                try {
-                    this.data.put(new AbstractMap.SimpleEntry<>(gameStartTime, habbo.getHabboInfo().getId()), 1);
-                }
-                catch(IllegalArgumentException e) {
-
-                }
-
-                if (habbo.getHabboInfo().getGamePlayer() != null) {
-                    habbo.getHabboInfo().getGamePlayer().addScore(this.score, true);
-                }
+            if (habbo.getHabboInfo().getGamePlayer() != null) {
+                habbo.getHabboInfo().getGamePlayer().addScore(this.getAppliedAmount(), true);
             }
         }
     }
@@ -109,7 +67,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.score, this.count, this.getDelay(), this.userSource));
+        return WiredManager.getGson().toJson(new JsonData(this.score, this.operation, this.getDelay(), this.userSource));
     }
 
     @Override
@@ -119,7 +77,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         if(wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.score = data.score;
-            this.count = data.count;
+            this.operation = this.normalizeOperation(data.operation);
             this.setDelay(data.delay);
             this.userSource = data.userSource;
         }
@@ -128,7 +86,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
             if (data.length == 3) {
                 this.score = Integer.parseInt(data[0]);
-                this.count = Integer.parseInt(data[1]);
+                this.operation = OPERATION_ADD;
                 this.setDelay(Integer.parseInt(data[2]));
             }
 
@@ -140,7 +98,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.score = 0;
-        this.count = 0;
+        this.operation = OPERATION_ADD;
         this.setDelay(0);
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
@@ -160,7 +118,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         message.appendString("");
         message.appendInt(3);
         message.appendInt(this.score);
-        message.appendInt(this.count);
+        message.appendInt(this.operation);
         message.appendInt(this.userSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -195,10 +153,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         if(score < 1 || score > 100)
             throw new WiredSaveException("Score is invalid");
 
-        int timesPerGame = settings.getIntParams()[1];
-
-        if(timesPerGame < 1 || timesPerGame > 10)
-            throw new WiredSaveException("Times per game is invalid");
+        int operation = this.normalizeOperation(settings.getIntParams()[1]);
 
         this.userSource = settings.getIntParams()[2];
         int delay = settings.getDelay();
@@ -207,7 +162,7 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.score = score;
-        this.count = timesPerGame;
+        this.operation = operation;
         this.setDelay(delay);
 
         return true;
@@ -218,15 +173,23 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
         return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
     }
 
+    private int normalizeOperation(int value) {
+        return (value == OPERATION_REMOVE) ? OPERATION_REMOVE : OPERATION_ADD;
+    }
+
+    private int getAppliedAmount() {
+        return (this.operation == OPERATION_REMOVE) ? -this.score : this.score;
+    }
+
     static class JsonData {
         int score;
-        int count;
+        int operation;
         int delay;
         int userSource;
 
-        public JsonData(int score, int count, int delay, int userSource) {
+        public JsonData(int score, int operation, int delay, int userSource) {
             this.score = score;
-            this.count = count;
+            this.operation = operation;
             this.delay = delay;
             this.userSource = userSource;
         }

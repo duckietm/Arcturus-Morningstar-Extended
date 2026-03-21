@@ -108,8 +108,8 @@ public final class WiredEvents {
      */
     public static WiredEvent userClicksUser(Room room, RoomUnit clickingUser, RoomUnit clickedUser) {
         return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_USER, room)
-                .actor(clickedUser)
-                .targetUnit(clickingUser)
+                .actor(clickingUser)
+                .targetUnit(clickedUser)
                 .tile(clickedUser.getCurrentLocation())
                 .build();
     }
@@ -215,6 +215,12 @@ public final class WiredEvents {
     public static WiredEvent timerRepeat(Room room, HabboItem timerItem) {
         return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT, room)
                 .sourceItem(timerItem)
+                .build();
+    }
+
+    public static WiredEvent clockCounter(Room room, HabboItem counterItem) {
+        return WiredEvent.builder(WiredEvent.Type.CLOCK_COUNTER_REACHED, room)
+                .sourceItem(counterItem)
                 .build();
     }
 

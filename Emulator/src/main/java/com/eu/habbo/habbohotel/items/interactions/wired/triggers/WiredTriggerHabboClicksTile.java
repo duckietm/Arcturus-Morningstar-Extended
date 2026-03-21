@@ -44,4 +44,14 @@ public class WiredTriggerHabboClicksTile extends WiredTriggerHabboClicksFurni {
         String interaction = item.getBaseItem().getInteractionType().getName();
         return interaction != null && interaction.equalsIgnoreCase(CLICK_TILE_INTERACTION);
     }
+
+    @Override
+    protected boolean isSelectableItem(HabboItem item) {
+        return this.isClickTileItem(item);
+    }
+
+    @Override
+    protected String getInvalidSelectionErrorKey() {
+        return "wiredfurni.error.require_click_tiles";
+    }
 }

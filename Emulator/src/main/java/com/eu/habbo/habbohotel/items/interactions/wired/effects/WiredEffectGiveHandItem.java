@@ -20,7 +20,7 @@ public class WiredEffectGiveHandItem extends WiredEffectWhisper {
     @Override
     public void execute(WiredContext ctx) {
         try {
-            int itemId = Integer.parseInt(this.message);
+            int itemId = Math.max(0, Integer.parseInt(this.message));
 
             Room room = ctx.room();
 

@@ -36,7 +36,9 @@ public enum WiredConditionType {
     TEAM_HAS_SCORE(34),
     TEAM_HAS_RANK(35),
     MATCH_TIME(36),
-    MATCH_DATE(37);
+    MATCH_DATE(37),
+    ACTOR_DIR(38),
+    SLC_QUANTITY(39);
 
     public final int code;
 

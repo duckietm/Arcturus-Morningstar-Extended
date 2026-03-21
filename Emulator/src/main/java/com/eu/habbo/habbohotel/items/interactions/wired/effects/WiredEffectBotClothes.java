@@ -9,6 +9,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
+import com.eu.habbo.habbohotel.wired.core.WiredBotSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
@@ -24,6 +25,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
 
     private String botName = "";
     private String botLook = "";
+    private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
 
     public WiredEffectBotClothes(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -41,7 +43,8 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName + ((char) 9) + "" + this.botLook);
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.botSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -65,6 +68,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
         if (data.length != 2)
             throw new WiredSaveException("Malformed data string. Invalid data length");
 
+        this.botSource = (settings.getIntParams().length > 0) ? WiredBotSourceUtil.normalizeBotSource(settings.getIntParams()[0]) : WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.botName = data[0].substring(0, Math.min(data[0].length(), Emulator.getConfig().getInt("hotel.wired.message.max_length", 100)));
         this.botLook = data[1];
         this.setDelay(delay);
@@ -80,10 +84,9 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        List<Bot> bots = room.getBots(this.botName);
+        List<Bot> bots = WiredBotSourceUtil.resolveBots(ctx, room, this.botSource, this.botName);
 
-        if (bots.size() == 1) {
-            Bot bot = bots.get(0);
+        for (Bot bot : bots) {
             bot.setFigure(this.botLook);
         }
     }
@@ -96,7 +99,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.botLook, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.botLook, this.getDelay(), this.botSource));
     }
 
     @Override
@@ -108,6 +111,9 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
             this.setDelay(data.delay);
             this.botName = data.bot_name;
             this.botLook = data.look;
+            this.botSource = (data.botSource != null)
+                    ? WiredBotSourceUtil.normalizeBotSource(data.botSource)
+                    : WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
@@ -119,6 +125,7 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
             }
 
             this.needsUpdate(true);
+            this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
     }
 
@@ -126,7 +133,13 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
     public void onPickUp() {
         this.botLook = "";
         this.botName = "";
+        this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.setDelay(0);
+    }
+
+    @Override
+    public boolean requiresTriggeringUser() {
+        return WiredBotSourceUtil.requiresTriggeringUser(this.botSource);
     }
 
     public String getBotName() {
@@ -149,11 +162,13 @@ public class WiredEffectBotClothes extends InteractionWiredEffect {
         String bot_name;
         String look;
         int delay;
+        Integer botSource;
 
-        public JsonData(String bot_name, String look, int delay) {
+        public JsonData(String bot_name, String look, int delay, int botSource) {
             this.bot_name = bot_name;
             this.look = look;
             this.delay = delay;
+            this.botSource = botSource;
         }
     }
 }

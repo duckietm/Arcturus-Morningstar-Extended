@@ -687,6 +687,15 @@ public class RoomSpecialTypes {
     }
 
     /**
+     * Finds a wired extra by its item ID.
+     * @param itemId The item ID to search for
+     * @return The extra if found, null otherwise
+     */
+    public InteractionWiredExtra getExtra(int itemId) {
+        return this.wiredExtras.get(itemId);
+    }
+
+    /**
      * Gets all wired extras at specific coordinates using spatial index.
      * @param x The X coordinate
      * @param y The Y coordinate

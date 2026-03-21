@@ -26,13 +26,11 @@ public class WiredConditionNotHabboHasHandItem extends WiredConditionHabboHasHan
         List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.getUserSource());
         if (targets.isEmpty()) return false;
 
-        for (RoomUnit roomUnit : targets) {
-            if (roomUnit == null || roomUnit.getHandItem() == this.getHandItem()) {
-                return false;
-            }
+        if (this.getQuantifier() == QUANTIFIER_ANY) {
+            return !this.matchesAnyTarget(targets);
         }
 
-        return true;
+        return !this.matchesAllTargets(targets);
     }
 
     @Override

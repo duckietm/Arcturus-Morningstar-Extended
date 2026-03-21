@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionMonsterPlantSe
 import com.eu.habbo.habbohotel.pets.MonsterplantPet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.PetPackageComposer;
@@ -39,6 +40,8 @@ public class ToggleFloorItemEvent extends MessageHandler {
 
             if (item == null || item instanceof InteractionDice)
                 return;
+
+            WiredManager.cancelPendingUserClicksFurni(room, this.client.getHabbo().getRoomUnit(), item);
 
             Event furnitureToggleEvent = new FurnitureToggleEvent(item, this.client.getHabbo(), state);
             Emulator.getPluginManager().fireEvent(furnitureToggleEvent);

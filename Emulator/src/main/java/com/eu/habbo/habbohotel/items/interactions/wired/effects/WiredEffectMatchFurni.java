@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.math.BigDecimal;
 
 public class WiredEffectMatchFurni extends InteractionWiredEffect implements InteractionWiredMatchFurniSettings {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectMatchFurni.class);
@@ -35,6 +36,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     private boolean state = false;
     private boolean direction = false;
     private boolean position = false;
+    private boolean altitude = false;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectMatchFurni(ResultSet set, Item baseItem) throws SQLException {
@@ -122,13 +124,20 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
                 room.moveFurniTo(item, oldLocation, setting.rotation, null, true);
             }
         }
+        else if(this.altitude && !this.position) {
+            int newRotation = this.direction ? setting.rotation : item.getRotation();
+            if(BigDecimal.valueOf(item.getZ()).compareTo(BigDecimal.valueOf(setting.z)) != 0 || newRotation != item.getRotation()) {
+                room.moveFurniTo(item, oldLocation, newRotation, setting.z, null, true, false);
+            }
+        }
         else if(this.position) {
             boolean slideAnimation = !this.direction || item.getRotation() == setting.rotation;
             RoomTile newLocation = room.getLayout().getTile((short) setting.x, (short) setting.y);
             int newRotation = this.direction ? setting.rotation : item.getRotation();
+            double newZ = this.altitude ? setting.z : item.getZ();
 
             if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation()) && room.furnitureFitsAt(newLocation, item, newRotation, true) == FurnitureMovementError.NONE) {
-                if(room.moveFurniTo(item, newLocation, newRotation, null, !slideAnimation) == FurnitureMovementError.NONE) {
+                if(room.moveFurniTo(item, newLocation, newRotation, newZ, null, !slideAnimation, true) == FurnitureMovementError.NONE) {
                     if(slideAnimation) {
                         room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
                     }
@@ -146,7 +155,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     @Override
     public String getWiredData() {
         this.refresh();
-        return WiredManager.getGson().toJson(new JsonData(this.state, this.direction, this.position, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay(), this.furniSource));
+        return WiredManager.getGson().toJson(new JsonData(this.state, this.direction, this.position, this.altitude, new ArrayList<WiredMatchFurniSetting>(this.settings), this.getDelay(), this.furniSource));
     }
 
     @Override
@@ -159,6 +168,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             this.state = data.state;
             this.direction = data.direction;
             this.position = data.position;
+            this.altitude = data.altitude;
             this.settings.clear();
             this.settings.addAll(data.items);
             this.furniSource = data.furniSource;
@@ -175,7 +185,9 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
 
                     String[] stuff = items[i].split(Pattern.quote("-"));
 
-                    if (stuff.length >= 5) {
+                    if (stuff.length >= 6) {
+                        this.settings.add(new WiredMatchFurniSetting(Integer.parseInt(stuff[0]), stuff[1], Integer.parseInt(stuff[2]), Integer.parseInt(stuff[3]), Integer.parseInt(stuff[4]), Double.parseDouble(stuff[5])));
+                    } else if (stuff.length >= 5) {
                         this.settings.add(new WiredMatchFurniSetting(Integer.parseInt(stuff[0]), stuff[1], Integer.parseInt(stuff[2]), Integer.parseInt(stuff[3]), Integer.parseInt(stuff[4])));
                     }
 
@@ -187,6 +199,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             this.state = data[2].equals("1");
             this.direction = data[3].equals("1");
             this.position = data[4].equals("1");
+            this.altitude = false;
             this.setDelay(Integer.parseInt(data[5]));
             this.furniSource = this.settings.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
             this.needsUpdate(true);
@@ -199,6 +212,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.state = false;
         this.direction = false;
         this.position = false;
+        this.altitude = false;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
@@ -222,10 +236,11 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(4);
+        message.appendInt(5);
         message.appendInt(this.state ? 1 : 0);
         message.appendInt(this.direction ? 1 : 0);
         message.appendInt(this.position ? 1 : 0);
+        message.appendInt(this.altitude ? 1 : 0);
         message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -239,7 +254,8 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         boolean setState = settings.getIntParams()[0] == 1;
         boolean setDirection = settings.getIntParams()[1] == 1;
         boolean setPosition = settings.getIntParams()[2] == 1;
-        this.furniSource = settings.getIntParams()[3];
+        boolean setAltitude = (settings.getIntParams().length > 4) ? (settings.getIntParams()[3] == 1) : false;
+        this.furniSource = (settings.getIntParams().length > 4) ? settings.getIntParams()[4] : settings.getIntParams()[3];
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
 
@@ -261,7 +277,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             if(it == null)
                 throw new WiredSaveException(String.format("Item %s not found", itemId));
 
-            newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
+            newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY(), it.getZ()));
         }
 
         int delay = settings.getDelay();
@@ -272,6 +288,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.state = setState;
         this.direction = setDirection;
         this.position = setPosition;
+        this.altitude = setAltitude;
         this.settings.clear();
         this.settings.addAll(newSettings);
         this.setDelay(delay);
@@ -308,18 +325,25 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         return this.position;
     }
 
+    @Override
+    public boolean shouldMatchAltitude() {
+        return this.altitude;
+    }
+
     static class JsonData {
         boolean state;
         boolean direction;
         boolean position;
+        boolean altitude;
         List<WiredMatchFurniSetting> items;
         int delay;
         int furniSource;
 
-        public JsonData(boolean state, boolean direction, boolean position, List<WiredMatchFurniSetting> items, int delay, int furniSource) {
+        public JsonData(boolean state, boolean direction, boolean position, boolean altitude, List<WiredMatchFurniSetting> items, int delay, int furniSource) {
             this.state = state;
             this.direction = direction;
             this.position = position;
+            this.altitude = altitude;
             this.items = items;
             this.delay = delay;
             this.furniSource = furniSource;

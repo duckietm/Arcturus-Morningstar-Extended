@@ -221,6 +221,9 @@ public class RoomUnitManager {
 
         if (habbo.getRoomUnit() != null) {
             WiredManager.triggerUserLeavesRoom(this.room, habbo.getRoomUnit());
+            if (WiredFreezeUtil.isFrozen(habbo.getRoomUnit())) {
+                WiredFreezeUtil.unfreeze(this.room, habbo.getRoomUnit());
+            }
         }
 
         if (habbo.getRoomUnit() != null && habbo.getRoomUnit().getCurrentLocation() != null) {
