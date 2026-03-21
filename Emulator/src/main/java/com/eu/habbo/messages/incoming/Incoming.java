@@ -409,4 +409,10 @@ public class Incoming {
     public static final int UpdateFurniturePositionEvent = 10019;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
+
+    // Custom Prefixes
+    public static final int RequestUserPrefixesEvent = 7011;
+    public static final int SetActivePrefixEvent = 7012;
+    public static final int DeletePrefixEvent = 7013;
+    public static final int PurchasePrefixEvent = 7014;
 }

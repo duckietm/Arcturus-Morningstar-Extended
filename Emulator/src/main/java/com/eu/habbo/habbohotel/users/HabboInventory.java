@@ -22,6 +22,7 @@ public class HabboInventory {
     private EffectsComponent effectsComponent;
     private ItemsComponent itemsComponent;
     private PetsComponent petsComponent;
+    private PrefixesComponent prefixesComponent;
 
     public HabboInventory(Habbo habbo) {
         this.habbo = habbo;
@@ -57,6 +58,12 @@ public class HabboInventory {
 
         try {
             this.wardrobeComponent = new WardrobeComponent(this.habbo);
+        } catch (Exception e) {
+            LOGGER.error("Caught exception", e);
+        }
+
+        try {
+            this.prefixesComponent = new PrefixesComponent(this.habbo);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }
@@ -112,6 +119,14 @@ public class HabboInventory {
         this.petsComponent = petsComponent;
     }
 
+    public PrefixesComponent getPrefixesComponent() {
+        return this.prefixesComponent;
+    }
+
+    public void setPrefixesComponent(PrefixesComponent prefixesComponent) {
+        this.prefixesComponent = prefixesComponent;
+    }
+
     public void dispose() {
         this.badgesComponent.dispose();
         this.botsComponent.dispose();
@@ -119,6 +134,7 @@ public class HabboInventory {
         this.itemsComponent.dispose();
         this.petsComponent.dispose();
         this.wardrobeComponent.dispose();
+        this.prefixesComponent.dispose();
 
         this.badgesComponent = null;
         this.botsComponent = null;
@@ -126,6 +142,7 @@ public class HabboInventory {
         this.itemsComponent = null;
         this.petsComponent = null;
         this.wardrobeComponent = null;
+        this.prefixesComponent = null;
     }
 
     public void addMarketplaceOffer(MarketPlaceOffer marketPlaceOffer) {
