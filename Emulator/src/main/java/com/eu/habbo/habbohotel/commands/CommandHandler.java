@@ -301,7 +301,7 @@ public class CommandHandler {
         addCommand(new ListPrefixesCommand());
         addCommand(new RemovePrefixCommand());
         addCommand(new PrefixBlacklistCommand());
-
+        addCommand(new WiredCommand());
         addCommand(new TestCommand());
     }
 

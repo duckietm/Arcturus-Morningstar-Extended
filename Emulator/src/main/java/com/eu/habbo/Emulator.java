@@ -7,6 +7,7 @@ import com.eu.habbo.core.*;
 import com.eu.habbo.core.consolecommands.ConsoleCommand;
 import com.eu.habbo.database.Database;
 import com.eu.habbo.habbohotel.GameEnvironment;
+import com.eu.habbo.habbohotel.gameclients.SessionResumeManager;
 import com.eu.habbo.networking.gameserver.GameServer;
 import com.eu.habbo.networking.rconserver.RCONServer;
 import com.eu.habbo.plugin.PluginManager;
@@ -20,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
@@ -52,6 +55,7 @@ public final class Emulator {
                     "Still Rocking in 2026.\n";
 
     public static String build = "";
+    public static long buildTimestamp = -1L;
     public static boolean isReady = false;
     public static boolean isShuttingDown = false;
     public static boolean stopped = false;
@@ -103,13 +107,6 @@ public final class Emulator {
 
             System.out.println(logo);
 
-            System.out.println();
-            LOGGER.info("https://github.com/duckietm/Arcturus-Morningstar-Extended, ");
-            System.out.println();
-            LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
-            LOGGER.info("Version: {}", version);
-            LOGGER.info("Build: {}", build);
-
             long startTime = System.nanoTime();
 
             Emulator.runtime = Runtime.getRuntime();
@@ -141,6 +138,15 @@ public final class Emulator {
             Emulator.config.register("camera.price.points", "0");
             Emulator.config.register("camera.price.points.type", "5");
             Emulator.config.register("camera.render.delay", "5");
+            Emulator.config.register("hotel.timezone", java.time.ZoneId.systemDefault().getId());
+            String hotelTimezoneId = Emulator.getConfig().getValue("hotel.timezone", java.time.ZoneId.systemDefault().getId());
+            System.out.println();
+            LOGGER.info("https://github.com/duckietm/Arcturus-Morningstar-Extended, ");
+            System.out.println();
+            LOGGER.info("This project is for educational purposes only. This Emulator is an open-source fork of Arcturus created by TheGeneral.");
+            LOGGER.info("Version: {}", version);
+            LOGGER.info("Build: {}", build);
+            LOGGER.info("Build Timestamp: {} [{}]", formatBuildTimestamp(buildTimestamp, hotelTimezoneId), hotelTimezoneId);
             Emulator.texts.register("camera.permission", "You don't have permission to use the camera!");
             Emulator.texts.register("camera.wait", "Please wait %seconds% seconds before making another picture.");
             Emulator.texts.register("camera.error.creation", "Failed to create your picture. *sadpanda*");
@@ -216,12 +222,21 @@ public final class Emulator {
     private static void setBuild() {
         if (Emulator.class.getProtectionDomain().getCodeSource() == null) {
             build = "UNKNOWN";
+            buildTimestamp = -1L;
             return;
         }
 
         StringBuilder sb = new StringBuilder();
         try {
-            String filepath = new File(Emulator.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getAbsolutePath();
+            File buildFile = new File(Emulator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            buildTimestamp = resolveBuildTimestamp(buildFile);
+
+            if (!buildFile.isFile()) {
+                build = "DEV";
+                return;
+            }
+
+            String filepath = buildFile.getAbsolutePath();
             MessageDigest md = MessageDigest.getInstance("MD5");
             try (FileInputStream fis = new FileInputStream(filepath)) {
                 byte[] dataBytes = new byte[1024];
@@ -234,14 +249,69 @@ public final class Emulator {
             }
         } catch (Exception e) {
             build = "UNKNOWN";
+            buildTimestamp = -1L;
             return;
         }
 
         build = sb.toString();
     }
 
+    private static long resolveBuildTimestamp(File buildFile) {
+        if (buildFile != null && buildFile.exists() && buildFile.isFile()) {
+            return buildFile.lastModified();
+        }
+
+        try {
+            URL classUrl = Emulator.class.getResource("Emulator.class");
+
+            if (classUrl != null) {
+                if ("file".equalsIgnoreCase(classUrl.getProtocol())) {
+                    File classFile = new File(classUrl.toURI());
+
+                    if (classFile.exists()) {
+                        return classFile.lastModified();
+                    }
+                }
+
+                if ("jar".equalsIgnoreCase(classUrl.getProtocol())) {
+                    JarURLConnection connection = (JarURLConnection) classUrl.openConnection();
+                    File jarFile = new File(connection.getJarFileURL().toURI());
+
+                    if (jarFile.exists()) {
+                        return jarFile.lastModified();
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        if (buildFile != null && buildFile.exists()) {
+            return buildFile.lastModified();
+        }
+
+        return -1L;
+    }
+
+    private static String formatBuildTimestamp(long buildTimestamp, String timezoneId) {
+        if (buildTimestamp <= 0) {
+            return "UNKNOWN";
+        }
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        try {
+            format.setTimeZone(TimeZone.getTimeZone(java.time.ZoneId.of(timezoneId)));
+        } catch (Exception ignored) {
+            format.setTimeZone(TimeZone.getDefault());
+        }
+
+        return format.format(new Timestamp(buildTimestamp));
+    }
+
     private static void dispose() {
-        Emulator.getThreading().setCanAdd(false);
+        if (Emulator.threading != null) {
+            Emulator.threading.setCanAdd(false);
+        }
         Emulator.isShuttingDown = true;
         Emulator.isReady = false;
 
@@ -250,6 +320,7 @@ public final class Emulator {
         if (Emulator.pluginManager != null)
             tryShutdown(() -> Emulator.pluginManager.fireEvent(new EmulatorStartShutdownEvent()));
         if (Emulator.rconServer != null) tryShutdown(() -> Emulator.rconServer.stop());
+        tryShutdown(() -> SessionResumeManager.getInstance().disposeAll());
         if (Emulator.gameEnvironment != null) tryShutdown(() -> Emulator.gameEnvironment.dispose());
         if (Emulator.pluginManager != null)
             tryShutdown(() -> Emulator.pluginManager.fireEvent(new EmulatorStoppedEvent()));

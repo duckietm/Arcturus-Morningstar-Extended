@@ -50,6 +50,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
+        this.refresh();
 
         if(this.settings.isEmpty())
             return;
@@ -57,54 +58,81 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         if (room.getLayout() == null)
             return;
 
-        java.util.Set<Integer> allowedItemIds = null;
-        if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
-            allowedItemIds = new java.util.HashSet<>();
-            for (HabboItem si : WiredSourceUtil.resolveItems(ctx, this.furniSource, null)) {
-                if (si != null) {
-                    allowedItemIds.add(si.getId());
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            for (WiredMatchFurniSetting setting : this.settings) {
+                HabboItem item = room.getHabboItem(setting.item_id);
+                if (item != null) {
+                    this.applySetting(room, item, setting);
                 }
             }
-            if (allowedItemIds.isEmpty()) {
-                return;
+
+            return;
+        }
+
+        List<HabboItem> targets = WiredSourceUtil.resolveItems(ctx, this.furniSource, null);
+        if (targets.isEmpty()) {
+            return;
+        }
+
+        for (HabboItem item : targets) {
+            if (item == null) continue;
+
+            WiredMatchFurniSetting setting = this.resolveSettingForTarget(room, item);
+            if (setting == null) continue;
+
+            this.applySetting(room, item, setting);
+        }
+    }
+
+    private WiredMatchFurniSetting resolveSettingForTarget(Room room, HabboItem target) {
+        WiredMatchFurniSetting fallback = null;
+
+        for (WiredMatchFurniSetting setting : this.settings) {
+            HabboItem sourceItem = room.getHabboItem(setting.item_id);
+            if (sourceItem == null) continue;
+            if (sourceItem.getBaseItem().getId() != target.getBaseItem().getId()) continue;
+
+            if (setting.state.equals(target.getExtradata())) {
+                return setting;
+            }
+
+            if (fallback == null) {
+                fallback = setting;
             }
         }
 
-        for (WiredMatchFurniSetting setting : this.settings) {
-            if (allowedItemIds != null && !allowedItemIds.contains(setting.item_id)) continue;
+        return fallback;
+    }
 
-            HabboItem item = room.getHabboItem(setting.item_id);
-            if (item != null) {
-                if (this.state && (this.checkForWiredResetPermission && item.allowWiredResetState())) {
-                    if (!setting.state.equals(" ") && !item.getExtradata().equals(setting.state)) {
-                        item.setExtradata(setting.state);
-                        room.updateItemState(item);
+    private void applySetting(Room room, HabboItem item, WiredMatchFurniSetting setting) {
+        if (this.state && (this.checkForWiredResetPermission && item.allowWiredResetState())) {
+            if (!setting.state.equals(" ") && !item.getExtradata().equals(setting.state)) {
+                item.setExtradata(setting.state);
+                item.needsUpdate(true);
+                room.updateItemState(item);
+            }
+        }
+
+        RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
+        if (oldLocation == null) return;
+        double oldZ = item.getZ();
+
+        if(this.direction && !this.position) {
+            if(item.getRotation() != setting.rotation && room.furnitureFitsAt(oldLocation, item, setting.rotation, false) == FurnitureMovementError.NONE) {
+                room.moveFurniTo(item, oldLocation, setting.rotation, null, true);
+            }
+        }
+        else if(this.position) {
+            boolean slideAnimation = !this.direction || item.getRotation() == setting.rotation;
+            RoomTile newLocation = room.getLayout().getTile((short) setting.x, (short) setting.y);
+            int newRotation = this.direction ? setting.rotation : item.getRotation();
+
+            if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation()) && room.furnitureFitsAt(newLocation, item, newRotation, true) == FurnitureMovementError.NONE) {
+                if(room.moveFurniTo(item, newLocation, newRotation, null, !slideAnimation) == FurnitureMovementError.NONE) {
+                    if(slideAnimation) {
+                        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
                     }
                 }
-
-                RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
-                if (oldLocation == null) continue;
-                double oldZ = item.getZ();
-
-                if(this.direction && !this.position) {
-                    if(item.getRotation() != setting.rotation && room.furnitureFitsAt(oldLocation, item, setting.rotation, false) == FurnitureMovementError.NONE) {
-                        room.moveFurniTo(item, oldLocation, setting.rotation, null, true);
-                    }
-                }
-                else if(this.position) {
-                    boolean slideAnimation = !this.direction || item.getRotation() == setting.rotation;
-                    RoomTile newLocation = room.getLayout().getTile((short) setting.x, (short) setting.y);
-                    int newRotation = this.direction ? setting.rotation : item.getRotation();
-
-                    if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation()) && room.furnitureFitsAt(newLocation, item, newRotation, true) == FurnitureMovementError.NONE) {
-                        if(room.moveFurniTo(item, newLocation, newRotation, null, !slideAnimation) == FurnitureMovementError.NONE) {
-                            if(slideAnimation) {
-                                room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
-                            }
-                        }
-                    }
-                }
-
             }
         }
     }
@@ -134,9 +162,6 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             this.settings.clear();
             this.settings.addAll(data.items);
             this.furniSource = data.furniSource;
-            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.settings.isEmpty()) {
-                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
-            }
         }
         else {
             String[] data = set.getString("wired_data").split(":");
@@ -221,23 +246,22 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         if (room == null)
             throw new WiredSaveException("Trying to save wired in unloaded room");
 
+        int itemsCount = settings.getFurniIds().length;
+
+        if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
+            throw new WiredSaveException("Too many furni selected");
+        }
+
         List<WiredMatchFurniSetting> newSettings = new ArrayList<>();
-        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
-            int itemsCount = settings.getFurniIds().length;
 
-            if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
-                throw new WiredSaveException("Too many furni selected");
-            }
+        for (int i = 0; i < itemsCount; i++) {
+            int itemId = settings.getFurniIds()[i];
+            HabboItem it = room.getHabboItem(itemId);
 
-            for (int i = 0; i < itemsCount; i++) {
-                int itemId = settings.getFurniIds()[i];
-                HabboItem it = room.getHabboItem(itemId);
+            if(it == null)
+                throw new WiredSaveException(String.format("Item %s not found", itemId));
 
-                if(it == null)
-                    throw new WiredSaveException(String.format("Item %s not found", itemId));
-
-                newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
-            }
+            newSettings.add(new WiredMatchFurniSetting(it.getId(), this.checkForWiredResetPermission && it.allowWiredResetState() ? it.getExtradata() : " ", it.getRotation(), it.getX(), it.getY()));
         }
 
         int delay = settings.getDelay();
@@ -249,9 +273,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.direction = setDirection;
         this.position = setPosition;
         this.settings.clear();
-        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
-            this.settings.addAll(newSettings);
-        }
+        this.settings.addAll(newSettings);
         this.setDelay(delay);
 
         return true;

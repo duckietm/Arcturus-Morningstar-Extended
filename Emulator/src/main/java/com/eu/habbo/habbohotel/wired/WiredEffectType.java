@@ -32,7 +32,14 @@ public enum WiredEffectType {
     FURNI_BYTYPE_SELECTOR(30),
     USERS_AREA_SELECTOR(31),
     USERS_NEIGHBORHOOD_SELECTOR(32),
-    SEND_SIGNAL(33);
+    SEND_SIGNAL(33),
+    FREEZE(34),
+    UNFREEZE(35),
+    FURNI_TO_USER(36),
+    USER_TO_FURNI(37),
+    FURNI_TO_FURNI(38),
+    SET_ALTITUDE(39),
+    RELATIVE_MOVE(40);
 
     public final int code;
 
