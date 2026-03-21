@@ -164,14 +164,6 @@ public class WiredConditionHabboHasHandItem extends InteractionWiredCondition {
         return (value == QUANTIFIER_ANY) ? QUANTIFIER_ANY : QUANTIFIER_ALL;
     }
 
-    protected int getHandItem() {
-        return this.handItem;
-    }
-
-    protected int getUserSource() {
-        return this.userSource;
-    }
-
     static class JsonData {
         int handItemId;
         int userSource;

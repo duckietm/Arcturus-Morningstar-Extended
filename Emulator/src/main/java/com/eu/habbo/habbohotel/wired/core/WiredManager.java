@@ -443,30 +443,6 @@ public final class WiredManager {
     }
 
     /**
-     * Trigger a long periodic timer.
-     */
-    public static boolean triggerTimerRepeatLong(Room room, HabboItem timerItem) {
-        if (!isEnabled() || room == null) {
-            return false;
-        }
-
-        WiredEvent event = WiredEvents.timerRepeatLong(room, timerItem);
-        return handleEvent(event);
-    }
-
-    /**
-     * Trigger a short periodic timer.
-     */
-    public static boolean triggerTimerRepeatShort(Room room, HabboItem timerItem) {
-        if (!isEnabled() || room == null) {
-            return false;
-        }
-
-        WiredEvent event = WiredEvents.timerRepeatShort(room, timerItem);
-        return handleEvent(event);
-    }
-
-    /**
      * Trigger game start.
      */
     public static boolean triggerGameStarts(Room room) {
