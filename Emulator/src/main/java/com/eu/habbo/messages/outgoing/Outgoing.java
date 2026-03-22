@@ -555,6 +555,15 @@ public class Outgoing {
     public static final int SnowStormUserRematchedComposer = 5029;
 
 
+    // Catalog Admin
+    public static final int CatalogAdminResultComposer = 10059;
+
+    // Furni Editor
+    public static final int FurniEditorSearchComposer = 10040;
+    public static final int FurniEditorDetailComposer = 10041;
+    public static final int FurniEditorInteractionsComposer = 10043;
+    public static final int FurniEditorResultComposer = 10044;
+
     // Custom Prefixes
     public static final int UserPrefixesComposer = 7001;
     public static final int PrefixReceivedComposer = 7002;

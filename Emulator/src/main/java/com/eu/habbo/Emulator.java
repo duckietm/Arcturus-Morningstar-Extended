@@ -128,6 +128,8 @@ public final class Emulator {
             Emulator.getPluginManager().fireEvent(new EmulatorConfigUpdatedEvent());
             Emulator.texts = new TextsManager();
 
+            Emulator.config.register("furni.editor.renderer.config.path", "");
+            Emulator.config.register("furni.editor.asset.base.path", "");
             Emulator.config.register("camera.url", "http://localhost/camera/");
             Emulator.config.register("imager.location.output.camera", "/public/camera/");
             Emulator.config.register("imager.location.output.thumbnail", "/public/camera/thumbnails/");

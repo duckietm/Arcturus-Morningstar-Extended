@@ -10,6 +10,8 @@ import com.eu.habbo.messages.incoming.ambassadors.AmbassadorAlertCommandEvent;
 import com.eu.habbo.messages.incoming.ambassadors.AmbassadorVisitCommandEvent;
 import com.eu.habbo.messages.incoming.camera.*;
 import com.eu.habbo.messages.incoming.catalog.*;
+import com.eu.habbo.messages.incoming.catalog.catalogadmin.*;
+import com.eu.habbo.messages.incoming.furnieditor.*;
 import com.eu.habbo.messages.incoming.catalog.marketplace.*;
 import com.eu.habbo.messages.incoming.catalog.recycler.OpenRecycleBoxEvent;
 import com.eu.habbo.messages.incoming.catalog.recycler.RecycleEvent;
@@ -258,6 +260,26 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestClubCenterEvent, RequestClubCenterEvent.class);
         this.registerHandler(Incoming.CatalogRequestClubDiscountEvent, CatalogRequestClubDiscountEvent.class);
         this.registerHandler(Incoming.CatalogBuyClubDiscountEvent, CatalogBuyClubDiscountEvent.class);
+
+        // Catalog Admin
+        this.registerHandler(Incoming.CatalogAdminSavePageEvent, CatalogAdminSavePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminCreatePageEvent, CatalogAdminCreatePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminDeletePageEvent, CatalogAdminDeletePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSaveOfferEvent, CatalogAdminSaveOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminCreateOfferEvent, CatalogAdminCreateOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminDeleteOfferEvent, CatalogAdminDeleteOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminMoveOfferEvent, CatalogAdminMoveOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminMovePageEvent, CatalogAdminMovePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminPublishEvent, CatalogAdminPublishEvent.class);
+
+        // Furni Editor
+        this.registerHandler(Incoming.FurniEditorSearchEvent, FurniEditorSearchEvent.class);
+        this.registerHandler(Incoming.FurniEditorDetailEvent, FurniEditorDetailEvent.class);
+        this.registerHandler(Incoming.FurniEditorBySpriteEvent, FurniEditorBySpriteEvent.class);
+        this.registerHandler(Incoming.FurniEditorInteractionsEvent, FurniEditorInteractionsEvent.class);
+        this.registerHandler(Incoming.FurniEditorUpdateEvent, FurniEditorUpdateEvent.class);
+        this.registerHandler(Incoming.FurniEditorCreateEvent, FurniEditorCreateEvent.class);
+        this.registerHandler(Incoming.FurniEditorDeleteEvent, FurniEditorDeleteEvent.class);
     }
 
     private void registerEvent() throws Exception {
