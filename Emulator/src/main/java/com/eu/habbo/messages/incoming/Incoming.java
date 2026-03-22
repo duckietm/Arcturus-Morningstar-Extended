@@ -412,6 +412,17 @@ public class Incoming {
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
 
+    // Catalog Admin
+    public static final int CatalogAdminSavePageEvent = 10050;
+    public static final int CatalogAdminCreatePageEvent = 10051;
+    public static final int CatalogAdminDeletePageEvent = 10052;
+    public static final int CatalogAdminSaveOfferEvent = 10053;
+    public static final int CatalogAdminCreateOfferEvent = 10054;
+    public static final int CatalogAdminDeleteOfferEvent = 10055;
+    public static final int CatalogAdminMoveOfferEvent = 10056;
+    public static final int CatalogAdminMovePageEvent = 10057;
+    public static final int CatalogAdminPublishEvent = 10058;
+
     // Custom Prefixes
     public static final int RequestUserPrefixesEvent = 7011;
     public static final int SetActivePrefixEvent = 7012;
