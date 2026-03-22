@@ -28,6 +28,8 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
     private int rootY = 0;
     private int areaWidth = 0;
     private int areaHeight = 0;
+    private boolean filterExisting = false;
+    private boolean invert = false;
 
     public WiredEffectFurniArea(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -43,9 +45,12 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         if (room == null || areaWidth <= 0 || areaHeight <= 0) return;
 
         List<HabboItem> furniInArea = getFurniInArea(room);
-        if (!furniInArea.isEmpty()) {
-            ctx.targets().setItems(furniInArea);
-        }
+        ctx.targets().setItems(this.applySelectorModifiers(
+                furniInArea,
+                this.getSelectableFloorItems(room),
+                ctx.targets().items(),
+                this.filterExisting,
+                this.invert));
     }
 
     private List<HabboItem> getFurniInArea(Room room) {
@@ -78,6 +83,8 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         this.rootY = params[1];
         this.areaWidth = params[2];
         this.areaHeight = params[3];
+        this.filterExisting = params.length >= 5 && params[4] == 1;
+        this.invert = params.length >= 6 && params[5] == 1;
         this.setDelay(settings.getDelay());
 
         return true;
@@ -95,7 +102,7 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(rootX, rootY, areaWidth, areaHeight, getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(rootX, rootY, areaWidth, areaHeight, filterExisting, invert, getDelay()));
     }
 
     @Override
@@ -108,6 +115,8 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
             this.rootY = data.rootY;
             this.areaWidth = data.width;
             this.areaHeight = data.height;
+            this.filterExisting = data.filterExisting;
+            this.invert = data.invert;
             this.setDelay(data.delay);
         }
     }
@@ -118,6 +127,8 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         this.rootY = 0;
         this.areaWidth = 0;
         this.areaHeight = 0;
+        this.filterExisting = false;
+        this.invert = false;
         this.setDelay(0);
     }
 
@@ -131,11 +142,13 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(4);
+        message.appendInt(6);
         message.appendInt(this.rootX);
         message.appendInt(this.rootY);
         message.appendInt(this.areaWidth);
         message.appendInt(this.areaHeight);
+        message.appendInt(this.filterExisting ? 1 : 0);
+        message.appendInt(this.invert ? 1 : 0);
 
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -153,13 +166,17 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         int rootY;
         int width;
         int height;
+        boolean filterExisting;
+        boolean invert;
         int delay;
 
-        JsonData(int rootX, int rootY, int width, int height, int delay) {
+        JsonData(int rootX, int rootY, int width, int height, boolean filterExisting, boolean invert, int delay) {
             this.rootX = rootX;
             this.rootY = rootY;
             this.width = width;
             this.height = height;
+            this.filterExisting = filterExisting;
+            this.invert = invert;
             this.delay = delay;
         }
     }

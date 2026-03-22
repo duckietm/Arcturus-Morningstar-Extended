@@ -8,15 +8,17 @@ import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.sql.ResultSet;
@@ -234,39 +236,58 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
         RoomTile oldLocation = roomUnit.getCurrentLocation();
         RoomTile previousGoal = roomUnit.getGoal();
         boolean wasWalking = roomUnit.isWalking();
-
-        if (oldLocation == null) {
-            oldLocation = room.getLayout().getTile(roomUnit.getX(), roomUnit.getY());
-        }
+        boolean noAnimation = WiredMoveCarryHelper.hasNoAnimationExtra(room, this);
 
         if (oldLocation == null) {
             return;
         }
 
-        double oldZ = roomUnit.getZ();
         double newZ = item.getZ() + Item.getCurrentHeight(item);
-        room.sendComposer(new RoomUnitOnRollerComposer(roomUnit, null, oldLocation, oldZ, targetTile, newZ, room).compose());
+        int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
+        if (!WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, newZ,
+                roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), animationDuration, noAnimation)) {
+            return;
+        }
 
-        this.applyWalkMode(roomUnit, oldLocation, previousGoal, targetTile, wasWalking);
-        roomUnit.setPreviousLocationZ(newZ);
+        this.applyWalkMode(roomUnit, oldLocation, previousGoal, targetTile, wasWalking,
+                animationDuration);
+        roomUnit.setPreviousLocationZ(roomUnit.getZ());
     }
 
-    private void applyWalkMode(RoomUnit roomUnit, RoomTile oldLocation, RoomTile previousGoal, RoomTile targetTile, boolean wasWalking) {
+    private void applyWalkMode(RoomUnit roomUnit, RoomTile oldLocation, RoomTile previousGoal, RoomTile targetTile, boolean wasWalking, int delay) {
         if (roomUnit == null || targetTile == null) {
             return;
         }
 
-        if (this.walkMode == WALKMODE_STOP || !wasWalking || previousGoal == null) {
-            roomUnit.setGoalLocation(targetTile);
+        Runnable applyGoal = () -> {
+            if (roomUnit.getCurrentLocation() == null
+                    || roomUnit.isWalking()
+                    || roomUnit.hasStatus(RoomUnitStatus.SIT)
+                    || roomUnit.hasStatus(RoomUnitStatus.LAY)
+                    || roomUnit.getCurrentLocation().x != targetTile.x
+                    || roomUnit.getCurrentLocation().y != targetTile.y) {
+                return;
+            }
+
+            if (this.walkMode == WALKMODE_STOP || !wasWalking || previousGoal == null) {
+                roomUnit.setGoalLocation(targetTile);
+                return;
+            }
+
+            if (this.walkMode == WALKMODE_IF_CLOSER && !this.isCloserToGoal(oldLocation, targetTile, previousGoal)) {
+                roomUnit.setGoalLocation(targetTile);
+                return;
+            }
+
+            roomUnit.setGoalLocation(previousGoal);
+        };
+
+        if (delay > 0) {
+            Emulator.getThreading().run(applyGoal, delay);
             return;
         }
 
-        if (this.walkMode == WALKMODE_IF_CLOSER && !this.isCloserToGoal(oldLocation, targetTile, previousGoal)) {
-            roomUnit.setGoalLocation(targetTile);
-            return;
-        }
-
-        roomUnit.setGoalLocation(previousGoal);
+        applyGoal.run();
     }
 
     private boolean isCloserToGoal(RoomTile oldLocation, RoomTile newLocation, RoomTile goalLocation) {

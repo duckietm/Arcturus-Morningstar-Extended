@@ -1,7 +1,10 @@
 package com.eu.habbo.habbohotel.wired.core;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -120,18 +123,9 @@ public final class WiredTriggerSourceUtil {
             return null;
         }
 
-        THashSet<InteractionWiredEffect> effects = room.getRoomSpecialTypes().getEffects(trigger.getX(), trigger.getY());
-        if (effects == null || effects.isEmpty()) {
-            return null;
-        }
-
         WiredContext ctx = new WiredContext(event, trigger, DefaultWiredServices.getInstance(), new WiredState(100));
 
-        for (InteractionWiredEffect effect : effects) {
-            if (effect == null || !effect.isSelector()) {
-                continue;
-            }
-
+        for (InteractionWiredEffect effect : getOrderedSelectorEffects(room, trigger)) {
             if (effect.requiresActor() && !ctx.hasActor()) {
                 continue;
             }
@@ -143,6 +137,76 @@ public final class WiredTriggerSourceUtil {
             }
         }
 
+        applySelectionFilterExtras(room, trigger, ctx);
+
         return ctx;
+    }
+
+    private static List<InteractionWiredEffect> getOrderedSelectorEffects(Room room, InteractionWiredTrigger trigger) {
+        if (room == null || trigger == null || room.getRoomSpecialTypes() == null) {
+            return Collections.emptyList();
+        }
+
+        THashSet<InteractionWiredEffect> effects = room.getRoomSpecialTypes().getEffects(trigger.getX(), trigger.getY());
+        List<InteractionWiredEffect> selectorEffects = new ArrayList<>();
+
+        for (InteractionWiredEffect effect : WiredExecutionOrderUtil.sort(effects)) {
+            if (effect != null && effect.isSelector()) {
+                selectorEffects.add(effect);
+            }
+        }
+
+        return selectorEffects;
+    }
+
+    private static void applySelectionFilterExtras(Room room, HabboItem triggerItem, WiredContext selectorCtx) {
+        if (room == null || triggerItem == null || selectorCtx == null || room.getRoomSpecialTypes() == null) {
+            return;
+        }
+
+        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(triggerItem.getX(), triggerItem.getY());
+
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+
+        int furniLimit = Integer.MAX_VALUE;
+        int userLimit = Integer.MAX_VALUE;
+
+        for (InteractionWiredExtra extra : extras) {
+            if (extra instanceof WiredExtraFilterFurni) {
+                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
+            } else if (extra instanceof WiredExtraFilterUser) {
+                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
+            }
+        }
+
+        if (selectorCtx.targets().isItemsModifiedBySelector() && furniLimit != Integer.MAX_VALUE) {
+            selectorCtx.targets().setItems(limitIterable(selectorCtx.targets().items(), furniLimit));
+        }
+
+        if (selectorCtx.targets().isUsersModifiedBySelector() && userLimit != Integer.MAX_VALUE) {
+            selectorCtx.targets().setUsers(limitIterable(selectorCtx.targets().users(), userLimit));
+        }
+    }
+
+    private static <T> List<T> limitIterable(Iterable<T> values, int limit) {
+        List<T> result = new ArrayList<>();
+
+        if (values == null || limit <= 0) {
+            return result;
+        }
+
+        for (T value : values) {
+            if (value != null) {
+                result.add(value);
+            }
+        }
+
+        if (result.size() <= limit) {
+            return result;
+        }
+
+        return new ArrayList<>(result.subList(0, limit));
     }
 }

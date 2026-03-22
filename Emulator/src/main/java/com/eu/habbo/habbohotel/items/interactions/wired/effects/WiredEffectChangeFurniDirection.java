@@ -10,10 +10,10 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.*;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     public static final int ACTION_WAIT = 0;
@@ -35,6 +36,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.MOVE_DIRECTION;
 
     private final THashMap<HabboItem, WiredChangeDirectionSetting> items = new THashMap<>(0);
+    private final ConcurrentHashMap<Integer, WiredChangeDirectionSetting> runtimeItems = new ConcurrentHashMap<>();
     private RoomUserRotation startRotation = RoomUserRotation.NORTH;
     private int blockedAction = 0;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
@@ -57,6 +59,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         THashMap<HabboItem, WiredChangeDirectionSetting> effectiveItems;
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            this.runtimeItems.clear();
             THashSet<HabboItem> toRemove = new THashSet<>();
             for (HabboItem item : this.items.keySet()) {
                 if (item == null || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null)
@@ -67,10 +70,13 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             }
             effectiveItems = this.items;
         } else {
+            this.pruneRuntimeItems(room);
             effectiveItems = new THashMap<>();
             for (HabboItem item : resolvedItems) {
                 if (item != null) {
-                    WiredChangeDirectionSetting setting = this.items.get(item);
+                    WiredChangeDirectionSetting setting = this.runtimeItems.computeIfAbsent(
+                            item.getId(),
+                            key -> new WiredChangeDirectionSetting(item.getId(), item.getRotation(), this.startRotation));
                     if (setting == null) {
                         setting = new WiredChangeDirectionSetting(item.getId(), item.getRotation(), this.startRotation);
                     }
@@ -91,7 +97,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             RoomTile targetTile = room.getLayout().getTileInFront(itemTile, entry.getValue().direction.getValue());
 
             int count = 1;
-            while (this.shouldSearchNextDirection(room, item, targetTile) && count < 8) {
+            while (this.shouldSearchNextDirection(room, item, targetTile, ctx) && count < 8) {
                 entry.getValue().direction = this.nextRotation(entry.getValue().direction);
 
                 RoomTile tile = room.getLayout().getTileInFront(itemTile, entry.getValue().direction.getValue());
@@ -115,35 +121,30 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             RoomTile targetTile = room.getLayout().getTileInFront(itemTile, newDirection);
 
             if(item.getRotation() != entry.getValue().rotation) {
-                if(targetTile == null || room.furnitureFitsAt(targetTile, item, entry.getValue().rotation, false) != FurnitureMovementError.NONE)
+                if (targetTile == null || room.furnitureFitsAt(targetTile, item, entry.getValue().rotation, false) != FurnitureMovementError.NONE)
                     continue;
 
-                room.moveFurniTo(entry.getKey(), targetTile, entry.getValue().rotation, null, true);
+                WiredMoveCarryHelper.moveFurni(room, this, entry.getKey(), targetTile, entry.getValue().rotation, null, true, ctx);
             }
 
             if (targetTile == null) continue;
 
-            boolean hasRoomUnits = false;
-            THashSet<RoomTile> newOccupiedTiles = room.getLayout().getTilesAt(targetTile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
-            for(RoomTile tile : newOccupiedTiles) {
-                for (RoomUnit _roomUnit : room.getRoomUnits(tile)) {
-                    hasRoomUnits = true;
-                    if(_roomUnit.getCurrentLocation() == targetTile) {
-                        Emulator.getThreading().run(() -> {
-                            WiredManager.triggerBotCollision(room, _roomUnit);
-                        });
+            FurnitureMovementError movementError = WiredMoveCarryHelper.getMovementError(room, this, entry.getKey(), targetTile, item.getRotation(), ctx);
+
+            if (movementError == FurnitureMovementError.TILE_HAS_HABBOS
+                    || movementError == FurnitureMovementError.TILE_HAS_BOTS
+                    || movementError == FurnitureMovementError.TILE_HAS_PETS) {
+                Emulator.getThreading().run(() -> {
+                    for (RoomUnit roomUnit : room.getRoomUnits(targetTile)) {
+                        WiredManager.triggerBotCollision(room, roomUnit);
                         break;
                     }
-                }
+                });
             }
 
-            if (targetTile.state != RoomTileState.INVALID && room.furnitureFitsAt(targetTile, item, item.getRotation(), false) == FurnitureMovementError.NONE) {
-                if (!hasRoomUnits) {
-                    RoomTile oldLocation = room.getLayout().getTile(entry.getKey().getX(), entry.getKey().getY());
-                    double oldZ = entry.getKey().getZ();
-                    if(oldLocation != null && room.moveFurniTo(entry.getKey(), targetTile, item.getRotation(), null, false) == FurnitureMovementError.NONE) {
-                        room.sendComposer(new FloorItemOnRollerComposer(entry.getKey(), null, oldLocation, oldZ, targetTile, entry.getKey().getZ(), 0, room).compose());
-                    }
+            if (targetTile.state != RoomTileState.INVALID && movementError == FurnitureMovementError.NONE) {
+                RoomTile oldLocation = room.getLayout().getTile(entry.getKey().getX(), entry.getKey().getY());
+                if (oldLocation != null && WiredMoveCarryHelper.moveFurni(room, this, entry.getKey(), targetTile, item.getRotation(), null, false, ctx) == FurnitureMovementError.NONE) {
                 }
             }
         }
@@ -165,6 +166,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
 
         this.items.clear();
+        this.runtimeItems.clear();
 
         String wiredData = set.getString("wired_data");
 
@@ -228,6 +230,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     public void onPickUp() {
         this.setDelay(0);
         this.items.clear();
+        this.runtimeItems.clear();
         this.blockedAction = 0;
         this.startRotation = RoomUserRotation.NORTH;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
@@ -305,6 +308,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.items.clear();
+        this.runtimeItems.clear();
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             this.items.putAll(newItems);
         }
@@ -315,7 +319,15 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         return true;
     }
 
-    private boolean shouldSearchNextDirection(Room room, HabboItem item, RoomTile targetTile) {
+    private void pruneRuntimeItems(Room room) {
+        if (room == null || this.runtimeItems.isEmpty()) {
+            return;
+        }
+
+        this.runtimeItems.entrySet().removeIf(entry -> room.getHabboItem(entry.getKey()) == null);
+    }
+
+    private boolean shouldSearchNextDirection(Room room, HabboItem item, RoomTile targetTile, WiredContext ctx) {
         if (targetTile == null || targetTile.state == RoomTileState.INVALID) {
             return true;
         }
@@ -328,7 +340,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             return false;
         }
 
-        FurnitureMovementError unitCollision = room.furnitureFitsAt(targetTile, item, item.getRotation(), true);
+        FurnitureMovementError unitCollision = WiredMoveCarryHelper.getMovementError(room, this, item, targetTile, item.getRotation(), ctx);
         return unitCollision == FurnitureMovementError.TILE_HAS_HABBOS;
     }
 

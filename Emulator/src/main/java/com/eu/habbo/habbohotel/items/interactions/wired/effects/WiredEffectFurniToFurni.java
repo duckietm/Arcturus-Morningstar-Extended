@@ -12,10 +12,10 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -65,18 +65,14 @@ public class WiredEffectFurniToFurni extends InteractionWiredEffect {
             return;
         }
 
-        RoomTile oldLocation = room.getLayout().getTile(moveItem.getX(), moveItem.getY());
-        double oldZ = moveItem.getZ();
-
-        FurnitureMovementError error = room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), null, false, false);
+        FurnitureMovementError error = WiredMoveCarryHelper.moveFurni(room, this, moveItem, targetTile, moveItem.getRotation(), null, false, ctx);
         if (error == FurnitureMovementError.NONE) {
-            this.sendRollerAnimation(room, moveItem, oldLocation, oldZ, targetTile);
             return;
         }
 
-        error = room.moveFurniTo(moveItem, targetTile, moveItem.getRotation(), targetItem.getZ(), null, false, false);
+        error = WiredMoveCarryHelper.moveFurni(room, this, moveItem, targetTile, moveItem.getRotation(), targetItem.getZ(), null, false, ctx);
         if (error == FurnitureMovementError.NONE) {
-            this.sendRollerAnimation(room, moveItem, oldLocation, oldZ, targetTile);
+            return;
         }
     }
 
@@ -230,14 +226,6 @@ public class WiredEffectFurniToFurni extends InteractionWiredEffect {
     @Override
     public WiredEffectType getType() {
         return type;
-    }
-
-    private void sendRollerAnimation(Room room, HabboItem item, RoomTile oldLocation, double oldZ, RoomTile newLocation) {
-        if (room == null || item == null || oldLocation == null || newLocation == null) {
-            return;
-        }
-
-        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
     }
 
     @Override

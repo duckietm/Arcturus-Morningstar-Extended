@@ -9,6 +9,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWaterItem;
 import com.eu.habbo.habbohotel.items.interactions.interfaces.ConditionalGate;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.RideablePet;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -614,6 +616,11 @@ public class RoomUnit {
 
   public void setStatus(RoomUnitStatus key, String value) {
     if (key != null && value != null) {
+      if (key == RoomUnitStatus.MOVE) {
+        WiredMoveCarryHelper.clearStatusComposerSuppression(this);
+        WiredUserMovementHelper.clearStatusComposerSuppression(this);
+      }
+
       this.status.put(key, value);
     }
   }

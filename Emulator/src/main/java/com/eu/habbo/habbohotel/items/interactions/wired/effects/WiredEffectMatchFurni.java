@@ -12,10 +12,10 @@ import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredMatchFurniSetting;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             for (WiredMatchFurniSetting setting : this.settings) {
                 HabboItem item = room.getHabboItem(setting.item_id);
                 if (item != null) {
-                    this.applySetting(room, item, setting);
+                    this.applySetting(room, item, setting, ctx);
                 }
             }
 
@@ -82,7 +82,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             WiredMatchFurniSetting setting = this.resolveSettingForTarget(room, item);
             if (setting == null) continue;
 
-            this.applySetting(room, item, setting);
+            this.applySetting(room, item, setting, ctx);
         }
     }
 
@@ -106,7 +106,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         return fallback;
     }
 
-    private void applySetting(Room room, HabboItem item, WiredMatchFurniSetting setting) {
+    private void applySetting(Room room, HabboItem item, WiredMatchFurniSetting setting, WiredContext ctx) {
         if (this.state && (this.checkForWiredResetPermission && item.allowWiredResetState())) {
             if (!setting.state.equals(" ") && !item.getExtradata().equals(setting.state)) {
                 item.setExtradata(setting.state);
@@ -117,17 +117,16 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
 
         RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
         if (oldLocation == null) return;
-        double oldZ = item.getZ();
 
         if(this.direction && !this.position) {
             if(item.getRotation() != setting.rotation && room.furnitureFitsAt(oldLocation, item, setting.rotation, false) == FurnitureMovementError.NONE) {
-                room.moveFurniTo(item, oldLocation, setting.rotation, null, true);
+                WiredMoveCarryHelper.moveFurni(room, this, item, oldLocation, setting.rotation, null, true, ctx);
             }
         }
         else if(this.altitude && !this.position) {
             int newRotation = this.direction ? setting.rotation : item.getRotation();
             if(BigDecimal.valueOf(item.getZ()).compareTo(BigDecimal.valueOf(setting.z)) != 0 || newRotation != item.getRotation()) {
-                room.moveFurniTo(item, oldLocation, newRotation, setting.z, null, true, false);
+                WiredMoveCarryHelper.moveFurni(room, this, item, oldLocation, newRotation, setting.z, null, true, ctx);
             }
         }
         else if(this.position) {
@@ -136,11 +135,10 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
             int newRotation = this.direction ? setting.rotation : item.getRotation();
             double newZ = this.altitude ? setting.z : item.getZ();
 
-            if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation()) && room.furnitureFitsAt(newLocation, item, newRotation, true) == FurnitureMovementError.NONE) {
-                if(room.moveFurniTo(item, newLocation, newRotation, newZ, null, !slideAnimation, true) == FurnitureMovementError.NONE) {
-                    if(slideAnimation) {
-                        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
-                    }
+            if (newLocation != null && newLocation.state != RoomTileState.INVALID
+                    && (newLocation != oldLocation || newRotation != item.getRotation())
+                    && WiredMoveCarryHelper.getMovementError(room, this, item, newLocation, newRotation, ctx) == FurnitureMovementError.NONE) {
+                if (WiredMoveCarryHelper.moveFurni(room, this, item, newLocation, newRotation, newZ, null, !slideAnimation, ctx) == FurnitureMovementError.NONE) {
                 }
             }
         }

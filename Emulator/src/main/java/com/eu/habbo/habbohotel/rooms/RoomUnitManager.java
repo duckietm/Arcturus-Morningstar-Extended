@@ -14,6 +14,8 @@ import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
 import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
@@ -360,6 +362,11 @@ public class RoomUnitManager {
                 continue;
             }
 
+            if (WiredMoveCarryHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())
+                    || WiredUserMovementHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())) {
+                continue;
+            }
+
             double z = habbo.getRoomUnit().getCurrentLocation().getStackHeight();
             boolean hadLayStatus = habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY);
 
@@ -432,9 +439,17 @@ public class RoomUnitManager {
         if (!habbos.isEmpty()) {
             THashSet<RoomUnit> roomUnits = new THashSet<>();
             for (Habbo habbo : habbos) {
+                if (habbo.getRoomUnit() == null
+                        || WiredMoveCarryHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())
+                        || WiredUserMovementHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())) {
+                    continue;
+                }
                 roomUnits.add(habbo.getRoomUnit());
             }
-            this.room.sendComposer(new RoomUserStatusComposer(roomUnits, true).compose());
+
+            if (!roomUnits.isEmpty()) {
+                this.room.sendComposer(new RoomUserStatusComposer(roomUnits, true).compose());
+            }
         }
 
         if (topItem != null && topItem.getBaseItem().allowLay()) {
