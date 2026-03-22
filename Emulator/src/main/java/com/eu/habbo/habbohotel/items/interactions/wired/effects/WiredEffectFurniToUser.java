@@ -8,6 +8,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,9 +39,16 @@ public class WiredEffectFurniToUser extends WiredEffectUserFurniBase {
             return;
         }
 
-        FurnitureMovementError error = room.moveFurniTo(item, targetTile, item.getRotation(), null, true, false);
-        if (error != FurnitureMovementError.NONE && item.getBaseItem().getStateCount() > 0) {
-            room.moveFurniTo(item, targetTile, item.getRotation(), item.getZ(), null, true, false);
+        FurnitureMovementError error = WiredMoveCarryHelper.moveFurni(room, this, item, targetTile, item.getRotation(), null, false, ctx);
+        if (error == FurnitureMovementError.NONE) {
+            return;
+        }
+
+        if (item.getBaseItem().getStateCount() > 0) {
+            error = WiredMoveCarryHelper.moveFurni(room, this, item, targetTile, item.getRotation(), item.getZ(), null, false, ctx);
+            if (error == FurnitureMovementError.NONE) {
+                return;
+            }
         }
     }
 
@@ -54,4 +62,5 @@ public class WiredEffectFurniToUser extends WiredEffectUserFurniBase {
     public WiredEffectType getType() {
         return type;
     }
+
 }

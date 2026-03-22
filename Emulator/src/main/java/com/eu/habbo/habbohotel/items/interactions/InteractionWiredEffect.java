@@ -16,6 +16,8 @@ import com.eu.habbo.messages.outgoing.wired.WiredEffectDataComposer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -197,5 +199,57 @@ public abstract class InteractionWiredEffect extends InteractionWired implements
             || room.getHabboItem(item.getId()) == null
             || additionalRemoveCondition.test(item));
         return sizeBefore - items.size();
+    }
+
+    protected <T> LinkedHashSet<T> applySelectorModifiers(Iterable<T> matchedTargets,
+                                                          Iterable<T> availableTargets,
+                                                          Iterable<T> existingTargets,
+                                                          boolean filterExisting,
+                                                          boolean invert) {
+        LinkedHashSet<T> matched = toLinkedHashSet(matchedTargets);
+        LinkedHashSet<T> base = filterExisting
+            ? toLinkedHashSet(existingTargets)
+            : toLinkedHashSet(availableTargets);
+
+        if (invert) {
+            base.removeAll(matched);
+            return base;
+        }
+
+        if (filterExisting) {
+            matched.retainAll(base);
+        }
+
+        return matched;
+    }
+
+    protected LinkedHashSet<HabboItem> getSelectableFloorItems(Room room) {
+        LinkedHashSet<HabboItem> result = new LinkedHashSet<>();
+        if (room == null) {
+            return result;
+        }
+
+        room.getFloorItems().forEach(item -> {
+            if (item != null && !(item instanceof InteractionWired)) {
+                result.add(item);
+            }
+        });
+
+        return result;
+    }
+
+    protected <T> LinkedHashSet<T> toLinkedHashSet(Iterable<T> values) {
+        LinkedHashSet<T> result = new LinkedHashSet<>();
+        if (values == null) {
+            return result;
+        }
+
+        for (T value : values) {
+            if (value != null) {
+                result.add(value);
+            }
+        }
+
+        return result;
     }
 }

@@ -10,6 +10,8 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTriggerSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -25,6 +27,7 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
 
     private THashSet<StateSnapshot> snapshots;
     private int triggerMode = MODE_ALL_STATES;
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredTriggerFurniStateToggled(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -48,11 +51,14 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
         }
 
         StateSnapshot snapshot = this.getSnapshot(sourceItem.getId());
-        if (snapshot == null) {
+        if (!this.matchesSourceItem(event, sourceItem)) {
             return false;
         }
 
         if (this.triggerMode == MODE_SAVED_STATE) {
+            if (snapshot == null) {
+                return false;
+            }
             return snapshot.state.equals(this.normalizeState(sourceItem.getExtradata()));
         }
 
@@ -69,6 +75,7 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
             this.triggerMode,
+            this.furniSource,
             new ArrayList<>(this.snapshots)
         ));
     }
@@ -77,11 +84,13 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         this.snapshots = new THashSet<>();
         this.triggerMode = MODE_ALL_STATES;
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         String wiredData = set.getString("wired_data");
 
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.triggerMode = (data != null) ? data.triggerMode : MODE_ALL_STATES;
+            this.furniSource = (data != null) ? this.normalizeFurniSource(data.furniSource) : WiredSourceUtil.SOURCE_TRIGGER;
 
             if (data != null && data.snapshots != null && !data.snapshots.isEmpty()) {
                 for (StateSnapshot snapshot : data.snapshots) {
@@ -99,6 +108,10 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
                         this.snapshots.add(this.captureSnapshot(item));
                     }
                 }
+            }
+
+            if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.snapshots.isEmpty()) {
+                this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             }
         } else {
             if (wiredData.split(":").length >= 3) {
@@ -118,6 +131,8 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
                     }
                 }
             }
+
+            this.furniSource = this.snapshots.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
@@ -125,6 +140,7 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
     public void onPickUp() {
         this.snapshots.clear();
         this.triggerMode = MODE_ALL_STATES;
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -157,8 +173,9 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.triggerMode);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -170,6 +187,9 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
         this.triggerMode = (settings.getIntParams().length > 0 && settings.getIntParams()[0] == MODE_SAVED_STATE)
                 ? MODE_SAVED_STATE
                 : MODE_ALL_STATES;
+        this.furniSource = (settings.getIntParams().length > 1)
+                ? this.normalizeFurniSource(settings.getIntParams()[1])
+                : ((settings.getFurniIds().length > 0) ? WiredSourceUtil.SOURCE_SELECTED : WiredSourceUtil.SOURCE_TRIGGER);
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
         if (room == null) {
@@ -211,8 +231,38 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
         return (state == null) ? "" : state;
     }
 
+    private boolean matchesSourceItem(WiredEvent event, HabboItem sourceItem) {
+        List<HabboItem> selectedItems = new ArrayList<>();
+
+        if (event.getRoom() != null) {
+            for (StateSnapshot snapshot : this.snapshots) {
+                HabboItem item = event.getRoom().getHabboItem(snapshot.itemId);
+                if (item != null) {
+                    selectedItems.add(item);
+                }
+            }
+        }
+
+        for (HabboItem item : WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, selectedItems)) {
+            if (item != null && item.getId() == sourceItem.getId()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int normalizeFurniSource(int value) {
+        if (value == WiredSourceUtil.SOURCE_SELECTED || value == WiredSourceUtil.SOURCE_SELECTOR) {
+            return value;
+        }
+
+        return WiredSourceUtil.SOURCE_TRIGGER;
+    }
+
     static class JsonData {
         int triggerMode;
+        int furniSource;
         List<StateSnapshot> snapshots;
         List<Integer> itemIds;
 
@@ -223,8 +273,9 @@ public class WiredTriggerFurniStateToggled extends InteractionWiredTrigger {
             this.itemIds = itemIds;
         }
 
-        public JsonData(int triggerMode, List<StateSnapshot> snapshots) {
+        public JsonData(int triggerMode, int furniSource, List<StateSnapshot> snapshots) {
             this.triggerMode = triggerMode;
+            this.furniSource = furniSource;
             this.snapshots = snapshots;
         }
     }

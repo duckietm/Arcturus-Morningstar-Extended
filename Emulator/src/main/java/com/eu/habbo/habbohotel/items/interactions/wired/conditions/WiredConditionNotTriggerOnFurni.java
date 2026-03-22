@@ -37,7 +37,11 @@ public class WiredConditionNotTriggerOnFurni extends WiredConditionTriggerOnFurn
         if (itemTargets.isEmpty())
             return true;
 
-        return !isAnyUserOnFurni(userTargets, itemTargets, room);
+        if (this.getQuantifier() == QUANTIFIER_ANY) {
+            return !this.isAnyUserOnFurni(userTargets, itemTargets, room);
+        }
+
+        return !this.areAllUsersOnFurni(userTargets, itemTargets, room);
     }
 
     @Deprecated

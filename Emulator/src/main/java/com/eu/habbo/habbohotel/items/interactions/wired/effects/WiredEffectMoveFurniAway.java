@@ -10,11 +10,11 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -98,11 +98,10 @@ public class WiredEffectMoveFurniAway extends InteractionWiredEffect {
 
                 RoomTile newLocation = room.getLayout().getTile((short) (item.getX() + x), (short) (item.getY() + y));
                 RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
-                double oldZ = item.getZ();
 
-                if(newLocation != null && newLocation.state != RoomTileState.INVALID && newLocation != oldLocation && room.furnitureFitsAt(newLocation, item, item.getRotation(), true) == FurnitureMovementError.NONE) {
-                    if(room.moveFurniTo(item, newLocation, item.getRotation(), null, false) == FurnitureMovementError.NONE) {
-                        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
+                if (newLocation != null && newLocation.state != RoomTileState.INVALID && newLocation != oldLocation
+                        && WiredMoveCarryHelper.getMovementError(room, this, item, newLocation, item.getRotation(), ctx) == FurnitureMovementError.NONE) {
+                    if (WiredMoveCarryHelper.moveFurni(room, this, item, newLocation, item.getRotation(), null, false, ctx) == FurnitureMovementError.NONE) {
                     }
                 }
             }

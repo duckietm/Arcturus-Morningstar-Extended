@@ -56,6 +56,10 @@ public abstract class InteractionWiredTrigger extends InteractionWired implement
 
     public abstract boolean saveData(WiredSettings settings);
 
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
+        return this.saveData(settings);
+    }
+
     protected int getDelay() {
         return this.delay;
     }

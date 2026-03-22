@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
@@ -81,7 +82,7 @@ public class WiredEffectRelativeMove extends InteractionWiredEffect {
                 continue;
             }
 
-            room.moveFurniTo(item, targetTile, item.getRotation(), null, true, false);
+            WiredMoveCarryHelper.moveFurni(room, this, item, targetTile, item.getRotation(), null, true, ctx);
         }
     }
 

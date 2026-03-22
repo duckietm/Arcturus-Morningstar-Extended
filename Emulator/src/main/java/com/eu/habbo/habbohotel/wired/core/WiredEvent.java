@@ -63,6 +63,9 @@ public final class WiredEvent {
         
         /** Timer fires periodically/repeatedly */
         TIMER_REPEAT(WiredTriggerType.PERIODICALLY),
+
+        /** Up-counter reaches a configured elapsed time */
+        CLOCK_COUNTER_REACHED(WiredTriggerType.CLOCK_COUNTER),
         
         /** Long timer repeat */
         TIMER_REPEAT_LONG(WiredTriggerType.PERIODICALLY_LONG),

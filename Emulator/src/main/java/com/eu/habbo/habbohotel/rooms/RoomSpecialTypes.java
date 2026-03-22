@@ -30,7 +30,9 @@ import gnu.trove.set.hash.THashSet;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -376,6 +378,39 @@ public class RoomSpecialTypes {
         return countSendersTargetingReceiver(receiverItemId, null);
     }
 
+    public int countSendersTargetingAnyReceiver(Collection<Integer> receiverItemIds, InteractionWiredEffect excludeSender) {
+        if (receiverItemIds == null || receiverItemIds.isEmpty()) {
+            return 0;
+        }
+
+        Set<InteractionWiredEffect> senders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        if (senders == null) {
+            return 0;
+        }
+
+        Set<Integer> uniqueSenderIds = new HashSet<>();
+
+        for (InteractionWiredEffect effect : senders) {
+            if (excludeSender != null && effect.getId() == excludeSender.getId()) continue;
+            if (!(effect instanceof WiredEffectSendSignal)) continue;
+
+            WiredEffectSendSignal sender = (WiredEffectSendSignal) effect;
+            for (Integer receiverItemId : receiverItemIds) {
+                if (receiverItemId == null) continue;
+                if (!sender.hasPickedItem(receiverItemId)) continue;
+
+                uniqueSenderIds.add(effect.getId());
+                break;
+            }
+        }
+
+        return uniqueSenderIds.size();
+    }
+
+    public int countSendersTargetingAnyReceiver(Collection<Integer> receiverItemIds) {
+        return countSendersTargetingAnyReceiver(receiverItemIds, null);
+    }
+
     public void addTrigger(InteractionWiredTrigger trigger) {
         // Add to type-based index
         this.wiredTriggers.computeIfAbsent(trigger.getType(), k -> ConcurrentHashMap.newKeySet())
@@ -684,6 +719,15 @@ public class RoomSpecialTypes {
         THashSet<InteractionWiredExtra> result = new THashSet<>();
         result.addAll(this.wiredExtras.values());
         return result;
+    }
+
+    /**
+     * Finds a wired extra by its item ID.
+     * @param itemId The item ID to search for
+     * @return The extra if found, null otherwise
+     */
+    public InteractionWiredExtra getExtra(int itemId) {
+        return this.wiredExtras.get(itemId);
     }
 
     /**

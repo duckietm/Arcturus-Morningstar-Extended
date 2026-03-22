@@ -11,11 +11,11 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
@@ -61,7 +61,6 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
             int newRotation = this.rotation > 0 ? this.getNewRotation(item) : item.getRotation();
             RoomTile newLocation = room.getLayout().getTile(item.getX(), item.getY());
             RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
-            double oldZ = item.getZ();
 
             if(this.direction > 0) {
                 // Use pre-selected direction if available, otherwise pick random
@@ -77,13 +76,14 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
 
             boolean slideAnimation = item.getRotation() == newRotation;
 
-            FurnitureMovementError furniMoveTest = room.furnitureFitsAt(newLocation, item, newRotation, true);
-            if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation()) && (furniMoveTest == FurnitureMovementError.NONE || ((furniMoveTest == FurnitureMovementError.TILE_HAS_BOTS || furniMoveTest == FurnitureMovementError.TILE_HAS_HABBOS || furniMoveTest == FurnitureMovementError.TILE_HAS_PETS) && newLocation == oldLocation))) {
-                if(room.furnitureFitsAt(newLocation, item, newRotation, false) == FurnitureMovementError.NONE && room.moveFurniTo(item, newLocation, newRotation, null, !slideAnimation) == FurnitureMovementError.NONE) {
+            FurnitureMovementError furniMoveTest = WiredMoveCarryHelper.getMovementError(room, this, item, newLocation, newRotation, ctx);
+            if (newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != item.getRotation())
+                    && (furniMoveTest == FurnitureMovementError.NONE
+                    || ((furniMoveTest == FurnitureMovementError.TILE_HAS_BOTS
+                    || furniMoveTest == FurnitureMovementError.TILE_HAS_HABBOS
+                    || furniMoveTest == FurnitureMovementError.TILE_HAS_PETS) && newLocation == oldLocation))) {
+                if (WiredMoveCarryHelper.moveFurni(room, this, item, newLocation, newRotation, null, !slideAnimation, ctx) == FurnitureMovementError.NONE) {
                     this.itemCooldowns.add(item);
-                    if(slideAnimation) {
-                        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
-                    }
                 }
             }
         }
@@ -352,27 +352,32 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
      * @return direction
      */
     private RoomUserRotation getMovementDirection() {
-        RoomUserRotation movemementDirection = RoomUserRotation.NORTH;
-        if (this.direction == 1) {
-            movemementDirection = RoomUserRotation.values()[Emulator.getRandom().nextInt(RoomUserRotation.values().length / 2) * 2];
-        } else if (this.direction == 2) {
-            if (Emulator.getRandom().nextInt(2) == 1) {
-                movemementDirection = RoomUserRotation.EAST;
-            } else {
-                movemementDirection = RoomUserRotation.WEST;
-            }
-        } else if (this.direction == 3) {
-            if (Emulator.getRandom().nextInt(2) != 1) {
-                movemementDirection = RoomUserRotation.SOUTH;
-            }
-        } else if (this.direction == 4) {
-            movemementDirection = RoomUserRotation.SOUTH;
-        } else if (this.direction == 5) {
-            movemementDirection = RoomUserRotation.EAST;
-        } else if (this.direction == 7) {
-            movemementDirection = RoomUserRotation.WEST;
+        switch (this.direction) {
+            case 1:
+                return RoomUserRotation.values()[Emulator.getRandom().nextInt(RoomUserRotation.values().length / 2) * 2];
+            case 2:
+                return Emulator.getRandom().nextInt(2) == 1 ? RoomUserRotation.EAST : RoomUserRotation.WEST;
+            case 3:
+                return Emulator.getRandom().nextInt(2) == 1 ? RoomUserRotation.NORTH : RoomUserRotation.SOUTH;
+            case 4:
+                return RoomUserRotation.SOUTH;
+            case 5:
+                return RoomUserRotation.EAST;
+            case 6:
+                return RoomUserRotation.NORTH;
+            case 7:
+                return RoomUserRotation.WEST;
+            case 8:
+                return RoomUserRotation.NORTH_EAST;
+            case 9:
+                return RoomUserRotation.SOUTH_EAST;
+            case 10:
+                return RoomUserRotation.SOUTH_WEST;
+            case 11:
+                return RoomUserRotation.NORTH_WEST;
+            default:
+                return RoomUserRotation.NORTH;
         }
-        return movemementDirection;
     }
 
     @Override

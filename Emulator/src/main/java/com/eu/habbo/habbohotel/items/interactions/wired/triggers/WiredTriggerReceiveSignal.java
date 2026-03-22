@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
@@ -11,6 +12,8 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTriggerSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveException;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
@@ -18,6 +21,7 @@ import gnu.trove.set.hash.THashSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -25,11 +29,13 @@ import java.util.stream.Collectors;
 public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
     public static final WiredTriggerType type = WiredTriggerType.RECEIVE_SIGNAL;
 
-    private static final String ANTENNA_INTERACTION = "antenna";
     private static final long ACTIVATION_PULSE_MS = 300L;
+    private static final String ANTENNA_INTERACTION = "antenna";
+    private static final String REQUIRE_ANTENNA_ERROR = "Puoi selezionare solo furni antenna.";
 
     private int channel = 0; // signal channel (0-based)
     private THashSet<HabboItem> items;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private final AtomicLong activationToken = new AtomicLong();
 
     public WiredTriggerReceiveSignal(ResultSet set, Item baseItem) throws SQLException {
@@ -46,15 +52,16 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
         if (event.getType() != WiredEvent.Type.SIGNAL_RECEIVED) return false;
 
-        if (!this.items.isEmpty()) {
-            int signalChannel = event.getSignalChannel();
-            for (HabboItem antenna : this.items) {
-                if (antenna != null && antenna.getId() == signalChannel) return true;
-            }
-            return false;
+        List<HabboItem> resolvedAntennas = WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, this.items).stream()
+                .filter(this::isAntennaItem)
+                .collect(Collectors.toList());
+
+        if (!resolvedAntennas.isEmpty()) {
+            return resolvedAntennas.stream()
+                    .anyMatch(item -> item != null && item.getId() == event.getSignalChannel());
         }
 
-        return event.getSignalChannel() == this.channel;
+        return this.channel > 0 && event.getSignalChannel() == this.channel;
     }
 
     public int getChannel() {
@@ -82,13 +89,7 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
         int senderCount = 0;
         try {
             if (room != null && room.getRoomSpecialTypes() != null) {
-                if (!this.items.isEmpty()) {
-                    for (HabboItem item : this.items) {
-                        senderCount += room.getRoomSpecialTypes().countSendersTargetingReceiver(item.getId());
-                    }
-                } else {
-                    senderCount = room.getRoomSpecialTypes().countSendersTargetingReceiver(this.getId());
-                }
+                senderCount = this.getSenderCount(room);
             }
         } catch (Exception e) {
         }
@@ -112,10 +113,11 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(3);
+        message.appendInt(4);
         message.appendInt(channel);
         message.appendInt(senderCount);
         message.appendInt(RoomSpecialTypes.MAX_SENDERS_PER_RECEIVER);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -124,20 +126,37 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
 
     @Override
     public boolean saveData(WiredSettings settings) {
+        return this.saveData(settings, null);
+    }
+
+    @Override
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
         this.items.clear();
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
         int count = settings.getFurniIds().length;
 
-        for (int i = 0; i < count; i++) {
-            HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
-            if (item == null) continue;
-            if (!isAntennaItem(item)) throw new WiredTriggerSaveException("wiredfurni.error.require_antenna_furni");
-            this.items.add(item);
-        }
-
         int[] params = settings.getIntParams();
         this.channel = params.length > 0 ? params[0] : 0;
+        this.furniSource = (params.length > 1)
+                ? this.normalizeFurniSource(params[params.length - 1])
+                : WiredSourceUtil.SOURCE_SELECTED;
+
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED && room != null) {
+            for (int i = 0; i < count; i++) {
+                HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
+                if (item == null) continue;
+                if (!this.isAntennaItem(item)) throw new WiredTriggerSaveException(REQUIRE_ANTENNA_ERROR);
+
+                this.items.add(item);
+            }
+        }
+
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED && !this.items.isEmpty()) {
+            HabboItem firstItem = this.items.iterator().next();
+            this.channel = (firstItem != null) ? firstItem.getId() : this.channel;
+        }
+
         return true;
     }
 
@@ -174,6 +193,7 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
                 channel,
+                furniSource,
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -182,14 +202,23 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         this.items = new THashSet<>();
         String wiredData = set.getString("wired_data");
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.channel = data.channel;
+            this.furniSource = this.normalizeFurniSource(data.furniSource);
             if (data.itemIds != null) {
                 for (Integer id : data.itemIds) {
                     HabboItem item = room.getHabboItem(id);
                     if (item != null) this.items.add(item);
                 }
+            }
+
+            if (this.furniSource != WiredSourceUtil.SOURCE_SELECTOR) this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+            if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED && !this.items.isEmpty() && this.channel <= 0) {
+                HabboItem firstItem = this.items.iterator().next();
+                if (firstItem != null) this.channel = firstItem.getId();
             }
         }
     }
@@ -198,26 +227,63 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
     public void onPickUp() {
         this.channel = 0;
         this.items.clear();
-    }
-
-    private boolean isAntennaItem(HabboItem item) {
-        if (item == null || item.getBaseItem() == null || item.getBaseItem().getInteractionType() == null) return false;
-        String interaction = item.getBaseItem().getInteractionType().getName();
-        if (interaction == null) return false;
-
-        String normalized = interaction.toLowerCase();
-        return normalized.equals(ANTENNA_INTERACTION);
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     static class JsonData {
         int channel;
+        int furniSource;
         List<Integer> itemIds;
 
         public JsonData() {}
 
-        public JsonData(int channel, List<Integer> itemIds) {
+        public JsonData(int channel, int furniSource, List<Integer> itemIds) {
             this.channel = channel;
+            this.furniSource = furniSource;
             this.itemIds = itemIds;
         }
+    }
+
+    private int normalizeFurniSource(int value) {
+        if (value == WiredSourceUtil.SOURCE_SELECTED || value == WiredSourceUtil.SOURCE_SELECTOR) {
+            return value;
+        }
+
+        return WiredSourceUtil.SOURCE_SELECTED;
+    }
+
+    private boolean isAntennaItem(HabboItem item) {
+        if (item == null || item.getBaseItem() == null || item.getBaseItem().getInteractionType() == null) {
+            return false;
+        }
+
+        String interaction = item.getBaseItem().getInteractionType().getName();
+        return interaction != null && ANTENNA_INTERACTION.equalsIgnoreCase(interaction);
+    }
+
+    private int getSenderCount(Room room) {
+        if (room == null || room.getRoomSpecialTypes() == null) {
+            return 0;
+        }
+
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED && !this.items.isEmpty()) {
+            List<Integer> antennaIds = new ArrayList<>();
+
+            for (HabboItem item : this.items) {
+                if (this.isAntennaItem(item)) {
+                    antennaIds.add(item.getId());
+                }
+            }
+
+            if (!antennaIds.isEmpty()) {
+                return room.getRoomSpecialTypes().countSendersTargetingAnyReceiver(antennaIds);
+            }
+        }
+
+        if (this.channel > 0) {
+            return room.getRoomSpecialTypes().countSendersTargetingReceiver(this.channel);
+        }
+
+        return 0;
     }
 }

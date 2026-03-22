@@ -294,7 +294,10 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                 }
             }
 
-            if ((this.getBaseItem().getStateCount() > 1 && !(this instanceof InteractionDice)) || Arrays.asList(HabboItem.TOGGLING_INTERACTIONS).contains(this.getClass()) || (objects != null && objects.length == 1 && objects[0].equals("TOGGLE_OVERRIDE"))) {
+            boolean isTogglingInteraction = Arrays.stream(HabboItem.TOGGLING_INTERACTIONS)
+                    .anyMatch(type -> type.isAssignableFrom(this.getClass()));
+
+            if ((this.getBaseItem().getStateCount() > 1 && !(this instanceof InteractionDice)) || isTogglingInteraction || (objects != null && objects.length == 1 && objects[0].equals("TOGGLE_OVERRIDE"))) {
                 WiredManager.triggerFurniStateChanged(room, client.getHabbo().getRoomUnit(), this);
             }
         }

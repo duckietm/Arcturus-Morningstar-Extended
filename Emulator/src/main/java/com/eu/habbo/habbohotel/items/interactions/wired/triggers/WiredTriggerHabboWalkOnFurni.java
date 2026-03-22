@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.triggers;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
@@ -10,6 +11,8 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
 import com.eu.habbo.habbohotel.wired.core.WiredEvent;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTriggerSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import gnu.trove.set.hash.THashSet;
 
@@ -21,7 +24,8 @@ import java.util.stream.Collectors;
 public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     public static final WiredTriggerType type = WiredTriggerType.WALKS_ON_FURNI;
 
-    private THashSet<HabboItem> items;
+    private final THashSet<HabboItem> items;
+    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredTriggerHabboWalkOnFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -36,24 +40,11 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
         HabboItem sourceItem = event.getSourceItem().orElse(null);
-        if (sourceItem == null) {
-            return false;
-        }
-
-        if (this.items.contains(sourceItem)) {
-            return true;
-        }
-
         Room room = event.getRoom();
-        if (room != null) {
-            for (HabboItem item : room.getItemsAt(sourceItem.getX(), sourceItem.getY())) {
-                if (this.items.contains(item)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return WiredTriggerSourceUtil.containsItemOrTile(
+                room,
+                WiredTriggerSourceUtil.resolveItems(this, event, this.furniSource, this.items),
+                sourceItem);
     }
 
     @Deprecated
@@ -93,7 +84,8 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(0);
+        message.appendInt(1);
+        message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(0);
@@ -102,12 +94,28 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
 
     @Override
     public boolean saveData(WiredSettings settings) {
+        return this.saveData(settings, null);
+    }
+
+    @Override
+    public boolean saveData(WiredSettings settings, GameClient gameClient) {
         this.items.clear();
+        this.furniSource = (settings.getIntParams().length > 0)
+                ? this.normalizeFurniSource(settings.getIntParams()[0])
+                : ((settings.getFurniIds().length > 0) ? WiredSourceUtil.SOURCE_SELECTED : WiredSourceUtil.SOURCE_TRIGGER);
+
+        if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
+            return true;
+        }
 
         int count = settings.getFurniIds().length;
+        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (room == null) {
+            return false;
+        }
 
         for (int i = 0; i < count; i++) {
-            HabboItem item = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(settings.getFurniIds()[i]);
+            HabboItem item = room.getHabboItem(settings.getFurniIds()[i]);
             if (item != null) {
                 this.items.add(item);
             }
@@ -119,6 +127,7 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(new JsonData(
+            this.furniSource,
             this.items.stream().map(HabboItem::getId).collect(Collectors.toList())
         ));
     }
@@ -126,10 +135,12 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            this.furniSource = this.normalizeFurniSource(data.furniSource);
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
                 if (item != null) {
@@ -155,12 +166,15 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
                     }
                 }
             }
+
+            this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
 
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     @Override
@@ -169,10 +183,20 @@ public class WiredTriggerHabboWalkOnFurni extends InteractionWiredTrigger {
     }
 
     static class JsonData {
+        int furniSource;
         List<Integer> itemIds;
 
-        public JsonData(List<Integer> itemIds) {
+        public JsonData(int furniSource, List<Integer> itemIds) {
+            this.furniSource = furniSource;
             this.itemIds = itemIds;
         }
+    }
+
+    private int normalizeFurniSource(int value) {
+        if (value == WiredSourceUtil.SOURCE_SELECTED || value == WiredSourceUtil.SOURCE_SELECTOR) {
+            return value;
+        }
+
+        return WiredSourceUtil.SOURCE_TRIGGER;
     }
 }
