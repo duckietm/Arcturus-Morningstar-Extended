@@ -556,6 +556,9 @@ public class Outgoing {
     public static final int SnowStormUserRematchedComposer = 5029;
 
 
+    // UI Settings
+    public static final int UiSettingsDataComposer = 10047;
+
     // Custom Prefixes
     public static final int UserPrefixesComposer = 7001;
     public static final int PrefixReceivedComposer = 7002;

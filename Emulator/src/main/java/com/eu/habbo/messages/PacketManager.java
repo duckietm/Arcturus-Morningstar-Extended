@@ -28,6 +28,7 @@ import com.eu.habbo.messages.incoming.guardians.GuardianNoUpdatesWantedEvent;
 import com.eu.habbo.messages.incoming.guardians.GuardianVoteEvent;
 import com.eu.habbo.messages.incoming.guides.*;
 import com.eu.habbo.messages.incoming.guilds.*;
+import com.eu.habbo.messages.incoming.uisettings.*;
 import com.eu.habbo.messages.incoming.guilds.forums.*;
 import com.eu.habbo.messages.incoming.handshake.*;
 import com.eu.habbo.messages.incoming.helper.MySanctionStatusEvent;
@@ -115,6 +116,7 @@ public class PacketManager {
         this.registerCrafting();
         this.registerCamera();
         this.registerGameCenter();
+        this.registerUiSettings();
     }
 
     public PacketNames getNames() {
@@ -655,5 +657,11 @@ public class PacketManager {
         this.registerHandler(Incoming.GameCenterLeaveGameEvent, GameCenterLeaveGameEvent.class);
         this.registerHandler(Incoming.GameCenterEvent, GameCenterEvent.class);
         this.registerHandler(Incoming.GameCenterRequestGameStatusEvent, GameCenterRequestGameStatusEvent.class);
+    }
+
+    // UI Settings
+    void registerUiSettings() throws Exception {
+        this.registerHandler(Incoming.UiSettingsSaveEvent, UiSettingsSaveEvent.class);
+        this.registerHandler(Incoming.UiSettingsLoadEvent, UiSettingsLoadEvent.class);
     }
 }
