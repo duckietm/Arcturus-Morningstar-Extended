@@ -18,6 +18,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMovementPhysics;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
@@ -2440,6 +2441,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     return this.itemManager.furnitureFitsAt(tile, item, rotation, checkForUnits);
   }
 
+  public FurnitureMovementError furnitureFitsAtWithPhysics(RoomTile tile, HabboItem item, int rotation,
+      boolean checkForUnits, WiredMovementPhysics physics) {
+    return this.itemManager.furnitureFitsAtWithPhysics(tile, item, rotation, checkForUnits, physics);
+  }
+
   public FurnitureMovementError placeFloorFurniAt(HabboItem item, RoomTile tile, int rotation,
       Habbo owner) {
     return this.itemManager.placeFloorFurniAt(item, tile, rotation, owner);
@@ -2474,6 +2480,16 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
   public FurnitureMovementError moveFurniTo(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor, boolean sendUpdates, boolean checkForUnits) {
     return this.itemManager.moveFurniTo(item, tile, rotation, z, actor, sendUpdates, checkForUnits);
+  }
+
+  public FurnitureMovementError moveFurniToWithPhysics(HabboItem item, RoomTile tile, int rotation,
+      Habbo actor, boolean sendUpdates, boolean checkForUnits, WiredMovementPhysics physics) {
+    return this.itemManager.moveFurniToWithPhysics(item, tile, rotation, actor, sendUpdates, checkForUnits, physics);
+  }
+
+  public FurnitureMovementError moveFurniToWithPhysics(HabboItem item, RoomTile tile, int rotation, double z,
+      Habbo actor, boolean sendUpdates, boolean checkForUnits, WiredMovementPhysics physics) {
+    return this.itemManager.moveFurniToWithPhysics(item, tile, rotation, z, actor, sendUpdates, checkForUnits, physics);
   }
 
   public FurnitureMovementError slideFurniTo(HabboItem item, RoomTile tile, int rotation) {

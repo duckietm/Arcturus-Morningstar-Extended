@@ -41,6 +41,7 @@ public class Outgoing {
     public final static int HotelViewComposer = 122;
     public final static int UpdateFriendComposer = 2800;
     public final static int FloorItemUpdateComposer = 3776;
+    public final static int WiredMovementsComposer = 3999;
     public final static int RoomAccessDeniedComposer = 878;
     public final static int GuildFurniWidgetComposer = 3293;
     public final static int GiftConfigurationComposer = 2234;

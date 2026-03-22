@@ -197,7 +197,7 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         }
 
         List<IWiredCondition> conditions = new ArrayList<>(rawConditions.size());
-        for (InteractionWiredCondition condition : rawConditions) {
+        for (InteractionWiredCondition condition : WiredExecutionOrderUtil.sort(rawConditions)) {
             conditions.add(condition);
         }
         return conditions;
@@ -212,7 +212,7 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         }
 
         List<IWiredEffect> effects = new ArrayList<>(rawEffects.size());
-        for (InteractionWiredEffect effect : rawEffects) {
+        for (InteractionWiredEffect effect : WiredExecutionOrderUtil.sort(rawEffects)) {
             effects.add(effect);
         }
         return effects;

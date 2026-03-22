@@ -56,6 +56,8 @@ public final class Emulator {
 
     public static String build = "";
     public static long buildTimestamp = -1L;
+
+
     public static boolean isReady = false;
     public static boolean isShuttingDown = false;
     public static boolean stopped = false;

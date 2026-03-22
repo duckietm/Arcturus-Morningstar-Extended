@@ -8,7 +8,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,19 +39,15 @@ public class WiredEffectFurniToUser extends WiredEffectUserFurniBase {
             return;
         }
 
-        RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
-        double oldZ = item.getZ();
-
-        FurnitureMovementError error = room.moveFurniTo(item, targetTile, item.getRotation(), null, false, false);
+        FurnitureMovementError error = WiredMoveCarryHelper.moveFurni(room, this, item, targetTile, item.getRotation(), null, false, ctx);
         if (error == FurnitureMovementError.NONE) {
-            this.sendRollerAnimation(room, item, oldLocation, oldZ, targetTile);
             return;
         }
 
         if (item.getBaseItem().getStateCount() > 0) {
-            error = room.moveFurniTo(item, targetTile, item.getRotation(), item.getZ(), null, false, false);
+            error = WiredMoveCarryHelper.moveFurni(room, this, item, targetTile, item.getRotation(), item.getZ(), null, false, ctx);
             if (error == FurnitureMovementError.NONE) {
-                this.sendRollerAnimation(room, item, oldLocation, oldZ, targetTile);
+                return;
             }
         }
     }
@@ -67,11 +63,4 @@ public class WiredEffectFurniToUser extends WiredEffectUserFurniBase {
         return type;
     }
 
-    private void sendRollerAnimation(Room room, HabboItem item, RoomTile oldLocation, double oldZ, RoomTile newLocation) {
-        if (room == null || item == null || oldLocation == null || newLocation == null) {
-            return;
-        }
-
-        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newLocation, item.getZ(), 0, room).compose());
-    }
 }

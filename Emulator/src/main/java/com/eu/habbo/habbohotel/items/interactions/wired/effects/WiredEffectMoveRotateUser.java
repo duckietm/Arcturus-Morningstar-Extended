@@ -14,10 +14,11 @@ import com.eu.habbo.habbohotel.rooms.RoomUserRotation;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.sql.ResultSet;
@@ -53,21 +54,26 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
             }
 
             boolean hasRotation = this.rotationDirection >= 0;
+            RoomUserRotation targetBodyRotation = hasRotation ? this.getTargetRotation(roomUnit) : roomUnit.getBodyRotation();
+            RoomUserRotation targetHeadRotation = hasRotation ? targetBodyRotation : roomUnit.getHeadRotation();
             RoomTile targetTile = (this.movementDirection >= 0) ? this.getTargetTile(room, roomUnit, this.movementDirection) : null;
             boolean canMove = this.canMoveTo(room, roomUnit, targetTile);
-
-            if (hasRotation) {
-                roomUnit.setRotation(this.getTargetRotation(roomUnit));
-            }
+            boolean noAnimation = WiredMoveCarryHelper.hasNoAnimationExtra(room, this);
 
             if (canMove) {
                 double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
-                room.teleportRoomUnitToLocation(roomUnit, targetTile.x, targetTile.y, targetZ);
+                int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
+                if (!WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, targetBodyRotation, targetHeadRotation,
+                        animationDuration, noAnimation)) {
+                    if (hasRotation) {
+                        WiredUserMovementHelper.updateUserDirection(room, roomUnit, targetBodyRotation, targetHeadRotation);
+                    }
+                }
                 continue;
             }
 
             if (hasRotation) {
-                room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
+                WiredUserMovementHelper.updateUserDirection(room, roomUnit, targetBodyRotation, targetHeadRotation);
             }
         }
     }
@@ -209,9 +215,6 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
 
     private RoomTile getTargetTile(Room room, RoomUnit roomUnit, int direction) {
         RoomTile currentTile = roomUnit.getCurrentLocation();
-        if (currentTile == null) {
-            currentTile = room.getLayout().getTile(roomUnit.getX(), roomUnit.getY());
-        }
 
         if (currentTile == null) {
             return null;

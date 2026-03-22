@@ -1,5 +1,7 @@
 package com.eu.habbo.messages.outgoing.rooms.users;
 
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -8,7 +10,9 @@ import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import gnu.trove.set.hash.THashSet;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class RoomUserStatusComposer extends MessageComposer {
@@ -38,8 +42,20 @@ public class RoomUserStatusComposer extends MessageComposer {
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.RoomUserStatusComposer);
         if (this.roomUnits != null) {
-            this.response.appendInt(this.roomUnits.size());
+            List<RoomUnit> roomUnits = new ArrayList<>();
+
             for (RoomUnit roomUnit : this.roomUnits) {
+                if (roomUnit == null
+                        || WiredMoveCarryHelper.shouldSuppressStatusComposer(roomUnit)
+                        || WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit)) {
+                    continue;
+                }
+
+                roomUnits.add(roomUnit);
+            }
+
+            this.response.appendInt(roomUnits.size());
+            for (RoomUnit roomUnit : roomUnits) {
                 this.response.appendInt(roomUnit.getId());
                 this.response.appendInt(roomUnit.getPreviousLocation().x);
                 this.response.appendInt(roomUnit.getPreviousLocation().y);
@@ -59,8 +75,21 @@ public class RoomUserStatusComposer extends MessageComposer {
             }
         } else {
             synchronized (this.habbos) {
-                this.response.appendInt(this.habbos.size());
+                List<Habbo> habbos = new ArrayList<>();
+
                 for (Habbo habbo : this.habbos) {
+                    if (habbo == null
+                            || habbo.getRoomUnit() == null
+                            || WiredMoveCarryHelper.shouldSuppressStatusComposer(habbo.getRoomUnit())
+                            || WiredUserMovementHelper.shouldSuppressStatusComposer(habbo.getRoomUnit())) {
+                        continue;
+                    }
+
+                    habbos.add(habbo);
+                }
+
+                this.response.appendInt(habbos.size());
+                for (Habbo habbo : habbos) {
                     this.response.appendInt(habbo.getRoomUnit().getId());
                     this.response.appendInt(habbo.getRoomUnit().getPreviousLocation().x);
                     this.response.appendInt(habbo.getRoomUnit().getPreviousLocation().y);

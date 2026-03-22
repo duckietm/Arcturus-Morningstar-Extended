@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
@@ -73,7 +74,7 @@ public class WiredEffectSetAltitude extends InteractionWiredEffect {
             }
 
             double nextAltitude = this.computeAltitude(item.getZ());
-            room.moveFurniTo(item, tile, item.getRotation(), nextAltitude, null, true, false);
+            WiredMoveCarryHelper.moveFurni(room, this, item, tile, item.getRotation(), nextAltitude, null, true, ctx);
         }
     }
 
