@@ -31,6 +31,7 @@ public class Permission {
     public static String ACC_NOMUTE = "acc_nomute";
     public static String ACC_GUILD_ADMIN = "acc_guild_admin";
     public static String ACC_CATALOG_IDS = "acc_catalog_ids";
+    public static String ACC_CATALOGFURNI = "acc_catalogfurni";
     public static String ACC_MODTOOL_TICKET_Q = "acc_modtool_ticket_q";
     public static String ACC_MODTOOL_USER_LOGS = "acc_modtool_user_logs";
     public static String ACC_MODTOOL_USER_ALERT = "acc_modtool_user_alert";
