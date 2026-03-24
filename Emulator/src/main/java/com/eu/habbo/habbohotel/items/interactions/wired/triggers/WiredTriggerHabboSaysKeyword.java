@@ -36,7 +36,7 @@ public class WiredTriggerHabboSaysKeyword extends InteractionWiredTrigger {
 
     @Override
     public boolean matches(HabboItem triggerItem, WiredEvent event) {
-        if (this.key.length() <= 0) {
+        if ((this.matchMode != MATCH_ALL_WORDS) && this.key.length() <= 0) {
             return false;
         }
 
@@ -127,7 +127,7 @@ public class WiredTriggerHabboSaysKeyword extends InteractionWiredTrigger {
         this.matchMode = (params.length > 0) ? this.normalizeMatchMode(params[0]) : MATCH_CONTAINS;
         this.hideMessage = (params.length > 1) && (params[1] == 1);
         this.ownerOnly = (params.length > 2) && (params[2] == 1);
-        this.key = settings.getStringParam();
+        this.key = (this.matchMode == MATCH_ALL_WORDS) ? "" : settings.getStringParam();
 
         return true;
     }
@@ -149,13 +149,7 @@ public class WiredTriggerHabboSaysKeyword extends InteractionWiredTrigger {
             case MATCH_EXACT:
                 return normalizedText.equals(normalizedKey);
             case MATCH_ALL_WORDS:
-                String[] requiredParts = normalizedKey.split("\\s+");
-                for (String part : requiredParts) {
-                    if (!part.isEmpty() && !normalizedText.contains(part)) {
-                        return false;
-                    }
-                }
-                return true;
+                return !normalizedText.isEmpty();
             case MATCH_CONTAINS:
             default:
                 return normalizedText.contains(normalizedKey);

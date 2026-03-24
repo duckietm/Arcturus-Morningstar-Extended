@@ -45,17 +45,7 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
             return false;
         }
 
-        switch (this.furniSource) {
-            case WiredSourceUtil.SOURCE_SELECTED:
-                return this.matchesSourceItem(this.items, sourceItem);
-            case WiredSourceUtil.SOURCE_SELECTOR:
-                return this.matchesSourceItem(
-                        WiredTriggerSourceUtil.resolveItems(this, event, WiredSourceUtil.SOURCE_SELECTOR, this.items),
-                        sourceItem);
-            case WiredSourceUtil.SOURCE_TRIGGER:
-            default:
-                return true;
-        }
+        return this.matchesSourceItem(this.resolveCandidateItems(triggerItem, event), sourceItem);
     }
 
     @Deprecated
@@ -223,6 +213,18 @@ public class WiredTriggerHabboClicksFurni extends InteractionWiredTrigger {
         }
 
         return WiredSourceUtil.SOURCE_TRIGGER;
+    }
+
+    private Iterable<HabboItem> resolveCandidateItems(HabboItem triggerItem, WiredEvent event) {
+        switch (this.furniSource) {
+            case WiredSourceUtil.SOURCE_SELECTED:
+                return this.items;
+            case WiredSourceUtil.SOURCE_SELECTOR:
+                return WiredTriggerSourceUtil.resolveItems(this, event, WiredSourceUtil.SOURCE_SELECTOR, this.items);
+            case WiredSourceUtil.SOURCE_TRIGGER:
+            default:
+                return (triggerItem != null) ? java.util.Collections.singletonList(triggerItem) : java.util.Collections.emptyList();
+        }
     }
 
     private boolean matchesSourceItem(Iterable<HabboItem> candidateItems, HabboItem sourceItem) {
