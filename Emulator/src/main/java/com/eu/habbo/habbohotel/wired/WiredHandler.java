@@ -189,20 +189,22 @@ public class WiredHandler {
 
             trigger.setCooldown(millis);
 
-            boolean hasExtraRandom = room.getRoomSpecialTypes().hasExtraType(trigger.getX(), trigger.getY(), WiredExtraRandom.class);
             boolean hasExtraUnseen = room.getRoomSpecialTypes().hasExtraType(trigger.getX(), trigger.getY(), WiredExtraUnseen.class);
             THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY());
+            WiredExtraRandom randomExtra = null;
 
             for (InteractionWiredExtra extra : extras) {
                 extra.activateBox(room, roomUnit, millis);
+                if (randomExtra == null && extra instanceof WiredExtraRandom) {
+                    randomExtra = (WiredExtraRandom) extra;
+                }
             }
 
             List<InteractionWiredEffect> effectList = new ArrayList<>(effects);
 
-            if (hasExtraRandom || hasExtraUnseen) {
+            if (randomExtra != null || hasExtraUnseen) {
                 Collections.shuffle(effectList);
             }
-
 
             if (hasExtraUnseen) {
                 for (InteractionWiredExtra extra : room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY())) {
@@ -213,12 +215,11 @@ public class WiredHandler {
                         break;
                     }
                 }
+            } else if (randomExtra != null) {
+                effectsToExecute.addAll(randomExtra.selectEffects(effectList));
             } else {
                 for (final InteractionWiredEffect effect : effectList) {
-                    boolean executed = effectsToExecute.add(effect); //triggerEffect(effect, roomUnit, room, stuff, millis);
-                    if (hasExtraRandom && executed) {
-                        break;
-                    }
+                    effectsToExecute.add(effect); //triggerEffect(effect, roomUnit, room, stuff, millis);
                 }
             }
 

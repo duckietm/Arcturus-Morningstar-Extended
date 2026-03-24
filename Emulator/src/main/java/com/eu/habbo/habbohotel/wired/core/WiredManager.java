@@ -36,8 +36,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 
 /**
  * Manager class for the new wired engine system.
@@ -83,7 +81,6 @@ public final class WiredManager {
     private static final boolean DEFAULT_ENABLED = false;
     private static final boolean DEFAULT_EXCLUSIVE = false;
     private static final int DEFAULT_MAX_STEPS = 100;
-    private static final long FURNI_CLICK_TRIGGER_DELAY_MS = 400L;
 
     /** The singleton engine instance */
     private static volatile WiredEngine engine;
@@ -93,8 +90,6 @@ public final class WiredManager {
     
     /** Whether the engine is initialized */
     private static volatile boolean initialized = false;
-    private static final ConcurrentHashMap<String, ScheduledFuture<?>> pendingFurniClickTriggers = new ConcurrentHashMap<>();
-
     private WiredManager() {
         // Static utility class
     }
@@ -167,13 +162,6 @@ public final class WiredManager {
         if (engine != null) {
             engine.clearUnseenCache();
         }
-
-        pendingFurniClickTriggers.values().forEach(future -> {
-            if (future != null) {
-                future.cancel(false);
-            }
-        });
-        pendingFurniClickTriggers.clear();
 
         initialized = false;
         LOGGER.info("Wired Manager shutdown complete");
@@ -267,34 +255,11 @@ public final class WiredManager {
             return;
         }
 
-        String clickKey = getPendingFurniClickKey(room, user, item);
-
-        cancelPendingUserClicksFurni(room, user, item);
-
-        ScheduledFuture<?> future = Emulator.getThreading().run(() -> {
-            pendingFurniClickTriggers.remove(clickKey);
-            triggerUserClicksFurni(room, user, item);
-        }, FURNI_CLICK_TRIGGER_DELAY_MS);
-
-        if (future != null) {
-            pendingFurniClickTriggers.put(clickKey, future);
-        }
+        triggerUserClicksFurni(room, user, item);
     }
 
     public static void cancelPendingUserClicksFurni(Room room, RoomUnit user, HabboItem item) {
-        if (room == null || user == null || item == null) {
-            return;
-        }
-
-        ScheduledFuture<?> future = pendingFurniClickTriggers.remove(getPendingFurniClickKey(room, user, item));
-
-        if (future != null) {
-            future.cancel(false);
-        }
-    }
-
-    private static String getPendingFurniClickKey(Room room, RoomUnit user, HabboItem item) {
-        return room.getId() + ":" + user.getId() + ":" + item.getId();
+        // Click furni triggers are now executed immediately.
     }
     /**
      * Trigger when a user clicks invisible click tile furniture.
