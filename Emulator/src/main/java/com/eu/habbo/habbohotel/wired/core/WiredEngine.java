@@ -6,6 +6,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboSaysKeyword;
@@ -392,22 +394,38 @@ public final class WiredEngine {
         List<IWiredEffect> toExecute;
 
         if (stack.useRandom()) {
-            // Random mode: pick one random regular effect
+            WiredExtraRandom randomExtra = getRandomExtra(ctx.room(), stack);
             if (regulars.isEmpty()) {
                 toExecute = new ArrayList<>();
+            } else if (randomExtra != null) {
+                toExecute = randomExtra.selectWiredEffects(regulars);
+                debug(ctx.room(), "Random mode: selected {} effect(s), skip window {}", toExecute.size(), randomExtra.getSkipExecutions());
             } else {
                 int randomIndex = new Random().nextInt(regulars.size());
                 toExecute = Collections.singletonList(regulars.get(randomIndex));
                 debug(ctx.room(), "Random mode: selected effect {}/{}", randomIndex + 1, regulars.size());
             }
         } else if (stack.useUnseen()) {
-            // Unseen mode: round-robin among regular effects
+            // Unseen mode: execute in stable order with memory
             if (regulars.isEmpty()) {
                 toExecute = new ArrayList<>();
             } else {
-                int index = getNextUnseenIndex(stack, regulars.size());
-                toExecute = Collections.singletonList(regulars.get(index));
-                debug(ctx.room(), "Unseen mode: selected effect {}/{}", index + 1, regulars.size());
+                WiredExtraUnseen unseenExtra = getUnseenExtra(ctx.room(), stack);
+
+                if (unseenExtra != null) {
+                    toExecute = unseenExtra.selectWiredEffects(regulars);
+
+                    if (!toExecute.isEmpty()) {
+                        int selectedIndex = regulars.indexOf(toExecute.get(0));
+                        debug(ctx.room(), "Unseen mode: selected effect {}/{}", selectedIndex + 1, regulars.size());
+                    } else {
+                        debug(ctx.room(), "Unseen mode: no eligible effect found");
+                    }
+                } else {
+                    int index = getNextUnseenIndex(stack, regulars.size());
+                    toExecute = Collections.singletonList(regulars.get(index));
+                    debug(ctx.room(), "Unseen mode fallback: selected effect {}/{}", index + 1, regulars.size());
+                }
             }
         } else {
             // Normal mode: regular effects in random order
@@ -682,6 +700,40 @@ public final class WiredEngine {
                 extra.activateBox(room, roomUnit, millis);
             }
         }
+    }
+
+    private WiredExtraRandom getRandomExtra(Room room, WiredStack stack) {
+        InteractionWiredExtra extra = getStackExtra(room, stack, WiredExtraRandom.class);
+
+        return (extra instanceof WiredExtraRandom) ? (WiredExtraRandom) extra : null;
+    }
+
+    private WiredExtraUnseen getUnseenExtra(Room room, WiredStack stack) {
+        InteractionWiredExtra extra = getStackExtra(room, stack, WiredExtraUnseen.class);
+
+        return (extra instanceof WiredExtraUnseen) ? (WiredExtraUnseen) extra : null;
+    }
+
+    private <T extends InteractionWiredExtra> InteractionWiredExtra getStackExtra(Room room, WiredStack stack, Class<T> extraClass) {
+        if (room == null || stack == null || stack.triggerItem() == null || room.getRoomSpecialTypes() == null) {
+            return null;
+        }
+
+        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(
+                stack.triggerItem().getX(),
+                stack.triggerItem().getY());
+
+        if (extras == null || extras.isEmpty()) {
+            return null;
+        }
+
+        for (InteractionWiredExtra extra : extras) {
+            if (extraClass.isInstance(extra)) {
+                return extra;
+            }
+        }
+
+        return null;
     }
 
     /**

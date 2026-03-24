@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomTileState;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.rooms.RoomUserRotation;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
@@ -17,6 +18,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -29,6 +31,10 @@ import java.util.List;
 public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
     private static final int ROTATION_CLOCKWISE = 8;
     private static final int ROTATION_COUNTER_CLOCKWISE = 9;
+    private static final String CACHE_ACTIVE_UNTIL = "wired.move_rotate_user.active_until";
+    private static final String CACHE_WALK_IN_PLACE_UNTIL = "wired.move_rotate_user.walk_in_place_until";
+    private static final int WALK_IN_PLACE_DURATION_MS = 550;
+    private static final int ROTATION_ACTIVE_WINDOW_MS = 250;
 
     public static final WiredEffectType type = WiredEffectType.MOVE_ROTATE_USER;
 
@@ -59,10 +65,12 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
             RoomTile targetTile = (this.movementDirection >= 0) ? this.getTargetTile(room, roomUnit, this.movementDirection) : null;
             boolean canMove = this.canMoveTo(room, roomUnit, targetTile);
             boolean noAnimation = WiredMoveCarryHelper.hasNoAnimationExtra(room, this);
+            int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
+            int activeWindowMs = this.resolveActiveWindow(canMove, hasRotation, noAnimation, animationDuration);
 
             if (canMove) {
                 double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
-                int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
+                this.markActive(roomUnit, activeWindowMs);
                 if (!WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, targetBodyRotation, targetHeadRotation,
                         animationDuration, noAnimation)) {
                     if (hasRotation) {
@@ -73,6 +81,7 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
             }
 
             if (hasRotation) {
+                this.markActive(roomUnit, activeWindowMs);
                 WiredUserMovementHelper.updateUserDirection(room, roomUnit, targetBodyRotation, targetHeadRotation);
             }
         }
@@ -273,6 +282,105 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
         }
 
         return true;
+    }
+
+    private void markActive(RoomUnit roomUnit, int durationMs) {
+        if (roomUnit == null || durationMs <= 0) {
+            return;
+        }
+
+        long activeUntil = System.currentTimeMillis() + durationMs;
+        roomUnit.getCacheable().put(CACHE_ACTIVE_UNTIL, activeUntil);
+    }
+
+    private int resolveActiveWindow(boolean canMove, boolean hasRotation, boolean noAnimation, int animationDuration) {
+        if (noAnimation) {
+            return 0;
+        }
+
+        if (canMove) {
+            return Math.max(1, animationDuration);
+        }
+
+        if (hasRotation) {
+            return ROTATION_ACTIVE_WINDOW_MS;
+        }
+
+        return 0;
+    }
+
+    public static boolean handleWalkWhileActive(Room room, RoomUnit roomUnit, RoomTile targetTile) {
+        if (room == null || roomUnit == null || !isActive(roomUnit)) {
+            return false;
+        }
+
+        long walkInPlaceUntil = System.currentTimeMillis() + WALK_IN_PLACE_DURATION_MS;
+        roomUnit.getCacheable().put(CACHE_WALK_IN_PLACE_UNTIL, walkInPlaceUntil);
+        roomUnit.stopWalking();
+        roomUnit.removeStatus(RoomUnitStatus.MOVE);
+        roomUnit.setStatus(RoomUnitStatus.MOVE, roomUnit.getX() + "," + roomUnit.getY() + "," + roomUnit.getZ());
+        roomUnit.statusUpdate(false);
+        room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
+
+        Emulator.getThreading().run(() -> clearWalkInPlace(room, roomUnit, walkInPlaceUntil), WALK_IN_PLACE_DURATION_MS);
+        return true;
+    }
+
+    private static boolean isActive(RoomUnit roomUnit) {
+        Long activeUntil = getCachedTimestamp(roomUnit, CACHE_ACTIVE_UNTIL);
+        return activeUntil != null && activeUntil > System.currentTimeMillis();
+    }
+
+    private static boolean isWalkInPlaceActive(RoomUnit roomUnit) {
+        Long walkInPlaceUntil = getCachedTimestamp(roomUnit, CACHE_WALK_IN_PLACE_UNTIL);
+
+        if (walkInPlaceUntil == null) {
+            return false;
+        }
+
+        if (walkInPlaceUntil <= System.currentTimeMillis()) {
+            roomUnit.getCacheable().remove(CACHE_WALK_IN_PLACE_UNTIL);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static Long getCachedTimestamp(RoomUnit roomUnit, String key) {
+        if (roomUnit == null || key == null) {
+            return null;
+        }
+
+        Object value = roomUnit.getCacheable().get(key);
+
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        return null;
+    }
+
+    private static void clearWalkInPlace(Room room, RoomUnit roomUnit, long expectedUntil) {
+        if (room == null || roomUnit == null || !room.isLoaded()) {
+            return;
+        }
+
+        Long currentUntil = getCachedTimestamp(roomUnit, CACHE_WALK_IN_PLACE_UNTIL);
+        if (currentUntil == null || currentUntil.longValue() != expectedUntil) {
+            return;
+        }
+
+        roomUnit.getCacheable().remove(CACHE_WALK_IN_PLACE_UNTIL);
+
+        if (roomUnit.hasStatus(RoomUnitStatus.MOVE) && !roomUnit.isWalking()) {
+            roomUnit.removeStatus(RoomUnitStatus.MOVE);
+            roomUnit.statusUpdate(false);
+            room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
+        }
     }
 
     static class JsonData {

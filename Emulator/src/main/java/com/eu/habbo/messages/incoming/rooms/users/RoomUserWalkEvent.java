@@ -10,9 +10,12 @@ import com.eu.habbo.habbohotel.rooms.BedProfile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectMoveRotateUser;
 import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
@@ -109,8 +112,17 @@ public class RoomUserWalkEvent extends MessageHandler {
 
         // This is where we set the end location and begin finding a path
         if (tile.isWalkable() || room.canSitOrLayAt(tile.x, tile.y)) {
+          if (WiredEffectMoveRotateUser.handleWalkWhileActive(room, roomUnit, tile)) {
+            return;
+          }
+
           if (roomUnit.getMoveBlockingTask() != null) {
             roomUnit.getMoveBlockingTask().get();
+          }
+
+          if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit)) {
+            WiredUserMovementHelper.clearStatusComposerSuppression(roomUnit);
+            room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
           }
 
           roomUnit.setGoalLocation(tile);
