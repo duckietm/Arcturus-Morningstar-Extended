@@ -39,8 +39,8 @@ public final class Emulator {
     private static final String CLASS_PATH = (System.getProperty("java.class.path") != null ? System.getProperty("java.class.path") : "Unknown");
 
     public final static int MAJOR = 4;
-    public final static int MINOR = 0;
-    public final static int BUILD = 5;
+    public final static int MINOR = 1;
+    public final static int BUILD = 0;
     public final static String PREVIEW = "";
 
     public static final String version = "Arcturus Morningstar" + " " + MAJOR + "." + MINOR + "." + BUILD + " " + PREVIEW;
