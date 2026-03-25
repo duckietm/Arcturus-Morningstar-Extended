@@ -14,3 +14,4 @@ config.ini
 .DS_Store
 
 /Emulator/plugins
+/Emulator/.idea
