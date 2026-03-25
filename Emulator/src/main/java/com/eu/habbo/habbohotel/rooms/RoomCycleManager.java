@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.RoomAccessDeniedComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitIdleComposer;
@@ -123,7 +124,19 @@ public class RoomCycleManager {
 
                 // Send status updates
                 if (!updatedUnit.isEmpty()) {
-                    this.room.sendComposer(new RoomUserStatusComposer(updatedUnit, true).compose());
+                    ServerMessage statusComposer = new RoomUserStatusComposer(updatedUnit, true).compose();
+                    WiredMoveCarryHelper.beginMovementCollection();
+                    WiredMoveCarryHelper.processUserFollowers(this.room, updatedUnit);
+                    ServerMessage wiredMovementsComposer = WiredMoveCarryHelper.finishMovementCollection();
+
+                    if (wiredMovementsComposer != null) {
+                        ArrayList<ServerMessage> batchedMessages = new ArrayList<>(2);
+                        batchedMessages.add(statusComposer);
+                        batchedMessages.add(wiredMovementsComposer);
+                        this.room.sendComposers(batchedMessages);
+                    } else {
+                        this.room.sendComposer(statusComposer);
+                    }
                 }
 
                 // Cycle trax manager

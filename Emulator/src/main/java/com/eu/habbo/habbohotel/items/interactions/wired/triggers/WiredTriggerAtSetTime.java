@@ -155,12 +155,20 @@ public class WiredTriggerAtSetTime extends InteractionWiredTrigger implements Wi
         
         // Check if enough time has passed
         if (this.accumulatedTime >= this.executeTime) {
+            if (this.getRoomId() != 0 && room.isLoaded()) {
+                long currentTime = System.currentTimeMillis();
+                if (!WiredManager.isTriggerExecutionAllowed(room, this, currentTime)) {
+                    return;
+                }
+
+                this.hasFired = true;
+                this.accumulatedTime = 0;
+                WiredManager.triggerTimerTick(room, this);
+                return;
+            }
+
             this.hasFired = true;
             this.accumulatedTime = 0;
-            
-            if (this.getRoomId() != 0 && room.isLoaded()) {
-                WiredManager.triggerTimerTick(room, this);
-            }
         }
     }
 

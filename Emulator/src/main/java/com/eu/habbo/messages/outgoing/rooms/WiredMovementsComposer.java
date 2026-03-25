@@ -13,6 +13,10 @@ public class WiredMovementsComposer extends MessageComposer {
     public static final int TYPE_WALL_ITEM_MOVE = 2;
     public static final int TYPE_USER_DIRECTION = 3;
 
+    public static final int FURNI_ANCHOR_NONE = 0;
+    public static final int FURNI_ANCHOR_USER = 1;
+    public static final int FURNI_ANCHOR_FURNI = 2;
+
     public static final int USER_MOVEMENT_WALK = 0;
     public static final int USER_MOVEMENT_SLIDE = 1;
     public static final int DEFAULT_DURATION = 500;
@@ -37,11 +41,19 @@ public class WiredMovementsComposer extends MessageComposer {
     }
 
     public static MovementData furniMovement(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ) {
-        return furniMovement(id, fromX, fromY, toX, toY, fromZ, toZ, 0, DEFAULT_DURATION);
+        return furniMovement(id, fromX, fromY, toX, toY, fromZ, toZ, 0, DEFAULT_DURATION, 0, FURNI_ANCHOR_NONE, 0);
     }
 
     public static MovementData furniMovement(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int rotation, int duration) {
-        return new FurniMovementData(id, fromX, fromY, toX, toY, fromZ, toZ, rotation, duration);
+        return furniMovement(id, fromX, fromY, toX, toY, fromZ, toZ, rotation, duration, 0, FURNI_ANCHOR_NONE, 0);
+    }
+
+    public static MovementData furniMovement(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int rotation, int duration, int elapsed) {
+        return furniMovement(id, fromX, fromY, toX, toY, fromZ, toZ, rotation, duration, elapsed, FURNI_ANCHOR_NONE, 0);
+    }
+
+    public static MovementData furniMovement(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int rotation, int duration, int elapsed, int anchorType, int anchorId) {
+        return new FurniMovementData(id, fromX, fromY, toX, toY, fromZ, toZ, rotation, duration, elapsed, anchorType, anchorId);
     }
 
     public static MovementData userWalkMovement(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int bodyDirection, int headDirection, int duration) {
@@ -133,8 +145,11 @@ public class WiredMovementsComposer extends MessageComposer {
         private final int id;
         private final int rotation;
         private final int duration;
+        private final int elapsed;
+        private final int anchorType;
+        private final int anchorId;
 
-        private FurniMovementData(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int rotation, int duration) {
+        private FurniMovementData(int id, int fromX, int fromY, int toX, int toY, double fromZ, double toZ, int rotation, int duration, int elapsed, int anchorType, int anchorId) {
             super(TYPE_FURNI_MOVE);
             this.id = id;
             this.fromX = fromX;
@@ -145,6 +160,9 @@ public class WiredMovementsComposer extends MessageComposer {
             this.toZ = toZ;
             this.rotation = rotation;
             this.duration = duration;
+            this.elapsed = elapsed;
+            this.anchorType = anchorType;
+            this.anchorId = anchorId;
         }
 
         @Override
@@ -158,6 +176,9 @@ public class WiredMovementsComposer extends MessageComposer {
             response.appendInt(this.id);
             response.appendInt(this.rotation);
             response.appendInt(this.duration);
+            response.appendInt(this.elapsed);
+            response.appendInt(this.anchorType);
+            response.appendInt(this.anchorId);
         }
     }
 

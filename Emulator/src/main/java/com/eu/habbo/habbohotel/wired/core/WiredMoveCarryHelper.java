@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.rooms.RoomUnitType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
@@ -21,16 +22,21 @@ import gnu.trove.set.hash.THashSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class WiredMoveCarryHelper {
     private static final double DIRECT_HEIGHT_TOLERANCE = 0.1D;
     private static final int STATUS_SUPPRESSION_GRACE_MS = 250;
+    private static final long USER_FOLLOWER_TTL_MS = 10000L;
     private static final ThreadLocal<Set<Integer>> SUPPRESSED_STATUS_ROOM_UNIT_IDS = new ThreadLocal<>();
+    private static final ThreadLocal<List<WiredMovementsComposer.MovementData>> COLLECTED_MOVEMENTS = new ThreadLocal<>();
     private static final ConcurrentHashMap<Integer, Long> SUPPRESSED_STATUS_COMPOSER_UNTIL = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, UserFollowEntry>> ACTIVE_USER_FOLLOWERS = new ConcurrentHashMap<>();
 
     private WiredMoveCarryHelper() {
     }
@@ -60,10 +66,22 @@ public final class WiredMoveCarryHelper {
     }
 
     public static FurnitureMovementError moveFurni(Room room, HabboItem stackItem, HabboItem movingItem, RoomTile targetTile, int rotation, Habbo actor, boolean sendUpdates, WiredContext ctx) {
-        return moveFurni(room, stackItem, movingItem, targetTile, rotation, null, actor, sendUpdates, ctx);
+        return moveFurni(room, stackItem, movingItem, targetTile, rotation, null, actor, sendUpdates, ctx, null, null, WiredMovementsComposer.FURNI_ANCHOR_NONE, 0);
     }
 
     public static FurnitureMovementError moveFurni(Room room, HabboItem stackItem, HabboItem movingItem, RoomTile targetTile, int rotation, Double z, Habbo actor, boolean sendUpdates, WiredContext ctx) {
+        return moveFurni(room, stackItem, movingItem, targetTile, rotation, z, actor, sendUpdates, ctx, null, null, WiredMovementsComposer.FURNI_ANCHOR_NONE, 0);
+    }
+
+    public static FurnitureMovementError moveFurni(Room room, HabboItem stackItem, HabboItem movingItem, RoomTile targetTile, int rotation, Double z, Habbo actor, boolean sendUpdates, WiredContext ctx, Integer animationDurationOverride) {
+        return moveFurni(room, stackItem, movingItem, targetTile, rotation, z, actor, sendUpdates, ctx, animationDurationOverride, null, WiredMovementsComposer.FURNI_ANCHOR_NONE, 0);
+    }
+
+    public static FurnitureMovementError moveFurni(Room room, HabboItem stackItem, HabboItem movingItem, RoomTile targetTile, int rotation, Double z, Habbo actor, boolean sendUpdates, WiredContext ctx, Integer animationDurationOverride, Integer animationElapsedOverride) {
+        return moveFurni(room, stackItem, movingItem, targetTile, rotation, z, actor, sendUpdates, ctx, animationDurationOverride, animationElapsedOverride, WiredMovementsComposer.FURNI_ANCHOR_NONE, 0);
+    }
+
+    public static FurnitureMovementError moveFurni(Room room, HabboItem stackItem, HabboItem movingItem, RoomTile targetTile, int rotation, Double z, Habbo actor, boolean sendUpdates, WiredContext ctx, Integer animationDurationOverride, Integer animationElapsedOverride, int anchorType, int anchorId) {
         if (room == null || movingItem == null || targetTile == null) {
             return FurnitureMovementError.INVALID_MOVE;
         }
@@ -97,7 +115,9 @@ public final class WiredMoveCarryHelper {
         }
 
         boolean useWiredMovements = !hasNoAnimationExtra(room, stackItem);
-        int animationDuration = getAnimationDuration(room, stackItem, WiredMovementsComposer.DEFAULT_DURATION);
+        int animationDuration = animationDurationOverride != null
+                ? Math.max(50, animationDurationOverride)
+                : getAnimationDuration(room, stackItem, WiredMovementsComposer.DEFAULT_DURATION);
         Set<Integer> previousSuppressedRoomUnitIds = SUPPRESSED_STATUS_ROOM_UNIT_IDS.get();
 
         if (carryContext.active) {
@@ -133,7 +153,7 @@ public final class WiredMoveCarryHelper {
             if (!useWiredMovements) {
                 applyInstantCarryState(room, movingItem, targetTile, rotation, carryContext);
             } else if (oldLocation != null) {
-                sendAnimatedMove(room, movingItem, oldLocation, oldZ, targetTile, rotation, carryContext, animationDuration);
+                sendAnimatedMove(room, movingItem, oldLocation, oldZ, targetTile, rotation, carryContext, animationDuration, (animationElapsedOverride != null) ? Math.max(0, animationElapsedOverride) : 0, anchorType, anchorId);
             }
         }
 
@@ -198,6 +218,165 @@ public final class WiredMoveCarryHelper {
         SUPPRESSED_STATUS_COMPOSER_UNTIL.remove(roomUnit.getId());
     }
 
+    public static void beginMovementCollection() {
+        COLLECTED_MOVEMENTS.set(new ArrayList<>());
+    }
+
+    public static ServerMessage finishMovementCollection() {
+        List<WiredMovementsComposer.MovementData> movements = COLLECTED_MOVEMENTS.get();
+        COLLECTED_MOVEMENTS.remove();
+
+        if (movements == null || movements.isEmpty()) {
+            return null;
+        }
+
+        return new WiredMovementsComposer(movements).compose();
+    }
+
+    public static void registerUserFollower(Room room, HabboItem stackItem, HabboItem movingItem, RoomUnit targetUnit, Double zOverride, WiredContext ctx) {
+        if (room == null || stackItem == null || movingItem == null || targetUnit == null) {
+            return;
+        }
+
+        ACTIVE_USER_FOLLOWERS
+                .computeIfAbsent(targetUnit.getId(), key -> new ConcurrentHashMap<>())
+                .compute(movingItem.getId(), (key, existing) -> {
+                    if (existing != null
+                            && existing.roomId == room.getId()
+                            && existing.stackItemId == stackItem.getId()) {
+                        if (existing.zOverride == null && zOverride != null) {
+                            existing.zOverride = zOverride;
+                        }
+                        existing.ctx = ctx;
+                        existing.touch();
+                        return existing;
+                    }
+
+                    return new UserFollowEntry(
+                            room.getId(),
+                            stackItem.getId(),
+                            movingItem.getId(),
+                            zOverride,
+                            ctx);
+                });
+    }
+
+    public static void markUserFollowerProcessed(RoomUnit targetUnit, HabboItem movingItem, long moveStatusTimestamp) {
+        if (targetUnit == null || movingItem == null || moveStatusTimestamp <= 0L) {
+            return;
+        }
+
+        ConcurrentHashMap<Integer, UserFollowEntry> followers = ACTIVE_USER_FOLLOWERS.get(targetUnit.getId());
+        if (followers == null) {
+            return;
+        }
+
+        UserFollowEntry entry = followers.get(movingItem.getId());
+        if (entry == null) {
+            return;
+        }
+
+        entry.markProcessed(moveStatusTimestamp);
+    }
+
+    public static boolean isUserFollowerProcessed(RoomUnit targetUnit, HabboItem movingItem, long moveStatusTimestamp) {
+        if (targetUnit == null || movingItem == null || moveStatusTimestamp <= 0L) {
+            return false;
+        }
+
+        ConcurrentHashMap<Integer, UserFollowEntry> followers = ACTIVE_USER_FOLLOWERS.get(targetUnit.getId());
+        if (followers == null) {
+            return false;
+        }
+
+        UserFollowEntry entry = followers.get(movingItem.getId());
+        if (entry == null) {
+            return false;
+        }
+
+        return entry.lastProcessedMoveTimestamp == moveStatusTimestamp;
+    }
+
+    public static void processUserFollowers(Room room, Collection<RoomUnit> roomUnits) {
+        if (room == null || roomUnits == null || roomUnits.isEmpty()) {
+            return;
+        }
+
+        for (RoomUnit roomUnit : roomUnits) {
+            if (roomUnit == null) {
+                continue;
+            }
+
+            ConcurrentHashMap<Integer, UserFollowEntry> followers = ACTIVE_USER_FOLLOWERS.get(roomUnit.getId());
+            if (followers == null || followers.isEmpty()) {
+                continue;
+            }
+
+            if (!roomUnit.hasStatus(RoomUnitStatus.MOVE) || roomUnit.getCurrentLocation() == null) {
+                ACTIVE_USER_FOLLOWERS.remove(roomUnit.getId(), followers);
+                continue;
+            }
+
+            long moveStatusTimestamp = roomUnit.getMoveStatusTimestamp();
+            List<Integer> toRemove = new ArrayList<>();
+
+            if (shouldSettleFollowersForNewStep(followers, moveStatusTimestamp)) {
+                settleUserFollowers(room, followers);
+            }
+
+            List<Map.Entry<Integer, UserFollowEntry>> orderedFollowers = new ArrayList<>(followers.entrySet());
+            orderedFollowers.sort(Comparator
+                    .comparingDouble((Map.Entry<Integer, UserFollowEntry> followerEntry) -> {
+                        UserFollowEntry entry = followerEntry.getValue();
+                        return (entry != null && entry.zOverride != null) ? entry.zOverride : Double.MAX_VALUE;
+                    })
+                    .thenComparingInt(Map.Entry::getKey));
+
+            for (Map.Entry<Integer, UserFollowEntry> followerEntry : orderedFollowers) {
+                UserFollowEntry entry = followerEntry.getValue();
+
+                if (entry == null || entry.roomId != room.getId() || entry.expiresAt < System.currentTimeMillis()) {
+                    toRemove.add(followerEntry.getKey());
+                    continue;
+                }
+
+                HabboItem stackItem = room.getHabboItem(entry.stackItemId);
+                HabboItem movingItem = room.getHabboItem(entry.movingItemId);
+
+                if (stackItem == null || movingItem == null) {
+                    toRemove.add(followerEntry.getKey());
+                    continue;
+                }
+
+                if (moveStatusTimestamp <= 0L || moveStatusTimestamp == entry.lastProcessedMoveTimestamp) {
+                    continue;
+                }
+
+                int animationElapsed = resolveMoveStepElapsed(roomUnit);
+                int animationDuration = resolveMoveStepDuration(roomUnit);
+                Double targetZ = resolveFollowerStackZ(room, movingItem, roomUnit.getCurrentLocation(), movingItem.getRotation());
+                FurnitureMovementError error = moveFurni(room, stackItem, movingItem, roomUnit.getCurrentLocation(), movingItem.getRotation(), targetZ, null, false, entry.ctx, animationDuration, animationElapsed, WiredMovementsComposer.FURNI_ANCHOR_USER, roomUnit.getId());
+
+                if (error != FurnitureMovementError.NONE && entry.zOverride != null) {
+                    error = moveFurni(room, stackItem, movingItem, roomUnit.getCurrentLocation(), movingItem.getRotation(), entry.zOverride, null, false, entry.ctx, animationDuration, animationElapsed, WiredMovementsComposer.FURNI_ANCHOR_USER, roomUnit.getId());
+                }
+
+                if (error == FurnitureMovementError.INVALID_MOVE) {
+                    toRemove.add(followerEntry.getKey());
+                    continue;
+                }
+
+                entry.markProcessed(moveStatusTimestamp);
+            }
+
+            for (Integer movingItemId : toRemove) {
+                followers.remove(movingItemId);
+            }
+
+            purgeExpiredFollowers(roomUnit.getId(), followers, true);
+        }
+    }
+
     public static boolean hasNoAnimationExtra(Room room, HabboItem stackItem) {
         return getNoAnimationExtra(room, stackItem) != null;
     }
@@ -205,6 +384,141 @@ public final class WiredMoveCarryHelper {
     public static int getAnimationDuration(Room room, HabboItem stackItem, int fallbackDuration) {
         WiredExtraAnimationTime extra = getAnimationTimeExtra(room, stackItem);
         return (extra != null) ? extra.getDurationMs() : fallbackDuration;
+    }
+
+    public static int resolveMoveStepElapsed(RoomUnit roomUnit) {
+        if (roomUnit == null) {
+            return 0;
+        }
+
+        long moveStatusTimestamp = roomUnit.getMoveStatusTimestamp();
+        if (moveStatusTimestamp <= 0L) {
+            return 0;
+        }
+
+        return (int) Math.max(0L, Math.min(WiredMovementsComposer.DEFAULT_DURATION, System.currentTimeMillis() - moveStatusTimestamp));
+    }
+
+    public static int resolveMoveStepDuration(RoomUnit roomUnit) {
+        return WiredMovementsComposer.DEFAULT_DURATION;
+    }
+
+    public static Double resolveFollowerStackZ(Room room, HabboItem movingItem, RoomTile targetTile, int rotation) {
+        if (room == null || movingItem == null || targetTile == null || room.getLayout() == null) {
+            return null;
+        }
+
+        double targetZ = room.getStackHeight(targetTile.x, targetTile.y, false, movingItem);
+        THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(
+                targetTile,
+                movingItem.getBaseItem().getWidth(),
+                movingItem.getBaseItem().getLength(),
+                rotation);
+
+        if (occupiedTiles == null || occupiedTiles.isEmpty()) {
+            return targetZ;
+        }
+
+        for (RoomTile occupiedTile : occupiedTiles) {
+            if (occupiedTile == null) {
+                continue;
+            }
+
+            targetZ = Math.max(targetZ, room.getStackHeight(occupiedTile.x, occupiedTile.y, false, movingItem));
+        }
+
+        return targetZ;
+    }
+
+    private static Integer resolveRemainingMoveDuration(RoomUnit roomUnit, HabboItem stackItem, Room room) {
+        if (roomUnit == null || stackItem == null || room == null) {
+            return null;
+        }
+
+        long moveStatusTimestamp = roomUnit.getMoveStatusTimestamp();
+        if (moveStatusTimestamp <= 0L) {
+            return null;
+        }
+
+        int configuredDuration = getAnimationDuration(room, stackItem, WiredMovementsComposer.DEFAULT_DURATION);
+        int remainingStepDuration = (int) Math.max(50L, WiredMovementsComposer.DEFAULT_DURATION - Math.max(0L, System.currentTimeMillis() - moveStatusTimestamp));
+        return Math.min(configuredDuration, remainingStepDuration);
+    }
+
+    private static boolean shouldSettleFollowersForNewStep(ConcurrentHashMap<Integer, UserFollowEntry> followers, long moveStatusTimestamp) {
+        if (followers == null || followers.isEmpty() || moveStatusTimestamp <= 0L) {
+            return false;
+        }
+
+        for (UserFollowEntry entry : followers.values()) {
+            if (entry != null && entry.lastProcessedMoveTimestamp > 0L && entry.lastProcessedMoveTimestamp != moveStatusTimestamp) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void settleUserFollowers(Room room, ConcurrentHashMap<Integer, UserFollowEntry> followers) {
+        if (room == null || followers == null || followers.isEmpty()) {
+            return;
+        }
+
+        List<Map.Entry<Integer, UserFollowEntry>> entriesToSettle = new ArrayList<>(followers.entrySet());
+        entriesToSettle.sort(Comparator
+                .comparingDouble((Map.Entry<Integer, UserFollowEntry> followerEntry) -> {
+                    UserFollowEntry entry = followerEntry.getValue();
+                    return (entry != null && entry.zOverride != null) ? -entry.zOverride : Double.POSITIVE_INFINITY;
+                })
+                .thenComparingInt(Map.Entry::getKey));
+
+        for (Map.Entry<Integer, UserFollowEntry> followerEntry : entriesToSettle) {
+            UserFollowEntry entry = followerEntry.getValue();
+
+            if (entry == null || entry.roomId != room.getId()) {
+                continue;
+            }
+
+            HabboItem movingItem = room.getHabboItem(entry.movingItemId);
+            HabboItem stackItem = room.getHabboItem(entry.stackItemId);
+            if (movingItem == null || room.getLayout() == null) {
+                continue;
+            }
+
+            RoomTile currentTile = room.getLayout().getTile(movingItem.getX(), movingItem.getY());
+            if (currentTile == null) {
+                continue;
+            }
+
+            Double targetZ = (double) room.getLayout().getHeightAtSquare(currentTile.x, currentTile.y);
+
+            if (stackItem != null) {
+                FurnitureMovementError error = moveFurni(room, stackItem, movingItem, currentTile, movingItem.getRotation(), targetZ, null, false, entry.ctx, WiredMovementsComposer.DEFAULT_DURATION, 0, WiredMovementsComposer.FURNI_ANCHOR_NONE, 0);
+
+                if (error == FurnitureMovementError.NONE) {
+                    continue;
+                }
+            }
+
+            FurnitureMovementError error = room.moveFurniTo(movingItem, currentTile, movingItem.getRotation(), targetZ, null, true, false);
+
+            if (error != FurnitureMovementError.NONE) {
+                room.moveFurniTo(movingItem, currentTile, movingItem.getRotation(), null, true, false);
+            }
+        }
+    }
+
+    private static void purgeExpiredFollowers(int roomUnitId, ConcurrentHashMap<Integer, UserFollowEntry> followers, boolean removeEmpty) {
+        if (followers == null) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        followers.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue().expiresAt < now);
+
+        if (removeEmpty && followers.isEmpty()) {
+            ACTIVE_USER_FOLLOWERS.remove(roomUnitId, followers);
+        }
     }
 
     private static boolean hasMovementBehaviorExtra(Room room, HabboItem stackItem) {
@@ -370,7 +684,7 @@ public final class WiredMoveCarryHelper {
         return FurnitureMovementError.NONE;
     }
 
-    private static void sendAnimatedMove(Room room, HabboItem movingItem, RoomTile oldLocation, double oldZ, RoomTile targetTile, int rotation, CarryContext carryContext, int animationDuration) {
+    private static void sendAnimatedMove(Room room, HabboItem movingItem, RoomTile oldLocation, double oldZ, RoomTile targetTile, int rotation, CarryContext carryContext, int animationDuration, int animationElapsed, int anchorType, int anchorId) {
         List<CarriedUnitMove> carriedMoves = getCarriedUnitMoves(room, movingItem, targetTile, rotation, carryContext);
         List<WiredMovementsComposer.MovementData> movements = new ArrayList<>();
         movements.add(WiredMovementsComposer.furniMovement(
@@ -382,7 +696,10 @@ public final class WiredMoveCarryHelper {
                 oldZ,
                 movingItem.getZ(),
                 movingItem.getRotation(),
-                animationDuration));
+                animationDuration,
+                animationElapsed,
+                anchorType,
+                anchorId));
 
         for (CarriedUnitMove carriedMove : carriedMoves) {
             suppressStatusComposer(carriedMove.roomUnit, animationDuration);
@@ -399,7 +716,13 @@ public final class WiredMoveCarryHelper {
                     animationDuration));
         }
 
-        room.sendComposer(new WiredMovementsComposer(movements).compose());
+        List<WiredMovementsComposer.MovementData> collectedMovements = COLLECTED_MOVEMENTS.get();
+
+        if (collectedMovements != null) {
+            collectedMovements.addAll(movements);
+        } else {
+            room.sendComposer(new WiredMovementsComposer(movements).compose());
+        }
 
         for (CarriedUnitMove carriedMove : carriedMoves) {
             updateCarriedUnitState(carriedMove);
@@ -709,6 +1032,34 @@ public final class WiredMoveCarryHelper {
             this.oldZ = oldZ;
             this.destinationTile = destinationTile;
             this.newZ = newZ;
+        }
+    }
+
+    private static final class UserFollowEntry {
+        private final int roomId;
+        private final int stackItemId;
+        private final int movingItemId;
+        private Double zOverride;
+        private WiredContext ctx;
+        private long expiresAt;
+        private long lastProcessedMoveTimestamp;
+
+        private UserFollowEntry(int roomId, int stackItemId, int movingItemId, Double zOverride, WiredContext ctx) {
+            this.roomId = roomId;
+            this.stackItemId = stackItemId;
+            this.movingItemId = movingItemId;
+            this.zOverride = zOverride;
+            this.ctx = ctx;
+            this.touch();
+        }
+
+        private void markProcessed(long moveStatusTimestamp) {
+            this.lastProcessedMoveTimestamp = moveStatusTimestamp;
+            this.touch();
+        }
+
+        private void touch() {
+            this.expiresAt = System.currentTimeMillis() + USER_FOLLOWER_TTL_MS;
         }
     }
 }

@@ -74,6 +74,7 @@ public class RoomUnit {
   private int handItem;
   private long handItemTimestamp;
   private long lastRollerTime;
+  private long moveStatusTimestamp;
   private int walkTimeOut;
   private int effectId;
   private int effectEndTimestamp;
@@ -104,6 +105,7 @@ public class RoomUnit {
     this.goalLocation = null;
     this.startLocation = this.currentLocation;
     this.inRoom = false;
+    this.moveStatusTimestamp = 0L;
 
     this.status.clear();
 
@@ -611,12 +613,16 @@ public class RoomUnit {
   }
 
   public void removeStatus(RoomUnitStatus key) {
+    if (key == RoomUnitStatus.MOVE) {
+      this.moveStatusTimestamp = 0L;
+    }
     this.status.remove(key);
   }
 
   public void setStatus(RoomUnitStatus key, String value) {
     if (key != null && value != null) {
       if (key == RoomUnitStatus.MOVE) {
+        this.moveStatusTimestamp = System.currentTimeMillis();
         WiredMoveCarryHelper.clearStatusComposerSuppression(this);
         WiredUserMovementHelper.clearStatusComposerSuppression(this);
       }
@@ -630,6 +636,7 @@ public class RoomUnit {
   }
 
   public void clearStatus() {
+    this.moveStatusTimestamp = 0L;
     this.status.clear();
   }
 
@@ -655,6 +662,10 @@ public class RoomUnit {
 
   public void setLastRollerTime(long lastRollerTime) {
     this.lastRollerTime = lastRollerTime;
+  }
+
+  public long getMoveStatusTimestamp() {
+    return this.moveStatusTimestamp;
   }
 
   /**

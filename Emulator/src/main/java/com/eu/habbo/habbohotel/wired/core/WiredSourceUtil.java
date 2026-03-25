@@ -18,6 +18,7 @@ import java.util.List;
 
 public final class WiredSourceUtil {
     public static final int SOURCE_TRIGGER = 0;
+    public static final int SOURCE_CLICKED_USER = 11;
     public static final int SOURCE_SELECTED = 100;
     public static final int SOURCE_SELECTOR = 200;
     public static final int SOURCE_SIGNAL = 201;
@@ -54,6 +55,11 @@ public final class WiredSourceUtil {
         switch (sourceType) {
             case SOURCE_TRIGGER:
                 return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+            case SOURCE_CLICKED_USER:
+                if (ctx.eventType() == WiredEvent.Type.USER_CLICKS_USER) {
+                    return ctx.event().getTargetUnit().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return Collections.emptyList();
             case SOURCE_SELECTED:
                 return (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
             case SOURCE_SELECTOR:
@@ -69,6 +75,22 @@ public final class WiredSourceUtil {
             default:
                 return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
         }
+    }
+
+    public static boolean isDefaultUserSource(int value) {
+        switch (value) {
+            case SOURCE_TRIGGER:
+            case SOURCE_CLICKED_USER:
+            case SOURCE_SELECTOR:
+            case SOURCE_SIGNAL:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isSelectableUserSource(int value) {
+        return value == SOURCE_SELECTED || isDefaultUserSource(value);
     }
 
     private static WiredTargets getSelectorTargets(WiredContext ctx) {
