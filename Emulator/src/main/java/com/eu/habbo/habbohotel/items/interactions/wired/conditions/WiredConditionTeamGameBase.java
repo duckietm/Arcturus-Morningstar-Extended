@@ -84,14 +84,7 @@ abstract class WiredConditionTeamGameBase extends InteractionWiredCondition {
     }
 
     protected int normalizeUserSource(int value) {
-        switch (value) {
-            case WiredSourceUtil.SOURCE_SELECTOR:
-            case WiredSourceUtil.SOURCE_SIGNAL:
-            case WiredSourceUtil.SOURCE_TRIGGER:
-                return value;
-            default:
-                return WiredSourceUtil.SOURCE_TRIGGER;
-        }
+        return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     protected int normalizePlacement(int value) {

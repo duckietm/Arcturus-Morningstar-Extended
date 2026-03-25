@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
@@ -179,11 +180,11 @@ public final class WiredEngine {
 
         boolean anyTriggered = false;
         boolean suppressSaysOutput = false;
-        long currentTime = System.currentTimeMillis();
+        long triggerTime = event.getCreatedAtMs();
 
         for (WiredStack stack : stacks) {
             try {
-                boolean triggered = processStack(stack, event, currentTime);
+                boolean triggered = processStack(stack, event, triggerTime);
                 if (triggered) {
                     anyTriggered = true;
 
@@ -255,6 +256,15 @@ public final class WiredEngine {
             }
         } else {
             debug(room, "No conditions in stack, proceeding to effects");
+        }
+
+        WiredExtraExecutionLimit executionLimitExtra = getExecutionLimitExtra(room, stack);
+        if (executionLimitExtra != null && !executionLimitExtra.tryAcquireExecutionSlot(currentTime)) {
+            debug(room, "Execution limit blocked stack {} (max {} in {} ms)",
+                    stack.triggerItem() != null ? stack.triggerItem().getId() : "null",
+                    executionLimitExtra.getMaxExecutions(),
+                    executionLimitExtra.getTimeWindowMs());
+            return false;
         }
 
         // Fire plugin event (WiredStackTriggeredEvent)
@@ -427,6 +437,10 @@ public final class WiredEngine {
                     debug(ctx.room(), "Unseen mode fallback: selected effect {}/{}", index + 1, regulars.size());
                 }
             }
+        } else if (stack.executeInOrder()) {
+            debug(ctx.room(), "Ordered mode: executing effect batches in stack order by delay");
+            executeOrderedEffects(regulars, ctx, currentTime);
+            return;
         } else {
             // Normal mode: regular effects in random order
             toExecute = new ArrayList<>(regulars);
@@ -569,9 +583,11 @@ public final class WiredEngine {
     /**
      * Schedule a delayed effect execution.
      */
-    private void scheduleDelayedEffect(IWiredEffect effect, WiredContext ctx, int delay, long currentTime) {
+    private void scheduleDelayedEffect(IWiredEffect effect, WiredContext ctx, int delay, long triggerTime) {
         // Delay is in 500ms ticks
         long delayMs = delay * 500L;
+        long elapsedSinceTrigger = Math.max(0L, System.currentTimeMillis() - triggerTime);
+        long remainingDelayMs = Math.max(0L, delayMs - elapsedSinceTrigger);
         Room room = ctx.room();
         RoomUnit actor = ctx.actor().orElse(null);
         
@@ -592,7 +608,80 @@ public final class WiredEngine {
             } catch (Exception e) {
                 LOGGER.warn("Error executing delayed effect: {}", e.getMessage());
             }
-        }, delayMs);
+        }, remainingDelayMs);
+    }
+
+    private void executeOrderedEffects(List<IWiredEffect> effects, WiredContext ctx, long currentTime) {
+        if (effects == null || effects.isEmpty()) {
+            return;
+        }
+
+        Map<Integer, List<IWiredEffect>> effectsByDelay = new LinkedHashMap<>();
+
+        for (IWiredEffect effect : effects) {
+            if (effect == null) {
+                continue;
+            }
+
+            if (effect.requiresActor() && !ctx.hasActor()) {
+                continue;
+            }
+
+            effectsByDelay.computeIfAbsent(effect.getDelay(), key -> new ArrayList<>()).add(effect);
+        }
+
+        for (Map.Entry<Integer, List<IWiredEffect>> entry : effectsByDelay.entrySet()) {
+            int delay = entry.getKey();
+            List<IWiredEffect> batch = entry.getValue();
+
+            if (batch.isEmpty()) {
+                continue;
+            }
+
+            if (delay > 0) {
+                scheduleOrderedEffectBatch(batch, ctx, delay, currentTime);
+            } else {
+                executeOrderedEffectBatch(batch, ctx, currentTime, false);
+            }
+        }
+    }
+
+    private void scheduleOrderedEffectBatch(List<IWiredEffect> batch, WiredContext ctx, int delay, long triggerTime) {
+        long delayMs = delay * 500L;
+        long elapsedSinceTrigger = Math.max(0L, System.currentTimeMillis() - triggerTime);
+        long remainingDelayMs = Math.max(0L, delayMs - elapsedSinceTrigger);
+        Room room = ctx.room();
+
+        Emulator.getThreading().run(() -> {
+            if (!room.isLoaded() || room.getHabbos().isEmpty()) {
+                return;
+            }
+
+            executeOrderedEffectBatch(batch, ctx, System.currentTimeMillis(), true);
+        }, remainingDelayMs);
+    }
+
+    private void executeOrderedEffectBatch(List<IWiredEffect> batch, WiredContext ctx, long executionTime, boolean useExecutionTimeForCooldown) {
+        Room room = ctx.room();
+        RoomUnit actor = ctx.actor().orElse(null);
+
+        for (IWiredEffect effect : batch) {
+            try {
+                if (!useExecutionTimeForCooldown) {
+                    ctx.state().step();
+                }
+
+                effect.execute(ctx);
+
+                if (effect instanceof InteractionWiredEffect) {
+                    InteractionWiredEffect wiredEffect = (InteractionWiredEffect) effect;
+                    wiredEffect.setCooldown(executionTime);
+                    wiredEffect.activateBox(room, actor, executionTime);
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Error executing ordered effect batch item: {}", e.getMessage());
+            }
+        }
     }
 
     /**
@@ -712,6 +801,12 @@ public final class WiredEngine {
         InteractionWiredExtra extra = getStackExtra(room, stack, WiredExtraUnseen.class);
 
         return (extra instanceof WiredExtraUnseen) ? (WiredExtraUnseen) extra : null;
+    }
+
+    private WiredExtraExecutionLimit getExecutionLimitExtra(Room room, WiredStack stack) {
+        InteractionWiredExtra extra = getStackExtra(room, stack, WiredExtraExecutionLimit.class);
+
+        return (extra instanceof WiredExtraExecutionLimit) ? (WiredExtraExecutionLimit) extra : null;
     }
 
     private <T extends InteractionWiredExtra> InteractionWiredExtra getStackExtra(Room room, WiredStack stack, Class<T> extraClass) {

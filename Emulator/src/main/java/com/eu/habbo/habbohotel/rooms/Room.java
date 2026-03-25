@@ -2032,6 +2032,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.messagingManager.sendComposer(message);
   }
 
+  public void sendComposers(Collection<ServerMessage> messages) {
+    this.messagingManager.sendComposers(messages);
+  }
+
   public void sendComposerToHabbosWithRights(ServerMessage message) {
     this.messagingManager.sendComposerToHabbosWithRights(message);
   }

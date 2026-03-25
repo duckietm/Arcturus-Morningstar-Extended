@@ -187,6 +187,10 @@ public class WiredConditionSelectionQuantity extends InteractionWiredCondition {
     }
 
     private int normalizeSourceType(int group, int value) {
+        if (group == SOURCE_GROUP_USERS) {
+            return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
+        }
+
         switch (value) {
             case WiredSourceUtil.SOURCE_SELECTOR:
             case WiredSourceUtil.SOURCE_SIGNAL:

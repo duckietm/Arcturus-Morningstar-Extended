@@ -10,6 +10,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredTriggerReset;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectGiveReward;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTriggerStacks;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecuteInOrder;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -27,6 +29,7 @@ import com.eu.habbo.plugin.events.furniture.wired.WiredConditionFailedEvent;
 import com.eu.habbo.plugin.events.furniture.wired.WiredStackExecutedEvent;
 import com.eu.habbo.plugin.events.furniture.wired.WiredStackTriggeredEvent;
 import com.eu.habbo.plugin.events.users.UserWiredRewardReceived;
+import com.eu.habbo.habbohotel.wired.core.WiredExecutionOrderUtil;
 import com.google.gson.GsonBuilder;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
@@ -37,7 +40,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class WiredHandler {
@@ -48,6 +51,11 @@ public class WiredHandler {
     public static int TELEPORT_DELAY = Emulator.getConfig().getInt("wired.effect.teleport.delay", 500);
 
     private static GsonBuilder gsonBuilder = null;
+
+    private static final class LegacyExecutionPlan {
+        private final LinkedHashSet<InteractionWiredEffect> effects = new LinkedHashSet<>();
+        private boolean executeInOrder = false;
+    }
 
     public static boolean handle(WiredTriggerType triggerType, RoomUnit roomUnit, Room room, Object[] stuff) {
         if (triggerType == WiredTriggerType.CUSTOM) return false;
@@ -72,7 +80,7 @@ public class WiredHandler {
             return false;
 
         long millis = System.currentTimeMillis();
-        THashSet<InteractionWiredEffect> effectsToExecute = new THashSet<InteractionWiredEffect>();
+        List<LegacyExecutionPlan> executionPlans = new ArrayList<>();
 
         List<RoomTile> triggeredTiles = new ArrayList<>();
         for (InteractionWiredTrigger trigger : triggers) {
@@ -81,10 +89,10 @@ public class WiredHandler {
             if (triggeredTiles.contains(tile))
                 continue;
 
-            THashSet<InteractionWiredEffect> tEffectsToExecute = new THashSet<InteractionWiredEffect>();
+            LegacyExecutionPlan executionPlan = new LegacyExecutionPlan();
 
-            if (handle(trigger, roomUnit, room, stuff, tEffectsToExecute)) {
-                effectsToExecute.addAll(tEffectsToExecute);
+            if (handle(trigger, roomUnit, room, stuff, executionPlan)) {
+                executionPlans.add(executionPlan);
 
                 if (triggerType.equals(WiredTriggerType.SAY_SOMETHING))
                     talked = true;
@@ -93,8 +101,8 @@ public class WiredHandler {
             }
         }
 
-        for (InteractionWiredEffect effect : effectsToExecute) {
-            triggerEffect(effect, roomUnit, room, stuff, millis);
+        for (LegacyExecutionPlan executionPlan : executionPlans) {
+            triggerEffects(executionPlan.effects, roomUnit, room, stuff, millis, executionPlan.executeInOrder);
         }
 
         return talked;
@@ -119,7 +127,7 @@ public class WiredHandler {
             return false;
 
         long millis = System.currentTimeMillis();
-        THashSet<InteractionWiredEffect> effectsToExecute = new THashSet<InteractionWiredEffect>();
+        List<LegacyExecutionPlan> executionPlans = new ArrayList<>();
 
         List<RoomTile> triggeredTiles = new ArrayList<>();
         for (InteractionWiredTrigger trigger : triggers) {
@@ -130,44 +138,51 @@ public class WiredHandler {
             if (triggeredTiles.contains(tile))
                 continue;
 
-            THashSet<InteractionWiredEffect> tEffectsToExecute = new THashSet<InteractionWiredEffect>();
+            LegacyExecutionPlan executionPlan = new LegacyExecutionPlan();
 
-            if (handle(trigger, roomUnit, room, stuff, tEffectsToExecute)) {
-                effectsToExecute.addAll(tEffectsToExecute);
+            if (handle(trigger, roomUnit, room, stuff, executionPlan)) {
+                executionPlans.add(executionPlan);
                 triggeredTiles.add(tile);
             }
         }
 
-        for (InteractionWiredEffect effect : effectsToExecute) {
-            triggerEffect(effect, roomUnit, room, stuff, millis);
+        for (LegacyExecutionPlan executionPlan : executionPlans) {
+            triggerEffects(executionPlan.effects, roomUnit, room, stuff, millis, executionPlan.executeInOrder);
         }
 
-        return effectsToExecute.size() > 0;
+        return !executionPlans.isEmpty();
     }
 
     public static boolean handle(InteractionWiredTrigger trigger, final RoomUnit roomUnit, final Room room, final Object[] stuff) {
         long millis = System.currentTimeMillis();
-        THashSet<InteractionWiredEffect> effectsToExecute = new THashSet<InteractionWiredEffect>();
+        LegacyExecutionPlan executionPlan = new LegacyExecutionPlan();
 
-        if(handle(trigger, roomUnit, room, stuff, effectsToExecute)) {
-            for (InteractionWiredEffect effect : effectsToExecute) {
-                triggerEffect(effect, roomUnit, room, stuff, millis);
-            }
+        if(handle(trigger, roomUnit, room, stuff, executionPlan)) {
+            triggerEffects(executionPlan.effects, roomUnit, room, stuff, millis, executionPlan.executeInOrder);
             return true;
         }
         return false;
     }
 
-    public static boolean handle(InteractionWiredTrigger trigger, final RoomUnit roomUnit, final Room room, final Object[] stuff, final THashSet<InteractionWiredEffect> effectsToExecute) {
+    private static boolean handle(InteractionWiredTrigger trigger, final RoomUnit roomUnit, final Room room, final Object[] stuff, final LegacyExecutionPlan executionPlan) {
         long millis = System.currentTimeMillis();
         int roomUnitId = roomUnit != null ? roomUnit.getId() : -1;
         if (Emulator.isReady && ((Emulator.getConfig().getBoolean("wired.custom.enabled", false) && (trigger.canExecute(millis) || roomUnitId > -1) && trigger.userCanExecute(roomUnitId, millis)) || (!Emulator.getConfig().getBoolean("wired.custom.enabled", false) && trigger.canExecute(millis))) && trigger.execute(roomUnit, room, stuff)) {
-            trigger.activateBox(room, roomUnit, millis);
-
             THashSet<InteractionWiredCondition> conditions = room.getRoomSpecialTypes().getConditions(trigger.getX(), trigger.getY());
             THashSet<InteractionWiredEffect> effects = room.getRoomSpecialTypes().getEffects(trigger.getX(), trigger.getY());
-            if (Emulator.getPluginManager().fireEvent(new WiredStackTriggeredEvent(room, roomUnit, trigger, effects, conditions)).isCancelled())
-                return false;
+            THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY());
+            WiredExtraExecutionLimit executionLimitExtra = null;
+            WiredExtraRandom randomExtra = null;
+
+            for (InteractionWiredExtra extra : extras) {
+                if (executionLimitExtra == null && extra instanceof WiredExtraExecutionLimit) {
+                    executionLimitExtra = (WiredExtraExecutionLimit) extra;
+                }
+
+                if (randomExtra == null && extra instanceof WiredExtraRandom) {
+                    randomExtra = (WiredExtraRandom) extra;
+                }
+            }
 
             if (!conditions.isEmpty()) {
                 ArrayList<WiredConditionType> matchedConditions = new ArrayList<>(conditions.size());
@@ -187,39 +202,48 @@ public class WiredHandler {
                 }
             }
 
+            if (executionLimitExtra != null && !executionLimitExtra.tryAcquireExecutionSlot(millis)) {
+                return false;
+            }
+
+            if (Emulator.getPluginManager().fireEvent(new WiredStackTriggeredEvent(room, roomUnit, trigger, effects, conditions)).isCancelled())
+                return false;
+
+            trigger.activateBox(room, roomUnit, millis);
+
             trigger.setCooldown(millis);
 
             boolean hasExtraUnseen = room.getRoomSpecialTypes().hasExtraType(trigger.getX(), trigger.getY(), WiredExtraUnseen.class);
-            THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY());
-            WiredExtraRandom randomExtra = null;
+            boolean hasExtraExecuteInOrder = room.getRoomSpecialTypes().hasExtraType(trigger.getX(), trigger.getY(), WiredExtraExecuteInOrder.class);
 
             for (InteractionWiredExtra extra : extras) {
                 extra.activateBox(room, roomUnit, millis);
-                if (randomExtra == null && extra instanceof WiredExtraRandom) {
-                    randomExtra = (WiredExtraRandom) extra;
-                }
             }
 
-            List<InteractionWiredEffect> effectList = new ArrayList<>(effects);
+            List<InteractionWiredEffect> effectList = (hasExtraUnseen || hasExtraExecuteInOrder)
+                    ? WiredExecutionOrderUtil.sort(effects)
+                    : new ArrayList<>(effects);
 
-            if (randomExtra != null || hasExtraUnseen) {
-                Collections.shuffle(effectList);
-            }
+            executionPlan.executeInOrder = hasExtraExecuteInOrder;
 
             if (hasExtraUnseen) {
                 for (InteractionWiredExtra extra : room.getRoomSpecialTypes().getExtras(trigger.getX(), trigger.getY())) {
                     if (extra instanceof WiredExtraUnseen) {
                         extra.setExtradata(extra.getExtradata().equals("1") ? "0" : "1");
                         InteractionWiredEffect effect = ((WiredExtraUnseen) extra).getUnseenEffect(effectList);
-                        effectsToExecute.add(effect); // triggerEffect(effect, roomUnit, room, stuff, millis);
+                        if (effect != null) {
+                            executionPlan.effects.add(effect);
+                        }
                         break;
                     }
                 }
             } else if (randomExtra != null) {
-                effectsToExecute.addAll(randomExtra.selectEffects(effectList));
+                executionPlan.effects.addAll(randomExtra.selectEffects(effectList));
+            } else if (hasExtraExecuteInOrder) {
+                executionPlan.effects.addAll(effectList);
             } else {
                 for (final InteractionWiredEffect effect : effectList) {
-                    effectsToExecute.add(effect); //triggerEffect(effect, roomUnit, room, stuff, millis);
+                    executionPlan.effects.add(effect);
                 }
             }
 
@@ -234,7 +258,7 @@ public class WiredHandler {
         if (effect != null && (effect.canExecute(millis) || (roomUnit != null && effect.requiresTriggeringUser() && Emulator.getConfig().getBoolean("wired.custom.enabled", false) && effect.userCanExecute(roomUnit.getId(), millis)))) {
             executed = true;
             if (!effect.requiresTriggeringUser() || (roomUnit != null && effect.requiresTriggeringUser())) {
-                Emulator.getThreading().run(() -> {
+                Runnable execution = () -> {
                     if (room.isLoaded() && room.getHabbos().size() > 0) {
                         try {
                             if (!effect.execute(roomUnit, room, stuff)) return;
@@ -245,11 +269,106 @@ public class WiredHandler {
 
                         effect.activateBox(room, roomUnit, millis);
                     }
-                }, effect.getDelay() * 500L);
+                };
+
+                long delayMs = effect.getDelay() * 500L;
+                long elapsedSinceTrigger = Math.max(0L, System.currentTimeMillis() - millis);
+                long remainingDelayMs = Math.max(0L, delayMs - elapsedSinceTrigger);
+
+                if (delayMs <= 0) {
+                    execution.run();
+                } else {
+                    Emulator.getThreading().run(execution, remainingDelayMs);
+                }
             }
         }
 
         return executed;
+    }
+
+    private static void triggerEffects(LinkedHashSet<InteractionWiredEffect> effects, RoomUnit roomUnit, Room room, Object[] stuff, long millis, boolean executeInOrder) {
+        if (effects == null || effects.isEmpty()) {
+            return;
+        }
+
+        if (!executeInOrder) {
+            for (InteractionWiredEffect effect : effects) {
+                triggerEffect(effect, roomUnit, room, stuff, millis);
+            }
+            return;
+        }
+
+        LinkedHashSet<InteractionWiredEffect> queueableEffects = new LinkedHashSet<>();
+
+        for (InteractionWiredEffect effect : effects) {
+            if (canQueueEffect(effect, roomUnit, millis)) {
+                queueableEffects.add(effect);
+            }
+        }
+
+        LinkedHashSet<Integer> delays = new LinkedHashSet<>();
+        for (InteractionWiredEffect effect : queueableEffects) {
+            delays.add(effect.getDelay());
+        }
+
+        for (Integer delay : delays) {
+            List<InteractionWiredEffect> delayBatch = new ArrayList<>();
+
+            for (InteractionWiredEffect effect : queueableEffects) {
+                if (effect.getDelay() == delay) {
+                    delayBatch.add(effect);
+                }
+            }
+
+            if (delayBatch.isEmpty()) {
+                continue;
+            }
+
+            if (delay > 0) {
+                long delayMs = delay * 500L;
+                long elapsedSinceTrigger = Math.max(0L, System.currentTimeMillis() - millis);
+                long remainingDelayMs = Math.max(0L, delayMs - elapsedSinceTrigger);
+                Emulator.getThreading().run(() -> executeOrderedEffectBatch(delayBatch, roomUnit, room, stuff, millis), remainingDelayMs);
+            } else {
+                executeOrderedEffectBatch(delayBatch, roomUnit, room, stuff, millis);
+            }
+        }
+    }
+
+    private static boolean canQueueEffect(InteractionWiredEffect effect, RoomUnit roomUnit, long millis) {
+        if (effect == null) {
+            return false;
+        }
+
+        boolean canExecute = effect.canExecute(millis)
+                || (roomUnit != null && effect.requiresTriggeringUser()
+                && Emulator.getConfig().getBoolean("wired.custom.enabled", false)
+                && effect.userCanExecute(roomUnit.getId(), millis));
+
+        if (!canExecute) {
+            return false;
+        }
+
+        return !effect.requiresTriggeringUser() || roomUnit != null;
+    }
+
+    private static void executeOrderedEffectBatch(List<InteractionWiredEffect> effects, RoomUnit roomUnit, Room room, Object[] stuff, long millis) {
+        if (!room.isLoaded() || room.getHabbos().size() <= 0) {
+            return;
+        }
+
+        for (InteractionWiredEffect effect : effects) {
+            try {
+                if (!effect.execute(roomUnit, room, stuff)) {
+                    continue;
+                }
+
+                effect.setCooldown(millis);
+                effect.activateBox(room, roomUnit, millis);
+            } catch (Exception e) {
+                LOGGER.error("Caught exception", e);
+            }
+        }
     }
 
     public static GsonBuilder getGsonBuilder() {

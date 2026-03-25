@@ -170,14 +170,7 @@ public class WiredConditionNotInGroup extends InteractionWiredCondition {
     }
 
     private int normalizeUserSource(int value) {
-        switch (value) {
-            case WiredSourceUtil.SOURCE_TRIGGER:
-            case WiredSourceUtil.SOURCE_SELECTOR:
-            case WiredSourceUtil.SOURCE_SIGNAL:
-                return value;
-            default:
-                return WiredSourceUtil.SOURCE_TRIGGER;
-        }
+        return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     private int normalizeGroupType(int value) {

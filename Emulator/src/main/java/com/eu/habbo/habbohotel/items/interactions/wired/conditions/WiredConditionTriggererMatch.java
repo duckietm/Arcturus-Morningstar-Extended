@@ -304,25 +304,16 @@ public class WiredConditionTriggererMatch extends InteractionWiredCondition {
     }
 
     private int normalizePrimaryUserSource(int value) {
-        switch (value) {
-            case WiredSourceUtil.SOURCE_SELECTOR:
-            case WiredSourceUtil.SOURCE_SIGNAL:
-            case WiredSourceUtil.SOURCE_TRIGGER:
-                return value;
-            default:
-                return WiredSourceUtil.SOURCE_TRIGGER;
-        }
+        return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
     }
 
     private int normalizeCompareUserSource(int value) {
         switch (value) {
-            case WiredSourceUtil.SOURCE_SELECTOR:
-            case WiredSourceUtil.SOURCE_SIGNAL:
-            case WiredSourceUtil.SOURCE_TRIGGER:
+            case WiredSourceUtil.SOURCE_CLICKED_USER:
             case SOURCE_SPECIFIED_USERNAME:
                 return value;
             default:
-                return WiredSourceUtil.SOURCE_TRIGGER;
+                return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
         }
     }
 
