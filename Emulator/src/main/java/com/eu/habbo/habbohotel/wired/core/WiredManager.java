@@ -4,8 +4,10 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogItem;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectGiveReward;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTriggerStacks;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
@@ -723,6 +725,34 @@ public final class WiredManager {
      */
     public static WiredTickService getTickService() {
         return WiredTickService.getInstance();
+    }
+
+    public static boolean isTriggerExecutionAllowed(Room room, HabboItem triggerItem, long timestamp) {
+        WiredExtraExecutionLimit executionLimit = getExecutionLimitExtra(room, triggerItem);
+
+        return executionLimit == null || executionLimit.canExecuteAt(timestamp);
+    }
+
+    public static WiredExtraExecutionLimit getExecutionLimitExtra(Room room, HabboItem triggerItem) {
+        if (room == null || triggerItem == null || room.getRoomSpecialTypes() == null) {
+            return null;
+        }
+
+        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(
+                triggerItem.getX(),
+                triggerItem.getY());
+
+        if (extras == null || extras.isEmpty()) {
+            return null;
+        }
+
+        for (InteractionWiredExtra extra : extras) {
+            if (extra instanceof WiredExtraExecutionLimit) {
+                return (WiredExtraExecutionLimit) extra;
+            }
+        }
+
+        return null;
     }
 
     // ========== Timer Management ==========

@@ -39,6 +39,7 @@ public final class WiredStack {
     private final boolean useOrMode;       // WiredExtraOrEval present
     private final boolean useRandom;        // WiredExtraRandom present
     private final boolean useUnseen;        // WiredExtraUnseen present
+    private final boolean executeInOrder;   // WiredExtraExecuteInOrder present
 
     /**
      * Create a new wired stack.
@@ -52,7 +53,7 @@ public final class WiredStack {
                       IWiredTrigger trigger,
                       List<IWiredCondition> conditions,
                       List<IWiredEffect> effects) {
-        this(triggerItem, trigger, conditions, effects, false, false, false);
+        this(triggerItem, trigger, conditions, effects, false, false, false, false);
     }
 
     /**
@@ -65,6 +66,7 @@ public final class WiredStack {
      * @param useOrMode if true, conditions use OR logic (any pass = success)
      * @param useRandom if true, select one random effect instead of all
      * @param useUnseen if true, execute effects in "unseen" order (round-robin)
+     * @param executeInOrder if true, execute all regular effects in stable stack order
      */
     public WiredStack(HabboItem triggerItem,
                       IWiredTrigger trigger,
@@ -72,7 +74,8 @@ public final class WiredStack {
                       List<IWiredEffect> effects,
                       boolean useOrMode,
                       boolean useRandom,
-                      boolean useUnseen) {
+                      boolean useUnseen,
+                      boolean executeInOrder) {
         this.triggerItem = triggerItem;
         this.trigger = trigger;
         this.conditions = conditions != null ? Collections.unmodifiableList(conditions) : Collections.emptyList();
@@ -80,6 +83,7 @@ public final class WiredStack {
         this.useOrMode = useOrMode;
         this.useRandom = useRandom;
         this.useUnseen = useUnseen;
+        this.executeInOrder = executeInOrder;
     }
 
     /**
@@ -158,6 +162,15 @@ public final class WiredStack {
     }
 
     /**
+     * Check if ordered execution mode is enabled (WiredExtraExecuteInOrder).
+     * When true, all regular effects execute in stable stack order.
+     * @return true if ordered execution is enabled
+     */
+    public boolean executeInOrder() {
+        return executeInOrder;
+    }
+
+    /**
      * Get the number of conditions.
      * @return condition count
      */
@@ -183,6 +196,7 @@ public final class WiredStack {
                 ", orMode=" + useOrMode +
                 ", random=" + useRandom +
                 ", unseen=" + useUnseen +
+                ", executeInOrder=" + executeInOrder +
                 '}';
     }
 }

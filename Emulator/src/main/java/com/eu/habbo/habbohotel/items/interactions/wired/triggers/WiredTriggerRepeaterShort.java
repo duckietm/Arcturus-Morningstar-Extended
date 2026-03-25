@@ -105,7 +105,9 @@ public class WiredTriggerRepeaterShort extends WiredTriggerRepeater {
         long elapsedMs = tickCount * tickIntervalMs;
 
         if (elapsedMs % this.repeatTime == 0) {
-            if (this.getRoomId() != 0 && room.isLoaded()) {
+            long currentTime = System.currentTimeMillis();
+            if (this.getRoomId() != 0 && room.isLoaded()
+                    && WiredManager.isTriggerExecutionAllowed(room, this, currentTime)) {
                 WiredManager.triggerTimerRepeatShort(room, this);
             }
         }

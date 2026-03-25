@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.wired.core;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecuteInOrder;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
@@ -176,6 +177,7 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         boolean useOrMode = specialTypes.hasExtraType(x, y, WiredExtraOrEval.class);
         boolean useRandom = specialTypes.hasExtraType(x, y, WiredExtraRandom.class);
         boolean useUnseen = specialTypes.hasExtraType(x, y, WiredExtraUnseen.class);
+        boolean executeInOrder = specialTypes.hasExtraType(x, y, WiredExtraExecuteInOrder.class);
 
         return new WiredStack(
                 trigger,
@@ -184,7 +186,8 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
                 effects,
                 useOrMode,
                 useRandom,
-                useUnseen
+                useUnseen,
+                executeInOrder
         );
     }
 

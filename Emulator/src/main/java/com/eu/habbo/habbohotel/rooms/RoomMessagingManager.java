@@ -4,6 +4,9 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericAlertComposer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * Manages all messaging and communication within a room.
  * Handles sending messages to Habbos, pet/bot chat, and alerts.
@@ -27,6 +30,34 @@ public class RoomMessagingManager {
             }
 
             habbo.getClient().sendResponse(message);
+        }
+    }
+
+    public void sendComposers(Collection<ServerMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+
+        ArrayList<ServerMessage> responses = new ArrayList<>();
+
+        for (ServerMessage message : messages) {
+            if (message == null) {
+                continue;
+            }
+
+            responses.add(message);
+        }
+
+        if (responses.isEmpty()) {
+            return;
+        }
+
+        for (Habbo habbo : this.room.getHabbos()) {
+            if (habbo.getClient() == null) {
+                continue;
+            }
+
+            habbo.getClient().sendResponses(new ArrayList<>(responses));
         }
     }
 

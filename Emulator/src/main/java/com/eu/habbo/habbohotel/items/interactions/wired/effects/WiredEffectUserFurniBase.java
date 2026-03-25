@@ -7,15 +7,19 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
+import com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer;
 import gnu.trove.procedure.TObjectProcedure;
 
 import java.sql.ResultSet;
@@ -37,7 +41,7 @@ public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
         super(id, userId, item, extradata, limitedStack, limitedSells);
     }
 
-    protected HabboItem resolveLastItem(WiredContext ctx) {
+    protected List<HabboItem> resolveItems(WiredContext ctx) {
         Room room = ctx.room();
         List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
 
@@ -46,6 +50,12 @@ public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
                     || item.getRoomId() != this.getRoomId()
                     || room.getHabboItem(item.getId()) == null);
         }
+
+        return effectiveItems;
+    }
+
+    protected HabboItem resolveLastItem(WiredContext ctx) {
+        List<HabboItem> effectiveItems = this.resolveItems(ctx);
 
         if (effectiveItems.isEmpty()) {
             return null;
@@ -88,6 +98,62 @@ public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
         }
 
         return habbos;
+    }
+
+    protected RoomTile resolveTargetTile(Habbo habbo) {
+        if (habbo == null || habbo.getRoomUnit() == null) {
+            return null;
+        }
+
+        RoomUnit roomUnit = habbo.getRoomUnit();
+        RoomTile movingTile = this.resolveActiveMoveTile(roomUnit);
+
+        if (movingTile != null) {
+            return movingTile;
+        }
+
+        return roomUnit.getCurrentLocation();
+    }
+
+    private RoomTile resolveActiveMoveTile(RoomUnit roomUnit) {
+        if (roomUnit == null || roomUnit.getRoom() == null || roomUnit.getRoom().getLayout() == null) {
+            return null;
+        }
+
+        String moveStatus = roomUnit.getStatus(RoomUnitStatus.MOVE);
+        if (moveStatus != null && !moveStatus.isEmpty()) {
+            String[] parts = moveStatus.split(",");
+            if (parts.length >= 2) {
+                try {
+                    return roomUnit.getRoom().getLayout().getTile(
+                            Short.parseShort(parts[0]),
+                            Short.parseShort(parts[1]));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected Integer resolveFollowAnimationDuration(Room room, Habbo habbo, HabboItem stackItem) {
+        if (room == null || habbo == null || habbo.getRoomUnit() == null || stackItem == null) {
+            return null;
+        }
+
+        RoomUnit roomUnit = habbo.getRoomUnit();
+        if (this.resolveActiveMoveTile(roomUnit) == null) {
+            return null;
+        }
+
+        long moveStatusTimestamp = roomUnit.getMoveStatusTimestamp();
+        if (moveStatusTimestamp <= 0L) {
+            return null;
+        }
+
+        int configuredDuration = WiredMoveCarryHelper.getAnimationDuration(room, stackItem, WiredMovementsComposer.DEFAULT_DURATION);
+        int remainingStepDuration = (int) Math.max(50L, WiredMovementsComposer.DEFAULT_DURATION - Math.max(0L, System.currentTimeMillis() - moveStatusTimestamp));
+        return Math.min(configuredDuration, remainingStepDuration);
     }
 
     @Override
