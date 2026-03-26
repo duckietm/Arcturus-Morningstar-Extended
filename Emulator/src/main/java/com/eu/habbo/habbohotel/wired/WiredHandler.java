@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectGiveR
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTriggerStacks;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecuteInOrder;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -40,8 +41,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 public class WiredHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredHandler.class);
@@ -185,20 +188,24 @@ public class WiredHandler {
             }
 
             if (!conditions.isEmpty()) {
-                ArrayList<WiredConditionType> matchedConditions = new ArrayList<>(conditions.size());
-                for (InteractionWiredCondition searchMatched : conditions) {
-                    if (!matchedConditions.contains(searchMatched.getType()) && searchMatched.operator() == WiredConditionOperator.OR && searchMatched.execute(roomUnit, room, stuff)) {
-                        matchedConditions.add(searchMatched.getType());
+                int conditionEvaluationMode = WiredExtraOrEval.MODE_ALL;
+                int conditionEvaluationValue = 1;
+                for (InteractionWiredExtra extra : extras) {
+                    if (extra instanceof WiredExtraOrEval) {
+                        conditionEvaluationMode = ((WiredExtraOrEval) extra).getEvaluationMode();
+                        conditionEvaluationValue = ((WiredExtraOrEval) extra).getCompareValue();
+                        break;
                     }
                 }
 
-                for (InteractionWiredCondition condition : conditions) {
-                    if (!((condition.operator() == WiredConditionOperator.OR && matchedConditions.contains(condition.getType())) ||
-                            (condition.operator() == WiredConditionOperator.AND && condition.execute(roomUnit, room, stuff))) &&
-                            !Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
-
-                        return false;
+                if (!evaluateConditions(conditions, roomUnit, room, stuff, conditionEvaluationMode, conditionEvaluationValue)) {
+                    for (InteractionWiredCondition condition : conditions) {
+                        if (!Emulator.getPluginManager().fireEvent(new WiredConditionFailedEvent(room, roomUnit, trigger, condition)).isCancelled()) {
+                            break;
+                        }
                     }
+
+                    return false;
                 }
             }
 
@@ -251,6 +258,40 @@ public class WiredHandler {
         }
 
         return false;
+    }
+
+    private static boolean evaluateConditions(THashSet<InteractionWiredCondition> conditions, RoomUnit roomUnit, Room room, Object[] stuff, int evaluationMode, int evaluationValue) {
+        if (conditions == null || conditions.isEmpty()) {
+            return true;
+        }
+
+        Map<WiredConditionType, Boolean> orGroupResults = new HashMap<>();
+        int matchedRequirements = 0;
+        int totalRequirements = 0;
+
+        for (InteractionWiredCondition condition : conditions) {
+            boolean result = condition.execute(roomUnit, room, stuff);
+
+            if (condition.operator() == WiredConditionOperator.OR) {
+                orGroupResults.merge(condition.getType(), result, (left, right) -> left || right);
+                continue;
+            }
+
+            totalRequirements++;
+            if (result) {
+                matchedRequirements++;
+            }
+        }
+
+        totalRequirements += orGroupResults.size();
+
+        for (Boolean groupResult : orGroupResults.values()) {
+            if (Boolean.TRUE.equals(groupResult)) {
+                matchedRequirements++;
+            }
+        }
+
+        return WiredExtraOrEval.matchesMode(evaluationMode, matchedRequirements, totalRequirements, evaluationValue);
     }
 
     private static boolean triggerEffect(InteractionWiredEffect effect, RoomUnit roomUnit, Room room, Object[] stuff, long millis) {

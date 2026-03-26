@@ -316,6 +316,15 @@ public final class WiredManager {
         return handleEvent(event);
     }
 
+    public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message) {
+        if (!isEnabled() || engine == null || room == null || user == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userSays(room, user, message);
+        return engine.shouldSuppressUserSaysOutput(event);
+    }
+
     /**
      * Trigger when a user enters the room.
      */

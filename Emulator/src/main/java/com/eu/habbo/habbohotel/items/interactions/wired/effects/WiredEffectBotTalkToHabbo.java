@@ -15,6 +15,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredBotSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTextPlaceholderUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -136,6 +137,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
                     .replace(Emulator.getTexts().getValue("wired.variable.item_count", "%item_count%"), room.itemCount() + "")
                     .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), room.getName())
                     .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), room.getUserCount() + "");
+            m = WiredTextPlaceholderUtil.applyUsernamePlaceholders(ctx, m);
 
             for (Bot bot : bots) {
                 String botMessage = m.replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), bot.getName());
@@ -203,7 +205,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
     @Override
     public boolean requiresTriggeringUser() {
-        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER || WiredBotSourceUtil.requiresTriggeringUser(this.botSource);
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER || WiredBotSourceUtil.requiresTriggeringUser(this.botSource) || WiredTextPlaceholderUtil.requiresActor(this.getRoom(), this);
     }
 
     static class JsonData {
