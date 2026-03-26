@@ -40,6 +40,7 @@ import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.promotions.RoomPromotionMessageComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.messages.outgoing.users.MutedWhisperComposer;
+import com.eu.habbo.messages.outgoing.users.UserBadgesComposer;
 import com.eu.habbo.plugin.events.navigator.NavigatorRoomCreatedEvent;
 import com.eu.habbo.plugin.events.rooms.RoomFloorItemsLoadEvent;
 import com.eu.habbo.plugin.events.rooms.RoomUncachedEvent;
@@ -72,6 +73,7 @@ public class RoomManager {
     private final THashMap<Integer, RoomCategory> roomCategories;
     private final List<String> mapNames;
     private final ConcurrentHashMap<Integer, Room> activeRooms;
+    private final ConcurrentHashMap<Integer, Set<Integer>> roomsByOwner;
     private final ArrayList<Class<? extends Game>> gameTypes;
 
     public RoomManager() {
@@ -79,6 +81,7 @@ public class RoomManager {
         this.roomCategories = new THashMap<>();
         this.mapNames = new ArrayList<>();
         this.activeRooms = new ConcurrentHashMap<>();
+        this.roomsByOwner = new ConcurrentHashMap<>();
         this.loadRoomCategories();
         this.loadRoomModels();
 
@@ -93,6 +96,20 @@ public class RoomManager {
         registerGameType(RollerskateGame.class);
 
         LOGGER.info("Room Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
+    }
+
+    private void trackRoomOwner(Room room) {
+        this.roomsByOwner.computeIfAbsent(room.getOwnerId(), k -> ConcurrentHashMap.newKeySet()).add(room.getId());
+    }
+
+    private void untrackRoomOwner(Room room) {
+        Set<Integer> rooms = this.roomsByOwner.get(room.getOwnerId());
+        if (rooms != null) {
+            rooms.remove(room.getId());
+            if (rooms.isEmpty()) {
+                this.roomsByOwner.remove(room.getOwnerId());
+            }
+        }
     }
 
     public void loadRoomModels() {
@@ -143,6 +160,7 @@ public class RoomManager {
                     Room room = new Room(set);
                     room.preventUncaching = true;
                     this.activeRooms.put(set.getInt("id"), room);
+                    this.trackRoomOwner(room);
                 }
             }
         } catch (SQLException e) {
@@ -162,6 +180,7 @@ public class RoomManager {
                     if (room == null) {
                         room = new Room(set);
                         this.activeRooms.put(set.getInt("id"), room);
+                        this.trackRoomOwner(room);
                     }
 
                     if (!rooms.containsKey(set.getInt("category"))) {
@@ -179,12 +198,7 @@ public class RoomManager {
     }
 
     public RoomCategory getCategory(int id) {
-        for (RoomCategory category : this.roomCategories.values()) {
-            if (category.getId() == id)
-                return category;
-        }
-
-        return null;
+        return this.roomCategories.get(id);
     }
 
     public RoomCategory getCategory(String name) {
@@ -220,15 +234,8 @@ public class RoomManager {
     }
 
     public boolean hasCategory(int categoryId, Habbo habbo) {
-        for (RoomCategory category : this.roomCategories.values()) {
-            if (category.getId() == categoryId) {
-                if (category.getMinRank() <= habbo.getHabboInfo().getRank().getId()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        RoomCategory category = this.roomCategories.get(categoryId);
+        return category != null && category.getMinRank() <= habbo.getHabboInfo().getRank().getId();
     }
 
     public THashMap<Integer, RoomCategory> getRoomCategories() {
@@ -333,6 +340,7 @@ public class RoomManager {
 
             if (room != null) {
                 this.activeRooms.put(room.getId(), room);
+                this.trackRoomOwner(room);
             }
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
@@ -380,8 +388,11 @@ public class RoomManager {
             statement.setInt(1, habbo.getHabboInfo().getId());
             try (ResultSet set = statement.executeQuery()) {
                 while (set.next()) {
-                    if (!this.activeRooms.containsKey(set.getInt("id")))
-                        this.activeRooms.put(set.getInt("id"), new Room(set));
+                    if (!this.activeRooms.containsKey(set.getInt("id"))) {
+                        Room room = new Room(set);
+                        this.activeRooms.put(room.getId(), room);
+                        this.trackRoomOwner(room);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -402,22 +413,31 @@ public class RoomManager {
                 continue;
 
             room.dispose();
+            this.untrackRoomOwner(room);
             this.activeRooms.remove(room.getId());
         }
     }
 
     public void clearInactiveRooms() {
         THashSet<Room> roomsToDispose = new THashSet<>();
-        for (Room room : this.activeRooms.values()) {
-            if (!room.isPublicRoom() && !room.isStaffPromotedRoom() && !Emulator.getGameServer().getGameClientManager().containsHabbo(room.getOwnerId()) && room.isPreLoaded()) {
-                roomsToDispose.add(room);
+        for (Map.Entry<Integer, Set<Integer>> entry : this.roomsByOwner.entrySet()) {
+            int ownerId = entry.getKey();
+            if (!Emulator.getGameServer().getGameClientManager().containsHabbo(ownerId)) {
+                for (int roomId : entry.getValue()) {
+                    Room room = this.activeRooms.get(roomId);
+                    if (room != null && !room.isPublicRoom() && !room.isStaffPromotedRoom() && room.isPreLoaded()) {
+                        roomsToDispose.add(room);
+                    }
+                }
             }
         }
 
         for (Room room : roomsToDispose) {
             room.dispose();
-            if (room.getUserCount() == 0)
+            if (room.getUserCount() == 0) {
+                this.untrackRoomOwner(room);
                 this.activeRooms.remove(room.getId());
+            }
         }
     }
 
@@ -446,6 +466,7 @@ public class RoomManager {
     }
 
     public void uncacheRoom(Room room) {
+        this.untrackRoomOwner(room);
         this.activeRooms.remove(room.getId());
     }
 
@@ -744,6 +765,9 @@ public class RoomManager {
 
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
+
+        // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
+        habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));
 
         List<Habbo> habbos = new ArrayList<>();
         if (!room.getCurrentHabbos().isEmpty()) {
@@ -1137,6 +1161,7 @@ public class RoomManager {
                     Room r = new Room(set);
                     rooms.add(r);
                     this.activeRooms.put(r.getId(), r);
+                    this.trackRoomOwner(r);
                 }
             }
         } catch (SQLException e) {
@@ -1197,6 +1222,7 @@ public class RoomManager {
                     rooms.add(r);
 
                     this.activeRooms.put(r.getId(), r);
+                    this.trackRoomOwner(r);
                 }
             }
         } catch (SQLException e) {
@@ -1260,6 +1286,7 @@ public class RoomManager {
                         room = new Room(set);
 
                         this.activeRooms.put(room.getId(), room);
+                        this.trackRoomOwner(room);
                     }
 
                     rooms.add(room);
@@ -1501,6 +1528,7 @@ public class RoomManager {
             room.dispose();
         }
 
+        this.roomsByOwner.clear();
         this.activeRooms.clear();
 
         LOGGER.info("Room Manager -> Disposed!");

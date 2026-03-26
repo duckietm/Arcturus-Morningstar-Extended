@@ -35,11 +35,13 @@ public class HabboManager {
     public static boolean NAMECHANGE_ENABLED = false;
 
     private final ConcurrentHashMap<Integer, Habbo> onlineHabbos;
+    private final ConcurrentHashMap<String, Habbo> onlineHabbosByName;
 
     public HabboManager() {
         long millis = System.currentTimeMillis();
 
         this.onlineHabbos = new ConcurrentHashMap<>();
+        this.onlineHabbosByName = new ConcurrentHashMap<>();
 
         LOGGER.info("Habbo Manager -> Loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
@@ -80,10 +82,12 @@ public class HabboManager {
 
     public void addHabbo(Habbo habbo) {
         this.onlineHabbos.put(habbo.getHabboInfo().getId(), habbo);
+        this.onlineHabbosByName.put(habbo.getHabboInfo().getUsername().toLowerCase(), habbo);
     }
 
     public void removeHabbo(Habbo habbo) {
         this.onlineHabbos.remove(habbo.getHabboInfo().getId());
+        this.onlineHabbosByName.remove(habbo.getHabboInfo().getUsername().toLowerCase());
     }
 
     public Habbo getHabbo(int id) {
@@ -91,14 +95,7 @@ public class HabboManager {
     }
 
     public Habbo getHabbo(String username) {
-        synchronized (this.onlineHabbos) {
-            for (Map.Entry<Integer, Habbo> map : this.onlineHabbos.entrySet()) {
-                if (map.getValue().getHabboInfo().getUsername().equalsIgnoreCase(username))
-                    return map.getValue();
-            }
-        }
-
-        return null;
+        return this.onlineHabbosByName.get(username.toLowerCase());
     }
 
     public Habbo loadHabbo(String sso) {
@@ -178,11 +175,9 @@ public class HabboManager {
     }
 
     public void sendPacketToHabbosWithPermission(ServerMessage message, String perm) {
-        synchronized (this.onlineHabbos) {
-            for (Habbo habbo : this.onlineHabbos.values()) {
-                if (habbo.hasPermission(perm)) {
-                    habbo.getClient().sendResponse(message);
-                }
+        for (Habbo habbo : this.onlineHabbos.values()) {
+            if (habbo.hasPermission(perm)) {
+                habbo.getClient().sendResponse(message);
             }
         }
     }
