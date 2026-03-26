@@ -11,8 +11,19 @@ import gnu.trove.procedure.TIntProcedure;
 import java.util.ArrayList;
 
 public class UserClothesComposer extends MessageComposer {
+    private static class ClothEntry {
+        private final String name;
+        private final int[] setIds;
+
+        private ClothEntry(String name, int[] setIds) {
+            this.name = name;
+            this.setIds = setIds;
+        }
+    }
+
     private final ArrayList<Integer> idList = new ArrayList<>();
     private final ArrayList<String> nameList = new ArrayList<>();
+    private final ArrayList<ClothEntry> clothEntries = new ArrayList<>();
 
     public UserClothesComposer(Habbo habbo) {
         habbo.getInventory().getWardrobeComponent().getClothing().forEach(new TIntProcedure() {
@@ -31,6 +42,12 @@ public class UserClothesComposer extends MessageComposer {
                 return true;
             }
         });
+
+        for (ClothItem item : Emulator.getGameEnvironment().getCatalogManager().clothing.values()) {
+            if (item != null) {
+                this.clothEntries.add(new ClothEntry(item.name, item.setId));
+            }
+        }
     }
 
     @Override
@@ -40,6 +57,17 @@ public class UserClothesComposer extends MessageComposer {
         this.idList.forEach(this.response::appendInt);
         this.response.appendInt(this.nameList.size());
         this.nameList.forEach(this.response::appendString);
+        this.response.appendInt(this.clothEntries.size());
+
+        for (ClothEntry entry : this.clothEntries) {
+            this.response.appendString(entry.name);
+            this.response.appendInt(entry.setIds.length);
+
+            for (int setId : entry.setIds) {
+                this.response.appendInt(setId);
+            }
+        }
+
         return this.response;
     }
 
