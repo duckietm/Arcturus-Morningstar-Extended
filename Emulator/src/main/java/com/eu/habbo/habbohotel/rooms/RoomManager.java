@@ -40,6 +40,7 @@ import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.promotions.RoomPromotionMessageComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.*;
 import com.eu.habbo.messages.outgoing.users.MutedWhisperComposer;
+import com.eu.habbo.messages.outgoing.users.UserBadgesComposer;
 import com.eu.habbo.plugin.events.navigator.NavigatorRoomCreatedEvent;
 import com.eu.habbo.plugin.events.rooms.RoomFloorItemsLoadEvent;
 import com.eu.habbo.plugin.events.rooms.RoomUncachedEvent;
@@ -764,6 +765,9 @@ public class RoomManager {
 
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
+
+        // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
+        habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));
 
         List<Habbo> habbos = new ArrayList<>();
         if (!room.getCurrentHabbos().isEmpty()) {
