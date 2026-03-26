@@ -2,6 +2,7 @@ package com.eu.habbo.habbohotel.wired.core;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecuteInOrder;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
@@ -174,17 +175,30 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         List<IWiredEffect> effects = collectEffects(rawEffects);
 
         // Check for extras
-        boolean useOrMode = specialTypes.hasExtraType(x, y, WiredExtraOrEval.class);
+        THashSet<InteractionWiredExtra> extras = specialTypes.getExtras(x, y);
+        int conditionEvaluationMode = WiredExtraOrEval.MODE_ALL;
+        int conditionEvaluationValue = 1;
         boolean useRandom = specialTypes.hasExtraType(x, y, WiredExtraRandom.class);
         boolean useUnseen = specialTypes.hasExtraType(x, y, WiredExtraUnseen.class);
         boolean executeInOrder = specialTypes.hasExtraType(x, y, WiredExtraExecuteInOrder.class);
+
+        if (extras != null) {
+            for (InteractionWiredExtra extra : extras) {
+                if (extra instanceof WiredExtraOrEval) {
+                    conditionEvaluationMode = ((WiredExtraOrEval) extra).getEvaluationMode();
+                    conditionEvaluationValue = ((WiredExtraOrEval) extra).getCompareValue();
+                    break;
+                }
+            }
+        }
 
         return new WiredStack(
                 trigger,
                 wrappedTrigger,
                 conditions,
                 effects,
-                useOrMode,
+                conditionEvaluationMode,
+                conditionEvaluationValue,
                 useRandom,
                 useUnseen,
                 executeInOrder

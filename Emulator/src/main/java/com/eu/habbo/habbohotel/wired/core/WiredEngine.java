@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
@@ -305,83 +306,102 @@ public final class WiredEngine {
         return true;
     }
 
+    private boolean wouldTriggerStack(WiredStack stack, WiredEvent event, long currentTime) {
+        Room room = event.getRoom();
+
+        if (!stack.trigger().matches(stack.triggerItem(), event)) {
+            return false;
+        }
+
+        if (stack.trigger().requiresActor() && !event.getActor().isPresent()) {
+            return false;
+        }
+
+        WiredState state = new WiredState(maxStepsPerStack);
+        WiredContext ctx = new WiredContext(event, stack.triggerItem(), stack, services, state, null);
+
+        state.step();
+
+        List<InteractionWiredEffect> executedSelectors = Collections.emptyList();
+        if (stack.hasEffects()) {
+            executedSelectors = executeSelectors(stack, ctx);
+            applySelectionFilterExtras(stack, ctx, executedSelectors);
+        }
+
+        if (stack.hasConditions() && !evaluateConditions(stack, ctx)) {
+            return false;
+        }
+
+        WiredExtraExecutionLimit executionLimitExtra = getExecutionLimitExtra(room, stack);
+        return executionLimitExtra == null || executionLimitExtra.canExecuteAt(currentTime);
+    }
+
     /**
      * Evaluate all conditions in a stack.
      */
     private boolean evaluateConditions(WiredStack stack, WiredContext ctx) {
         List<IWiredCondition> conditions = stack.conditions();
-        
-        if (stack.useOrMode()) {
-            // OR mode: at least one condition must pass
-            return evaluateOrMode(conditions, ctx);
-        } else {
-            // Standard mode: use individual operators
-            return evaluateStandardMode(conditions, ctx);
-        }
+
+        return evaluateConditionsByMode(conditions, ctx, stack.conditionEvaluationMode(), stack.conditionEvaluationValue());
     }
 
     /**
-     * Evaluate conditions in OR mode (any pass = success).
+     * Evaluate conditions according to the configured stack mode.
      */
-    private boolean evaluateOrMode(List<IWiredCondition> conditions, WiredContext ctx) {
-        // Group by condition type (for legacy compatibility)
-        Map<String, Boolean> typeResults = new HashMap<>();
-        
+    private boolean evaluateConditionsByMode(List<IWiredCondition> conditions, WiredContext ctx, int evaluationMode, int evaluationValue) {
+        if (conditions == null || conditions.isEmpty()) {
+            return true;
+        }
+
+        Room room = ctx.room();
+        Map<String, List<Boolean>> groupedOrResults = new LinkedHashMap<>();
+        int matchedRequirements = 0;
+        int totalRequirements = 0;
+
         for (IWiredCondition condition : conditions) {
             ctx.state().step();
-            
-            String typeName = condition.getClass().getSimpleName();
-            if (!typeResults.containsKey(typeName) && condition.evaluate(ctx)) {
-                typeResults.put(typeName, true);
+
+            boolean result = condition.evaluate(ctx);
+            String conditionKey = getConditionGroupKey(condition);
+
+            if (condition.operator() == WiredConditionOperator.OR) {
+                groupedOrResults.computeIfAbsent(conditionKey, ignored -> new ArrayList<>()).add(result);
+                debug(room, "  Condition (OR group {}) {}: {}", conditionKey, condition.getClass().getSimpleName(), result ? "PASS" : "FAIL");
+                continue;
             }
+
+            totalRequirements++;
+
+            if (result) {
+                matchedRequirements++;
+            }
+
+            debug(room, "  Condition {}: {}", condition.getClass().getSimpleName(), result ? "PASS" : "FAIL");
         }
-        
-        // At least one condition type must have passed
-        return !typeResults.isEmpty();
+
+        for (Map.Entry<String, List<Boolean>> entry : groupedOrResults.entrySet()) {
+            totalRequirements++;
+
+            boolean groupPassed = entry.getValue().stream().anyMatch(Boolean::booleanValue);
+            if (groupPassed) {
+                matchedRequirements++;
+            }
+
+            debug(room, "  Condition (OR result {}) : {}", entry.getKey(), groupPassed ? "PASS" : "FAIL");
+        }
+
+        boolean matches = WiredExtraOrEval.matchesMode(evaluationMode, matchedRequirements, totalRequirements, evaluationValue);
+
+        debug(room, "Condition eval mode {} value {} matched {}/{} logical requirements => {}", evaluationMode, evaluationValue, matchedRequirements, totalRequirements, matches ? "PASS" : "FAIL");
+        return matches;
     }
 
-    /**
-     * Evaluate conditions in standard mode using operators.
-     */
-    private boolean evaluateStandardMode(List<IWiredCondition> conditions, WiredContext ctx) {
-        Room room = ctx.room();
-        
-        // First pass: collect all OR conditions that passed
-        Map<String, Boolean> orResults = new HashMap<>();
-        for (IWiredCondition condition : conditions) {
-            if (condition.operator() == WiredConditionOperator.OR) {
-                ctx.state().step();
-                String typeName = condition.getClass().getSimpleName();
-                boolean result = condition.evaluate(ctx);
-                debug(room, "  Condition (OR) {}: {}", typeName, result ? "PASS" : "FAIL");
-                if (!orResults.containsKey(typeName) && result) {
-                    orResults.put(typeName, true);
-                }
-            }
+    private String getConditionGroupKey(IWiredCondition condition) {
+        if (condition instanceof InteractionWiredCondition) {
+            return String.valueOf(((InteractionWiredCondition) condition).getType());
         }
 
-        // Second pass: verify all conditions
-        for (IWiredCondition condition : conditions) {
-            boolean passes;
-            String typeName = condition.getClass().getSimpleName();
-            
-            if (condition.operator() == WiredConditionOperator.OR) {
-                // OR: passes if any of same type passed
-                passes = orResults.containsKey(typeName);
-                debug(room, "  Condition (OR check) {}: {}", typeName, passes ? "PASS" : "FAIL");
-            } else {
-                // AND: must evaluate and pass
-                ctx.state().step();
-                passes = condition.evaluate(ctx);
-                debug(room, "  Condition (AND) {}: {}", typeName, passes ? "PASS" : "FAIL");
-            }
-            
-            if (!passes) {
-                return false;
-            }
-        }
-        
-        return true;
+        return condition.getClass().getName();
     }
 
     /**
@@ -644,6 +664,51 @@ public final class WiredEngine {
                 executeOrderedEffectBatch(batch, ctx, currentTime, false);
             }
         }
+    }
+
+    /**
+     * Preview whether a USER_SAYS event should suppress the public room chat output.
+     * This mirrors trigger and condition eligibility without executing regular effects.
+     */
+    public boolean shouldSuppressUserSaysOutput(WiredEvent event) {
+        if (event == null || event.getType() != WiredEvent.Type.USER_SAYS) {
+            return false;
+        }
+
+        Room room = event.getRoom();
+        if (room == null || !room.isLoaded()) {
+            return false;
+        }
+
+        List<WiredStack> stacks = index.getStacks(room, event.getType());
+        if (stacks.isEmpty()) {
+            return false;
+        }
+
+        long triggerTime = event.getCreatedAtMs();
+
+        for (WiredStack stack : stacks) {
+            if (!(stack.triggerItem() instanceof WiredTriggerHabboSaysKeyword)) {
+                continue;
+            }
+
+            WiredTriggerHabboSaysKeyword trigger = (WiredTriggerHabboSaysKeyword) stack.triggerItem();
+            if (!trigger.isHideMessage()) {
+                continue;
+            }
+
+            try {
+                if (wouldTriggerStack(stack, event, triggerTime)) {
+                    return true;
+                }
+            } catch (WiredLimitException limitEx) {
+                debug(room, "Suppression preview stopped (limit): {}", limitEx.getMessage());
+            } catch (Exception ex) {
+                LOGGER.warn("Error previewing USER_SAYS suppression in room {}: {}", room.getId(), ex.getMessage());
+            }
+        }
+
+        return false;
     }
 
     private void scheduleOrderedEffectBatch(List<IWiredEffect> batch, WiredContext ctx, int delay, long triggerTime) {
