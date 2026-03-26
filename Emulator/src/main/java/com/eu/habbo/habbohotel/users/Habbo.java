@@ -259,7 +259,7 @@ public class Habbo implements Runnable {
 
         this.getHabboInfo().addCredits(event.credits);
 
-        if (this.client != null) this.client.sendResponse(new UserCreditsComposer(this.client.getHabbo()));
+        if (this.client != null) this.client.sendResponse(new UserCreditsComposer(this));
     }
 
 
