@@ -72,6 +72,7 @@ public class RoomManager {
     public static boolean SHOW_PUBLIC_IN_POPULAR_TAB = false;
     private final THashMap<Integer, RoomCategory> roomCategories;
     private final List<String> mapNames;
+    private final ConcurrentHashMap<String, RoomLayoutData> layoutCache;
     private final ConcurrentHashMap<Integer, Room> activeRooms;
     private final ConcurrentHashMap<Integer, Set<Integer>> roomsByOwner;
     private final ArrayList<Class<? extends Game>> gameTypes;
@@ -80,6 +81,7 @@ public class RoomManager {
         long millis = System.currentTimeMillis();
         this.roomCategories = new THashMap<>();
         this.mapNames = new ArrayList<>();
+        this.layoutCache = new ConcurrentHashMap<>();
         this.activeRooms = new ConcurrentHashMap<>();
         this.roomsByOwner = new ConcurrentHashMap<>();
         this.loadRoomCategories();
@@ -114,9 +116,12 @@ public class RoomManager {
 
     public void loadRoomModels() {
         this.mapNames.clear();
+        this.layoutCache.clear();
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM room_models")) {
             while (set.next()) {
-                this.mapNames.add(set.getString("name"));
+                String name = set.getString("name");
+                this.mapNames.add(name);
+                this.layoutCache.put(name, new RoomLayoutData(set));
             }
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
@@ -446,6 +451,12 @@ public class RoomManager {
     }
 
     public RoomLayout loadLayout(String name, Room room) {
+        RoomLayoutData cached = this.layoutCache.get(name);
+        if (cached != null) {
+            return new RoomLayout(cached, room);
+        }
+
+        // Fallback to DB if not in cache (should not happen for standard models)
         RoomLayout layout = null;
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM room_models WHERE name = ? LIMIT 1")) {
             statement.setString(1, name);
@@ -1621,6 +1632,26 @@ public class RoomManager {
 
         RoomBanTypes(int duration) {
             this.duration = duration;
+        }
+    }
+
+    /**
+     * Cached layout data from room_models to avoid repeated DB queries.
+     * The raw data is shared; each Room gets its own RoomLayout instance.
+     */
+    static class RoomLayoutData {
+        final String name;
+        final int doorX;
+        final int doorY;
+        final int doorDir;
+        final String heightmap;
+
+        RoomLayoutData(ResultSet set) throws SQLException {
+            this.name = set.getString("name");
+            this.doorX = set.getInt("door_x");
+            this.doorY = set.getInt("door_y");
+            this.doorDir = set.getInt("door_dir");
+            this.heightmap = set.getString("heightmap");
         }
     }
 }

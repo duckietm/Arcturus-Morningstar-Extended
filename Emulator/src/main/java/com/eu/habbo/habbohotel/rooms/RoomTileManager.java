@@ -517,17 +517,43 @@ public class RoomTileManager {
 
     /**
      * Loads the heightmap for the room.
+     * Only updates tiles that have items on them (+ door tile) instead of all tiles,
+     * using getTilesAt() to correctly handle rotated multi-tile furniture.
      */
     public void loadHeightmap() {
         RoomLayout layout = this.room.getLayout();
         if (layout != null) {
-            for (short x = 0; x < layout.getMapSizeX(); x++) {
-                for (short y = 0; y < layout.getMapSizeY(); y++) {
-                    RoomTile tile = layout.getTile(x, y);
-                    if (tile != null) {
-                        this.updateTile(tile);
-                    }
+            THashSet<HabboItem> floorItems = this.room.getFloorItems();
+
+            if (floorItems.isEmpty()) {
+                // No items - only update door tile
+                RoomTile doorTile = layout.getDoorTile();
+                if (doorTile != null) {
+                    this.updateTile(doorTile);
                 }
+                return;
+            }
+
+            // Collect unique tiles occupied by items (handles rotation)
+            THashSet<RoomTile> tilesToUpdate = new THashSet<>();
+            for (HabboItem item : floorItems) {
+                RoomTile baseTile = layout.getTile(item.getX(), item.getY());
+                if (baseTile != null) {
+                    tilesToUpdate.addAll(layout.getTilesAt(baseTile,
+                        item.getBaseItem().getWidth(),
+                        item.getBaseItem().getLength(),
+                        item.getRotation()));
+                }
+            }
+
+            // Always include door tile
+            RoomTile doorTile = layout.getDoorTile();
+            if (doorTile != null) {
+                tilesToUpdate.add(doorTile);
+            }
+
+            for (RoomTile tile : tilesToUpdate) {
+                this.updateTile(tile);
             }
         } else {
             LOGGER.error("Unknown Room Layout for Room (ID: {})", this.room.getId());

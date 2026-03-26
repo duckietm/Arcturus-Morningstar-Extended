@@ -54,6 +54,25 @@ public class RoomLayout {
     }
   }
 
+  public RoomLayout(RoomManager.RoomLayoutData data, Room room) {
+    this.room = room;
+    try {
+      this.name = data.name;
+      this.doorX = (short) data.doorX;
+      this.doorY = (short) data.doorY;
+
+      this.doorDirection = data.doorDir;
+      this.heightmap = data.heightmap;
+
+      this.parse();
+      this.pathfinder = new PathfinderImpl(this.room, MAXIMUM_STEP_HEIGHT,
+          Emulator.getConfig().getBoolean("pathfinder.step.allow.falling", true),
+          Emulator.getConfig().getBoolean("pathfinder.retro-style.diagonals", false));
+    } catch (Exception e) {
+      LOGGER.error("Caught exception", e);
+    }
+  }
+
   public static boolean squareInSquare(Rectangle outerSquare, Rectangle innerSquare) {
     if (outerSquare.x > innerSquare.x) {
       return false;
