@@ -159,14 +159,63 @@ public class ItemsComponent {
             }
 
             if (!this.items.isEmpty()) {
-                for (int i = this.items.size(); i-- > 0; ) {
-                    try {
-                        items.advance();
-                    } catch (NoSuchElementException e) {
-                        break;
+                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+                    try (PreparedStatement updateStmt = connection.prepareStatement(
+                            "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ? WHERE id = ?")) {
+                        try (PreparedStatement deleteStmt = connection.prepareStatement(
+                                "DELETE FROM items WHERE id = ?")) {
+
+                            int updateCount = 0;
+                            int deleteCount = 0;
+
+                            for (int i = this.items.size(); i-- > 0; ) {
+                                try {
+                                    items.advance();
+                                } catch (NoSuchElementException e) {
+                                    break;
+                                }
+
+                                HabboItem item = items.value();
+                                if (item.needsDelete()) {
+                                    deleteStmt.setInt(1, item.getId());
+                                    deleteStmt.addBatch();
+                                    deleteCount++;
+                                    item.needsUpdate(false);
+                                    item.needsDelete(false);
+                                } else if (item.needsUpdate()) {
+                                    updateStmt.setInt(1, item.getUserId());
+                                    updateStmt.setInt(2, item.getRoomId());
+                                    updateStmt.setString(3, item.getWallPosition());
+                                    updateStmt.setInt(4, item.getX());
+                                    updateStmt.setInt(5, item.getY());
+                                    updateStmt.setDouble(6, item.getZ());
+                                    updateStmt.setInt(7, item.getRotation());
+                                    updateStmt.setString(8, item.getExtradata());
+                                    updateStmt.setString(9, item.getLimitedStack() + ":" + item.getLimitedSells());
+                                    updateStmt.setInt(10, item.getId());
+                                    updateStmt.addBatch();
+                                    updateCount++;
+                                    item.needsUpdate(false);
+                                }
+
+                                if (updateCount > 0 && updateCount % 100 == 0) {
+                                    updateStmt.executeBatch();
+                                }
+                                if (deleteCount > 0 && deleteCount % 100 == 0) {
+                                    deleteStmt.executeBatch();
+                                }
+                            }
+
+                            if (deleteCount % 100 != 0) {
+                                deleteStmt.executeBatch();
+                            }
+                            if (updateCount % 100 != 0) {
+                                updateStmt.executeBatch();
+                            }
+                        }
                     }
-                    if (items.value().needsUpdate())
-                        Emulator.getThreading().run(items.value());
+                } catch (SQLException e) {
+                    LOGGER.error("Caught SQL exception during batch item save", e);
                 }
             }
 

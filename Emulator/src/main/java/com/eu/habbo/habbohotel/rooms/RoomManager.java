@@ -179,12 +179,7 @@ public class RoomManager {
     }
 
     public RoomCategory getCategory(int id) {
-        for (RoomCategory category : this.roomCategories.values()) {
-            if (category.getId() == id)
-                return category;
-        }
-
-        return null;
+        return this.roomCategories.get(id);
     }
 
     public RoomCategory getCategory(String name) {
@@ -220,15 +215,8 @@ public class RoomManager {
     }
 
     public boolean hasCategory(int categoryId, Habbo habbo) {
-        for (RoomCategory category : this.roomCategories.values()) {
-            if (category.getId() == categoryId) {
-                if (category.getMinRank() <= habbo.getHabboInfo().getRank().getId()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        RoomCategory category = this.roomCategories.get(categoryId);
+        return category != null && category.getMinRank() <= habbo.getHabboInfo().getRank().getId();
     }
 
     public THashMap<Integer, RoomCategory> getRoomCategories() {
