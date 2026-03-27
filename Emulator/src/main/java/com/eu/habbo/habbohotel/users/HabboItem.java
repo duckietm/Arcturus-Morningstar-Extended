@@ -133,6 +133,24 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         serverMessage.appendInt(-1);
         serverMessage.appendInt(this.isUsable());
         serverMessage.appendInt(this.getUserId());
+        serverMessage.appendInt(this.getBaseItem().allowStack() ? 1 : 0);
+        serverMessage.appendInt(this.getBaseItem().allowSit() ? 1 : 0);
+        serverMessage.appendInt(this.getBaseItem().allowLay() ? 1 : 0);
+        serverMessage.appendInt(this.getBaseItem().allowWalk() ? 1 : 0);
+        serverMessage.appendInt(this.getBaseItem().getWidth());
+        serverMessage.appendInt(this.getBaseItem().getLength());
+        serverMessage.appendInt(this.getTeleportTargetId());
+    }
+
+    public int getTeleportTargetId() {
+        if (!(InteractionTeleport.class.isAssignableFrom(this.getBaseItem().getInteractionType().getType())
+            || InteractionTeleportTile.class.isAssignableFrom(this.getBaseItem().getInteractionType().getType()))) {
+            return 0;
+        }
+
+        int[] target = Emulator.getGameEnvironment().getItemManager().getTargetTeleportRoomId(this);
+
+        return (target.length >= 2) ? target[1] : 0;
     }
 
     public int getId() {

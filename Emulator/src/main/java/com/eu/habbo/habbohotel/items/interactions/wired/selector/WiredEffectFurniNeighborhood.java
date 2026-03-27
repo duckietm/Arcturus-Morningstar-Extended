@@ -61,6 +61,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null || tileOffsets.isEmpty()) return;
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         List<int[]> sourcePositions = resolveSourcePositions(ctx, room);
         if (sourcePositions.isEmpty()) return;
 
@@ -75,7 +77,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
                 for (HabboItem item : room.getItemsAt(tx, ty)) {
                     if (item == null) continue;
                     totalRaw++;
-                    if (item instanceof InteractionWired) {
+                    if (!includeWiredItems && item instanceof InteractionWired) {
                         wiredSkipped++;
                         LOGGER.info("[FurniNeighborhood]   SKIP wired item {} ({}) at ({},{})",
                                 item.getId(), item.getClass().getSimpleName(), tx, ty);
@@ -89,7 +91,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         }
         LOGGER.info("[FurniNeighborhood] Raw={}, wiredSkipped={}, kept={}", totalRaw, wiredSkipped, result.size());
 
-        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room), ctx.targets().items(), filterExisting, invert);
+        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), filterExisting, invert);
 
         // Always set the selector result — even if empty.
         // An empty result means no items matched the neighborhood, so downstream

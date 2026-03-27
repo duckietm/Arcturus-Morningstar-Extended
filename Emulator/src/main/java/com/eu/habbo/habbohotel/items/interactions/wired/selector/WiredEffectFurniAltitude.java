@@ -48,10 +48,12 @@ public class WiredEffectFurniAltitude extends InteractionWiredEffect {
             return;
         }
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         Set<HabboItem> matchingItems = new LinkedHashSet<>();
 
         room.getFloorItems().forEach(item -> {
-            if (item == null || item instanceof InteractionWired) {
+            if (item == null || (!includeWiredItems && item instanceof InteractionWired)) {
                 return;
             }
 
@@ -62,7 +64,7 @@ public class WiredEffectFurniAltitude extends InteractionWiredEffect {
 
         Set<HabboItem> result = new LinkedHashSet<>(matchingItems);
 
-        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room), ctx.targets().items(), this.filterExisting, this.invert);
+        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), this.filterExisting, this.invert);
 
         ctx.targets().setItems(result);
     }

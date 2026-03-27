@@ -7,7 +7,11 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
+import com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class UpdateFurniturePositionEvent extends MessageHandler {
     @Override
@@ -34,10 +38,30 @@ public class UpdateFurniturePositionEvent extends MessageHandler {
             return;
         }
 
-        error = room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), true, true);
+        RoomTile oldTile = room.getLayout().getTile(item.getX(), item.getY());
+        double oldZ = item.getZ();
+
+        error = room.moveFurniTo(item, tile, rotation, z, this.client.getHabbo(), false, true);
         if (error != FurnitureMovementError.NONE) {
             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, error.errorCode));
             this.client.sendResponse(new FloorItemUpdateComposer(item));
+            return;
+        }
+
+        if (oldTile != null) {
+            List<WiredMovementsComposer.MovementData> movements = new ArrayList<>(1);
+            movements.add(WiredMovementsComposer.furniMovement(
+                    item.getId(),
+                    oldTile.x,
+                    oldTile.y,
+                    tile.x,
+                    tile.y,
+                    oldZ,
+                    item.getZ(),
+                    item.getRotation(),
+                    WiredMovementsComposer.DEFAULT_DURATION));
+
+            room.sendComposer(new WiredMovementsComposer(movements).compose());
         }
     }
 }

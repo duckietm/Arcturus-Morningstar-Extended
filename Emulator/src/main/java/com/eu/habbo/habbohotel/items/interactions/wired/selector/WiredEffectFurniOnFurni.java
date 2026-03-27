@@ -67,12 +67,13 @@ public class WiredEffectFurniOnFurni extends InteractionWiredEffect {
         }
 
         Set<HabboItem> result = new LinkedHashSet<>();
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
 
         for (HabboItem sourceItem : sourceItems) {
-            result.addAll(this.resolveRelatedItems(room, sourceItem));
+            result.addAll(this.resolveRelatedItems(room, sourceItem, includeWiredItems));
         }
 
-        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room), ctx.targets().items(), this.filterExisting, this.invert);
+        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), this.filterExisting, this.invert);
 
         ctx.targets().setItems(result);
     }
@@ -211,7 +212,7 @@ public class WiredEffectFurniOnFurni extends InteractionWiredEffect {
         return false;
     }
 
-    private Set<HabboItem> resolveRelatedItems(Room room, HabboItem sourceItem) {
+    private Set<HabboItem> resolveRelatedItems(Room room, HabboItem sourceItem, boolean includeWiredItems) {
         Set<HabboItem> result = new LinkedHashSet<>();
 
         if (sourceItem == null) {
@@ -237,7 +238,7 @@ public class WiredEffectFurniOnFurni extends InteractionWiredEffect {
             }
 
             for (HabboItem matchedItem : room.getItemsAt(tile)) {
-                if (matchedItem == null || matchedItem instanceof InteractionWired) {
+                if (matchedItem == null || (!includeWiredItems && matchedItem instanceof InteractionWired)) {
                     continue;
                 }
 

@@ -28,6 +28,7 @@ import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.rooms.HideDoorbellComposer;
 import com.eu.habbo.messages.outgoing.rooms.UpdateStackHeightComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.*;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserIgnoredComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.furniture.FurniturePickedUpEvent;
@@ -1890,10 +1891,12 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
   public void muteHabbo(Habbo habbo, int minutes) {
     this.chatManager.muteHabbo(habbo, minutes);
+    this.sendComposer(new RoomUserIgnoredComposer(habbo, RoomUserIgnoredComposer.MUTED).compose());
   }
 
   public void unmuteHabbo(Habbo habbo) {
     this.chatManager.unmuteHabbo(habbo);
+    this.sendComposer(new RoomUserIgnoredComposer(habbo, RoomUserIgnoredComposer.UNIGNORED).compose());
   }
 
   public boolean isMuted(Habbo habbo) {

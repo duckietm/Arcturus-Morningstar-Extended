@@ -60,6 +60,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraMovePhys
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraMoveNoAnimation;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraTextOutputFurniName;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraTextOutputUsername;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.items.interactions.wired.selector.*;
@@ -355,6 +356,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_xtra_exec_in_order", WiredExtraExecuteInOrder.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_execution_limit", WiredExtraExecutionLimit.class));
         this.interactionsList.add(new ItemInteraction("wf_xtra_text_output_username", WiredExtraTextOutputUsername.class));
+        this.interactionsList.add(new ItemInteraction("wf_xtra_text_output_furni_name", WiredExtraTextOutputFurniName.class));
 
 
         this.interactionsList.add(new ItemInteraction("wf_highscore", InteractionWiredHighscore.class));
@@ -697,7 +699,7 @@ public class ItemManager {
     }
 
     public void insertTeleportPair(int itemOneId, int itemTwoId) {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO items_teleports VALUES (?, ?)")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO items_teleports (teleport_one_id, teleport_two_id) VALUES (?, ?)")) {
             statement.setInt(1, itemOneId);
             statement.setInt(2, itemTwoId);
             statement.execute();
@@ -717,20 +719,28 @@ public class ItemManager {
     }
 
     public int[] getTargetTeleportRoomId(HabboItem item) {
-        int[] a = new int[]{};
+        int[] target = new int[]{};
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT items.id, items.room_id FROM items_teleports INNER JOIN items ON items_teleports.teleport_one_id = items.id OR items_teleports.teleport_two_id = items.id WHERE items.id != ? AND items.room_id > 0 LIMIT 1")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT items_teleports.*, A.room_id as a_room_id, A.id as a_id, B.room_id as b_room_id, B.id as b_id FROM items_teleports INNER JOIN items AS A ON items_teleports.teleport_one_id = A.id INNER JOIN items AS B ON items_teleports.teleport_two_id = B.id WHERE (teleport_one_id = ? OR teleport_two_id = ?) LIMIT 1")) {
             statement.setInt(1, item.getId());
+            statement.setInt(2, item.getId());
+
             try (ResultSet set = statement.executeQuery()) {
                 if (set.next()) {
-                    a = new int[]{set.getInt("room_id"), set.getInt("id")};
+                    final boolean useA = (set.getInt("a_id") != item.getId());
+                    final int targetRoomId = useA ? set.getInt("a_room_id") : set.getInt("b_room_id");
+                    final int targetItemId = useA ? set.getInt("a_id") : set.getInt("b_id");
+
+                    if (targetRoomId > 0 && targetItemId > 0) {
+                        target = new int[]{targetRoomId, targetItemId};
+                    }
                 }
             }
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         }
 
-        return a;
+        return target;
     }
 
     public HabboItem loadHabboItem(int itemId) {

@@ -47,6 +47,8 @@ public class HabboInfo implements Runnable {
     private int InfostandOverlay;
     private int loadingRoom;
     private Room currentRoom;
+    private String roomEntryMethod = "door";
+    private int roomEntryTeleportId = 0;
     private int roomQueueId;
     private RideablePet riding;
     private Class<? extends Game> currentGame;
@@ -433,6 +435,22 @@ public class HabboInfo implements Runnable {
 
     public void setCurrentRoom(Room room) {
         this.currentRoom = room;
+    }
+
+    public String getRoomEntryMethod() {
+        return this.roomEntryMethod;
+    }
+
+    public void setRoomEntryMethod(String roomEntryMethod) {
+        this.roomEntryMethod = roomEntryMethod;
+    }
+
+    public int getRoomEntryTeleportId() {
+        return this.roomEntryTeleportId;
+    }
+
+    public void setRoomEntryTeleportId(int roomEntryTeleportId) {
+        this.roomEntryTeleportId = roomEntryTeleportId;
     }
 
     public int getRoomQueueId() {

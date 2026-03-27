@@ -1,9 +1,13 @@
 package com.eu.habbo.habbohotel.wired.core;
 
+import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraTextOutputFurniName;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraTextOutputUsername;
+import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
+import com.eu.habbo.habbohotel.rooms.RoomUnitType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import gnu.trove.set.hash.THashSet;
@@ -36,18 +40,25 @@ public final class WiredTextPlaceholderUtil {
         String resolvedText = text;
 
         for (InteractionWiredExtra extra : WiredExecutionOrderUtil.sort(extras)) {
-            if (!(extra instanceof WiredExtraTextOutputUsername)) {
+            if (extra instanceof WiredExtraTextOutputUsername) {
+                WiredExtraTextOutputUsername usernameExtra = (WiredExtraTextOutputUsername) extra;
+                String placeholderToken = usernameExtra.getPlaceholderToken();
+
+                if (!placeholderToken.isEmpty() && resolvedText.contains(placeholderToken)) {
+                    resolvedText = resolvedText.replace(placeholderToken, buildUsernameReplacement(ctx, usernameExtra));
+                }
+
                 continue;
             }
 
-            WiredExtraTextOutputUsername usernameExtra = (WiredExtraTextOutputUsername) extra;
-            String placeholderToken = usernameExtra.getPlaceholderToken();
+            if (extra instanceof WiredExtraTextOutputFurniName) {
+                WiredExtraTextOutputFurniName furniExtra = (WiredExtraTextOutputFurniName) extra;
+                String placeholderToken = furniExtra.getPlaceholderToken();
 
-            if (placeholderToken.isEmpty() || !resolvedText.contains(placeholderToken)) {
-                continue;
+                if (!placeholderToken.isEmpty() && resolvedText.contains(placeholderToken)) {
+                    resolvedText = resolvedText.replace(placeholderToken, buildFurniNameReplacement(ctx, furniExtra));
+                }
             }
-
-            resolvedText = resolvedText.replace(placeholderToken, buildUsernameReplacement(ctx, usernameExtra));
         }
 
         return resolvedText;
@@ -83,7 +94,6 @@ public final class WiredTextPlaceholderUtil {
             return "";
         }
 
-        Room room = ctx.room();
         LinkedHashSet<Integer> seenUserIds = new LinkedHashSet<>();
         List<String> usernames = new ArrayList<>();
 
@@ -92,12 +102,12 @@ public final class WiredTextPlaceholderUtil {
                 continue;
             }
 
-            Habbo habbo = room.getHabbo(unit);
-            if ((habbo == null) || (habbo.getHabboInfo() == null)) {
+            String roomUnitName = getRoomUnitName(ctx.room(), unit);
+            if (roomUnitName == null || roomUnitName.trim().isEmpty()) {
                 continue;
             }
 
-            usernames.add(habbo.getHabboInfo().getUsername());
+            usernames.add(roomUnitName);
         }
 
         if (usernames.isEmpty()) {
@@ -109,5 +119,71 @@ public final class WiredTextPlaceholderUtil {
         }
 
         return usernames.get(0);
+    }
+
+    private static String buildFurniNameReplacement(WiredContext ctx, WiredExtraTextOutputFurniName extra) {
+        List<HabboItem> items;
+        if (extra.getFurniSource() == WiredSourceUtil.SOURCE_SELECTOR) {
+            items = WiredSourceUtil.resolveSelectorItems(ctx, true);
+        } else {
+            items = WiredSourceUtil.resolveItems(ctx, extra.getFurniSource(), extra.getItems());
+        }
+
+        if (items.isEmpty()) {
+            return "";
+        }
+
+        LinkedHashSet<Integer> seenItemIds = new LinkedHashSet<>();
+        List<String> furniNames = new ArrayList<>();
+
+        for (HabboItem item : items) {
+            if ((item == null) || (item.getBaseItem() == null) || !seenItemIds.add(item.getId())) {
+                continue;
+            }
+
+            String furniName = item.getBaseItem().getFullName();
+            if (furniName == null || furniName.trim().isEmpty()) {
+                furniName = item.getBaseItem().getName();
+            }
+
+            if (furniName == null || furniName.trim().isEmpty()) {
+                continue;
+            }
+
+            furniNames.add(furniName);
+        }
+
+        if (furniNames.isEmpty()) {
+            return "";
+        }
+
+        if (extra.getPlaceholderType() == WiredExtraTextOutputFurniName.TYPE_MULTIPLE) {
+            return String.join(extra.getDelimiter(), furniNames);
+        }
+
+        return furniNames.get(0);
+    }
+
+    private static String getRoomUnitName(Room room, RoomUnit roomUnit) {
+        if (room == null || roomUnit == null) {
+            return "";
+        }
+
+        if (roomUnit.getRoomUnitType() == RoomUnitType.USER) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            return (habbo != null && habbo.getHabboInfo() != null) ? habbo.getHabboInfo().getUsername() : "";
+        }
+
+        if (roomUnit.getRoomUnitType() == RoomUnitType.BOT) {
+            Bot bot = room.getBot(roomUnit);
+            return (bot != null) ? bot.getName() : "";
+        }
+
+        if (roomUnit.getRoomUnitType() == RoomUnitType.PET) {
+            Pet pet = room.getPet(roomUnit);
+            return (pet != null) ? pet.getName() : "";
+        }
+
+        return "";
     }
 }

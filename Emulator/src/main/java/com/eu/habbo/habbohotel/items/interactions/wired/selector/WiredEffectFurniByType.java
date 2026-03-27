@@ -48,6 +48,8 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null) return;
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         List<HabboItem> sourceFurni = resolveSourceFurni(ctx, room);
         if (sourceFurni.isEmpty()) return;
 
@@ -61,7 +63,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
         Set<HabboItem> matched = new LinkedHashSet<>();
         room.getFloorItems().forEach(item -> {
-            if (item instanceof InteractionWired) return;
+            if (!includeWiredItems && item instanceof InteractionWired) return;
             String key = matchState
                 ? item.getBaseItem().getId() + ":" + item.getExtradata()
                 : String.valueOf(item.getBaseItem().getId());
@@ -70,7 +72,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
             }
         });
 
-        Set<HabboItem> result = this.applySelectorModifiers(matched, this.getSelectableFloorItems(room), ctx.targets().items(), filterExisting, invert);
+        Set<HabboItem> result = this.applySelectorModifiers(matched, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), filterExisting, invert);
         ctx.targets().setItems(result);
     }
 
