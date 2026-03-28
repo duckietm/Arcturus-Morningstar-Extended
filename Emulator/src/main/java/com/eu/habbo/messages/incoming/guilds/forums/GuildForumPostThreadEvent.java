@@ -74,6 +74,15 @@ public class GuildForumPostThreadEvent extends MessageHandler {
             return;
         }
 
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
+        if (thread.isLocked() && !isStaff) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
 
         if (!((guild.canPostMessages().state == 0)
                 || (guild.canPostMessages().state == 1 && member != null)

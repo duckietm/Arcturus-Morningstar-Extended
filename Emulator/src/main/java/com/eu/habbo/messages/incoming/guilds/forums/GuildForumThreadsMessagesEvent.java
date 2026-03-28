@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.guilds.GuildMember;
 import com.eu.habbo.habbohotel.guilds.GuildRank;
+import com.eu.habbo.habbohotel.guilds.SettingsState;
 import com.eu.habbo.habbohotel.guilds.forums.ForumThread;
 import com.eu.habbo.habbohotel.guilds.forums.ForumThreadState;
 import com.eu.habbo.habbohotel.permissions.Permission;
@@ -37,8 +38,27 @@ public class GuildForumThreadsMessagesEvent extends MessageHandler {
             this.client.sendResponse(new ConnectionErrorComposer(404));
             return;
         }
+
+        // Verify thread belongs to the requested guild
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
         GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, this.client.getHabbo().getHabboInfo().getId());
         boolean isGuildAdministrator = (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || (member != null && member.getRank().equals(GuildRank.ADMIN)));
+
+        // Enforce read permissions
+        if (!hasStaffPermissions && guild.canReadForum() != SettingsState.EVERYONE) {
+            if (guild.canReadForum() == SettingsState.MEMBERS && member == null) {
+                this.client.sendResponse(new ConnectionErrorComposer(403));
+                return;
+            }
+            if (guild.canReadForum() == SettingsState.ADMINS && !isGuildAdministrator) {
+                this.client.sendResponse(new ConnectionErrorComposer(403));
+                return;
+            }
+        }
 
         if (thread.getState() != ForumThreadState.HIDDEN_BY_GUILD_ADMIN || hasStaffPermissions || isGuildAdministrator) {
             this.client.sendResponse(new GuildForumCommentsComposer(guildId, threadId, index, thread.getComments(limit, index)));

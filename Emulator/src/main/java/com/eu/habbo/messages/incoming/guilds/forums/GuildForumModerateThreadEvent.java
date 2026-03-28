@@ -37,6 +37,11 @@ public class GuildForumModerateThreadEvent extends MessageHandler {
             return;
         }
 
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
         GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, this.client.getHabbo().getHabboInfo().getId());
         boolean hasStaffPerms = this.client.getHabbo().hasPermission(Permission.ACC_MODTOOL_TICKET_Q);
 
@@ -48,6 +53,12 @@ public class GuildForumModerateThreadEvent extends MessageHandler {
         boolean isGuildAdmin = (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || (member != null && member.getRank().equals(GuildRank.ADMIN)));
 
         if (!isGuildAdmin && !hasStaffPerms) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
+        // Restrict state 20 (staff hidden) to staff only
+        if (state == 20 && !hasStaffPerms) {
             this.client.sendResponse(new ConnectionErrorComposer(403));
             return;
         }

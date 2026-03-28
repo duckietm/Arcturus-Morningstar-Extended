@@ -135,16 +135,10 @@ public class ForumThread implements Runnable, ISerialize {
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT A.*, B.`id` AS `last_comment_id` " +
                 "FROM guilds_forums_threads A " +
-                "JOIN (" +
-                "SELECT * " +
+                "LEFT JOIN (" +
+                "SELECT `thread_id`, MAX(`id`) AS `id`, MAX(`created_at`) AS `created_at` " +
                 "FROM `guilds_forums_comments` " +
-                "WHERE `id` IN (" +
-                "SELECT MAX(id) " +
-                "FROM `guilds_forums_comments` B " +
-                "GROUP BY `thread_id` AND B.`id` " +
-                "ORDER BY B.`id` " +
-                ") " +
-                "ORDER BY `id` DESC " +
+                "GROUP BY `thread_id`" +
                 ") B ON A.`id` = B.`thread_id` " +
                 "WHERE A.`guild_id` = ? " +
                 "ORDER BY A.`pinned` DESC, B.`created_at` DESC "
@@ -176,16 +170,10 @@ public class ForumThread implements Runnable, ISerialize {
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(
                 "SELECT A.*, B.`id` AS `last_comment_id` " +
                         "FROM guilds_forums_threads A " +
-                        "JOIN (" +
-                        "SELECT * " +
+                        "LEFT JOIN (" +
+                        "SELECT `thread_id`, MAX(`id`) AS `id`, MAX(`created_at`) AS `created_at` " +
                         "FROM `guilds_forums_comments` " +
-                        "WHERE `id` IN (" +
-                        "SELECT MAX(id) " +
-                        "FROM `guilds_forums_comments` B " +
-                        "GROUP BY `thread_id` AND b.`id`" +
-                        "ORDER BY B.`id` " +
-                        ") " +
-                        "ORDER BY `id` DESC " +
+                        "GROUP BY `thread_id`" +
                         ") B ON A.`id` = B.`thread_id` " +
                         "WHERE A.`id` = ? " +
                         "ORDER BY A.`pinned` DESC, B.`created_at` DESC " +
