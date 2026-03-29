@@ -37,6 +37,13 @@ public class GuildForumThreadsMessagesEvent extends MessageHandler {
             this.client.sendResponse(new ConnectionErrorComposer(404));
             return;
         }
+
+        // Verify thread belongs to the requested guild
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
         GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, this.client.getHabbo().getHabboInfo().getId());
         boolean isGuildAdministrator = (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || (member != null && member.getRank().equals(GuildRank.ADMIN)));
 

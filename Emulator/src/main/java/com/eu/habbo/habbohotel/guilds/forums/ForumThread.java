@@ -210,6 +210,19 @@ public class ForumThread implements Runnable, ISerialize {
         guildThreads.add(thread);
     }
 
+    public static void clearCacheForGuild(int guildId) {
+        synchronized (guildThreadsCache) {
+            THashSet<ForumThread> threads = guildThreadsCache.remove(guildId);
+            if (threads != null) {
+                synchronized (forumThreadsCache) {
+                    for (ForumThread thread : threads) {
+                        forumThreadsCache.remove(thread.threadId);
+                    }
+                }
+            }
+        }
+    }
+
     public static void clearCache() {
         for (THashSet<ForumThread> threads : guildThreadsCache.values()) {
             for (ForumThread thread : threads) {
