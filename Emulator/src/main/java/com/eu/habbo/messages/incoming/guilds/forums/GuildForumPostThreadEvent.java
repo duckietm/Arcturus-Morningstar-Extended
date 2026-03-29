@@ -18,7 +18,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
 
     @Override
     public int getRatelimit() {
-        return 1000;
+        return 2000;
     }
     
     @Override

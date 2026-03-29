@@ -2,12 +2,14 @@ package com.eu.habbo.messages.incoming.guilds;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.guilds.Guild;
+import com.eu.habbo.habbohotel.guilds.GuildMember;
 import com.eu.habbo.habbohotel.guilds.GuildState;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.habbohotel.guilds.forums.ForumThread;
 import com.eu.habbo.messages.incoming.guilds.forums.GuildForumListEvent;
+import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumDataComposer;
 import com.eu.habbo.plugin.events.guilds.GuildChangedSettingsEvent;
 import org.slf4j.Logger;
@@ -16,13 +18,18 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GuildChangeSettingsEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuildChangeSettingsEvent.class);
 
+    // Cooldown for forum toggle per guild: guildId -> last toggle timestamp
+    private static final ConcurrentHashMap<Integer, Long> forumToggleCooldown = new ConcurrentHashMap<>();
+    private static final long FORUM_TOGGLE_COOLDOWN_MS = 30_000; // 30 seconds
+
     @Override
     public int getRatelimit() {
-        return 500;
+        return 2000; // 2 seconds between settings saves
     }
 
     @Override
@@ -47,17 +54,27 @@ public class GuildChangeSettingsEvent extends MessageHandler {
                 boolean wasForumEnabled = guild.hasForum();
 
                 if (forumEnabled != wasForumEnabled) {
-                    guild.setForum(forumEnabled);
+                    // Enforce cooldown on forum toggle to prevent rapid enable/disable spam
+                    Long lastToggle = forumToggleCooldown.get(guildId);
+                    long now = System.currentTimeMillis();
 
-                    if (!forumEnabled) {
-                        // Delete all threads and comments for this guild
-                        ForumThread.clearCacheForGuild(guildId);
-                        deleteForumData(guildId);
+                    if (lastToggle != null && (now - lastToggle) < FORUM_TOGGLE_COOLDOWN_MS) {
+                        LOGGER.warn("Forum toggle cooldown for guild {} by user {}", guildId, this.client.getHabbo().getHabboInfo().getUsername());
+                    } else {
+                        forumToggleCooldown.put(guildId, now);
+                        guild.setForum(forumEnabled);
+
+                        if (!forumEnabled) {
+                            // Delete all threads and comments for this guild
+                            ForumThread.clearCacheForGuild(guildId);
+                            deleteForumData(guildId);
+                        }
+
+                        // Invalidate caches
+                        GuildForumDataComposer.invalidateUnreadCache(guildId);
+                        GuildForumListEvent.invalidateActiveForumsCache();
+                        GuildForumListEvent.invalidateMyForumsCache(this.client.getHabbo().getHabboInfo().getId());
                     }
-
-                    // Invalidate caches
-                    GuildForumDataComposer.invalidateUnreadCache(guildId);
-                    GuildForumListEvent.invalidateActiveForumsCache();
                 }
 
                 Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(guild.getRoomId());
@@ -68,6 +85,10 @@ public class GuildChangeSettingsEvent extends MessageHandler {
                 guild.needsUpdate = true;
 
                 Emulator.getThreading().run(guild);
+
+                // Send updated group info back to client so hasForum flag refreshes immediately
+                GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild, this.client.getHabbo());
+                this.client.sendResponse(new GuildInfoComposer(guild, this.client, false, member));
             }
         }
     }
