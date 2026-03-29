@@ -1,0 +1,301 @@
+/* ===== Dark Theme for Arcturus Morningstar GUI ===== */
+
+.root {
+    -fx-font-family: "Segoe UI", "System", sans-serif;
+    -fx-font-size: 13px;
+    -fx-base: #1e1e1e;
+    -fx-background: #1e1e1e;
+    -fx-control-inner-background: #2d2d2d;
+    -fx-text-fill: #e0e0e0;
+    -fx-accent: #2980b9;
+    -fx-focus-color: #2980b9;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Tab Pane */
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #111111;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #252525;
+    -fx-padding: 8 20;
+    -fx-background-radius: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #2980b9;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:hover:!selected {
+    -fx-background-color: #353535;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: #cccccc;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: white;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: #1e1e1e;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-padding: 6 14;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.button:hover {
+    -fx-background-color: #2980b9;
+}
+
+.button:pressed {
+    -fx-background-color: #2471a3;
+}
+
+.button:disabled {
+    -fx-background-color: #555555;
+    -fx-text-fill: #888888;
+    -fx-opacity: 0.7;
+}
+
+.button.danger {
+    -fx-background-color: #e74c3c;
+}
+
+.button.danger:hover {
+    -fx-background-color: #c0392b;
+}
+
+.button.success {
+    -fx-background-color: #27ae60;
+}
+
+.button.success:hover {
+    -fx-background-color: #219a52;
+}
+
+.button.warning {
+    -fx-background-color: #f39c12;
+}
+
+.button.warning:hover {
+    -fx-background-color: #d68910;
+}
+
+/* Text Fields */
+.text-field {
+    -fx-padding: 6 10;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-background-color: #2d2d2d;
+    -fx-border-color: #444444;
+    -fx-text-fill: #e0e0e0;
+    -fx-prompt-text-fill: #777777;
+}
+
+.text-field:focused {
+    -fx-border-color: #2980b9;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: #e0e0e0;
+}
+
+/* Table View */
+.table-view {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #333333;
+}
+
+.table-view .column-header {
+    -fx-background-color: #252525;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: transparent transparent #2a2a2a transparent;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #232323;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #2980b9;
+}
+
+.table-view .table-row-cell:selected .label {
+    -fx-text-fill: white;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #d0d0d0;
+    -fx-alignment: CENTER-LEFT;
+    -fx-padding: 4 8;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: #666666;
+}
+
+/* Scroll Bars */
+.scroll-bar {
+    -fx-background-color: #1e1e1e;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #444444;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #555555;
+}
+
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* Check Boxes */
+.check-box {
+    -fx-text-fill: #cccccc;
+}
+
+.check-box .box {
+    -fx-background-color: #2d2d2d;
+    -fx-border-color: #555555;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #2980b9;
+    -fx-border-color: #2980b9;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+
+/* Text Area (Console) */
+.text-area {
+    -fx-background-color: #0d0d0d;
+    -fx-control-inner-background: #0d0d0d;
+    -fx-text-fill: #00ff00;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+    -fx-font-size: 12px;
+}
+
+.text-area .content {
+    -fx-background-color: #0d0d0d;
+}
+
+/* Alerts / Dialogs */
+.dialog-pane {
+    -fx-background-color: #2d2d2d;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #252525;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: #e0e0e0;
+}
+
+/* Tooltip */
+.tooltip {
+    -fx-background-color: #333333;
+    -fx-text-fill: #e0e0e0;
+    -fx-background-radius: 4;
+    -fx-border-color: #555555;
+    -fx-border-radius: 4;
+    -fx-padding: 6 10;
+}
+
+/* Status indicator styles */
+.status-online {
+    -fx-text-fill: #2ecc71;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.status-offline {
+    -fx-text-fill: #e74c3c;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.status-starting {
+    -fx-text-fill: #f39c12;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+/* Separator */
+.separator .line {
+    -fx-border-color: #333333;
+}
+
+/* Charts */
+.dark-chart {
+    -fx-background-color: #1e1e1e;
+}
+
+.dark-chart .chart-plot-background {
+    -fx-background-color: #1a1a1a;
+}
+
+.dark-chart .chart-title {
+    -fx-text-fill: #cccccc;
+}
+
+.dark-chart .axis-label {
+    -fx-text-fill: #aaaaaa;
+}
+
+.dark-chart .axis .tick-label {
+    -fx-fill: #888888;
+}
+
+.chart-series-line {
+    -fx-stroke-width: 2;
+}
+
+.default-color0.chart-series-line {
+    -fx-stroke: #2980b9;
+}
+
+.default-color1.chart-series-line {
+    -fx-stroke: #e74c3c;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+}
+
+.chart-legend-item-text {
+    -fx-text-fill: #cccccc;
+}

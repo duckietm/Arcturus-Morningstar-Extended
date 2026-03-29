@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GuildForumListEvent extends MessageHandler {
     @Override
@@ -22,6 +23,26 @@ public class GuildForumListEvent extends MessageHandler {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GuildForumListEvent.class);
+
+    // Cache for active forums list (shared across all users)
+    private static volatile THashSet<Guild> activeForumsCache = null;
+    private static volatile long activeForumsCachedAt = 0;
+    private static final long ACTIVE_FORUMS_TTL = 30 * 60 * 1000; // 30 minutes
+
+    // Cache for user's forum list
+    private static final ConcurrentHashMap<Integer, long[]> myForumsCache = new ConcurrentHashMap<>(); // userId -> {cachedAt}
+    private static final ConcurrentHashMap<Integer, THashSet<Guild>> myForumsData = new ConcurrentHashMap<>();
+    private static final long MY_FORUMS_TTL = 10 * 60 * 1000; // 10 minutes
+
+    public static void invalidateActiveForumsCache() {
+        activeForumsCache = null;
+        activeForumsCachedAt = 0;
+    }
+
+    public static void invalidateMyForumsCache(int userId) {
+        myForumsCache.remove(userId);
+        myForumsData.remove(userId);
+    }
 
     @Override
     public void handle() throws Exception {
@@ -50,12 +71,18 @@ public class GuildForumListEvent extends MessageHandler {
     }
 
     private THashSet<Guild> getActiveForums() {
+        long now = System.currentTimeMillis();
+
+        if (activeForumsCache != null && (now - activeForumsCachedAt) < ACTIVE_FORUMS_TTL) {
+            return activeForumsCache;
+        }
+
         THashSet<Guild> guilds = new THashSet<Guild>();
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT `guilds`.`id`, SUM(`guilds_forums_threads`.`posts_count`) AS `post_count` " +
                 "FROM `guilds_forums_threads` " +
                 "LEFT JOIN `guilds` ON `guilds`.`id` = `guilds_forums_threads`.`guild_id` " +
-                "WHERE `guilds`.`read_forum` = 'EVERYONE' AND `guilds_forums_threads`.`created_at` > ? " +
+                "WHERE `guilds`.`forum` = '1' AND `guilds_forums_threads`.`created_at` > ? " +
                 "GROUP BY `guilds`.`id` " +
                 "ORDER BY `post_count` DESC LIMIT 100")) {
             statement.setInt(1, Emulator.getIntUnixTimestamp() - 7 * 24 * 60 * 60);
@@ -73,10 +100,21 @@ public class GuildForumListEvent extends MessageHandler {
             this.client.sendResponse(new ConnectionErrorComposer(500));
         }
 
+        activeForumsCache = guilds;
+        activeForumsCachedAt = now;
+
         return guilds;
     }
 
     private THashSet<Guild> getMyForums(int userId) {
+        long now = System.currentTimeMillis();
+
+        long[] cached = myForumsCache.get(userId);
+        if (cached != null && (now - cached[0]) < MY_FORUMS_TTL) {
+            THashSet<Guild> data = myForumsData.get(userId);
+            if (data != null) return data;
+        }
+
         THashSet<Guild> guilds = new THashSet<Guild>();
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT `guilds`.`id` FROM `guilds_members` " +
@@ -96,6 +134,9 @@ public class GuildForumListEvent extends MessageHandler {
             LOGGER.error("Caught SQL exception", e);
             this.client.sendResponse(new ConnectionErrorComposer(500));
         }
+
+        myForumsCache.put(userId, new long[]{now});
+        myForumsData.put(userId, guilds);
 
         return guilds;
     }

@@ -20,10 +20,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class GuildForumDataComposer extends MessageComposer {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuildForumDataComposer.class);
+
+    // Cache for user last-seen timestamps: key = "userId:guildId", value = {timestamp, cachedAt}
+    private static final ConcurrentHashMap<String, long[]> lastSeenCache = new ConcurrentHashMap<>();
+    private static final long LAST_SEEN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    // Cache for unread counts: key = "guildId:lastSeenAt", value = {count, cachedAt}
+    private static final ConcurrentHashMap<String, long[]> unreadCache = new ConcurrentHashMap<>();
+    private static final long UNREAD_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
     public final Guild guild;
     public Habbo habbo;
@@ -33,13 +42,77 @@ public class GuildForumDataComposer extends MessageComposer {
         this.habbo = habbo;
     }
 
+    public static void invalidateLastSeenCache(int userId, int guildId) {
+        lastSeenCache.remove(userId + ":" + guildId);
+    }
+
+    public static void invalidateUnreadCache(int guildId) {
+        unreadCache.entrySet().removeIf(entry -> entry.getKey().startsWith(guildId + ":"));
+    }
+
+    private static int getLastSeenAt(int userId, int guildId) {
+        String key = userId + ":" + guildId;
+        long now = System.currentTimeMillis();
+
+        long[] cached = lastSeenCache.get(key);
+        if (cached != null && (now - cached[1]) < LAST_SEEN_CACHE_TTL) {
+            return (int) cached[0];
+        }
+
+        int lastSeenAt = 0;
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(
+                "SELECT `timestamp` FROM `guild_forum_views` WHERE `user_id` = ? AND `guild_id` = ? LIMIT 1"
+        )) {
+            statement.setInt(1, userId);
+            statement.setInt(2, guildId);
+            ResultSet set = statement.executeQuery();
+            if (set.next()) {
+                lastSeenAt = set.getInt("timestamp");
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        lastSeenCache.put(key, new long[]{lastSeenAt, now});
+        return lastSeenAt;
+    }
+
+    private static int getUnreadCount(int guildId, int lastSeenAt) {
+        String key = guildId + ":" + lastSeenAt;
+        long now = System.currentTimeMillis();
+
+        long[] cached = unreadCache.get(key);
+        if (cached != null && (now - cached[1]) < UNREAD_CACHE_TTL) {
+            return (int) cached[0];
+        }
+
+        int newComments = 0;
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(
+                "SELECT COUNT(*) FROM `guilds_forums_comments` " +
+                        "JOIN `guilds_forums_threads` ON `guilds_forums_threads`.`id` = `guilds_forums_comments`.`thread_id` " +
+                        "WHERE `guilds_forums_threads`.`guild_id` = ? AND `guilds_forums_comments`.`created_at` > ?"
+        )) {
+            statement.setInt(1, guildId);
+            statement.setInt(2, lastSeenAt);
+
+            ResultSet set = statement.executeQuery();
+            if (set.next()) {
+                newComments = set.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        unreadCache.put(key, new long[]{newComments, now});
+        return newComments;
+    }
+
     public static void serializeForumData(ServerMessage response, Guild guild, Habbo habbo) {
 
         final THashSet<ForumThread> forumThreads = ForumThread.getByGuildId(guild.getId());
-        int lastSeenAt = 0;
+        int lastSeenAt = getLastSeenAt(habbo.getHabboInfo().getId(), guild.getId());
 
         int totalComments = 0;
-        int newComments = 0;
         int totalThreads = 0;
         ForumThreadComment lastComment = null;
 
@@ -55,31 +128,7 @@ public class GuildForumDataComposer extends MessageComposer {
             }
         }
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "SELECT COUNT(*) " +
-                        "FROM guilds_forums_threads A " +
-                        "JOIN ( " +
-                        "SELECT * " +
-                        "FROM `guilds_forums_comments` " +
-                        "WHERE `id` IN ( " +
-                        "SELECT id " +
-                        "FROM `guilds_forums_comments` B " +
-                        "ORDER BY B.`id` ASC " +
-                        ") " +
-                        "ORDER BY `id` DESC " +
-                        ") B ON A.`id` = B.`thread_id` " +
-                        "WHERE A.`guild_id` = ? AND B.`created_at` > ?"
-        )) {
-            statement.setInt(1, guild.getId());
-            statement.setInt(2, lastSeenAt);
-
-            ResultSet set = statement.executeQuery();
-            while (set.next()) {
-                newComments = set.getInt(1);
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
-        }
+        int newComments = getUnreadCount(guild.getId(), lastSeenAt);
 
         response.appendInt(guild.getId());
 

@@ -15,6 +15,7 @@ import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorLoadedEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStartShutdownEvent;
 import com.eu.habbo.plugin.events.emulator.EmulatorStoppedEvent;
+import com.eu.habbo.gui.EmulatorGUI;
 import com.eu.habbo.threading.ThreadPooling;
 import com.eu.habbo.util.imager.badges.BadgeImager;
 import org.slf4j.Logger;
@@ -89,8 +90,45 @@ public final class Emulator {
     }
 
     @SuppressWarnings("resource")
-
     public static void main(String[] args) throws Exception {
+        // Check for --gui flag
+        boolean guiMode = false;
+        for (String arg : args) {
+            if ("--gui".equalsIgnoreCase(arg)) {
+                guiMode = true;
+                break;
+            }
+        }
+
+        if (guiMode) {
+            EmulatorGUI.launchGUI(args);
+        } else {
+            initEmulator();
+            startServer();
+
+            // Check if console mode is true or false, default is true
+            if (Emulator.getConfig().getBoolean("console.mode", true)) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+                while (!isShuttingDown && isReady) {
+                    try {
+                        String line = reader.readLine();
+
+                        if (line != null) {
+                            ConsoleCommand.handle(line);
+                        }
+                        System.out.println("Waiting for command: ");
+                    } catch (Exception e) {
+                        if (!(e instanceof IOException && e.getMessage().equals("Bad file descriptor"))) {
+                            LOGGER.error("Error while reading command", e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void initEmulator() {
         try {
             if (OS_NAME.startsWith("Windows") && !CLASS_PATH.contains("idea_rt.jar")) {
                 ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -108,8 +146,6 @@ public final class Emulator {
             Emulator.logging = new Logging();
 
             System.out.println(logo);
-
-            long startTime = System.nanoTime();
 
             Emulator.runtime = Runtime.getRuntime();
             Emulator.config = new ConfigurationManager("config.ini");
@@ -157,6 +193,15 @@ public final class Emulator {
             if (!thumbnailDir.exists()) {
                 thumbnailDir.mkdirs();
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to initialize emulator", e);
+            throw e;
+        }
+    }
+
+    public static void startServer() {
+        try {
+            long startTime = System.nanoTime();
 
             new CleanerThread();
             Emulator.gameServer = new GameServer(getConfig().getValue("game.host", "127.0.0.1"), getConfig().getInt("game.port", 30000));
@@ -194,30 +239,9 @@ public final class Emulator {
 
             Emulator.getThreading().run(() -> {
             }, 1500);
-
-            // Check if console mode is true or false, default is true
-            if (Emulator.getConfig().getBoolean("console.mode", true)) {
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-                while (!isShuttingDown && isReady) {
-                    try {
-                        String line = reader.readLine();
-
-                        if (line != null) {
-                            ConsoleCommand.handle(line);
-                        }
-                        System.out.println("Waiting for command: ");
-                    } catch (Exception e) {
-                        if (!(e instanceof IOException && e.getMessage().equals("Bad file descriptor"))) {
-                            LOGGER.error("Error while reading command", e);
-                        }
-                    }
-                }
-            }
-
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to start server", e);
+            throw new RuntimeException(e);
         }
     }
 

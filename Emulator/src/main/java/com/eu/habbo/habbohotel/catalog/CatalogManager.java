@@ -287,7 +287,7 @@ public class CatalogManager {
                         CatalogPage page = pageClazz.getConstructor(ResultSet.class).newInstance(set);
                         pages.put(page.getId(), page);
                     } catch (Exception e) {
-                        LOGGER.error("Failed to load layout: {}", set.getString("page_layout"));
+                        LOGGER.error("Failed to load layout: {} (page id: {})", set.getString("page_layout"), set.getInt("id"), e);
                     }
                 }
             }

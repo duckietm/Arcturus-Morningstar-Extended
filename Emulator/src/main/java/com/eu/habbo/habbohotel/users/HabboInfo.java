@@ -45,6 +45,7 @@ public class HabboInfo implements Runnable {
     private int InfostandBg;
     private int InfostandStand;
     private int InfostandOverlay;
+    private String uiSettings;
     private int loadingRoom;
     private Room currentRoom;
     private int roomQueueId;
@@ -89,6 +90,13 @@ public class HabboInfo implements Runnable {
             this.InfostandBg = set.getInt("background_id");
             this.InfostandStand = set.getInt("background_stand_id");
             this.InfostandOverlay = set.getInt("background_overlay_id");
+
+            try {
+                this.uiSettings = set.getString("ui_settings");
+            } catch (SQLException e) {
+                this.uiSettings = null;
+            }
+
             this.currentRoom = null;
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
@@ -299,6 +307,15 @@ public class HabboInfo implements Runnable {
     public void setInfostandOverlay(int infostandOverlay) {
         InfostandOverlay = infostandOverlay;
     }
+
+    public String getUiSettings() {
+        return this.uiSettings;
+    }
+
+    public void setUiSettings(String uiSettings) {
+        this.uiSettings = uiSettings;
+    }
+
     public Rank getRank() {
         return this.rank;
     }
@@ -570,7 +587,7 @@ public class HabboInfo implements Runnable {
     public void run() {
         this.saveCurrencies();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ?, background_id = ?, background_stand_id = ?, background_overlay_id = ? WHERE id = ?")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ?, background_id = ?, background_stand_id = ?, background_overlay_id = ?, ui_settings = ? WHERE id = ?")) {
             statement.setString(1, this.motto);
             statement.setString(2, this.online ? "1" : "0");
             statement.setString(3, this.look);
@@ -586,7 +603,8 @@ public class HabboInfo implements Runnable {
             statement.setInt(13, this.InfostandBg);
             statement.setInt(14, this.InfostandStand);
             statement.setInt(15, this.InfostandOverlay);
-            statement.setInt(16, this.id);
+            statement.setString(16, this.uiSettings);
+            statement.setInt(17, this.id);
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
