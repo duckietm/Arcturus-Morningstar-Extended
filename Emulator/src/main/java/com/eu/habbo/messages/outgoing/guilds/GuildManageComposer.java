@@ -62,6 +62,7 @@ public class GuildManageComposer extends MessageComposer {
         }
         this.response.appendString(this.guild.getBadge());
         this.response.appendInt(this.guild.getMemberCount());
+        this.response.appendBoolean(this.guild.hasForum());
         return this.response;
     }
 

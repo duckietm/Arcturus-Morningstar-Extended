@@ -572,6 +572,7 @@ public class PacketManager {
         this.registerHandler(Incoming.GuildForumModerateMessageEvent, GuildForumModerateMessageEvent.class);
         this.registerHandler(Incoming.GuildForumModerateThreadEvent, GuildForumModerateThreadEvent.class);
         this.registerHandler(Incoming.GuildForumThreadUpdateEvent, GuildForumThreadUpdateEvent.class);
+        this.registerHandler(Incoming.GuildForumMarkAsReadEvent, GuildForumMarkAsReadEvent.class);
         this.registerHandler(Incoming.GetHabboGuildBadgesMessageEvent, GetHabboGuildBadgesMessageEvent.class);
 
 //        this.registerHandler(Incoming.GuildForumDataEvent,              GuildForumModerateMessageEvent.class);

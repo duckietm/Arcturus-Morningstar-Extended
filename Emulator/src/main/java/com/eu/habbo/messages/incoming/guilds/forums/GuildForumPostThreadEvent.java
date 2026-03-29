@@ -9,6 +9,7 @@ import com.eu.habbo.habbohotel.guilds.forums.ForumThreadComment;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumAddCommentComposer;
+import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumDataComposer;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumThreadMessagesComposer;
 import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 
@@ -65,6 +66,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
 
             this.client.getHabbo().getHabboStats().forumPostsCount += 1;
             thread.setPostsCount(thread.getPostsCount() + 1);
+            GuildForumDataComposer.invalidateUnreadCache(guildId);
             this.client.sendResponse(new GuildForumThreadMessagesComposer(thread));
             return;
         }
@@ -100,6 +102,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
             thread.setUpdatedAt(Emulator.getIntUnixTimestamp());
             this.client.getHabbo().getHabboStats().forumPostsCount += 1;
             thread.setPostsCount(thread.getPostsCount() + 1);
+            GuildForumDataComposer.invalidateUnreadCache(guildId);
             this.client.sendResponse(new GuildForumAddCommentComposer(comment));
         } else {
             this.client.sendResponse(new ConnectionErrorComposer(500));
