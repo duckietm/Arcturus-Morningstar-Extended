@@ -412,6 +412,14 @@ public class Incoming {
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
 
+    // Furni Editor
+    public static final int FurniEditorSearchEvent = 10040;
+    public static final int FurniEditorDetailEvent = 10041;
+    public static final int FurniEditorBySpriteEvent = 10042;
+    public static final int FurniEditorInteractionsEvent = 10043;
+    public static final int FurniEditorUpdateEvent = 10044;
+    public static final int FurniEditorDeleteEvent = 10045;
+
     // Catalog Admin
     public static final int CatalogAdminSavePageEvent = 10050;
     public static final int CatalogAdminCreatePageEvent = 10051;
