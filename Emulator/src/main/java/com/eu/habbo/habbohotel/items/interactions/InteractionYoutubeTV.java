@@ -56,7 +56,7 @@ public class InteractionYoutubeTV extends HabboItem {
         if (this.currentVideo == null) {
             serverMessage.appendString("");
         } else {
-            serverMessage.appendString(Emulator.getConfig().getValue("imager.url.youtube").replace("%video%", this.currentVideo.getId()));
+            serverMessage.appendString("https://img.youtube.com/vi/" + this.currentVideo.getId() + "/hqdefault.jpg");
         }
 
         super.serializeExtradata(serverMessage);
