@@ -58,7 +58,7 @@ public class RoomTile {
         this.diagonally = false;
         this.gCosts = 0;
         this.hCosts = 0;
-        this.units = null;
+        this.units = new THashSet<>();
     }
 
     public void setStackHeight(double stackHeight) {

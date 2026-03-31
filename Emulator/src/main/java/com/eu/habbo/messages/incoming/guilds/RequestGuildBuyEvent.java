@@ -72,7 +72,7 @@ public class RequestGuildBuyEvent extends MessageHandler {
 
                     StringBuilder badge = new StringBuilder();
 
-                    byte base = 1;
+                    int base = 1;
 
                     while (base < count) {
                         int id = this.packet.readInt();

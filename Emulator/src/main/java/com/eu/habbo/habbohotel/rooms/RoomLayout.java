@@ -150,7 +150,12 @@ public class RoomLayout {
           } else if (Emulator.isNumeric(square)) {
             height = Short.parseShort(square);
           } else {
-            height = (short) (10 + "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(square.toUpperCase()));
+            int index = "abcdefghijklmnopqrstuvwxyz".indexOf(square);
+            if (index == -1) {
+              height = 0;
+            } else {
+              height = (short) (10 + index);
+            }
           }
         }
         this.mapSize += 1;

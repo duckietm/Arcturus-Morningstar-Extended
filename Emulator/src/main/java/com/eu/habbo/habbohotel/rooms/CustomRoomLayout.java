@@ -24,8 +24,6 @@ public class CustomRoomLayout extends RoomLayout implements Runnable {
     @Override
     public void run() {
         if (this.needsUpdate) {
-            this.needsUpdate = false;
-
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE room_models_custom SET door_x = ?, door_y = ?, door_dir = ?, heightmap = ? WHERE id = ? LIMIT 1")) {
                 statement.setInt(1, this.getDoorX());
                 statement.setInt(2, this.getDoorY());
@@ -33,6 +31,7 @@ public class CustomRoomLayout extends RoomLayout implements Runnable {
                 statement.setString(4, this.getHeightmap());
                 statement.setInt(5, this.roomId);
                 statement.execute();
+                this.needsUpdate = false;
             } catch (SQLException e) {
                 LOGGER.error("Caught SQL exception", e);
             }

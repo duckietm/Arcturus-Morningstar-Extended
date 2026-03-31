@@ -47,7 +47,7 @@ public class CatalogBuyItemEvent extends MessageHandler {
             int pageId = this.packet.readInt();
             int itemId = this.packet.readInt();
             String extraData = this.packet.readString();
-            int count = this.packet.readInt();
+            int count = Math.max(1, Math.min(this.packet.readInt(), 100));
 
             try {
                 if (this.client.getHabbo().getInventory().getItemsComponent().itemCount() > HabboInventory.MAXIMUM_ITEMS) {

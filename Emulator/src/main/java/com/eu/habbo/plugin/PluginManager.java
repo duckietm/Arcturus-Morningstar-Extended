@@ -244,8 +244,8 @@ public class PluginManager {
         }
 
         for (File file : Objects.requireNonNull(loc.listFiles(file -> file.getPath().toLowerCase().endsWith(".jar")))) {
-            URLClassLoader urlClassLoader;
-            InputStream stream;
+            URLClassLoader urlClassLoader = null;
+            InputStream stream = null;
             try {
                 urlClassLoader = URLClassLoader.newInstance(new URL[]{file.toURI().toURL()});
                 stream = urlClassLoader.getResourceAsStream("plugin.json");
@@ -272,6 +272,8 @@ public class PluginManager {
                         plugin.stream = stream;
                         this.plugins.add(plugin);
                         plugin.onEnable();
+                        urlClassLoader = null;
+                        stream = null;
                     } catch (Exception e) {
                         LOGGER.error("Could not load plugin {}!", pluginConfigurtion.name);
                         LOGGER.error("Caught exception", e);
@@ -279,6 +281,13 @@ public class PluginManager {
                 }
             } catch (Exception e) {
                 LOGGER.error("Caught exception", e);
+            } finally {
+                if (stream != null) {
+                    try { stream.close(); } catch (IOException ignored) {}
+                }
+                if (urlClassLoader != null) {
+                    try { urlClassLoader.close(); } catch (IOException ignored) {}
+                }
             }
         }
     }

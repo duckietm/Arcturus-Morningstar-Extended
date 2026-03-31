@@ -85,34 +85,42 @@ public class RequestDeleteRoomEvent extends MessageHandler {
                 Emulator.getGameEnvironment().getRoomManager().uncacheRoom(room);
 
                 try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
-                    try (PreparedStatement statement = connection.prepareStatement("DELETE FROM rooms WHERE id = ? LIMIT 1")) {
-                        statement.setInt(1, roomId);
-                        statement.execute();
-                    }
-
-                    if (room.hasCustomLayout()) {
-                        try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM room_models_custom WHERE id = ? LIMIT 1")) {
-                            stmt.setInt(1, roomId);
-                            stmt.execute();
+                    connection.setAutoCommit(false);
+                    try {
+                        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM rooms WHERE id = ? LIMIT 1")) {
+                            statement.setInt(1, roomId);
+                            statement.execute();
                         }
+
+                        if (room.hasCustomLayout()) {
+                            try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM room_models_custom WHERE id = ? LIMIT 1")) {
+                                stmt.setInt(1, roomId);
+                                stmt.execute();
+                            }
+                        }
+
+                        try (PreparedStatement rights = connection.prepareStatement("DELETE FROM room_rights WHERE room_id = ?")) {
+                            rights.setInt(1, roomId);
+                            rights.execute();
+                        }
+
+                        try (PreparedStatement votes = connection.prepareStatement("DELETE FROM room_votes WHERE room_id = ?")) {
+                            votes.setInt(1, roomId);
+                            votes.execute();
+                        }
+
+                        try (PreparedStatement filter = connection.prepareStatement("DELETE FROM room_wordfilter WHERE room_id = ?")) {
+                            filter.setInt(1, roomId);
+                            filter.execute();
+                        }
+
+                        connection.commit();
+                    } catch (SQLException e) {
+                        connection.rollback();
+                        throw e;
                     }
 
                     Emulator.getGameEnvironment().getRoomManager().unloadRoom(room);
-
-                    try (PreparedStatement rights = connection.prepareStatement("DELETE FROM room_rights WHERE room_id = ?")) {
-                        rights.setInt(1, roomId);
-                        rights.execute();
-                    }
-
-                    try (PreparedStatement votes = connection.prepareStatement("DELETE FROM room_votes WHERE room_id = ?")) {
-                        votes.setInt(1, roomId);
-                        votes.execute();
-                    }
-
-                    try (PreparedStatement filter = connection.prepareStatement("DELETE FROM room_wordfilter WHERE room_id = ?")) {
-                        filter.setInt(1, roomId);
-                        filter.execute();
-                    }
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
                 }

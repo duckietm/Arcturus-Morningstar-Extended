@@ -50,16 +50,16 @@ public class SearchRoomsEvent extends MessageHandler {
         }
 
         if (message == null) {
-            if (name.startsWith("owner:")) {
-                query = name.split("owner:")[1];
+            if (name.startsWith("owner:") && name.length() > 6) {
+                query = name.substring(6);
                 prefix = "owner:";
                 rooms = (ArrayList<Room>) Emulator.getGameEnvironment().getRoomManager().getRoomsForHabbo(name);
-            } else if (name.startsWith("tag:")) {
-                query = name.split("tag:")[1];
+            } else if (name.startsWith("tag:") && name.length() > 4) {
+                query = name.substring(4);
                 prefix = "tag:";
                 rooms = Emulator.getGameEnvironment().getRoomManager().getRoomsWithTag(name);
-            } else if (name.startsWith("group:")) {
-                query = name.split("group:")[1];
+            } else if (name.startsWith("group:") && name.length() > 6) {
+                query = name.substring(6);
                 prefix = "group:";
                 rooms = Emulator.getGameEnvironment().getRoomManager().getGroupRoomsWithName(name);
             } else {

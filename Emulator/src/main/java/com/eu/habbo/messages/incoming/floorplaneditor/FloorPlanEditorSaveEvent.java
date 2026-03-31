@@ -28,17 +28,19 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
 
     @Override
     public void handle() throws Exception {
-        if (!this.client.getHabbo().hasPermission(Permission.ACC_FLOORPLAN_EDITOR)) {
-            this.client.sendResponse(new GenericAlertComposer(Emulator.getTexts().getValue("floorplan.permission")));
-            return;
-        }
-
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
 
         if (room == null)
             return;
 
-        if (room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)) {
+        boolean isRoomOwner = room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId();
+
+        if (!this.client.getHabbo().hasPermission(Permission.ACC_FLOORPLAN_EDITOR, isRoomOwner)) {
+            this.client.sendResponse(new GenericAlertComposer(Emulator.getTexts().getValue("floorplan.permission")));
+            return;
+        }
+
+        if (isRoomOwner || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)) {
             StringJoiner errors = new StringJoiner("<br />");
             String map = this.packet.readString();
             map = map.replace("X", "x");
@@ -59,7 +61,7 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
                     errors.add("${notification.floorplan_editor.error.message.effective_height_is_0}");
                 }
 
-                if (map.length() > MAXIMUM_FLOORPLAN_SIZE) {
+                if (map.replace("\r", "").length() > MAXIMUM_FLOORPLAN_SIZE) {
                     errors.add("${notification.floorplan_editor.error.message.too_large_area}");
                 }
 
@@ -75,7 +77,7 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
             int doorX = this.packet.readInt();
             int doorY = this.packet.readInt();
 
-            if (doorX < 0 || doorX > firstRowSize || doorY < 0 || doorY >= mapRows.length) {
+            if (doorX < 0 || doorX >= firstRowSize || doorY < 0 || doorY >= mapRows.length) {
                 errors.add("${notification.floorplan_editor.error.message.entry_tile_outside_map}");
             }
 
@@ -112,7 +114,9 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
                 for (int x = 0; x < firstRowSize; x++) {
 
                     RoomTile tile = room.getLayout().getTile((short) x, (short) y);
-                    new_tileList.add(tile);
+                    if (tile != null) {
+                        new_tileList.add(tile);
+                    }
                     String square = String.valueOf(mapRows[y].charAt(x));
                     short height;
 
@@ -164,7 +168,7 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
                     return;
                 }
                 ((CustomRoomLayout) layout).needsUpdate(true);
-                Emulator.getThreading().run((CustomRoomLayout) layout);
+                ((CustomRoomLayout) layout).run();
             } else {
                 layout = Emulator.getGameEnvironment().getRoomManager().insertCustomLayout(room, map, doorX, doorY, doorRotation);
             }

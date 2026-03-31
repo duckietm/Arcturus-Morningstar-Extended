@@ -114,21 +114,21 @@ public class RoomSettingsSaveEvent extends MessageHandler {
 
 
                 room.setTags(tags.toString());
-                room.setTradeMode(this.packet.readInt());
+                room.setTradeMode(Math.max(0, Math.min(this.packet.readInt(), 2)));
                 room.setAllowPets(this.packet.readBoolean());
                 room.setAllowPetsEat(this.packet.readBoolean());
                 room.setAllowWalkthrough(this.packet.readBoolean());
                 room.setHideWall(this.packet.readBoolean());
-                room.setWallSize(this.packet.readInt());
-                room.setFloorSize(this.packet.readInt());
-                room.setMuteOption(this.packet.readInt());
-                room.setKickOption(this.packet.readInt());
-                room.setBanOption(this.packet.readInt());
-                room.setChatMode(this.packet.readInt());
-                room.setChatWeight(this.packet.readInt());
-                room.setChatSpeed(this.packet.readInt());
-                room.setChatDistance(Math.abs(this.packet.readInt()));
-                room.setChatProtection(this.packet.readInt());
+                room.setWallSize(Math.max(-2, Math.min(this.packet.readInt(), 1)));
+                room.setFloorSize(Math.max(-2, Math.min(this.packet.readInt(), 1)));
+                room.setMuteOption(Math.max(0, Math.min(this.packet.readInt(), 1)));
+                room.setKickOption(Math.max(0, Math.min(this.packet.readInt(), 2)));
+                room.setBanOption(Math.max(0, Math.min(this.packet.readInt(), 2)));
+                room.setChatMode(Math.max(0, Math.min(this.packet.readInt(), 1)));
+                room.setChatWeight(Math.max(0, Math.min(this.packet.readInt(), 2)));
+                room.setChatSpeed(Math.max(0, Math.min(this.packet.readInt(), 2)));
+                room.setChatDistance(Math.max(0, Math.min(Math.abs(this.packet.readInt()), 99)));
+                room.setChatProtection(Math.max(0, Math.min(this.packet.readInt(), 2)));
 
                 if (this.packet.bytesAvailable() > 0) {
                     room.setAllowUnderpass(this.packet.readBoolean());
