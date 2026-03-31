@@ -12,7 +12,7 @@ import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 public class GuildForumUpdateSettingsEvent extends MessageHandler {
     @Override
     public int getRatelimit() {
-        return 500;
+        return 2000;
     }
 
     @Override
