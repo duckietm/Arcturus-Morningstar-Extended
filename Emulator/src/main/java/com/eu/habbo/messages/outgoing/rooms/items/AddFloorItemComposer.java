@@ -24,6 +24,13 @@ public class AddFloorItemComposer extends MessageComposer {
         this.response.appendInt(-1);
         this.response.appendInt(this.item instanceof InteractionTeleport || this.item instanceof InteractionSwitch || this.item instanceof InteractionSwitchRemoteControl || this.item instanceof InteractionVendingMachine || this.item instanceof InteractionInformationTerminal || this.item instanceof InteractionPostIt|| this.item instanceof InteractionPuzzleBox ? 2 : this.item.isUsable() ? 1 : 0);
         this.response.appendInt(this.item.getUserId());
+        this.response.appendInt(this.item.getBaseItem().allowStack() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowSit() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowLay() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowWalk() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().getWidth());
+        this.response.appendInt(this.item.getBaseItem().getLength());
+        this.response.appendInt(this.item.getTeleportTargetId());
         this.response.appendString(this.itemOwnerName);
         return this.response;
     }

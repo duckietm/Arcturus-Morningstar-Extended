@@ -224,18 +224,28 @@ public abstract class InteractionWiredEffect extends InteractionWired implements
     }
 
     protected LinkedHashSet<HabboItem> getSelectableFloorItems(Room room) {
+        return this.getSelectableFloorItems(room, null);
+    }
+
+    protected LinkedHashSet<HabboItem> getSelectableFloorItems(Room room, WiredContext ctx) {
         LinkedHashSet<HabboItem> result = new LinkedHashSet<>();
         if (room == null) {
             return result;
         }
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         room.getFloorItems().forEach(item -> {
-            if (item != null && !(item instanceof InteractionWired)) {
+            if (item != null && (includeWiredItems || !(item instanceof InteractionWired))) {
                 result.add(item);
             }
         });
 
         return result;
+    }
+
+    protected boolean includeWiredTargets(WiredContext ctx) {
+        return ctx != null && ctx.includeWiredSelectorItems();
     }
 
     protected <T> LinkedHashSet<T> toLinkedHashSet(Iterable<T> values) {

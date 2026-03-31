@@ -42,15 +42,17 @@ public class WiredEffectFurniSignal extends InteractionWiredEffect {
             return;
         }
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         Set<HabboItem> result = new LinkedHashSet<>();
 
         if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
             List<HabboItem> signalItems = WiredSourceUtil.resolveItems(ctx, WiredSourceUtil.SOURCE_SIGNAL, null);
             Set<HabboItem> matched = signalItems.stream()
-                    .filter(item -> item != null && !(item instanceof InteractionWired))
+                    .filter(item -> item != null && (includeWiredItems || !(item instanceof InteractionWired)))
                     .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
 
-            result = this.applySelectorModifiers(matched, this.getSelectableFloorItems(room), ctx.targets().items(), this.filterExisting, this.invert);
+            result = this.applySelectorModifiers(matched, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), this.filterExisting, this.invert);
         }
 
         ctx.targets().setItems(result);

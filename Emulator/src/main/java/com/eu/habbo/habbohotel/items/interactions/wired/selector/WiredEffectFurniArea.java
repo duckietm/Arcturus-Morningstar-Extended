@@ -44,16 +44,16 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null || areaWidth <= 0 || areaHeight <= 0) return;
 
-        List<HabboItem> furniInArea = getFurniInArea(room);
+        List<HabboItem> furniInArea = getFurniInArea(room, this.includeWiredTargets(ctx));
         ctx.targets().setItems(this.applySelectorModifiers(
                 furniInArea,
-                this.getSelectableFloorItems(room),
+                this.getSelectableFloorItems(room, ctx),
                 ctx.targets().items(),
                 this.filterExisting,
                 this.invert));
     }
 
-    private List<HabboItem> getFurniInArea(Room room) {
+    private List<HabboItem> getFurniInArea(Room room, boolean includeWiredItems) {
         List<HabboItem> result = new ArrayList<>();
 
         int maxX = rootX + areaWidth - 1;
@@ -62,7 +62,7 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
         for (int x = rootX; x <= maxX; x++) {
             for (int y = rootY; y <= maxY; y++) {
                 for (HabboItem item : room.getItemsAt(x, y)) {
-                    if (item != null && !(item instanceof InteractionWired) && !result.contains(item)) {
+                    if (item != null && (includeWiredItems || !(item instanceof InteractionWired)) && !result.contains(item)) {
                         result.add(item);
                     }
                 }
@@ -159,6 +159,22 @@ public class WiredEffectFurniArea extends InteractionWiredEffect {
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
+    }
+
+    public int getRootX() {
+        return this.rootX;
+    }
+
+    public int getRootY() {
+        return this.rootY;
+    }
+
+    public int getAreaWidth() {
+        return this.areaWidth;
+    }
+
+    public int getAreaHeight() {
+        return this.areaHeight;
     }
 
     static class JsonData {

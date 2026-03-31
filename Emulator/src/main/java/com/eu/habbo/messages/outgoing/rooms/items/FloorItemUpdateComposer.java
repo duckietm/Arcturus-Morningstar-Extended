@@ -23,6 +23,13 @@ public class FloorItemUpdateComposer extends MessageComposer {
         this.response.appendInt(-1);
         this.response.appendInt(0);
         this.response.appendInt(this.item.getUserId());
+        this.response.appendInt(this.item.getBaseItem().allowStack() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowSit() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowLay() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().allowWalk() ? 1 : 0);
+        this.response.appendInt(this.item.getBaseItem().getWidth());
+        this.response.appendInt(this.item.getBaseItem().getLength());
+        this.response.appendInt(this.item.getTeleportTargetId());
         return this.response;
     }
 

@@ -93,6 +93,24 @@ public final class WiredSourceUtil {
         return value == SOURCE_SELECTED || isDefaultUserSource(value);
     }
 
+    public static List<HabboItem> resolveSelectorItems(WiredContext ctx, boolean includeWiredItems) {
+        if (ctx == null) {
+            return Collections.emptyList();
+        }
+
+        if (!includeWiredItems) {
+            return resolveItems(ctx, SOURCE_SELECTOR, null);
+        }
+
+        WiredContext selectorContext = executeSelectors(cloneSelectorContext(ctx, true));
+
+        if (selectorContext == null || !selectorContext.targets().isItemsModifiedBySelector()) {
+            return Collections.emptyList();
+        }
+
+        return new ArrayList<>(selectorContext.targets().items());
+    }
+
     private static WiredTargets getSelectorTargets(WiredContext ctx) {
         if (ctx == null) {
             return new WiredTargets();
@@ -139,6 +157,7 @@ public final class WiredSourceUtil {
                 new WiredState(100),
                 originalCtx.legacySettings()
         );
+        selectorCtx.setIncludeWiredSelectorItems(originalCtx.includeWiredSelectorItems());
 
         List<InteractionWiredEffect> selectorEffects = getOrderedSelectorEffects(originalCtx, room, triggerItem);
 
@@ -156,6 +175,23 @@ public final class WiredSourceUtil {
 
         applySelectionFilterExtras(room, triggerItem, selectorCtx);
 
+        return selectorCtx;
+    }
+
+    private static WiredContext cloneSelectorContext(WiredContext originalCtx, boolean includeWiredItems) {
+        if (originalCtx == null) {
+            return null;
+        }
+
+        WiredContext selectorCtx = new WiredContext(
+                originalCtx.event(),
+                originalCtx.triggerItem(),
+                originalCtx.stack(),
+                originalCtx.services(),
+                new WiredState(100),
+                originalCtx.legacySettings()
+        );
+        selectorCtx.setIncludeWiredSelectorItems(includeWiredItems);
         return selectorCtx;
     }
 
