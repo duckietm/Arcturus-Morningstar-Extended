@@ -46,6 +46,13 @@ public class RoomFloorItemsComposer extends MessageComposer {
             this.response.appendInt(-1);
             this.response.appendInt(item instanceof InteractionTeleport || item instanceof InteractionSwitch || item instanceof InteractionSwitchRemoteControl || item instanceof InteractionVendingMachine || item instanceof InteractionInformationTerminal || item instanceof InteractionPostIt || item instanceof InteractionPuzzleBox ? 2 : item.isUsable() ? 1 : 0);
             this.response.appendInt(item.getUserId());
+            this.response.appendInt(item.getBaseItem().allowStack() ? 1 : 0);
+            this.response.appendInt(item.getBaseItem().allowSit() ? 1 : 0);
+            this.response.appendInt(item.getBaseItem().allowLay() ? 1 : 0);
+            this.response.appendInt(item.getBaseItem().allowWalk() ? 1 : 0);
+            this.response.appendInt(item.getBaseItem().getWidth());
+            this.response.appendInt(item.getBaseItem().getLength());
+            this.response.appendInt(item.getTeleportTargetId());
         }
         return this.response;
     }

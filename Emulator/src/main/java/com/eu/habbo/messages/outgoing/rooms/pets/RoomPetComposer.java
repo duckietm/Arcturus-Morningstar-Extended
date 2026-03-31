@@ -59,6 +59,8 @@ public class RoomPetComposer extends MessageComposer implements TIntObjectProced
         this.response.appendBoolean(pet instanceof MonsterplantPet && ((MonsterplantPet) pet).isPubliclyBreedable()); //Breedable checkbox //Toggle breeding permission
         this.response.appendInt(pet instanceof MonsterplantPet ? ((MonsterplantPet) pet).getGrowthStage() : pet.getLevel());
         this.response.appendString("");
+        this.response.appendString("unknown");
+        this.response.appendInt(0);
 
         return true;
     }

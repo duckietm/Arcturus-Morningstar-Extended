@@ -59,6 +59,9 @@ public final class WiredContext {
     /** Extra settings from the trigger item (for legacy compatibility) */
     private final Object[] legacySettings;
 
+    /** Whether selector item resolution should include wired furniture too. */
+    private boolean includeWiredSelectorItems = false;
+
     /**
      * Create a new wired context.
      * 
@@ -254,6 +257,14 @@ public final class WiredContext {
      */
     public Object[] legacySettings() {
         return legacySettings != null ? legacySettings : new Object[0];
+    }
+
+    public boolean includeWiredSelectorItems() {
+        return this.includeWiredSelectorItems;
+    }
+
+    public void setIncludeWiredSelectorItems(boolean includeWiredSelectorItems) {
+        this.includeWiredSelectorItems = includeWiredSelectorItems;
     }
 
     // ========== Utility Methods ==========

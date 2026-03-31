@@ -654,6 +654,8 @@ public class RoomManager {
         }
 
         habbo.setRoomUnit(new RoomUnit());
+        habbo.getHabboInfo().setRoomEntryMethod("door");
+        habbo.getHabboInfo().setRoomEntryTeleportId(0);
 
         habbo.getRoomUnit().clearStatus();
         if (habbo.getRoomUnit().getCurrentLocation() == null) {
@@ -672,8 +674,10 @@ public class RoomManager {
                 // Furniture teleport spawn
                 habbo.getRoomUnit().setCanLeaveRoomByDoor(false);
                 habbo.getRoomUnit().isTeleporting = true;
+                habbo.getHabboInfo().setRoomEntryMethod("teleport");
                 HabboItem topItem = room.getTopItemAt(doorLocation.x, doorLocation.y);
                 if (topItem != null) {
+                    habbo.getHabboInfo().setRoomEntryTeleportId(topItem.getId());
                     habbo.getRoomUnit().setRotation(RoomUserRotation.values()[topItem.getRotation()]);
                 }
             }

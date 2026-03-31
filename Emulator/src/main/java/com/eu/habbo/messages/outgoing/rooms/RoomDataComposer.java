@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
+import com.eu.habbo.util.HotelDateTimeUtil;
 
 public class RoomDataComposer extends MessageComposer {
     private final Room room;
@@ -108,6 +109,9 @@ public class RoomDataComposer extends MessageComposer {
         this.response.appendInt(this.room.getChatSpeed());
         this.response.appendInt(this.room.getChatDistance());
         this.response.appendInt(this.room.getChatProtection());
+        this.response.appendString(HotelDateTimeUtil.getTimezoneId());
+        this.response.appendString(String.valueOf(HotelDateTimeUtil.now().toInstant().toEpochMilli()));
+        this.response.appendInt(Room.MAXIMUM_FURNI);
 
 
         return this.response;

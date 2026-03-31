@@ -147,6 +147,22 @@ public class WiredEffectUsersArea extends InteractionWiredEffect {
         return false;
     }
 
+    public int getRootX() {
+        return this.rootX;
+    }
+
+    public int getRootY() {
+        return this.rootY;
+    }
+
+    public int getAreaWidth() {
+        return this.areaWidth;
+    }
+
+    public int getAreaHeight() {
+        return this.areaHeight;
+    }
+
     static class JsonData {
         int rootX;
         int rootY;

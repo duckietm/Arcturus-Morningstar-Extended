@@ -45,12 +45,14 @@ public class WiredEffectFurniPicks extends InteractionWiredEffect {
             return;
         }
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         Set<HabboItem> result = this.pickedFurniIds.stream()
                 .map(room::getHabboItem)
-                .filter(item -> item != null && !(item instanceof InteractionWired))
+                .filter(item -> item != null && (includeWiredItems || !(item instanceof InteractionWired)))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room), ctx.targets().items(), this.filterExisting, this.invert);
+        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), this.filterExisting, this.invert);
 
         ctx.targets().setItems(result);
     }
