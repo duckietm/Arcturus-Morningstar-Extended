@@ -40,29 +40,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Manager class for the new wired engine system.
+ * Manager class for the wired runtime.
  * <p>
- * This class serves as the integration point between the emulator and the new
- * wired engine. It provides static methods for triggering events and manages
- * the lifecycle of the engine.
+ * WiredManager is now the sole runtime entrypoint for wired execution. Legacy
+ * configuration keys are still read for backwards compatibility with existing
+ * databases, but they no longer switch execution back to {@code WiredHandler}.
  * </p>
- * 
+ *
  * <h3>Configuration Options:</h3>
  * <ul>
- *   <li>{@code wired.engine.enabled} - Enable new engine (parallel mode)</li>
- *   <li>{@code wired.engine.exclusive} - Disable legacy handler when true</li>
+ *   <li>{@code wired.engine.enabled} - Compatibility flag kept for old configs</li>
+ *   <li>{@code wired.engine.exclusive} - Compatibility flag kept for old configs</li>
  *   <li>{@code wired.engine.maxStepsPerStack} - Loop protection limit</li>
  *   <li>{@code wired.engine.debug} - Verbose logging</li>
  * </ul>
- * 
- * <h3>Migration Strategy:</h3>
- * <ol>
- *   <li>Set {@code wired.engine.enabled=true} to run both engines in parallel</li>
- *   <li>Test thoroughly to ensure identical behavior</li>
- *   <li>Set {@code wired.engine.exclusive=true} to disable legacy engine</li>
- *   <li>Full migration complete - WiredManager is now the only wired engine</li>
- * </ol>
- * 
+ *
  * @see WiredEngine
  * @see WiredEvents
  */
@@ -80,8 +72,8 @@ public final class WiredManager {
     public static final String CONFIG_DEBUG = "wired.engine.debug";
 
     // Defaults
-    private static final boolean DEFAULT_ENABLED = false;
-    private static final boolean DEFAULT_EXCLUSIVE = false;
+    private static final boolean DEFAULT_ENABLED = true;
+    private static final boolean DEFAULT_EXCLUSIVE = true;
     private static final int DEFAULT_MAX_STEPS = 100;
 
     /** The singleton engine instance */
@@ -117,6 +109,7 @@ public final class WiredManager {
 
         // Load configuration
         boolean enabled = Emulator.getConfig().getBoolean(CONFIG_ENABLED, DEFAULT_ENABLED);
+        boolean exclusive = Emulator.getConfig().getBoolean(CONFIG_EXCLUSIVE, DEFAULT_EXCLUSIVE);
         int maxSteps = Emulator.getConfig().getInt(CONFIG_MAX_STEPS, DEFAULT_MAX_STEPS);
         boolean debug = Emulator.getConfig().getBoolean(CONFIG_DEBUG, false);
         
@@ -138,9 +131,13 @@ public final class WiredManager {
         WiredTickService.getInstance().start();
 
         initialized = true;
-        
-        LOGGER.info("Wired Manager initialized - enabled: {}, maxSteps: {}, debug: {}", 
-                enabled, maxSteps, debug);
+
+        if (!enabled || !exclusive) {
+            LOGGER.warn("wired.engine.enabled / wired.engine.exclusive are now compatibility-only flags. WiredManager runs as the exclusive engine runtime.");
+        }
+
+        LOGGER.info("Wired Manager initialized - exclusive runtime active, maxSteps: {}, debug: {}",
+                maxSteps, debug);
     }
 
     /**
@@ -163,6 +160,7 @@ public final class WiredManager {
         
         if (engine != null) {
             engine.clearUnseenCache();
+            engine.clearAllDiagnostics();
         }
 
         initialized = false;
@@ -174,7 +172,7 @@ public final class WiredManager {
      * @return true if enabled
      */
     public static boolean isEnabled() {
-        return Emulator.getConfig().getBoolean(CONFIG_ENABLED, DEFAULT_ENABLED);
+        return initialized && engine != null;
     }
 
     /**
@@ -182,7 +180,7 @@ public final class WiredManager {
      * @return true if exclusive mode
      */
     public static boolean isExclusive() {
-        return Emulator.getConfig().getBoolean(CONFIG_EXCLUSIVE, DEFAULT_EXCLUSIVE);
+        return true;
     }
 
     /**
@@ -199,6 +197,27 @@ public final class WiredManager {
      */
     public static RoomWiredStackIndex getStackIndex() {
         return stackIndex;
+    }
+
+    /**
+     * Get the current monitor snapshot for a room.
+     * @param roomId the room ID
+     * @return the diagnostics snapshot, or null if the engine is unavailable
+     */
+    public static WiredRoomDiagnostics.Snapshot getDiagnosticsSnapshot(int roomId) {
+        if (engine == null) {
+            return null;
+        }
+
+        return engine.getDiagnosticsSnapshot(roomId);
+    }
+
+    public static void clearDiagnosticsLogs(int roomId) {
+        if (engine == null) {
+            return;
+        }
+
+        engine.clearRoomDiagnosticsLogs(roomId);
     }
 
     // ========== Event Triggering Methods ==========
@@ -308,20 +327,28 @@ public final class WiredManager {
      * Trigger when a user says something.
      */
     public static boolean triggerUserSays(Room room, RoomUnit user, String message) {
+        return triggerUserSays(room, user, message, -1, -1);
+    }
+
+    public static boolean triggerUserSays(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         if (!isEnabled() || room == null || user == null) {
             return false;
         }
-        
-        WiredEvent event = WiredEvents.userSays(room, user, message);
+
+        WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
         return handleEvent(event);
     }
 
     public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message) {
+        return shouldSuppressUserSaysOutput(room, user, message, -1, -1);
+    }
+
+    public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         if (!isEnabled() || engine == null || room == null || user == null) {
             return false;
         }
 
-        WiredEvent event = WiredEvents.userSays(room, user, message);
+        WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
         return engine.shouldSuppressUserSaysOutput(event);
     }
 
@@ -358,6 +385,36 @@ public final class WiredManager {
         }
         
         WiredEvent event = WiredEvents.furniStateChanged(room, user, item);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerUserVariableChanged(Room room, int userId, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || definitionItemId <= 0) {
+            return false;
+        }
+
+        Habbo habbo = room.getHabbo(userId);
+        RoomUnit roomUnit = (habbo != null) ? habbo.getRoomUnit() : null;
+        WiredEvent event = WiredEvents.userVariableChanged(room, roomUnit, definitionItemId, created, deleted, changeKind);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerFurniVariableChanged(Room room, int furniId, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || furniId <= 0 || definitionItemId <= 0) {
+            return false;
+        }
+
+        HabboItem item = room.getHabboItem(furniId);
+        WiredEvent event = WiredEvents.furniVariableChanged(room, item, definitionItemId, created, deleted, changeKind);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerRoomVariableChanged(Room room, int definitionItemId, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || definitionItemId <= 0) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.roomVariableChanged(room, definitionItemId, changeKind);
         return handleEvent(event);
     }
 
@@ -567,8 +624,8 @@ public final class WiredManager {
     }
 
     /**
-     * Trigger from legacy system for parallel running.
-     * This allows the new engine to run alongside the old one during migration.
+     * Compatibility bridge for code paths that still describe themselves as
+     * legacy-triggered. Execution still goes through the new engine only.
      */
     public static boolean triggerFromLegacy(WiredTriggerType triggerType, RoomUnit roomUnit, Room room, Object[] stuff) {
         if (!isEnabled() || room == null) {
@@ -725,6 +782,11 @@ public final class WiredManager {
      */
     public static void unregisterRoomTickables(Room room) {
         WiredTickService.getInstance().unregisterRoom(room);
+
+        if (room != null) {
+            room.getFurniVariableManager().clearTransientAssignments();
+            room.getRoomVariableManager().clearTransientAssignments();
+        }
     }
     
     /**

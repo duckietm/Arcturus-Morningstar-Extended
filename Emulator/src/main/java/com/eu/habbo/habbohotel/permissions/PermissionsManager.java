@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ public class PermissionsManager {
     private final TIntObjectHashMap<Rank> ranks;
     private final TIntIntHashMap enables;
     private final THashMap<String, List<Rank>> badges;
+    private volatile boolean normalizedSchemaEnabled;
 
     public PermissionsManager() {
         long millis = System.currentTimeMillis();
@@ -40,7 +42,30 @@ public class PermissionsManager {
     private void loadPermissions() {
         this.badges.clear();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM permissions ORDER BY id ASC")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+            if (this.hasNormalizedPermissionsSchema(connection)) {
+                try {
+                    if (this.loadPermissionsNormalized(connection)) {
+                        this.normalizedSchemaEnabled = true;
+                        LOGGER.info("Permissions Manager -> Using normalized permissions schema.");
+                        return;
+                    }
+                } catch (SQLException e) {
+                    LOGGER.warn("Permissions Manager -> Failed to load normalized permissions schema, falling back to legacy permissions table.", e);
+                }
+            }
+
+            this.normalizedSchemaEnabled = false;
+            this.badges.clear();
+            LOGGER.info("Permissions Manager -> Using legacy permissions schema.");
+            this.loadPermissionsLegacy(connection);
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+    }
+
+    private void loadPermissionsLegacy(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM permissions ORDER BY id ASC")) {
             while (set.next()) {
                 Rank rank = null;
                 if (!this.ranks.containsKey(set.getInt("id"))) {
@@ -51,16 +76,135 @@ public class PermissionsManager {
                     rank.load(set);
                 }
 
-                if (rank != null && !rank.getBadge().isEmpty()) {
-                    if (!this.badges.containsKey(rank.getBadge())) {
-                        this.badges.put(rank.getBadge(), new ArrayList<Rank>());
-                    }
+                this.addBadgeMapping(rank);
+            }
+        }
+    }
 
-                    this.badges.get(rank.getBadge()).add(rank);
+    private boolean loadPermissionsNormalized(Connection connection) throws SQLException {
+        boolean hasRanks = false;
+        List<Rank> loadedRanks = new ArrayList<>();
+
+        try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT * FROM permission_ranks ORDER BY id ASC")) {
+            while (set.next()) {
+                hasRanks = true;
+
+                Rank rank = this.ranks.get(set.getInt("id"));
+
+                if (rank == null) {
+                    rank = new Rank(set.getInt("id"));
+                    this.ranks.put(set.getInt("id"), rank);
+                }
+
+                rank.loadNormalizedMetadata(set);
+                this.addBadgeMapping(rank);
+                loadedRanks.add(rank);
+            }
+        }
+
+        if (!hasRanks) {
+            return false;
+        }
+
+        this.ensureNormalizedRankColumns(connection, loadedRanks);
+
+        boolean hasDefinitions = false;
+
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM permission_definitions ORDER BY permission_key ASC");
+             ResultSet set = statement.executeQuery()) {
+            ResultSetMetaData meta = set.getMetaData();
+            Set<String> availableColumns = new HashSet<>();
+
+            for (int i = 1; i <= meta.getColumnCount(); i++) {
+                availableColumns.add(meta.getColumnName(i).toLowerCase());
+            }
+
+            for (Rank rank : loadedRanks) {
+                if (!availableColumns.contains(("rank_" + rank.getId()).toLowerCase())) {
+                    return false;
                 }
             }
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+
+            while (set.next()) {
+                hasDefinitions = true;
+                String permissionKey = set.getString("permission_key");
+
+                for (Rank rank : loadedRanks) {
+                    String rankColumn = "rank_" + rank.getId();
+
+                    if (!availableColumns.contains(rankColumn.toLowerCase())) {
+                        continue;
+                    }
+
+                    rank.setPermission(permissionKey, PermissionSetting.fromString(Integer.toString(set.getInt(rankColumn))));
+                }
+            }
+        }
+
+        return hasDefinitions;
+    }
+
+    private void ensureNormalizedRankColumns(Connection connection, List<Rank> loadedRanks) throws SQLException {
+        Set<String> availableColumns = new HashSet<>();
+
+        try (PreparedStatement statement = connection.prepareStatement("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'permission_definitions'");
+             ResultSet set = statement.executeQuery()) {
+            while (set.next()) {
+                availableColumns.add(set.getString("column_name").toLowerCase());
+            }
+        }
+
+        for (Rank rank : loadedRanks) {
+            String rankColumn = "rank_" + rank.getId();
+
+            if (availableColumns.contains(rankColumn.toLowerCase())) {
+                continue;
+            }
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE permission_definitions ADD COLUMN `" + rankColumn + "` tinyint(3) unsigned NOT NULL DEFAULT 0");
+            }
+
+            availableColumns.add(rankColumn.toLowerCase());
+            LOGGER.info("Permissions Manager -> Added missing normalized permission column {}.", rankColumn);
+        }
+    }
+
+    private boolean hasNormalizedPermissionsSchema(Connection connection) throws SQLException {
+        if (!this.tableExists(connection, "permission_ranks") || !this.tableExists(connection, "permission_definitions")) {
+            return false;
+        }
+
+        if (!this.tableHasRows(connection, "permission_ranks")) {
+            return false;
+        }
+
+        return this.tableHasRows(connection, "permission_definitions");
+    }
+
+    private boolean tableExists(Connection connection, String tableName) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?")) {
+            statement.setString(1, tableName);
+
+            try (ResultSet set = statement.executeQuery()) {
+                return set.next() && set.getInt(1) > 0;
+            }
+        }
+    }
+
+    private boolean tableHasRows(Connection connection, String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement(); ResultSet set = statement.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+            return set.next() && set.getInt(1) > 0;
+        }
+    }
+
+    private void addBadgeMapping(Rank rank) {
+        if (rank != null && !rank.getBadge().isEmpty()) {
+            if (!this.badges.containsKey(rank.getBadge())) {
+                this.badges.put(rank.getBadge(), new ArrayList<Rank>());
+            }
+
+            this.badges.get(rank.getBadge()).add(rank);
         }
     }
 
@@ -138,5 +282,9 @@ public class PermissionsManager {
 
     public List<Rank> getAllRanks() {
         return new ArrayList<>(this.ranks.valueCollection());
+    }
+
+    public boolean isNormalizedSchemaEnabled() {
+        return this.normalizedSchemaEnabled;
     }
 }

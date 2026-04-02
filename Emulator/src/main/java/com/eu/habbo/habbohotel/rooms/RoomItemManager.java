@@ -16,6 +16,13 @@ import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagPole;
 import com.eu.habbo.habbohotel.items.interactions.pets.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendSignal;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFurniVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRoomVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUserVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableEcho;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableReference;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraContextVariable;
+import com.eu.habbo.habbohotel.wired.core.WiredContextVariableSupport;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -773,6 +780,8 @@ public class RoomItemManager {
         if (specialTypes == null) {
             return;
         }
+
+        this.room.getFurniVariableManager().removeAssignmentsForFurni(item.getId());
         
         boolean isWiredItem = false;
 
@@ -785,21 +794,50 @@ public class RoomItemManager {
             specialTypes.removeCycleTask((ICycleable) item);
         }
 
-        if (item instanceof InteractionBattleBanzaiTeleporter) {
-            specialTypes.removeBanzaiTeleporter((InteractionBattleBanzaiTeleporter) item);
-        } else if (item instanceof InteractionWiredTrigger) {
-            specialTypes.removeTrigger((InteractionWiredTrigger) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredEffect) {
-            specialTypes.removeEffect((InteractionWiredEffect) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredCondition) {
-            specialTypes.removeCondition((InteractionWiredCondition) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredExtra) {
-            specialTypes.removeExtra((InteractionWiredExtra) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionRoller) {
+          if (item instanceof InteractionBattleBanzaiTeleporter) {
+              specialTypes.removeBanzaiTeleporter((InteractionBattleBanzaiTeleporter) item);
+          } else if (item instanceof InteractionWiredTrigger) {
+              specialTypes.removeTrigger((InteractionWiredTrigger) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredEffect) {
+              specialTypes.removeEffect((InteractionWiredEffect) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredCondition) {
+              specialTypes.removeCondition((InteractionWiredCondition) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredExtra) {
+              boolean removedContextDefinition = false;
+              if (item instanceof WiredExtraUserVariable) {
+                  this.room.getUserVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraFurniVariable) {
+                  this.room.getFurniVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraRoomVariable) {
+                  this.room.getRoomVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraContextVariable) {
+                  removedContextDefinition = true;
+              } else if (item instanceof WiredExtraVariableReference) {
+                  if (((WiredExtraVariableReference) item).isRoomReference()) {
+                      this.room.getRoomVariableManager().removeDefinition(item.getId());
+                  } else {
+                      this.room.getUserVariableManager().removeDefinition(item.getId());
+                  }
+              } else if (item instanceof WiredExtraVariableEcho) {
+                  WiredExtraVariableEcho echo = (WiredExtraVariableEcho) item;
+
+                  if (echo.isRoomEcho()) {
+                      this.room.getRoomVariableManager().removeDefinition(item.getId());
+                  } else if (echo.isFurniEcho()) {
+                      this.room.getFurniVariableManager().removeDefinition(item.getId());
+                  } else {
+                      this.room.getUserVariableManager().removeDefinition(item.getId());
+                  }
+              }
+              specialTypes.removeExtra((InteractionWiredExtra) item);
+              if (removedContextDefinition) {
+                  WiredContextVariableSupport.broadcastDefinitions(this.room);
+              }
+              isWiredItem = true;
+          } else if (item instanceof InteractionRoller) {
             specialTypes.removeRoller((InteractionRoller) item);
         } else if (item instanceof InteractionGameScoreboard) {
             specialTypes.removeScoreboard((InteractionGameScoreboard) item);

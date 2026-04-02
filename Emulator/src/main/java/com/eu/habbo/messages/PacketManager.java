@@ -67,6 +67,12 @@ import com.eu.habbo.messages.incoming.users.*;
 import com.eu.habbo.messages.incoming.wired.WiredApplySetConditionsEvent;
 import com.eu.habbo.messages.incoming.wired.WiredConditionSaveDataEvent;
 import com.eu.habbo.messages.incoming.wired.WiredEffectSaveDataEvent;
+import com.eu.habbo.messages.incoming.wired.WiredMonitorRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsSaveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableManageEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableUpdateEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariablesRequestEvent;
 import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
@@ -615,6 +621,12 @@ public class PacketManager {
         this.registerHandler(Incoming.WiredEffectSaveDataEvent, WiredEffectSaveDataEvent.class);
         this.registerHandler(Incoming.WiredConditionSaveDataEvent, WiredConditionSaveDataEvent.class);
         this.registerHandler(Incoming.WiredApplySetConditionsEvent, WiredApplySetConditionsEvent.class);
+        this.registerHandler(Incoming.WiredMonitorRequestEvent, WiredMonitorRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsRequestEvent, WiredRoomSettingsRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsSaveEvent, WiredRoomSettingsSaveEvent.class);
+        this.registerHandler(Incoming.WiredUserVariablesRequestEvent, WiredUserVariablesRequestEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableUpdateEvent, WiredUserVariableUpdateEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableManageEvent, WiredUserVariableManageEvent.class);
     }
 
     void registerUnknown() throws Exception {

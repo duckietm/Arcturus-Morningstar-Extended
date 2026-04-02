@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.games.Game;
 import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.guilds.GuildMember;
+import com.eu.habbo.habbohotel.guilds.GuildRank;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.*;
@@ -30,6 +31,7 @@ import com.eu.habbo.messages.outgoing.rooms.UpdateStackHeightComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.*;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserIgnoredComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
+import com.eu.habbo.messages.outgoing.wired.WiredRoomSettingsDataComposer;
 import com.eu.habbo.plugin.Event;
 import com.eu.habbo.plugin.events.furniture.FurniturePickedUpEvent;
 import com.eu.habbo.plugin.events.rooms.RoomLoadedEvent;
@@ -75,6 +77,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private RoomRollerManager rollerManager;
   private RoomMessagingManager messagingManager;
   private RoomCycleManager cycleManager;
+  private RoomUserVariableManager userVariableManager;
+  private RoomFurniVariableManager furniVariableManager;
+  private RoomVariableManager roomVariableManager;
 
   public static final Comparator<Room> SORT_SCORE = (o1, o2) -> o2.getScore() - o1.getScore();
   public static final Comparator<Room> SORT_ID = (o1, o2) -> o2.getId() - o1.getId();
@@ -92,6 +97,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   public static int ROLLERS_MAXIMUM_ROLL_AVATARS = 1;
   public static boolean MUTEAREA_CAN_WHISPER = false;
   public static double MAXIMUM_FURNI_HEIGHT = 40d;
+  public static final int WIRED_ACCESS_EVERYONE = 1;
+  public static final int WIRED_ACCESS_USERS_WITH_RIGHTS = 2;
+  public static final int WIRED_ACCESS_GROUP_MEMBERS = 4;
+  public static final int WIRED_ACCESS_GROUP_ADMINS = 8;
+  public static final int WIRED_ACCESS_ALLOWED_INSPECT_MASK = WIRED_ACCESS_EVERYONE | WIRED_ACCESS_USERS_WITH_RIGHTS | WIRED_ACCESS_GROUP_MEMBERS | WIRED_ACCESS_GROUP_ADMINS;
+  public static final int WIRED_ACCESS_ALLOWED_MODIFY_MASK = WIRED_ACCESS_USERS_WITH_RIGHTS | WIRED_ACCESS_GROUP_MEMBERS | WIRED_ACCESS_GROUP_ADMINS;
+  public static final int WIRED_ACCESS_DEFAULT_INSPECT_MASK = 0;
+  public static final int WIRED_ACCESS_DEFAULT_MODIFY_MASK = 0;
 
   static {
     for (int i = 1; i <= 3; i++) {
@@ -175,6 +188,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private volatile boolean muted;
   private RoomSpecialTypes roomSpecialTypes;
   private TraxManager traxManager;
+  private final Object wiredSettingsLock = new Object();
+  private volatile boolean wiredSettingsLoaded;
+  private int wiredInspectMask = WIRED_ACCESS_DEFAULT_INSPECT_MASK;
+  private int wiredModifyMask = WIRED_ACCESS_DEFAULT_MODIFY_MASK;
   
   public final THashMap<String, Object> cache;
 
@@ -269,6 +286,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.rollerManager = new RoomRollerManager(this);
     this.messagingManager = new RoomMessagingManager(this);
     this.cycleManager = new RoomCycleManager(this);
+    this.userVariableManager = new RoomUserVariableManager(this);
+    this.furniVariableManager = new RoomFurniVariableManager(this);
+    this.roomVariableManager = new RoomVariableManager(this);
   }
 
   // ==================== MANAGER GETTERS ====================
@@ -348,6 +368,18 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
    */
   public RoomCycleManager getCycleManager() {
     return this.cycleManager;
+  }
+
+  public RoomUserVariableManager getUserVariableManager() {
+    return this.userVariableManager;
+  }
+
+  public RoomFurniVariableManager getFurniVariableManager() {
+    return this.furniVariableManager;
+  }
+
+  public RoomVariableManager getRoomVariableManager() {
+    return this.roomVariableManager;
   }
 
   /**
@@ -924,12 +956,12 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
           this.itemManager.saveAllPendingItems();
 
+          // Unregister all wired tickables for this room from the tick service
+          com.eu.habbo.habbohotel.wired.core.WiredManager.unregisterRoomTickables(this);
+
           if (this.roomSpecialTypes != null) {
             this.roomSpecialTypes.dispose();
           }
-
-          // Unregister all wired tickables for this room from the tick service
-          com.eu.habbo.habbohotel.wired.core.WiredManager.unregisterRoomTickables(this);
 
           // Clear wired engine caches for this room
           if (com.eu.habbo.habbohotel.wired.core.WiredManager.getStackIndex() != null) {
@@ -938,6 +970,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
           if (com.eu.habbo.habbohotel.wired.core.WiredManager.getEngine() != null) {
             com.eu.habbo.habbohotel.wired.core.WiredManager.getEngine().clearRoomRecursionDepth(this.id);
             com.eu.habbo.habbohotel.wired.core.WiredManager.getEngine().clearRoomRateLimiters(this.id);
+            com.eu.habbo.habbohotel.wired.core.WiredManager.getEngine().clearRoomBan(this.id);
+            com.eu.habbo.habbohotel.wired.core.WiredManager.getEngine().clearRoomDiagnostics(this.id);
           }
 
           this.itemManager.clear();
@@ -2127,20 +2161,108 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     return this.rightsManager.hasRights(habbo);
   }
 
+  public boolean hasExplicitRights(Habbo habbo) {
+    return habbo != null && this.rights.contains(habbo.getHabboInfo().getId());
+  }
+
+  public int getWiredInspectMask() {
+    this.ensureWiredSettingsLoaded();
+    return this.wiredInspectMask;
+  }
+
+  public int getWiredModifyMask() {
+    this.ensureWiredSettingsLoaded();
+    return this.wiredModifyMask;
+  }
+
+  public boolean canInspectWired(Habbo habbo) {
+    if (habbo == null) {
+      return false;
+    }
+
+    if (this.canManageWiredSettings(habbo)) {
+      return true;
+    }
+
+    this.ensureWiredSettingsLoaded();
+    return this.matchesWiredAccessMask(habbo, this.wiredInspectMask, true);
+  }
+
+  public boolean canModifyWired(Habbo habbo) {
+    if (habbo == null) {
+      return false;
+    }
+
+    if (this.canManageWiredSettings(habbo)) {
+      return true;
+    }
+
+    this.ensureWiredSettingsLoaded();
+    return this.matchesWiredAccessMask(habbo, this.wiredModifyMask, false);
+  }
+
+  public boolean canManageWiredSettings(Habbo habbo) {
+    return habbo != null && this.isOwner(habbo);
+  }
+
+  public boolean saveWiredSettings(int inspectMask, int modifyMask) {
+    int sanitizedInspectMask = sanitizeWiredInspectMask(inspectMask);
+    int sanitizedModifyMask = sanitizeWiredModifyMask(modifyMask);
+    sanitizedInspectMask |= sanitizedModifyMask;
+
+    synchronized (this.wiredSettingsLock) {
+      int previousInspectMask = this.wiredInspectMask;
+      int previousModifyMask = this.wiredModifyMask;
+      this.wiredInspectMask = sanitizedInspectMask;
+      this.wiredModifyMask = sanitizedModifyMask;
+      this.wiredSettingsLoaded = true;
+
+      try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+           PreparedStatement statement = connection.prepareStatement(
+               "INSERT INTO room_wired_settings (room_id, inspect_mask, modify_mask) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE inspect_mask = VALUES(inspect_mask), modify_mask = VALUES(modify_mask)")) {
+        statement.setInt(1, this.id);
+        statement.setInt(2, sanitizedInspectMask);
+        statement.setInt(3, sanitizedModifyMask);
+        statement.executeUpdate();
+        this.pushWiredSettingsToCurrentHabbos();
+        return true;
+      } catch (SQLException e) {
+        this.wiredInspectMask = previousInspectMask;
+        this.wiredModifyMask = previousModifyMask;
+        LOGGER.error("Caught SQL exception while saving wired room settings", e);
+        return false;
+      }
+    }
+  }
+
   public void giveRights(Habbo habbo) {
-    this.rightsManager.giveRights(habbo);
+    if (habbo == null) {
+      return;
+    }
+
+    this.giveRights(habbo.getHabboInfo().getId());
   }
 
   public void giveRights(int userId) {
     this.rightsManager.giveRights(userId);
+
+    if (!this.rights.contains(userId)) {
+      this.rights.add(userId);
+    }
+
+    this.pushWiredSettingsToCurrentHabbos();
   }
 
   public void removeRights(int userId) {
     this.rightsManager.removeRights(userId);
+    this.rights.remove(userId);
+    this.pushWiredSettingsToCurrentHabbos();
   }
 
   public void removeAllRights() {
     this.rightsManager.removeAllRights();
+    this.rights.clear();
+    this.pushWiredSettingsToCurrentHabbos();
   }
 
   void refreshRightsInRoom() {
@@ -2165,6 +2287,111 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
   public TIntObjectHashMap<RoomBan> getBannedHabbos() {
     return this.bannedHabbos;
+  }
+
+  private void ensureWiredSettingsLoaded() {
+    if (this.wiredSettingsLoaded) {
+      return;
+    }
+
+    synchronized (this.wiredSettingsLock) {
+      if (this.wiredSettingsLoaded) {
+        return;
+      }
+
+      this.wiredInspectMask = WIRED_ACCESS_DEFAULT_INSPECT_MASK;
+      this.wiredModifyMask = WIRED_ACCESS_DEFAULT_MODIFY_MASK;
+
+      try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+           PreparedStatement statement = connection.prepareStatement(
+               "SELECT inspect_mask, modify_mask FROM room_wired_settings WHERE room_id = ? LIMIT 1")) {
+        statement.setInt(1, this.id);
+
+        try (ResultSet set = statement.executeQuery()) {
+          if (set.next()) {
+            this.wiredInspectMask = sanitizeWiredInspectMask(set.getInt("inspect_mask"));
+            this.wiredModifyMask = sanitizeWiredModifyMask(set.getInt("modify_mask"));
+          }
+        }
+      } catch (SQLException e) {
+        LOGGER.error("Caught SQL exception while loading wired room settings", e);
+      }
+
+      this.wiredSettingsLoaded = true;
+    }
+  }
+
+  private boolean matchesWiredAccessMask(Habbo habbo, int mask, boolean allowEveryone) {
+    if (habbo == null) {
+      return false;
+    }
+
+    if (allowEveryone && hasWiredAccess(mask, WIRED_ACCESS_EVERYONE)) {
+      return true;
+    }
+
+    if (hasWiredAccess(mask, WIRED_ACCESS_USERS_WITH_RIGHTS) && this.hasExplicitRights(habbo)) {
+      return true;
+    }
+
+    if (hasWiredAccess(mask, WIRED_ACCESS_GROUP_ADMINS) && this.isRoomGroupAdmin(habbo)) {
+      return true;
+    }
+
+    return hasWiredAccess(mask, WIRED_ACCESS_GROUP_MEMBERS) && this.isRoomGroupMember(habbo);
+  }
+
+  private boolean isRoomGroupMember(Habbo habbo) {
+    return habbo != null && this.guild > 0 && habbo.getHabboStats().hasGuild(this.guild);
+  }
+
+  private boolean isRoomGroupAdmin(Habbo habbo) {
+    if (!this.isRoomGroupMember(habbo)) {
+      return false;
+    }
+
+    GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(this.guild, habbo.getHabboInfo().getId());
+
+    if (member == null) {
+      return false;
+    }
+
+    GuildRank rank = member.getRank();
+    return rank == GuildRank.OWNER || rank == GuildRank.ADMIN;
+  }
+
+  private static boolean hasWiredAccess(int mask, int permissionMask) {
+    return (mask & permissionMask) != 0;
+  }
+
+  private static int sanitizeWiredInspectMask(int mask) {
+    int sanitizedMask = mask & WIRED_ACCESS_ALLOWED_INSPECT_MASK;
+
+    if (hasWiredAccess(sanitizedMask, WIRED_ACCESS_GROUP_MEMBERS)) {
+      sanitizedMask |= WIRED_ACCESS_GROUP_ADMINS;
+    }
+
+    return sanitizedMask;
+  }
+
+  private static int sanitizeWiredModifyMask(int mask) {
+    int sanitizedMask = mask & WIRED_ACCESS_ALLOWED_MODIFY_MASK;
+
+    if (hasWiredAccess(sanitizedMask, WIRED_ACCESS_GROUP_MEMBERS)) {
+      sanitizedMask |= WIRED_ACCESS_GROUP_ADMINS;
+    }
+
+    return sanitizedMask;
+  }
+
+  private void pushWiredSettingsToCurrentHabbos() {
+    for (Habbo currentHabbo : this.getCurrentHabbos().values()) {
+      if (currentHabbo == null || currentHabbo.getClient() == null) {
+        continue;
+      }
+
+      currentHabbo.getClient().sendResponse(new WiredRoomSettingsDataComposer(this, currentHabbo));
+    }
   }
 
   public void addRoomBan(RoomBan roomBan) {

@@ -141,6 +141,18 @@ public class WiredTriggerHabboSaysKeyword extends InteractionWiredTrigger {
         return this.hideMessage;
     }
 
+    public boolean isOwnerOnly() {
+        return this.ownerOnly;
+    }
+
+    public String getKey() {
+        return this.key;
+    }
+
+    public int getMatchMode() {
+        return this.matchMode;
+    }
+
     private boolean matchesText(String text) {
         String normalizedText = text.toLowerCase().trim();
         String normalizedKey = this.key.toLowerCase().trim();

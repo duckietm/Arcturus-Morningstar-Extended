@@ -120,6 +120,9 @@ public class Outgoing {
     public final static int EnableNotificationsComposer = 3284; // PRODUCTION-201611291003-338511768
     public final static int HallOfFameComposer = 3005; // PRODUCTION-201611291003-338511768
     public final static int WiredSavedComposer = 1155; // PRODUCTION-201611291003-338511768
+    public final static int WiredMonitorDataComposer = 5101; // CUSTOM
+    public final static int WiredRoomSettingsDataComposer = 5102; // CUSTOM
+    public final static int WiredUserVariablesDataComposer = 5103; // CUSTOM
     public final static int RoomPaintComposer = 2454; // PRODUCTION-201611291003-338511768
     public final static int MarketplaceConfigComposer = 1823; // PRODUCTION-201611291003-338511768
     public final static int AddBotComposer = 1352; // PRODUCTION-201611291003-338511768

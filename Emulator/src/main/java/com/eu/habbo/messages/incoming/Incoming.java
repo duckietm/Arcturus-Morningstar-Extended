@@ -409,6 +409,12 @@ public class Incoming {
 	// CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
     public static final int ClickUserEvent = 10020;
+    public static final int WiredMonitorRequestEvent = 10021;
+    public static final int WiredRoomSettingsRequestEvent = 10022;
+    public static final int WiredRoomSettingsSaveEvent = 10023;
+    public static final int WiredUserVariablesRequestEvent = 10024;
+    public static final int WiredUserVariableUpdateEvent = 10025;
+    public static final int WiredUserVariableManageEvent = 10026;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
 

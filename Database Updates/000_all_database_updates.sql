@@ -213,8 +213,8 @@ ON DUPLICATE KEY UPDATE `key` = `key`;
 
 -- Wired engine configuration
 INSERT INTO `emulator_settings` (`key`, `value`) VALUES
-('wired.engine.enabled', '0'),
-('wired.engine.exclusive', '0'),
+('wired.engine.enabled', '1'),
+('wired.engine.exclusive', '1'),
 ('wired.engine.maxStepsPerStack', '100'),
 ('wired.engine.debug', '0')
 ON DUPLICATE KEY UPDATE `key` = `key`;
