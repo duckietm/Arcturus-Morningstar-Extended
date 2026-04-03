@@ -25,10 +25,11 @@ public class YoutubeRequestPlaylists extends MessageHandler {
             if (item instanceof InteractionYoutubeTV) {
                 InteractionYoutubeTV tv = (InteractionYoutubeTV) item;
 
-                ArrayList<YoutubeManager.YoutubePlaylist> playlists = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(item.getBaseItem().getId());
+                int furniItemId = item.getId();
+                ArrayList<YoutubeManager.YoutubePlaylist> playlists = Emulator.getGameEnvironment().getItemManager().getYoutubeManager().getPlaylistsForItemId(furniItemId);
 
                 if (playlists == null) {
-                    LOGGER.error("No YouTube playlists set for base item #{}", item.getBaseItem().getId());
+                    LOGGER.error("No YouTube playlists loaded for item #{}. Check: 1) youtube_playlists table has entries with item_id={}, 2) youtube.apikey is set in emulator_settings, 3) playlist IDs are valid YouTube playlist IDs (start with PL)", furniItemId, furniItemId);
                     this.client.sendResponse(new ConnectionErrorComposer(1000));
                     return;
                 }
