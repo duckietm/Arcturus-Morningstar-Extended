@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.rooms.users;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomHanditemBlockSupport;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.threading.runnables.HabboGiveHandItemToHabbo;
@@ -18,6 +19,10 @@ public class RoomUserGiveHandItemEvent extends MessageHandler {
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
 
         if (room != null) {
+            if (RoomHanditemBlockSupport.isHanditemBlocked(room)) {
+                return;
+            }
+
             Habbo target = room.getHabbo(userId);
 
             if (target != null) {

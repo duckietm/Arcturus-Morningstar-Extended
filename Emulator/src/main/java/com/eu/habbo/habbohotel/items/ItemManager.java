@@ -169,6 +169,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("monsterplant_seed", InteractionMonsterPlantSeed.class));
         this.interactionsList.add(new ItemInteraction("gift", InteractionGift.class));
         this.interactionsList.add(new ItemInteraction("stack_helper", InteractionStackHelper.class));
+        this.interactionsList.add(new ItemInteraction("stack_walk_helper", InteractionStackWalkHelper.class));
         this.interactionsList.add(new ItemInteraction("puzzle_box", InteractionPuzzleBox.class));
         this.interactionsList.add(new ItemInteraction("hopper", InteractionHopper.class));
         this.interactionsList.add(new ItemInteraction("costume_hopper", InteractionCostumeHopper.class));
@@ -198,6 +199,13 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("youtube", InteractionYoutubeTV.class));
         this.interactionsList.add(new ItemInteraction("jukebox", InteractionJukeBox.class));
         this.interactionsList.add(new ItemInteraction("switch", InteractionSwitch.class));
+        this.interactionsList.add(new ItemInteraction("conf_invis_control", InteractionConfInvisControl.class));
+        this.interactionsList.add(new ItemInteraction("wf_conf_invis_control", InteractionConfInvisControl.class));
+        this.interactionsList.add(new ItemInteraction("wf_conf_area_hide", InteractionAreaHideControl.class));
+        this.interactionsList.add(new ItemInteraction("conf_area_hide", InteractionAreaHideControl.class));
+        this.interactionsList.add(new ItemInteraction("wf_conf_handitem_block", InteractionHanditemBlockControl.class));
+        this.interactionsList.add(new ItemInteraction("wf_conf_queue_speed", InteractionQueueSpeedControl.class));
+        this.interactionsList.add(new ItemInteraction("wf_conf_wired_disable", InteractionWiredDisableControl.class));
         this.interactionsList.add(new ItemInteraction("switch_remote_control", InteractionSwitchRemoteControl.class));
         this.interactionsList.add(new ItemInteraction("fx_box", InteractionFXBox.class));
         this.interactionsList.add(new ItemInteraction("blackhole", InteractionBlackHole.class));

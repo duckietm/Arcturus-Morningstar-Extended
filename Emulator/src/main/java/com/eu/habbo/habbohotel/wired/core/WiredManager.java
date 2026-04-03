@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTrigg
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomWiredDisableSupport;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -231,6 +232,10 @@ public final class WiredManager {
         if (!isEnabled() || engine == null) {
             return false;
         }
+
+        if (event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
+            return false;
+        }
         
         return engine.handleEvent(event);
     }
@@ -345,6 +350,10 @@ public final class WiredManager {
 
     public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         if (!isEnabled() || engine == null || room == null || user == null) {
+            return false;
+        }
+
+        if (RoomWiredDisableSupport.isWiredDisabled(room)) {
             return false;
         }
 

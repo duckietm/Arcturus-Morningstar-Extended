@@ -2458,29 +2458,38 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public void updateItem(HabboItem item) {
-    if (this.isLoaded()) {
-      if (item != null && item.getRoomId() == this.id) {
-        if (item.getBaseItem() != null) {
-          if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
-            this.sendComposer(new FloorItemUpdateComposer(item).compose());
-            this.updateTiles(this.getLayout()
-                .getTilesAt(this.layout.getTile(item.getX(), item.getY()),
-                    item.getBaseItem().getWidth(), item.getBaseItem().getLength(),
-                    item.getRotation()));
-          } else if (item.getBaseItem().getType() == FurnitureType.WALL) {
-            this.sendComposer(new WallItemUpdateComposer(item).compose());
+      if (this.isLoaded()) {
+        if (item != null && item.getRoomId() == this.id) {
+          if (item.getBaseItem() != null) {
+            if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
+              this.sendComposer(new FloorItemUpdateComposer(item).compose());
+              this.updateTiles(this.getLayout()
+                  .getTilesAt(this.layout.getTile(item.getX(), item.getY()),
+                      item.getBaseItem().getWidth(), item.getBaseItem().getLength(),
+                      item.getRotation()));
+
+              if (RoomAreaHideSupport.isControllerItem(item)) {
+                RoomAreaHideSupport.sendState(this, item);
+              }
+            } else if (item.getBaseItem().getType() == FurnitureType.WALL) {
+              this.sendComposer(new WallItemUpdateComposer(item).compose());
+            }
           }
         }
-      }
     }
   }
 
   public void updateItemState(HabboItem item) {
-    if (!item.isLimited()) {
-      this.sendComposer(new ItemStateComposer(item).compose());
-    } else {
-      this.sendComposer(new FloorItemUpdateComposer(item).compose());
-    }
+      if (item != null && RoomAreaHideSupport.isControllerItem(item)) {
+        this.updateItem(item);
+        return;
+      }
+
+      if (!item.isLimited()) {
+        this.sendComposer(new ItemStateComposer(item).compose());
+      } else {
+        this.sendComposer(new FloorItemUpdateComposer(item).compose());
+      }
 
     if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
       if (this.layout == null) {
@@ -2494,6 +2503,16 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
       if (item instanceof InteractionMultiHeight) {
         ((InteractionMultiHeight) item).updateUnitsOnItem(this);
       }
+    }
+
+    if (item.getBaseItem().getType() == FurnitureType.FLOOR
+        && (RoomConfInvisSupport.isControllerItem(item) || RoomConfInvisSupport.isTarget(item))) {
+      RoomConfInvisSupport.sendState(this);
+    }
+
+    if (item.getBaseItem().getType() == FurnitureType.FLOOR
+        && RoomHanditemBlockSupport.isControllerItem(item)) {
+      RoomHanditemBlockSupport.sendState(this);
     }
   }
 

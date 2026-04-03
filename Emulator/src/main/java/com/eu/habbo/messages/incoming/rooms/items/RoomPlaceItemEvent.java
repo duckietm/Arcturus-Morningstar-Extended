@@ -77,6 +77,7 @@ public class RoomPlaceItemEvent extends MessageHandler {
             if ((rentSpace != null || buildArea != null) && !room.hasRights(this.client.getHabbo())) {
                 if (item instanceof InteractionRoller ||
                         item instanceof InteractionStackHelper ||
+                        item instanceof InteractionStackWalkHelper ||
                         item instanceof InteractionWired ||
                         item instanceof InteractionBackgroundToner ||
                         item instanceof InteractionRoomAds ||

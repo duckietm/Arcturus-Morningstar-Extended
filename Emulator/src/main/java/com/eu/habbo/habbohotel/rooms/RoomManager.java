@@ -34,6 +34,8 @@ import com.eu.habbo.messages.outgoing.polls.PollStartComposer;
 import com.eu.habbo.messages.outgoing.polls.infobus.SimplePollAnswersComposer;
 import com.eu.habbo.messages.outgoing.polls.infobus.SimplePollStartComposer;
 import com.eu.habbo.messages.outgoing.rooms.*;
+import com.eu.habbo.messages.outgoing.rooms.items.ConfInvisStateComposer;
+import com.eu.habbo.messages.outgoing.rooms.items.HanditemBlockStateComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RoomFloorItemsComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RoomWallItemsComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
@@ -885,6 +887,10 @@ public class RoomManager {
             habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
             floorItems.clear();
         }
+
+        habbo.getClient().sendResponse(new ConfInvisStateComposer(room).compose());
+        RoomAreaHideSupport.sendState(room, habbo.getClient());
+        habbo.getClient().sendResponse(new HanditemBlockStateComposer(room).compose());
 
         if (!room.getCurrentPets().isEmpty()) {
             habbo.getClient().sendResponse(new RoomPetComposer(room.getCurrentPets()));
