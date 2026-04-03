@@ -141,245 +141,203 @@ ALTER TABLE IF EXISTS `guilds_forums_comments`
 -- PHASE 3: Add missing primary keys
 -- =============================================================================
 -- Tables without primary keys hurt performance and replication.
+-- Uses a helper procedure to safely add `id` column only if it doesn't exist.
 
--- bot_serves: no PK
-ALTER TABLE IF EXISTS `bot_serves`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+DELIMITER //
+DROP PROCEDURE IF EXISTS `_add_id_pk_if_missing`//
+CREATE PROCEDURE `_add_id_pk_if_missing`(IN tbl VARCHAR(64))
+BEGIN
+    DECLARE col_exists INT DEFAULT 0;
+    SELECT COUNT(*) INTO col_exists
+        FROM `information_schema`.`COLUMNS`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl AND `COLUMN_NAME` = 'id';
+    IF col_exists = 0 THEN
+        SET @sql = CONCAT('ALTER TABLE `', tbl, '` ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END//
+DELIMITER ;
 
--- chatlogs_room: no PK (high-volume log table, add auto-increment PK)
-ALTER TABLE IF EXISTS `chatlogs_room`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+CALL `_add_id_pk_if_missing`('bot_serves');
+CALL `_add_id_pk_if_missing`('chatlogs_room');
+CALL `_add_id_pk_if_missing`('commandlogs');
+CALL `_add_id_pk_if_missing`('crafting_recipes_ingredients');
 
--- commandlogs: no PK
-ALTER TABLE IF EXISTS `commandlogs`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+-- items_hoppers: use existing item_id as PK (skip if PK already exists)
+SET @has_pk = (SELECT COUNT(*) FROM `information_schema`.`TABLE_CONSTRAINTS`
+    WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = 'items_hoppers' AND `CONSTRAINT_TYPE` = 'PRIMARY KEY');
+SET @sql = IF(@has_pk = 0, 'ALTER TABLE `items_hoppers` ADD PRIMARY KEY (`item_id`)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- crafting_recipes_ingredients: no PK
-ALTER TABLE IF EXISTS `crafting_recipes_ingredients`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+CALL `_add_id_pk_if_missing`('items_presents');
+CALL `_add_id_pk_if_missing`('items_teleports');
+CALL `_add_id_pk_if_missing`('namechange_log');
+CALL `_add_id_pk_if_missing`('navigator_publics');
 
--- items_hoppers: no PK
-ALTER TABLE IF EXISTS `items_hoppers`
-  ADD PRIMARY KEY (`item_id`);
+CALL `_add_id_pk_if_missing`('pet_breeding');
+CALL `_add_id_pk_if_missing`('pet_breeding_races');
+CALL `_add_id_pk_if_missing`('pet_drinks');
+CALL `_add_id_pk_if_missing`('pet_foods');
+CALL `_add_id_pk_if_missing`('pet_items');
+CALL `_add_id_pk_if_missing`('pet_vocals');
+CALL `_add_id_pk_if_missing`('recycler_prizes');
+CALL `_add_id_pk_if_missing`('room_bans');
+CALL `_add_id_pk_if_missing`('room_enter_log');
+CALL `_add_id_pk_if_missing`('room_game_scores');
+CALL `_add_id_pk_if_missing`('room_mutes');
+CALL `_add_id_pk_if_missing`('room_rights');
+CALL `_add_id_pk_if_missing`('room_trax');
+CALL `_add_id_pk_if_missing`('room_trax_playlist');
+CALL `_add_id_pk_if_missing`('room_votes');
+CALL `_add_id_pk_if_missing`('trax_playlist');
+CALL `_add_id_pk_if_missing`('wired_rewards_given');
 
--- items_presents: no PK
-ALTER TABLE IF EXISTS `items_presents`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+CALL `_add_id_pk_if_missing`('calendar_rewards_claimed');
 
--- items_teleports: no PK
-ALTER TABLE IF EXISTS `items_teleports`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+-- camera: ensure id is auto-increment PK (skip ADD PK if already exists)
+SET @has_pk = (SELECT COUNT(*) FROM `information_schema`.`TABLE_CONSTRAINTS`
+    WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = 'camera' AND `CONSTRAINT_TYPE` = 'PRIMARY KEY');
+SET @sql = IF(@has_pk = 0,
+    'ALTER TABLE `camera` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY (`id`)',
+    'ALTER TABLE `camera` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- namechange_log: no PK
-ALTER TABLE IF EXISTS `namechange_log`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- navigator_publics: no PK
-ALTER TABLE IF EXISTS `navigator_publics`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_breeding: no PK
-ALTER TABLE IF EXISTS `pet_breeding`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_breeding_races: no PK
-ALTER TABLE IF EXISTS `pet_breeding_races`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_drinks: no PK
-ALTER TABLE IF EXISTS `pet_drinks`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_foods: no PK
-ALTER TABLE IF EXISTS `pet_foods`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_items: no PK
-ALTER TABLE IF EXISTS `pet_items`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- pet_vocals: no PK
-ALTER TABLE IF EXISTS `pet_vocals`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- recycler_prizes: no PK
-ALTER TABLE IF EXISTS `recycler_prizes`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_bans: no PK
-ALTER TABLE IF EXISTS `room_bans`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_enter_log: no PK
-ALTER TABLE IF EXISTS `room_enter_log`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_game_scores: no PK
-ALTER TABLE IF EXISTS `room_game_scores`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_mutes: no PK
-ALTER TABLE IF EXISTS `room_mutes`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_rights: no PK (use composite)
-ALTER TABLE IF EXISTS `room_rights`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_trax: no PK
-ALTER TABLE IF EXISTS `room_trax`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_trax_playlist: no PK
-ALTER TABLE IF EXISTS `room_trax_playlist`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- room_votes: no PK (use composite unique)
-ALTER TABLE IF EXISTS `room_votes`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- trax_playlist: no PK
-ALTER TABLE IF EXISTS `trax_playlist`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- wired_rewards_given: no PK
-ALTER TABLE IF EXISTS `wired_rewards_given`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- calendar_rewards_claimed: no PK
-ALTER TABLE IF EXISTS `calendar_rewards_claimed`
-  ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- camera: no PK
-ALTER TABLE IF EXISTS `camera`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-  ADD PRIMARY KEY (`id`);
-
+-- Clean up helper procedure
+DROP PROCEDURE IF EXISTS `_add_id_pk_if_missing`;
 
 -- =============================================================================
 -- PHASE 4: Add missing indexes
 -- =============================================================================
 -- Adding indexes for columns commonly used in JOINs and WHERE clauses.
+-- Uses a helper procedure to skip indexes that already exist.
 
--- bans: index on user_id for lookups
-ALTER TABLE IF EXISTS `bans`
-  ADD INDEX `idx_bans_user_id` (`user_id`),
-  ADD INDEX `idx_bans_ip` (`ip`),
-  ADD INDEX `idx_bans_machine_id` (`machine_id`(64));
+DELIMITER //
+DROP PROCEDURE IF EXISTS `_add_index_if_missing`//
+CREATE PROCEDURE `_add_index_if_missing`(IN tbl VARCHAR(64), IN idx VARCHAR(64), IN cols VARCHAR(255))
+BEGIN
+    DECLARE tbl_exists INT DEFAULT 0;
+    DECLARE idx_exists INT DEFAULT 0;
+    SELECT COUNT(*) INTO tbl_exists
+        FROM `information_schema`.`TABLES`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl;
+    IF tbl_exists = 0 THEN
+        -- Table does not exist, skip
+        SET @dummy = 0;
+    ELSE
+        SELECT COUNT(*) INTO idx_exists
+            FROM `information_schema`.`STATISTICS`
+            WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl AND `INDEX_NAME` = idx;
+        IF idx_exists = 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', tbl, '` ADD INDEX `', idx, '` (', cols, ')');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
 
--- calendar_rewards: index on campaign_id
-ALTER TABLE IF EXISTS `calendar_rewards`
-  ADD INDEX `idx_calendar_rewards_campaign_id` (`campaign_id`);
+-- bans
+CALL `_add_index_if_missing`('bans', 'idx_bans_user_id', '`user_id`');
+CALL `_add_index_if_missing`('bans', 'idx_bans_ip', '`ip`');
+CALL `_add_index_if_missing`('bans', 'idx_bans_machine_id', '`machine_id`(64)');
 
--- calendar_rewards_claimed: indexes for lookups
-ALTER TABLE IF EXISTS `calendar_rewards_claimed`
-  ADD INDEX `idx_cal_claimed_user_id` (`user_id`),
-  ADD INDEX `idx_cal_claimed_campaign_id` (`campaign_id`),
-  ADD INDEX `idx_cal_claimed_reward_id` (`reward_id`);
+-- calendar_rewards
+CALL `_add_index_if_missing`('calendar_rewards', 'idx_calendar_rewards_campaign_id', '`campaign_id`');
 
--- camera: indexes
-ALTER TABLE IF EXISTS `camera`
-  ADD INDEX `idx_camera_user_id` (`user_id`),
-  ADD INDEX `idx_camera_room_id` (`room_id`);
+-- calendar_rewards_claimed
+CALL `_add_index_if_missing`('calendar_rewards_claimed', 'idx_cal_claimed_user_id', '`user_id`');
+CALL `_add_index_if_missing`('calendar_rewards_claimed', 'idx_cal_claimed_campaign_id', '`campaign_id`');
+CALL `_add_index_if_missing`('calendar_rewards_claimed', 'idx_cal_claimed_reward_id', '`reward_id`');
 
--- guilds: index on user_id
-ALTER TABLE IF EXISTS `guilds`
-  ADD INDEX `idx_guilds_user_id` (`user_id`),
-  ADD INDEX `idx_guilds_room_id` (`room_id`);
+-- camera
+CALL `_add_index_if_missing`('camera', 'idx_camera_user_id', '`user_id`');
+CALL `_add_index_if_missing`('camera', 'idx_camera_room_id', '`room_id`');
 
--- guilds_forums_threads: index on guild_id
-ALTER TABLE IF EXISTS `guilds_forums_threads`
-  ADD INDEX `idx_gft_guild_id` (`guild_id`),
-  ADD INDEX `idx_gft_opener_id` (`opener_id`);
+-- guilds
+CALL `_add_index_if_missing`('guilds', 'idx_guilds_user_id', '`user_id`');
+CALL `_add_index_if_missing`('guilds', 'idx_guilds_room_id', '`room_id`');
 
--- guilds_forums_comments: index on user_id
-ALTER TABLE IF EXISTS `guilds_forums_comments`
-  ADD INDEX `idx_gfc_user_id` (`user_id`);
+-- guilds_forums_threads
+CALL `_add_index_if_missing`('guilds_forums_threads', 'idx_gft_guild_id', '`guild_id`');
+CALL `_add_index_if_missing`('guilds_forums_threads', 'idx_gft_opener_id', '`opener_id`');
 
--- guild_forum_views: indexes
-ALTER TABLE IF EXISTS `guild_forum_views`
-  ADD INDEX `idx_gfv_user_id` (`user_id`),
-  ADD INDEX `idx_gfv_guild_id` (`guild_id`);
+-- guilds_forums_comments
+CALL `_add_index_if_missing`('guilds_forums_comments', 'idx_gfc_user_id', '`user_id`');
 
--- items_crackable: index on item_id
-ALTER TABLE IF EXISTS `items_crackable`
-  ADD INDEX `idx_items_crackable_item_id` (`item_id`);
+-- guild_forum_views
+CALL `_add_index_if_missing`('guild_forum_views', 'idx_gfv_user_id', '`user_id`');
+CALL `_add_index_if_missing`('guild_forum_views', 'idx_gfv_guild_id', '`guild_id`');
 
--- namechange_log: index on user_id
-ALTER TABLE IF EXISTS `namechange_log`
-  ADD INDEX `idx_namechange_user_id` (`user_id`);
+-- items_crackable
+CALL `_add_index_if_missing`('items_crackable', 'idx_items_crackable_item_id', '`item_id`');
 
--- messenger_friendrequests: indexes
-ALTER TABLE IF EXISTS `messenger_friendrequests`
-  ADD INDEX `idx_fr_user_to_id` (`user_to_id`),
-  ADD INDEX `idx_fr_user_from_id` (`user_from_id`);
+-- namechange_log
+CALL `_add_index_if_missing`('namechange_log', 'idx_namechange_user_id', '`user_id`');
 
--- room_bans: indexes
-ALTER TABLE IF EXISTS `room_bans`
-  ADD INDEX `idx_room_bans_room_id` (`room_id`),
-  ADD INDEX `idx_room_bans_user_id` (`user_id`);
+-- messenger_friendrequests
+CALL `_add_index_if_missing`('messenger_friendrequests', 'idx_fr_user_to_id', '`user_to_id`');
+CALL `_add_index_if_missing`('messenger_friendrequests', 'idx_fr_user_from_id', '`user_from_id`');
 
--- room_mutes: indexes
-ALTER TABLE IF EXISTS `room_mutes`
-  ADD INDEX `idx_room_mutes_room_id` (`room_id`),
-  ADD INDEX `idx_room_mutes_user_id` (`user_id`);
+-- room_bans
+CALL `_add_index_if_missing`('room_bans', 'idx_room_bans_room_id', '`room_id`');
+CALL `_add_index_if_missing`('room_bans', 'idx_room_bans_user_id', '`user_id`');
 
--- room_votes: index on room_id
-ALTER TABLE IF EXISTS `room_votes`
-  ADD INDEX `idx_room_votes_room_id` (`room_id`);
+-- room_mutes
+CALL `_add_index_if_missing`('room_mutes', 'idx_room_mutes_room_id', '`room_id`');
+CALL `_add_index_if_missing`('room_mutes', 'idx_room_mutes_user_id', '`user_id`');
 
--- sanctions: index on habbo_id
-ALTER TABLE IF EXISTS `sanctions`
-  ADD INDEX `idx_sanctions_habbo_id` (`habbo_id`);
+-- room_votes
+CALL `_add_index_if_missing`('room_votes', 'idx_room_votes_room_id', '`room_id`');
 
--- shadowbans: index on user_id
-ALTER TABLE IF EXISTS `shadowbans`
-  ADD INDEX `idx_shadowbans_user_id` (`user_id`);
+-- sanctions
+CALL `_add_index_if_missing`('sanctions', 'idx_sanctions_habbo_id', '`habbo_id`');
 
--- support_cfh_topics: index on category_id
-ALTER TABLE IF EXISTS `support_cfh_topics`
-  ADD INDEX `idx_cfh_topics_category_id` (`category_id`);
+-- shadowbans
+CALL `_add_index_if_missing`('shadowbans', 'idx_shadowbans_user_id', '`user_id`');
 
--- support_tickets: indexes
-ALTER TABLE IF EXISTS `support_tickets`
-  ADD INDEX `idx_tickets_sender_id` (`sender_id`),
-  ADD INDEX `idx_tickets_reported_id` (`reported_id`),
-  ADD INDEX `idx_tickets_mod_id` (`mod_id`),
-  ADD INDEX `idx_tickets_room_id` (`room_id`);
+-- support_cfh_topics
+CALL `_add_index_if_missing`('support_cfh_topics', 'idx_cfh_topics_category_id', '`category_id`');
 
--- users_settings: already has user_id index, good
+-- support_tickets
+CALL `_add_index_if_missing`('support_tickets', 'idx_tickets_sender_id', '`sender_id`');
+CALL `_add_index_if_missing`('support_tickets', 'idx_tickets_reported_id', '`reported_id`');
+CALL `_add_index_if_missing`('support_tickets', 'idx_tickets_mod_id', '`mod_id`');
+CALL `_add_index_if_missing`('support_tickets', 'idx_tickets_room_id', '`room_id`');
 
--- voucher_history: indexes
-ALTER TABLE IF EXISTS `voucher_history`
-  ADD INDEX `idx_vh_voucher_id` (`voucher_id`),
-  ADD INDEX `idx_vh_user_id` (`user_id`);
+-- voucher_history
+CALL `_add_index_if_missing`('voucher_history', 'idx_vh_voucher_id', '`voucher_id`');
+CALL `_add_index_if_missing`('voucher_history', 'idx_vh_user_id', '`user_id`');
 
 -- ls_name_backgrounds_owned
-ALTER TABLE IF EXISTS `ls_name_backgrounds_owned`
-  ADD INDEX `idx_lsnbo_user_id` (`user_id`),
-  ADD INDEX `idx_lsnbo_bg_id` (`name_background_id`);
+CALL `_add_index_if_missing`('ls_name_backgrounds_owned', 'idx_lsnbo_user_id', '`user_id`');
+CALL `_add_index_if_missing`('ls_name_backgrounds_owned', 'idx_lsnbo_bg_id', '`name_background_id`');
 
 -- ls_name_colors_owned
-ALTER TABLE IF EXISTS `ls_name_colors_owned`
-  ADD INDEX `idx_lsnco_user_id` (`user_id`),
-  ADD INDEX `idx_lsnco_color_id` (`name_color_id`);
+CALL `_add_index_if_missing`('ls_name_colors_owned', 'idx_lsnco_user_id', '`user_id`');
+CALL `_add_index_if_missing`('ls_name_colors_owned', 'idx_lsnco_color_id', '`name_color_id`');
 
 -- ls_prefixes_owned
-ALTER TABLE IF EXISTS `ls_prefixes_owned`
-  ADD INDEX `idx_lspo_user_id` (`user_id`),
-  ADD INDEX `idx_lspo_prefix_id` (`prefix_id`);
+CALL `_add_index_if_missing`('ls_prefixes_owned', 'idx_lspo_user_id', '`user_id`');
+CALL `_add_index_if_missing`('ls_prefixes_owned', 'idx_lspo_prefix_id', '`prefix_id`');
 
 -- users_target_offer_purchases
-ALTER TABLE IF EXISTS `users_target_offer_purchases`
-  ADD INDEX `idx_utop_offer_id` (`offer_id`);
+CALL `_add_index_if_missing`('users_target_offer_purchases', 'idx_utop_offer_id', '`offer_id`');
 
 -- users_unlockable_commands
-ALTER TABLE IF EXISTS `users_unlockable_commands`
-  ADD INDEX `idx_uuc_user_id` (`user_id`);
+CALL `_add_index_if_missing`('users_unlockable_commands', 'idx_uuc_user_id', '`user_id`');
 
--- command_category_permissions: index on category_id
-ALTER TABLE IF EXISTS `command_category_permissions`
-  ADD INDEX `idx_ccp_category_id` (`category_id`);
+-- command_category_permissions
+CALL `_add_index_if_missing`('command_category_permissions', 'idx_ccp_category_id', '`category_id`');
+
+-- Clean up helper procedure
+DROP PROCEDURE IF EXISTS `_add_index_if_missing`;
 
 
 -- =============================================================================
@@ -397,584 +355,270 @@ ALTER TABLE IF EXISTS `command_category_permissions`
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
--- 5.1 Rooms → Users (owner)
+-- 5.0 Clean orphan rows BEFORE adding foreign keys
 -- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `rooms`
-  ADD CONSTRAINT `fk_rooms_owner`
-    FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- Legacy Habbo databases often have rows referencing deleted users, rooms, or
+-- items. These orphans must be removed before FK constraints can be created.
+-- Uses a helper procedure to safely skip tables that don't exist.
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS `_delete_orphans`//
+CREATE PROCEDURE `_delete_orphans`(IN tbl VARCHAR(64), IN col VARCHAR(64), IN ref_tbl VARCHAR(64), IN ref_col VARCHAR(64), IN extra_where VARCHAR(255))
+BEGIN
+    DECLARE tbl_exists INT DEFAULT 0;
+    DECLARE ref_exists INT DEFAULT 0;
+    SELECT COUNT(*) INTO tbl_exists
+        FROM `information_schema`.`TABLES`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl;
+    SELECT COUNT(*) INTO ref_exists
+        FROM `information_schema`.`TABLES`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = ref_tbl;
+    IF tbl_exists > 0 AND ref_exists > 0 THEN
+        IF extra_where IS NOT NULL AND extra_where != '' THEN
+            SET @sql = CONCAT('DELETE FROM `', tbl, '` WHERE ', extra_where, ' AND `', col, '` NOT IN (SELECT `', ref_col, '` FROM `', ref_tbl, '`)');
+        ELSE
+            SET @sql = CONCAT('DELETE FROM `', tbl, '` WHERE `', col, '` NOT IN (SELECT `', ref_col, '` FROM `', ref_tbl, '`)');
+        END IF;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END//
+DELIMITER ;
+
+-- Orphans referencing users
+CALL `_delete_orphans`('rooms', 'owner_id', 'users', 'id', '');
+CALL `_delete_orphans`('items', 'user_id', 'users', 'id', '');
+-- bots: skipped, no FK added (see 5.3 comment)
+CALL `_delete_orphans`('bans', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('bans', 'user_staff_id', 'users', 'id', '');
+CALL `_delete_orphans`('guilds', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('guilds_members', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('guilds_forums_comments', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('guild_forum_views', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_settings', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_badges', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_currency', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_effects', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_clothing', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_favorite_rooms', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_wardrobe', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_pets', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_recipes', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_saved_searches', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_navigator_settings', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_achievements', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_achievements_queue', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_ignored', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_ignored', 'target_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_subscriptions', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_target_offer_purchases', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_unlockable_outfit', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_window_settings', 'user_id', 'users', 'id', '');
+CALL `_delete_orphans`('users_prefixes', 'user_id', 'users', 'id', '');
+
+-- Orphans referencing rooms
+CALL `_delete_orphans`('guilds', 'room_id', 'rooms', 'id', '');
+CALL `_delete_orphans`('items', 'room_id', 'rooms', 'id', '`room_id` != 0');
+
+-- Orphans referencing items_base
+CALL `_delete_orphans`('items', 'item_id', 'items_base', 'id', '');
+
+-- Orphans referencing guilds
+CALL `_delete_orphans`('guilds_members', 'guild_id', 'guilds', 'id', '');
+CALL `_delete_orphans`('guilds_forums_threads', 'guild_id', 'guilds', 'id', '');
+CALL `_delete_orphans`('guild_forum_views', 'guild_id', 'guilds', 'id', '');
+
+-- Clean up helper procedure
+DROP PROCEDURE IF EXISTS `_delete_orphans`;
 
 -- ---------------------------------------------------------------------------
--- 5.2 Items → Users, Rooms, Items_base
+-- Helper: add FK only if it doesn't already exist
 -- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `items`
-  ADD CONSTRAINT `fk_items_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_items_item_base`
-    FOREIGN KEY (`item_id`) REFERENCES `items_base` (`id`)
-    ON DELETE CASCADE;
+DELIMITER //
+DROP PROCEDURE IF EXISTS `_add_fk_if_missing`//
+CREATE PROCEDURE `_add_fk_if_missing`(IN tbl VARCHAR(64), IN fk_name VARCHAR(64), IN col VARCHAR(64), IN ref_tbl VARCHAR(64), IN ref_col VARCHAR(64), IN on_del VARCHAR(20))
+BEGIN
+    DECLARE tbl_exists INT DEFAULT 0;
+    DECLARE ref_exists INT DEFAULT 0;
+    DECLARE fk_exists INT DEFAULT 0;
+    SELECT COUNT(*) INTO tbl_exists
+        FROM `information_schema`.`TABLES`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl;
+    SELECT COUNT(*) INTO ref_exists
+        FROM `information_schema`.`TABLES`
+        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = ref_tbl;
+    IF tbl_exists = 0 OR ref_exists = 0 THEN
+        -- Source or referenced table does not exist, skip
+        SET @dummy = 0;
+    ELSE
+        SELECT COUNT(*) INTO fk_exists
+            FROM `information_schema`.`TABLE_CONSTRAINTS`
+            WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = tbl AND `CONSTRAINT_NAME` = fk_name AND `CONSTRAINT_TYPE` = 'FOREIGN KEY';
+        IF fk_exists = 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', tbl, '` ADD CONSTRAINT `', fk_name, '` FOREIGN KEY (`', col, '`) REFERENCES `', ref_tbl, '` (`', ref_col, '`) ON DELETE ', on_del);
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
 
--- Note: items.room_id = 0 means "in inventory", so we can't FK to rooms
--- unless we allow NULL instead of 0. Skipping this FK.
+-- 5.1 Rooms → Users
+CALL `_add_fk_if_missing`('rooms', 'fk_rooms_owner', 'owner_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
+-- 5.2 Items → Users, Items_base
+CALL `_add_fk_if_missing`('items', 'fk_items_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('items', 'fk_items_item_base', 'item_id', 'items_base', 'id', 'CASCADE');
+
 -- 5.3 Bots → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `bots`
-  ADD CONSTRAINT `fk_bots_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- SKIPPED: The emulator creates bots with a temporary user_id during catalog
+-- purchase, which may not yet exist in `users`. Drop FK if previously added.
+SET @has_fk = (SELECT COUNT(*) FROM `information_schema`.`TABLE_CONSTRAINTS`
+    WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = 'bots' AND `CONSTRAINT_NAME` = 'fk_bots_user' AND `CONSTRAINT_TYPE` = 'FOREIGN KEY');
+SET @sql = IF(@has_fk > 0, 'ALTER TABLE `bots` DROP FOREIGN KEY `fk_bots_user`', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- ---------------------------------------------------------------------------
 -- 5.4 Bans → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `bans`
-  ADD CONSTRAINT `fk_bans_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_bans_staff`
-    FOREIGN KEY (`user_staff_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('bans', 'fk_bans_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('bans', 'fk_bans_staff', 'user_staff_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.5 Guilds → Users, Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `guilds`
-  ADD CONSTRAINT `fk_guilds_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_guilds_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('guilds', 'fk_guilds_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('guilds', 'fk_guilds_room', 'room_id', 'rooms', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.6 Guild members → Guilds, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `guilds_members`
-  ADD CONSTRAINT `fk_gm_guild`
-    FOREIGN KEY (`guild_id`) REFERENCES `guilds` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_gm_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('guilds_members', 'fk_gm_guild', 'guild_id', 'guilds', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('guilds_members', 'fk_gm_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.7 Guild forum threads → Guilds, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `guilds_forums_threads`
-  ADD CONSTRAINT `fk_gft_guild`
-    FOREIGN KEY (`guild_id`) REFERENCES `guilds` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_gft_opener`
-    FOREIGN KEY (`opener_id`) REFERENCES `users` (`id`)
-    ON DELETE SET NULL;
+CALL `_add_fk_if_missing`('guilds_forums_threads', 'fk_gft_guild', 'guild_id', 'guilds', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('guilds_forums_threads', 'fk_gft_opener', 'opener_id', 'users', 'id', 'SET NULL');
 
--- ---------------------------------------------------------------------------
 -- 5.8 Guild forum comments → Threads, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `guilds_forums_comments`
-  ADD CONSTRAINT `fk_gfc_thread`
-    FOREIGN KEY (`thread_id`) REFERENCES `guilds_forums_threads` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_gfc_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('guilds_forums_comments', 'fk_gfc_thread', 'thread_id', 'guilds_forums_threads', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('guilds_forums_comments', 'fk_gfc_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.9 Guild forum views → Guilds, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `guild_forum_views`
-  ADD CONSTRAINT `fk_gfv_guild`
-    FOREIGN KEY (`guild_id`) REFERENCES `guilds` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_gfv_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('guild_forum_views', 'fk_gfv_guild', 'guild_id', 'guilds', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('guild_forum_views', 'fk_gfv_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.10 Catalog items → Catalog pages
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `catalog_items`
-  ADD CONSTRAINT `fk_catitems_page`
-    FOREIGN KEY (`page_id`) REFERENCES `catalog_pages` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('catalog_items', 'fk_catitems_page', 'page_id', 'catalog_pages', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.11 Catalog items limited → Catalog items
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `catalog_items_limited`
-  ADD CONSTRAINT `fk_catitemsltd_catitem`
-    FOREIGN KEY (`catalog_item_id`) REFERENCES `catalog_items` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('catalog_items_limited', 'fk_catitemsltd_catitem', 'catalog_item_id', 'catalog_items', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.12 Calendar rewards → Calendar campaigns
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `calendar_rewards`
-  ADD CONSTRAINT `fk_calrewards_campaign`
-    FOREIGN KEY (`campaign_id`) REFERENCES `calendar_campaigns` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('calendar_rewards', 'fk_calrewards_campaign', 'campaign_id', 'calendar_campaigns', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.13 Calendar rewards claimed → Users, Campaigns, Rewards
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `calendar_rewards_claimed`
-  ADD CONSTRAINT `fk_calclaimed_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_calclaimed_campaign`
-    FOREIGN KEY (`campaign_id`) REFERENCES `calendar_campaigns` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_calclaimed_reward`
-    FOREIGN KEY (`reward_id`) REFERENCES `calendar_rewards` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('calendar_rewards_claimed', 'fk_calclaimed_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('calendar_rewards_claimed', 'fk_calclaimed_campaign', 'campaign_id', 'calendar_campaigns', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('calendar_rewards_claimed', 'fk_calclaimed_reward', 'reward_id', 'calendar_rewards', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.14 Users_settings → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_settings`
-  ADD CONSTRAINT `fk_usettings_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.14-5.26 Users_* → Users
+CALL `_add_fk_if_missing`('users_settings', 'fk_usettings_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_badges', 'fk_ubadges_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_currency', 'fk_ucurrency_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_effects', 'fk_ueffects_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_clothing', 'fk_uclothing_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_favorite_rooms', 'fk_ufavrooms_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_favorite_rooms', 'fk_ufavrooms_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_wardrobe', 'fk_uwardrobe_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_pets', 'fk_upets_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_recipes', 'fk_urecipes_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_saved_searches', 'fk_usavedsearches_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_navigator_settings', 'fk_unavsettings_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_achievements', 'fk_uachievements_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_achievements_queue', 'fk_uachqueue_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_ignored', 'fk_uignored_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_ignored', 'fk_uignored_target', 'target_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_subscriptions', 'fk_usubs_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_target_offer_purchases', 'fk_utop_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_target_offer_purchases', 'fk_utop_offer', 'offer_id', 'catalog_target_offers', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('users_unlockable_commands', 'fk_uunlockable_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('user_window_settings', 'fk_uwinsettings_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('user_prefixes', 'fk_uprefixes_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.15 Users_badges → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_badges`
-  ADD CONSTRAINT `fk_ubadges_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.33-5.35 Messenger → Users
+CALL `_add_fk_if_missing`('messenger_friendships', 'fk_mfriends_user_one', 'user_one_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('messenger_friendships', 'fk_mfriends_user_two', 'user_two_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('messenger_friendrequests', 'fk_mfr_user_to', 'user_to_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('messenger_friendrequests', 'fk_mfr_user_from', 'user_from_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('messenger_categories', 'fk_mcat_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.16 Users_currency → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_currency`
-  ADD CONSTRAINT `fk_ucurrency_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.36 Marketplace → Items, Users
+CALL `_add_fk_if_missing`('marketplace_items', 'fk_market_item', 'item_id', 'items', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('marketplace_items', 'fk_market_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.17 Users_effects → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_effects`
-  ADD CONSTRAINT `fk_ueffects_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.37-5.44 Room_* → Rooms, Users
+CALL `_add_fk_if_missing`('room_rights', 'fk_rrights_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_rights', 'fk_rrights_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_bans', 'fk_rbans_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_bans', 'fk_rbans_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_mutes', 'fk_rmutes_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_mutes', 'fk_rmutes_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_votes', 'fk_rvotes_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_votes', 'fk_rvotes_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_wordfilter', 'fk_rwf_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_promotions', 'fk_rpromo_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_trax', 'fk_rtrax_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_trax_playlist', 'fk_rtraxpl_room', 'room_id', 'rooms', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.18 Users_clothing → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_clothing`
-  ADD CONSTRAINT `fk_uclothing_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.19 Users_favorite_rooms → Users, Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_favorite_rooms`
-  ADD CONSTRAINT `fk_ufavrooms_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_ufavrooms_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.20 Users_wardrobe → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_wardrobe`
-  ADD CONSTRAINT `fk_uwardrobe_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.21 Users_pets → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_pets`
-  ADD CONSTRAINT `fk_upets_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.22 Users_recipes → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_recipes`
-  ADD CONSTRAINT `fk_urecipes_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.23 Users_saved_searches → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_saved_searches`
-  ADD CONSTRAINT `fk_usavedsearches_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.24 Users_navigator_settings → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_navigator_settings`
-  ADD CONSTRAINT `fk_unavsettings_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.25 Users_achievements → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_achievements`
-  ADD CONSTRAINT `fk_uachievements_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.26 Users_achievements_queue → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_achievements_queue`
-  ADD CONSTRAINT `fk_uachqueue_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.27 Users_ignored → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_ignored`
-  ADD CONSTRAINT `fk_uignored_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_uignored_target`
-    FOREIGN KEY (`target_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.28 Users_subscriptions → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_subscriptions`
-  ADD CONSTRAINT `fk_usubs_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.29 Users_target_offer_purchases → Users, Catalog target offers
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_target_offer_purchases`
-  ADD CONSTRAINT `fk_utop_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_utop_offer`
-    FOREIGN KEY (`offer_id`) REFERENCES `catalog_target_offers` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.30 Users_unlockable_commands → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `users_unlockable_commands`
-  ADD CONSTRAINT `fk_uunlockable_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.31 User_window_settings → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `user_window_settings`
-  ADD CONSTRAINT `fk_uwinsettings_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.32 User_prefixes → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `user_prefixes`
-  ADD CONSTRAINT `fk_uprefixes_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.33 Messenger_friendships → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `messenger_friendships`
-  ADD CONSTRAINT `fk_mfriends_user_one`
-    FOREIGN KEY (`user_one_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_mfriends_user_two`
-    FOREIGN KEY (`user_two_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.34 Messenger_friendrequests → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `messenger_friendrequests`
-  ADD CONSTRAINT `fk_mfr_user_to`
-    FOREIGN KEY (`user_to_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_mfr_user_from`
-    FOREIGN KEY (`user_from_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.35 Messenger_categories → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `messenger_categories`
-  ADD CONSTRAINT `fk_mcat_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.36 Marketplace_items → Items, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `marketplace_items`
-  ADD CONSTRAINT `fk_market_item`
-    FOREIGN KEY (`item_id`) REFERENCES `items` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_market_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.37 Room_rights → Rooms, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_rights`
-  ADD CONSTRAINT `fk_rrights_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rrights_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.38 Room_bans → Rooms, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_bans`
-  ADD CONSTRAINT `fk_rbans_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rbans_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.39 Room_mutes → Rooms, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_mutes`
-  ADD CONSTRAINT `fk_rmutes_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rmutes_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.40 Room_votes → Rooms, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_votes`
-  ADD CONSTRAINT `fk_rvotes_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rvotes_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.41 Room_wordfilter → Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_wordfilter`
-  ADD CONSTRAINT `fk_rwf_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.42 Room_promotions → Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_promotions`
-  ADD CONSTRAINT `fk_rpromo_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.43 Room_trax → Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_trax`
-  ADD CONSTRAINT `fk_rtrax_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.44 Room_trax_playlist → Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_trax_playlist`
-  ADD CONSTRAINT `fk_rtraxpl_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
 -- 5.45 Rooms_for_sale → Rooms, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `rooms_for_sale`
-  ADD CONSTRAINT `fk_r4sale_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_r4sale_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('rooms_for_sale', 'fk_r4sale_room', 'room_id', 'rooms', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('rooms_for_sale', 'fk_r4sale_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.46 Room_trade_log → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_trade_log`
-  ADD CONSTRAINT `fk_rtlog_user_one`
-    FOREIGN KEY (`user_one_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rtlog_user_two`
-    FOREIGN KEY (`user_two_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.46-5.47 Room_trade_log → Users
+CALL `_add_fk_if_missing`('room_trade_log', 'fk_rtlog_user_one', 'user_one_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_trade_log', 'fk_rtlog_user_two', 'user_two_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_trade_log_items', 'fk_rtli_trade', 'id', 'room_trade_log', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('room_trade_log_items', 'fk_rtli_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.47 Room_trade_log_items → Room_trade_log, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `room_trade_log_items`
-  ADD CONSTRAINT `fk_rtli_trade`
-    FOREIGN KEY (`id`) REFERENCES `room_trade_log` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_rtli_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+-- 5.48-5.49 Polls → Polls, Users
+CALL `_add_fk_if_missing`('polls_questions', 'fk_pq_poll', 'poll_id', 'polls', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('polls_answers', 'fk_pa_poll', 'poll_id', 'polls', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('polls_answers', 'fk_pa_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.48 Polls_questions → Polls
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `polls_questions`
-  ADD CONSTRAINT `fk_pq_poll`
-    FOREIGN KEY (`poll_id`) REFERENCES `polls` (`id`)
-    ON DELETE CASCADE;
+-- 5.50-5.51 Crafting → Crafting_recipes
+CALL `_add_fk_if_missing`('crafting_recipes_ingredients', 'fk_cri_recipe', 'recipe_id', 'crafting_recipes', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('crafting_altars_recipes', 'fk_car_recipe', 'recipe_id', 'crafting_recipes', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.49 Polls_answers → Polls, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `polls_answers`
-  ADD CONSTRAINT `fk_pa_poll`
-    FOREIGN KEY (`poll_id`) REFERENCES `polls` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_pa_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.50 Crafting_recipes_ingredients → Crafting_recipes, Items_base
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `crafting_recipes_ingredients`
-  ADD CONSTRAINT `fk_cri_recipe`
-    FOREIGN KEY (`recipe_id`) REFERENCES `crafting_recipes` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.51 Crafting_altars_recipes → Crafting_recipes
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `crafting_altars_recipes`
-  ADD CONSTRAINT `fk_car_recipe`
-    FOREIGN KEY (`recipe_id`) REFERENCES `crafting_recipes` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
 -- 5.52 Voucher_history → Vouchers, Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `voucher_history`
-  ADD CONSTRAINT `fk_vh_voucher`
-    FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_vh_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('voucher_history', 'fk_vh_voucher', 'voucher_id', 'vouchers', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('voucher_history', 'fk_vh_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.53 Support_cfh_topics → Support_cfh_categories
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `support_cfh_topics`
-  ADD CONSTRAINT `fk_cfhtopics_category`
-    FOREIGN KEY (`category_id`) REFERENCES `support_cfh_categories` (`id`)
-    ON DELETE CASCADE;
+-- 5.53-5.55 Support, Commands, Economy
+CALL `_add_fk_if_missing`('support_cfh_topics', 'fk_cfhtopics_category', 'category_id', 'support_cfh_categories', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('command_category_permissions', 'fk_ccp_category', 'category_id', 'command_categories', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('economy_furniture', 'fk_econfurni_itembase', 'items_base_id', 'items_base', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('economy_furniture', 'fk_econfurni_category', 'economy_categories_id', 'economy_categories', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.54 Command_category_permissions → Command_categories
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `command_category_permissions`
-  ADD CONSTRAINT `fk_ccp_category`
-    FOREIGN KEY (`category_id`) REFERENCES `command_categories` (`id`)
-    ON DELETE CASCADE;
+-- 5.56-5.57 Sanctions, Camera → Users
+CALL `_add_fk_if_missing`('sanctions', 'fk_sanctions_user', 'habbo_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('camera_web', 'fk_cameraweb_user', 'user_id', 'users', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.55 Economy_furniture → Items_base, Economy_categories
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `economy_furniture`
-  ADD CONSTRAINT `fk_econfurni_itembase`
-    FOREIGN KEY (`items_base_id`) REFERENCES `items_base` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_econfurni_category`
-    FOREIGN KEY (`economy_categories_id`) REFERENCES `economy_categories` (`id`)
-    ON DELETE CASCADE;
+-- 5.58 LS ownership → Users, LS definitions
+CALL `_add_fk_if_missing`('ls_name_backgrounds_owned', 'fk_lsnbo_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('ls_name_backgrounds_owned', 'fk_lsnbo_bg', 'name_background_id', 'ls_name_backgrounds', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('ls_name_colors_owned', 'fk_lsnco_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('ls_name_colors_owned', 'fk_lsnco_color', 'name_color_id', 'ls_name_colors', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('ls_prefixes_owned', 'fk_lspo_user', 'user_id', 'users', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('ls_prefixes_owned', 'fk_lspo_prefix', 'prefix_id', 'ls_prefixes', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
--- 5.56 Sanctions → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `sanctions`
-  ADD CONSTRAINT `fk_sanctions_user`
-    FOREIGN KEY (`habbo_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.57 Camera_web → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `camera_web`
-  ADD CONSTRAINT `fk_cameraweb_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
--- 5.58 LS ownership tables → Users, LS definition tables
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `ls_name_backgrounds_owned`
-  ADD CONSTRAINT `fk_lsnbo_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_lsnbo_bg`
-    FOREIGN KEY (`name_background_id`) REFERENCES `ls_name_backgrounds` (`id`)
-    ON DELETE CASCADE;
-
-ALTER TABLE IF EXISTS `ls_name_colors_owned`
-  ADD CONSTRAINT `fk_lsnco_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_lsnco_color`
-    FOREIGN KEY (`name_color_id`) REFERENCES `ls_name_colors` (`id`)
-    ON DELETE CASCADE;
-
-ALTER TABLE IF EXISTS `ls_prefixes_owned`
-  ADD CONSTRAINT `fk_lspo_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_lspo_prefix`
-    FOREIGN KEY (`prefix_id`) REFERENCES `ls_prefixes` (`id`)
-    ON DELETE CASCADE;
-
--- ---------------------------------------------------------------------------
 -- 5.59 Navigator_publics → Navigator_publiccats, Rooms
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `navigator_publics`
-  ADD CONSTRAINT `fk_navpub_cat`
-    FOREIGN KEY (`public_cat_id`) REFERENCES `navigator_publiccats` (`id`)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_navpub_room`
-    FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('navigator_publics', 'fk_navpub_cat', 'public_cat_id', 'navigator_publiccats', 'id', 'CASCADE');
+CALL `_add_fk_if_missing`('navigator_publics', 'fk_navpub_room', 'room_id', 'rooms', 'id', 'CASCADE');
 
--- ---------------------------------------------------------------------------
 -- 5.60 GOTW winners → Users
--- ---------------------------------------------------------------------------
-ALTER TABLE IF EXISTS `gotw_winners`
-  ADD CONSTRAINT `fk_gotw_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-    ON DELETE CASCADE;
+CALL `_add_fk_if_missing`('gotw_winners', 'fk_gotw_user', 'user_id', 'users', 'id', 'CASCADE');
+
+-- Clean up helper procedure
+DROP PROCEDURE IF EXISTS `_add_fk_if_missing`;
 
 
 -- =============================================================================
