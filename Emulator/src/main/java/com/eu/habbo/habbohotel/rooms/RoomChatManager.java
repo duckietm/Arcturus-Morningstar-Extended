@@ -328,7 +328,9 @@ public class RoomChatManager {
                 suppressSaysOutput = WiredManager.shouldSuppressUserSaysOutput(
                     habbo.getHabboInfo().getCurrentRoom(),
                     habbo.getRoomUnit(),
-                    wiredSayMessage);
+                    wiredSayMessage,
+                    chatType.ordinal(),
+                    roomChatMessage.getBubble() != null ? roomChatMessage.getBubble().getType() : -1);
             }
         }
 
@@ -407,7 +409,12 @@ public class RoomChatManager {
         }
 
         if (chatType != RoomChatType.WHISPER && !ignoreWired && !roomChatMessage.isCommand) {
-            WiredManager.triggerUserSays(habbo.getHabboInfo().getCurrentRoom(), habbo.getRoomUnit(), wiredSayMessage);
+            WiredManager.triggerUserSays(
+                    habbo.getHabboInfo().getCurrentRoom(),
+                    habbo.getRoomUnit(),
+                    wiredSayMessage,
+                    chatType.ordinal(),
+                    roomChatMessage.getBubble() != null ? roomChatMessage.getBubble().getType() : -1);
         }
 
         // Notify bots and talking furniture

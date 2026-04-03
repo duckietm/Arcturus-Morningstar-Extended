@@ -780,6 +780,7 @@ public class RoomManager {
 
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
+        room.getUserVariableManager().restorePermanentAssignments(habbo);
 
         // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
         habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));

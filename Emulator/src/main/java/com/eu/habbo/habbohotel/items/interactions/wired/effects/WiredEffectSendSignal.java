@@ -122,13 +122,13 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
         for (RoomUnit user : usersToSend) {
             for (HabboItem sourceItem : furniToSend) {
                 for (HabboItem antenna : resolvedAntennas) {
-                    fireSignalAtAntenna(room, antenna, user, sourceItem, nextDepth);
+                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth);
                 }
             }
         }
     }
 
-    private void fireSignalAtAntenna(Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth) {
+    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth) {
         if (antenna == null) return;
         RoomTile tile = room.getLayout().getTile(antenna.getX(), antenna.getY());
         if (tile == null) return;
@@ -144,6 +144,9 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 .tile(tile)
                 .callStackDepth(depth)
                 .signalChannel(signalChannel)
+                .signalUserCount(actor != null ? 1 : 0)
+                .signalFurniCount(sourceItem != null ? 1 : 0)
+                .contextVariableScope(ctx.contextVariables())
                 .triggeredByEffect(true);
 
         if (actor != null) builder.actor(actor);

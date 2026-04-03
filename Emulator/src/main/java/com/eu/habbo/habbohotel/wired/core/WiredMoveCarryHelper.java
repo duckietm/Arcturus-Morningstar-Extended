@@ -176,7 +176,25 @@ public final class WiredMoveCarryHelper {
                 && !sendUpdates
                 && oldLocation != null
                 && (oldLocation.x != targetTile.x || oldLocation.y != targetTile.y || Double.compare(oldZ, movingItem.getZ()) != 0)) {
-            room.sendComposer(new FloorItemOnRollerComposer(movingItem, null, oldLocation, oldZ, targetTile, movingItem.getZ(), 0, room).compose());
+            List<WiredMovementsComposer.MovementData> collectedMovements = COLLECTED_MOVEMENTS.get();
+
+            if (collectedMovements != null) {
+                collectedMovements.add(WiredMovementsComposer.furniMovement(
+                        movingItem.getId(),
+                        oldLocation.x,
+                        oldLocation.y,
+                        targetTile.x,
+                        targetTile.y,
+                        oldZ,
+                        movingItem.getZ(),
+                        movingItem.getRotation(),
+                        WiredMovementsComposer.DEFAULT_DURATION,
+                        0,
+                        WiredMovementsComposer.FURNI_ANCHOR_NONE,
+                        0));
+            } else {
+                room.sendComposer(new FloorItemOnRollerComposer(movingItem, null, oldLocation, oldZ, targetTile, movingItem.getZ(), 0, room).compose());
+            }
         }
 
         return result;
@@ -384,6 +402,14 @@ public final class WiredMoveCarryHelper {
     public static int getAnimationDuration(Room room, HabboItem stackItem, int fallbackDuration) {
         WiredExtraAnimationTime extra = getAnimationTimeExtra(room, stackItem);
         return (extra != null) ? extra.getDurationMs() : fallbackDuration;
+    }
+
+    public static WiredMovementPhysics getUserMovementPhysics(Room room, HabboItem stackItem, WiredContext ctx) {
+        if (room == null || stackItem == null) {
+            return WiredMovementPhysics.NONE;
+        }
+
+        return getMovementPhysics(room, stackItem, null, ctx);
     }
 
     public static int resolveMoveStepElapsed(RoomUnit roomUnit) {

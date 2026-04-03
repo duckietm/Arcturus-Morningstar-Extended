@@ -22,6 +22,7 @@ public enum WiredTriggerType {
     CLICKS_USER(20),
     USER_PERFORMS_ACTION(21),
     CLOCK_COUNTER(22),
+    VARIABLE_CHANGED(23),
     SAY_COMMAND(0),
     IDLES(11),
     UNIDLES(11),

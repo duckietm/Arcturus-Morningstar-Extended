@@ -120,6 +120,9 @@ public class Outgoing {
     public final static int EnableNotificationsComposer = 3284; // PRODUCTION-201611291003-338511768
     public final static int HallOfFameComposer = 3005; // PRODUCTION-201611291003-338511768
     public final static int WiredSavedComposer = 1155; // PRODUCTION-201611291003-338511768
+    public final static int WiredMonitorDataComposer = 5101; // CUSTOM
+    public final static int WiredRoomSettingsDataComposer = 5102; // CUSTOM
+    public final static int WiredUserVariablesDataComposer = 5103; // CUSTOM
     public final static int RoomPaintComposer = 2454; // PRODUCTION-201611291003-338511768
     public final static int MarketplaceConfigComposer = 1823; // PRODUCTION-201611291003-338511768
     public final static int AddBotComposer = 1352; // PRODUCTION-201611291003-338511768
@@ -555,6 +558,12 @@ public class Outgoing {
     public static final int SnowStormGenericErrorComposer = 5028;
     public static final int SnowStormUserRematchedComposer = 5029;
 
+
+    // Furni Editor
+    public static final int FurniEditorSearchComposer = 10040;
+    public static final int FurniEditorDetailComposer = 10041;
+    public static final int FurniEditorInteractionsComposer = 10043;
+    public static final int FurniEditorResultComposer = 10044;
 
     // Catalog Admin
     public static final int CatalogAdminResultComposer = 10059;

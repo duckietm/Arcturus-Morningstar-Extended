@@ -15,6 +15,7 @@ import com.eu.habbo.habbohotel.rooms.RoomUserRotation;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMovementPhysics;
 import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
@@ -53,6 +54,7 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
+        WiredMovementPhysics movementPhysics = WiredMoveCarryHelper.getUserMovementPhysics(room, this, ctx);
 
         for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             if (roomUnit == null || roomUnit.getRoom() != room) {
@@ -63,7 +65,7 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
             RoomUserRotation targetBodyRotation = hasRotation ? this.getTargetRotation(roomUnit) : roomUnit.getBodyRotation();
             RoomUserRotation targetHeadRotation = hasRotation ? targetBodyRotation : roomUnit.getHeadRotation();
             RoomTile targetTile = (this.movementDirection >= 0) ? this.getTargetTile(room, roomUnit, this.movementDirection) : null;
-            boolean canMove = this.canMoveTo(room, roomUnit, targetTile);
+            boolean canMove = this.canMoveTo(room, roomUnit, targetTile, movementPhysics);
             boolean noAnimation = WiredMoveCarryHelper.hasNoAnimationExtra(room, this);
             int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
             int activeWindowMs = this.resolveActiveWindow(canMove, hasRotation, noAnimation, animationDuration);
@@ -72,7 +74,7 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
                 double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
                 this.markActive(roomUnit, activeWindowMs);
                 if (!WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, targetBodyRotation, targetHeadRotation,
-                        animationDuration, noAnimation)) {
+                        animationDuration, noAnimation, movementPhysics)) {
                     if (hasRotation) {
                         WiredUserMovementHelper.updateUserDirection(room, roomUnit, targetBodyRotation, targetHeadRotation);
                     }
@@ -266,22 +268,8 @@ public class WiredEffectMoveRotateUser extends InteractionWiredEffect {
         return room.getLayout().getTile((short) (currentTile.x + deltaX), (short) (currentTile.y + deltaY));
     }
 
-    private boolean canMoveTo(Room room, RoomUnit roomUnit, RoomTile targetTile) {
-        if (targetTile == null || targetTile.state == RoomTileState.INVALID || targetTile.state == RoomTileState.BLOCKED) {
-            return false;
-        }
-
-        if (!room.tileWalkable(targetTile)) {
-            return false;
-        }
-
-        for (RoomUnit unit : room.getRoomUnitsAt(targetTile)) {
-            if (unit != null && unit != roomUnit) {
-                return false;
-            }
-        }
-
-        return true;
+    private boolean canMoveTo(Room room, RoomUnit roomUnit, RoomTile targetTile, WiredMovementPhysics movementPhysics) {
+        return WiredUserMovementHelper.canMoveTo(room, roomUnit, targetTile, movementPhysics);
     }
 
     private void markActive(RoomUnit roomUnit, int durationMs) {

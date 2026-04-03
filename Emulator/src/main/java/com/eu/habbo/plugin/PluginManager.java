@@ -120,6 +120,20 @@ public class PluginManager {
         WiredEngine.MAX_EVENTS_PER_WINDOW = Emulator.getConfig().getInt("wired.abuse.max.events.per.window", 100);
         WiredEngine.RATE_LIMIT_WINDOW_MS = Emulator.getConfig().getInt("wired.abuse.rate.limit.window.ms", 10000);
         WiredEngine.WIRED_BAN_DURATION_MS = Emulator.getConfig().getInt("wired.abuse.ban.duration.ms", 600000);
+        WiredEngine.MONITOR_USAGE_WINDOW_MS = Emulator.getConfig().getInt("wired.monitor.usage.window.ms", 1000);
+        WiredEngine.MONITOR_USAGE_LIMIT = Emulator.getConfig().getInt("wired.monitor.usage.limit", 1000);
+        WiredEngine.MONITOR_DELAYED_EVENTS_LIMIT = Emulator.getConfig().getInt("wired.monitor.delayed.events.limit", 100);
+        WiredEngine.MONITOR_OVERLOAD_AVERAGE_MS = Emulator.getConfig().getInt("wired.monitor.overload.average.ms", 50);
+        WiredEngine.MONITOR_OVERLOAD_PEAK_MS = Emulator.getConfig().getInt("wired.monitor.overload.peak.ms", 150);
+        WiredEngine.MONITOR_OVERLOAD_CONSECUTIVE_WINDOWS = Emulator.getConfig().getInt("wired.monitor.overload.consecutive.windows", 2);
+        WiredEngine.MONITOR_HEAVY_USAGE_PERCENT = Emulator.getConfig().getInt("wired.monitor.heavy.usage.percent", 70);
+        WiredEngine.MONITOR_HEAVY_CONSECUTIVE_WINDOWS = Emulator.getConfig().getInt("wired.monitor.heavy.consecutive.windows", 5);
+        WiredEngine.MONITOR_HEAVY_DELAYED_PERCENT = Emulator.getConfig().getInt("wired.monitor.heavy.delayed.percent", 60);
+
+        if (WiredManager.getEngine() != null) {
+            WiredManager.getEngine().clearAllDiagnostics();
+        }
+
         NavigatorManager.MAXIMUM_RESULTS_PER_PAGE = Emulator.getConfig().getInt("hotel.navigator.search.maxresults");
         NavigatorManager.CATEGORY_SORT_USING_ORDER_NUM = Emulator.getConfig().getBoolean("hotel.navigator.sort.ordernum");
         RoomChatMessage.MAXIMUM_LENGTH = Emulator.getConfig().getInt("hotel.chat.max.length");

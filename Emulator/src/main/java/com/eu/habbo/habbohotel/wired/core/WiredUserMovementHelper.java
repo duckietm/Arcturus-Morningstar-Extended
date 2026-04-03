@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,20 +37,26 @@ public final class WiredUserMovementHelper {
 
     public static boolean moveUser(Room room, RoomUnit roomUnit, RoomTile targetTile, double targetZ, int duration) {
         return moveUser(room, roomUnit, targetTile, targetZ, roomUnit == null ? null : roomUnit.getBodyRotation(),
-                roomUnit == null ? null : roomUnit.getHeadRotation(), duration, false);
+                roomUnit == null ? null : roomUnit.getHeadRotation(), duration, false, WiredMovementPhysics.NONE);
     }
 
     public static boolean moveUser(Room room, RoomUnit roomUnit, RoomTile targetTile, double targetZ, RoomUserRotation bodyRotation, RoomUserRotation headRotation, int duration) {
-        return moveUser(room, roomUnit, targetTile, targetZ, bodyRotation, headRotation, duration, false);
+        return moveUser(room, roomUnit, targetTile, targetZ, bodyRotation, headRotation, duration, false, WiredMovementPhysics.NONE);
     }
 
     public static boolean moveUser(Room room, RoomUnit roomUnit, RoomTile targetTile, double targetZ, RoomUserRotation bodyRotation, RoomUserRotation headRotation, int duration, boolean noAnimation) {
+        return moveUser(room, roomUnit, targetTile, targetZ, bodyRotation, headRotation, duration, noAnimation, WiredMovementPhysics.NONE);
+    }
+
+    public static boolean moveUser(Room room, RoomUnit roomUnit, RoomTile targetTile, double targetZ, RoomUserRotation bodyRotation, RoomUserRotation headRotation, int duration, boolean noAnimation, WiredMovementPhysics movementPhysics) {
         if (room == null || roomUnit == null || targetTile == null || room.getLayout() == null) {
             return false;
         }
 
         RoomTile oldLocation = roomUnit.getCurrentLocation();
-        if (oldLocation == null || hasBlockingUnits(room, roomUnit, targetTile)) {
+        WiredMovementPhysics resolvedMovementPhysics = movementPhysics == null ? WiredMovementPhysics.NONE : movementPhysics;
+
+        if (oldLocation == null || !canMoveTo(room, roomUnit, targetTile, resolvedMovementPhysics)) {
             return false;
         }
 
@@ -66,13 +73,12 @@ public final class WiredUserMovementHelper {
         }
 
         runWithSuppressedStatusUpdates(Collections.singletonList(roomUnit), () -> {
-            roomUnit.setPreviousLocation(oldLocation);
-            roomUnit.setCurrentLocation(targetTile);
             roomUnit.removeStatus(RoomUnitStatus.MOVE);
             roomUnit.setZ(targetZ);
+            roomUnit.setLocation(targetTile);
+            roomUnit.setPath(new LinkedList<>());
             roomUnit.setBodyRotation(resolvedBodyRotation);
             roomUnit.setHeadRotation(resolvedHeadRotation);
-            roomUnit.stopWalking();
             roomUnit.resetIdleTimer();
 
             if (habbo != null) {
@@ -99,10 +105,8 @@ public final class WiredUserMovementHelper {
         suppressStatusComposer(roomUnit, animationDuration);
         room.sendComposer(new WiredMovementsComposer(movements).compose());
 
-        roomUnit.setPreviousLocation(targetTile);
-        roomUnit.setPreviousLocationZ(roomUnit.getZ());
-
         scheduleTileCallbacks(room, roomUnit, oldLocation, targetTile, oldTopItem, newTopItem, animationDuration);
+        scheduleFinalStatusSync(room, roomUnit, targetTile, animationDuration);
         schedulePostureSync(room, roomUnit, targetTile, animationDuration);
         return true;
     }
@@ -161,7 +165,32 @@ public final class WiredUserMovementHelper {
         SUPPRESSED_STATUS_COMPOSER_UNTIL.remove(roomUnit.getId());
     }
 
-    private static boolean hasBlockingUnits(Room room, RoomUnit roomUnit, RoomTile targetTile) {
+    public static boolean canMoveTo(Room room, RoomUnit roomUnit, RoomTile targetTile, WiredMovementPhysics movementPhysics) {
+        if (room == null || roomUnit == null || targetTile == null) {
+            return false;
+        }
+
+        WiredMovementPhysics resolvedMovementPhysics = movementPhysics == null ? WiredMovementPhysics.NONE : movementPhysics;
+
+        if (targetTile.state == null || targetTile.state == com.eu.habbo.habbohotel.rooms.RoomTileState.INVALID) {
+            return false;
+        }
+
+        if (targetTile.state == com.eu.habbo.habbohotel.rooms.RoomTileState.BLOCKED
+                && !canBypassBlockedTile(room, targetTile, resolvedMovementPhysics)) {
+            return false;
+        }
+
+        if (!room.getLayout().tileWalkable(targetTile.x, targetTile.y)
+                && !room.canSitOrLayAt(targetTile.x, targetTile.y)
+                && !canBypassBlockedTile(room, targetTile, resolvedMovementPhysics)) {
+            return false;
+        }
+
+        return !hasBlockingUnits(room, roomUnit, targetTile, resolvedMovementPhysics);
+    }
+
+    private static boolean hasBlockingUnits(Room room, RoomUnit roomUnit, RoomTile targetTile, WiredMovementPhysics movementPhysics) {
         Collection<RoomUnit> units = room.getRoomUnitsAt(targetTile);
 
         if (units == null || units.isEmpty()) {
@@ -169,7 +198,9 @@ public final class WiredUserMovementHelper {
         }
 
         for (RoomUnit targetUnit : units) {
-            if (targetUnit != null && targetUnit != roomUnit) {
+            if (targetUnit != null
+                    && targetUnit != roomUnit
+                    && !movementPhysics.shouldIgnoreUser(targetUnit)) {
                 return true;
             }
         }
@@ -177,15 +208,50 @@ public final class WiredUserMovementHelper {
         return false;
     }
 
+    private static boolean canBypassBlockedTile(Room room, RoomTile targetTile, WiredMovementPhysics movementPhysics) {
+        if (room == null || targetTile == null || movementPhysics == null || !movementPhysics.isActive()) {
+            return false;
+        }
+
+        Collection<HabboItem> items = room.getItemsAt(targetTile);
+        if (items == null || items.isEmpty()) {
+            return false;
+        }
+
+        boolean hasIgnoredFurni = false;
+
+        for (HabboItem item : items) {
+            if (item == null) {
+                continue;
+            }
+
+            if (movementPhysics.isBlockingFurni(item)) {
+                return false;
+            }
+
+            if (movementPhysics.shouldIgnoreFurni(item)) {
+                hasIgnoredFurni = true;
+                continue;
+            }
+
+            if (!item.isWalkable()
+                    && !item.getBaseItem().allowSit()
+                    && !item.getBaseItem().allowLay()) {
+                return false;
+            }
+        }
+
+        return hasIgnoredFurni;
+    }
+
     private static boolean moveUserInstant(Room room, RoomUnit roomUnit, RoomTile targetTile, double targetZ, RoomUserRotation bodyRotation, RoomUserRotation headRotation, RoomTile oldLocation, HabboItem oldTopItem, HabboItem newTopItem, Habbo habbo) {
         runWithSuppressedStatusUpdates(Collections.singletonList(roomUnit), () -> {
-            roomUnit.setPreviousLocation(oldLocation);
-            roomUnit.setCurrentLocation(targetTile);
             roomUnit.removeStatus(RoomUnitStatus.MOVE);
             roomUnit.setZ(targetZ);
+            roomUnit.setLocation(targetTile);
+            roomUnit.setPath(new LinkedList<>());
             roomUnit.setBodyRotation(bodyRotation);
             roomUnit.setHeadRotation(headRotation);
-            roomUnit.stopWalking();
             roomUnit.resetIdleTimer();
 
             if (habbo != null) {
@@ -193,13 +259,12 @@ public final class WiredUserMovementHelper {
                 movedHabbos.add(habbo);
                 room.updateHabbosAt(targetTile.x, targetTile.y, movedHabbos);
             }
-
-            roomUnit.setPreviousLocation(targetTile);
-            roomUnit.setPreviousLocationZ(roomUnit.getZ());
             roomUnit.statusUpdate(false);
         });
 
         processTileCallbacks(room, roomUnit, oldLocation, targetTile, oldTopItem, newTopItem);
+        roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
+        roomUnit.setPreviousLocationZ(roomUnit.getZ());
         room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
         return true;
     }
@@ -256,6 +321,29 @@ public final class WiredUserMovementHelper {
 
             room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
         }, delay + STATUS_SUPPRESSION_GRACE_MS + 25);
+    }
+
+    private static void scheduleFinalStatusSync(Room room, RoomUnit roomUnit, RoomTile targetTile, int delay) {
+        if (room == null || roomUnit == null || targetTile == null) {
+            return;
+        }
+
+        Emulator.getThreading().run(() -> {
+            if (room == null || !room.isLoaded() || roomUnit == null || roomUnit.getCurrentLocation() == null) {
+                return;
+            }
+
+            if (roomUnit.isWalking()
+                    || roomUnit.getCurrentLocation().x != targetTile.x
+                    || roomUnit.getCurrentLocation().y != targetTile.y) {
+                return;
+            }
+
+            clearStatusComposerSuppression(roomUnit);
+            roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
+            roomUnit.setPreviousLocationZ(roomUnit.getZ());
+            room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
+        }, Math.max(delay, 1) + 25);
     }
 
     private static void suppressStatusComposer(RoomUnit roomUnit, int duration) {

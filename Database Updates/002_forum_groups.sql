@@ -1,0 +1,1 @@
+ALTER TABLE `guild_forum_views` ADD UNIQUE KEY `user_guild` (`user_id`, `guild_id`);

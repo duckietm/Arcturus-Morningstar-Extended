@@ -4,7 +4,9 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurniByVariable;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUsersByVariable;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -233,21 +235,50 @@ public final class WiredSourceUtil {
 
         int furniLimit = Integer.MAX_VALUE;
         int userLimit = Integer.MAX_VALUE;
+        List<WiredExtraFilterFurniByVariable> furniVariableFilters = new ArrayList<>();
+        List<WiredExtraFilterUsersByVariable> userVariableFilters = new ArrayList<>();
 
         for (InteractionWiredExtra extra : extras) {
             if (extra instanceof WiredExtraFilterFurni) {
                 furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
             } else if (extra instanceof WiredExtraFilterUser) {
                 userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
+            } else if (extra instanceof WiredExtraFilterFurniByVariable) {
+                furniVariableFilters.add((WiredExtraFilterFurniByVariable) extra);
+            } else if (extra instanceof WiredExtraFilterUsersByVariable) {
+                userVariableFilters.add((WiredExtraFilterUsersByVariable) extra);
             }
         }
 
-        if (selectorCtx.targets().isItemsModifiedBySelector() && furniLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setItems(limitIterable(selectorCtx.targets().items(), furniLimit));
+        furniVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
+        userVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
+
+        if (selectorCtx.targets().isItemsModifiedBySelector()) {
+            Iterable<HabboItem> filteredItems = selectorCtx.targets().items();
+
+            for (WiredExtraFilterFurniByVariable extra : furniVariableFilters) {
+                filteredItems = extra.filterItems(room, selectorCtx, filteredItems);
+            }
+
+            if (furniLimit != Integer.MAX_VALUE) {
+                filteredItems = limitIterable(filteredItems, furniLimit);
+            }
+
+            selectorCtx.targets().setItems(filteredItems);
         }
 
-        if (selectorCtx.targets().isUsersModifiedBySelector() && userLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setUsers(limitIterable(selectorCtx.targets().users(), userLimit));
+        if (selectorCtx.targets().isUsersModifiedBySelector()) {
+            Iterable<RoomUnit> filteredUsers = selectorCtx.targets().users();
+
+            for (WiredExtraFilterUsersByVariable extra : userVariableFilters) {
+                filteredUsers = extra.filterUsers(room, selectorCtx, filteredUsers);
+            }
+
+            if (userLimit != Integer.MAX_VALUE) {
+                filteredUsers = limitIterable(filteredUsers, userLimit);
+            }
+
+            selectorCtx.targets().setUsers(filteredUsers);
         }
     }
 

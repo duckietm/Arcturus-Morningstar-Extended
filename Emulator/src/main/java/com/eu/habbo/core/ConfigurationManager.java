@@ -17,14 +17,18 @@ import java.util.Properties;
 public class ConfigurationManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationManager.class);
+    private static final String EMULATOR_SETTINGS_TABLE = "emulator_settings";
+    private static final String WIRED_SETTINGS_TABLE = "wired_emulator_settings";
 
     private final Properties properties;
+    private final Properties wiredProperties;
     private final String configurationPath;
     public boolean loaded = false;
     public boolean isLoading = false;
 
     public ConfigurationManager(String configurationPath) {
         this.properties = new Properties();
+        this.wiredProperties = new Properties();
         this.configurationPath = configurationPath;
         this.reload();
     }
@@ -32,6 +36,7 @@ public class ConfigurationManager {
     public void reload() {
         this.isLoading = true;
         this.properties.clear();
+        this.wiredProperties.clear();
 
         InputStream input = null;
 
@@ -116,31 +121,15 @@ public class ConfigurationManager {
         LOGGER.info("Loading configuration from database...");
 
         long millis = System.currentTimeMillis();
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); Statement statement = connection.createStatement()) {
-            if (statement.execute("SELECT * FROM emulator_settings")) {
-                try (ResultSet set = statement.getResultSet()) {
-                    while (set.next()) {
-                        this.properties.put(set.getString("key"), set.getString("value"));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
-        }
+        this.loadSettingsTable(EMULATOR_SETTINGS_TABLE, this.properties, false);
+        this.loadSettingsTable(WIRED_SETTINGS_TABLE, this.wiredProperties, true);
 
         LOGGER.info("Configuration -> loaded! ({} MS)", System.currentTimeMillis() - millis);
     }
 
     public void saveToDatabase() {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE emulator_settings SET `value` = ? WHERE `key` = ? LIMIT 1")) {
-            for (Map.Entry<Object, Object> entry : this.properties.entrySet()) {
-                statement.setString(1, entry.getValue().toString());
-                statement.setString(2, entry.getKey().toString());
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
-        }
+        this.saveSettingsTable(EMULATOR_SETTINGS_TABLE, this.properties);
+        this.saveSettingsTable(WIRED_SETTINGS_TABLE, this.wiredProperties);
     }
 
 
@@ -153,10 +142,21 @@ public class ConfigurationManager {
         if (this.isLoading)
             return defaultValue;
 
-        if (!this.properties.containsKey(key)) {
+        Properties targetProperties = this.resolveProperties(key);
+
+        if (targetProperties.containsKey(key)) {
+            return targetProperties.getProperty(key, defaultValue);
+        }
+
+        if (this.isWiredSettingKey(key) && this.properties.containsKey(key)) {
+            return this.properties.getProperty(key, defaultValue);
+        }
+
+        if (!targetProperties.containsKey(key)) {
             LOGGER.error("Config key not found {}", key);
         }
-        return this.properties.getProperty(key, defaultValue);
+
+        return defaultValue;
     }
 
     public boolean getBoolean(String key) {
@@ -209,21 +209,91 @@ public class ConfigurationManager {
     }
 
     public void update(String key, String value) {
-        this.properties.setProperty(key, value);
+        this.resolveProperties(key).setProperty(key, value);
     }
 
     public void register(String key, String value) {
-        if (this.properties.getProperty(key, null) != null)
+        this.register(key, value, "");
+    }
+
+    public void register(String key, String value, String comment) {
+        Properties targetProperties = this.resolveProperties(key);
+
+        if (targetProperties.getProperty(key, null) != null)
             return;
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO emulator_settings VALUES (?, ?)")) {
+        this.insertSetting(key, value, comment);
+        this.update(key, value);
+    }
+
+    private void loadSettingsTable(String tableName, Properties targetProperties, boolean optional) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             Statement statement = connection.createStatement()) {
+            if (statement.execute("SELECT * FROM " + tableName)) {
+                try (ResultSet set = statement.getResultSet()) {
+                    while (set.next()) {
+                        targetProperties.put(set.getString("key"), set.getString("value"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            if (optional) {
+                LOGGER.warn("Skipping optional config table {}: {}", tableName, e.getMessage());
+            } else {
+                LOGGER.error("Caught SQL exception", e);
+            }
+        }
+    }
+
+    private void saveSettingsTable(String tableName, Properties sourceProperties) {
+        String sql = "UPDATE " + tableName + " SET `value` = ? WHERE `key` = ? LIMIT 1";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (Map.Entry<Object, Object> entry : sourceProperties.entrySet()) {
+                statement.setString(1, entry.getValue().toString());
+                statement.setString(2, entry.getKey().toString());
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            if (WIRED_SETTINGS_TABLE.equals(tableName)) {
+                LOGGER.warn("Skipping wired config save for table {}: {}", tableName, e.getMessage());
+            } else {
+                LOGGER.error("Caught SQL exception", e);
+            }
+        }
+    }
+
+    private void insertSetting(String key, String value, String comment) {
+        String tableName = this.isWiredSettingKey(key) ? WIRED_SETTINGS_TABLE : EMULATOR_SETTINGS_TABLE;
+        String sql = this.isWiredSettingKey(key)
+                ? "INSERT INTO " + tableName + " (`key`, `value`, `comment`) VALUES (?, ?, ?)"
+                : "INSERT INTO " + tableName + " (`key`, `value`) VALUES (?, ?)";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, key);
             statement.setString(2, value);
+
+            if (this.isWiredSettingKey(key)) {
+                statement.setString(3, comment == null ? "" : comment);
+            }
+
             statement.execute();
         } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+            if (this.isWiredSettingKey(key)) {
+                LOGGER.warn("Unable to insert wired setting {} into {}: {}", key, tableName, e.getMessage());
+            } else {
+                LOGGER.error("Caught SQL exception", e);
+            }
         }
+    }
 
-        this.update(key, value);
+    private Properties resolveProperties(String key) {
+        return this.isWiredSettingKey(key) ? this.wiredProperties : this.properties;
+    }
+
+    private boolean isWiredSettingKey(String key) {
+        return key != null && (key.startsWith("wired.") || key.startsWith("hotel.wired."));
     }
 }
