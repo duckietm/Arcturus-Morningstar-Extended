@@ -21,6 +21,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRoomVari
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUserVariable;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableEcho;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableReference;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableTextConnector;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraContextVariable;
 import com.eu.habbo.habbohotel.wired.core.WiredContextVariableSupport;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal;
@@ -807,6 +808,7 @@ public class RoomItemManager {
               isWiredItem = true;
           } else if (item instanceof InteractionWiredExtra) {
               boolean removedContextDefinition = false;
+              boolean removedVariableTextConnector = false;
               if (item instanceof WiredExtraUserVariable) {
                   this.room.getUserVariableManager().removeDefinition(item.getId());
               } else if (item instanceof WiredExtraFurniVariable) {
@@ -815,6 +817,8 @@ public class RoomItemManager {
                   this.room.getRoomVariableManager().removeDefinition(item.getId());
               } else if (item instanceof WiredExtraContextVariable) {
                   removedContextDefinition = true;
+              } else if (item instanceof WiredExtraVariableTextConnector) {
+                  removedVariableTextConnector = true;
               } else if (item instanceof WiredExtraVariableReference) {
                   if (((WiredExtraVariableReference) item).isRoomReference()) {
                       this.room.getRoomVariableManager().removeDefinition(item.getId());
@@ -833,7 +837,7 @@ public class RoomItemManager {
                   }
               }
               specialTypes.removeExtra((InteractionWiredExtra) item);
-              if (removedContextDefinition) {
+              if (removedContextDefinition || removedVariableTextConnector) {
                   WiredContextVariableSupport.broadcastDefinitions(this.room);
               }
               isWiredItem = true;

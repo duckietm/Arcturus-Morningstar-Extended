@@ -404,6 +404,14 @@ public final class WiredMoveCarryHelper {
         return (extra != null) ? extra.getDurationMs() : fallbackDuration;
     }
 
+    public static WiredMovementPhysics getUserMovementPhysics(Room room, HabboItem stackItem, WiredContext ctx) {
+        if (room == null || stackItem == null) {
+            return WiredMovementPhysics.NONE;
+        }
+
+        return getMovementPhysics(room, stackItem, null, ctx);
+    }
+
     public static int resolveMoveStepElapsed(RoomUnit roomUnit) {
         if (roomUnit == null) {
             return 0;

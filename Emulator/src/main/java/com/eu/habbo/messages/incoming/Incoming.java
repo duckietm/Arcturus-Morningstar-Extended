@@ -415,6 +415,7 @@ public class Incoming {
     public static final int WiredUserVariablesRequestEvent = 10024;
     public static final int WiredUserVariableUpdateEvent = 10025;
     public static final int WiredUserVariableManageEvent = 10026;
+    public static final int WiredUserInspectMoveEvent = 10027;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
 

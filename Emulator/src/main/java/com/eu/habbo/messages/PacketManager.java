@@ -70,6 +70,7 @@ import com.eu.habbo.messages.incoming.wired.WiredEffectSaveDataEvent;
 import com.eu.habbo.messages.incoming.wired.WiredMonitorRequestEvent;
 import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsRequestEvent;
 import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsSaveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserInspectMoveEvent;
 import com.eu.habbo.messages.incoming.wired.WiredUserVariableManageEvent;
 import com.eu.habbo.messages.incoming.wired.WiredUserVariableUpdateEvent;
 import com.eu.habbo.messages.incoming.wired.WiredUserVariablesRequestEvent;
@@ -627,6 +628,7 @@ public class PacketManager {
         this.registerHandler(Incoming.WiredUserVariablesRequestEvent, WiredUserVariablesRequestEvent.class);
         this.registerHandler(Incoming.WiredUserVariableUpdateEvent, WiredUserVariableUpdateEvent.class);
         this.registerHandler(Incoming.WiredUserVariableManageEvent, WiredUserVariableManageEvent.class);
+        this.registerHandler(Incoming.WiredUserInspectMoveEvent, WiredUserInspectMoveEvent.class);
     }
 
     void registerUnknown() throws Exception {
