@@ -26,6 +26,10 @@ import java.time.temporal.WeekFields;
 import java.util.Locale;
 
 public final class WiredInternalVariableSupport {
+    private static final ThreadLocal<Boolean> USER_MOVE_INSTANT_OVERRIDE = new ThreadLocal<>();
+    private static final ThreadLocal<UserMoveBatch> USER_MOVE_BATCH = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> USER_MOVE_BATCH_DEPTH = new ThreadLocal<>();
+
     private WiredInternalVariableSupport() {
     }
 
@@ -225,21 +229,53 @@ public final class WiredInternalVariableSupport {
     }
 
     public static boolean writeUserValue(Room room, RoomUnit roomUnit, String key, int value) {
+        Boolean instantOverride = USER_MOVE_INSTANT_OVERRIDE.get();
+
+        if (instantOverride != null) {
+            return writeUserValue(room, roomUnit, key, value, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION, instantOverride);
+        }
+
+        return writeUserValue(room, roomUnit, key, value, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION, false);
+    }
+
+    public static boolean writeUserValue(Room room, RoomUnit roomUnit, String key, int value, int animationDuration, boolean noAnimation) {
         if (room == null || roomUnit == null) {
             return false;
         }
 
         String normalized = normalizeKey(key);
 
+        if (stageUserMoveIfPossible(room, roomUnit, normalized, value, animationDuration, noAnimation)) {
+            return true;
+        }
+
         return switch (normalized) {
-            case "@position_x" -> moveUserTo(room, roomUnit, value, roomUnit.getY());
-            case "@position_y" -> moveUserTo(room, roomUnit, roomUnit.getX(), value);
+            case "@position_x" -> moveUserTo(room, roomUnit, value, roomUnit.getY(), animationDuration, noAnimation);
+            case "@position_y" -> moveUserTo(room, roomUnit, roomUnit.getX(), value, animationDuration, noAnimation);
             case "@direction" -> {
                 RoomUserRotation rotation = RoomUserRotation.fromValue(value);
                 yield WiredUserMovementHelper.updateUserDirection(room, roomUnit, rotation, rotation);
             }
             default -> false;
         };
+    }
+
+    public static UserMoveInstantScope beginUserMoveInstantOverride(boolean instant) {
+        Boolean previousValue = USER_MOVE_INSTANT_OVERRIDE.get();
+        USER_MOVE_INSTANT_OVERRIDE.set(instant);
+        return new UserMoveInstantScope(previousValue);
+    }
+
+    public static UserMoveBatchScope beginUserMoveBatch() {
+        Integer previousDepth = USER_MOVE_BATCH_DEPTH.get();
+        int nextDepth = (previousDepth == null) ? 1 : (previousDepth + 1);
+        USER_MOVE_BATCH_DEPTH.set(nextDepth);
+
+        if (nextDepth == 1) {
+            USER_MOVE_BATCH.set(new UserMoveBatch());
+        }
+
+        return new UserMoveBatchScope(previousDepth);
     }
 
     public static Integer readFurniValue(Room room, HabboItem item, String key) {
@@ -281,7 +317,7 @@ public final class WiredInternalVariableSupport {
         String normalized = normalizeKey(key);
 
         if ("@state".equals(normalized)) {
-            item.setExtradata(String.valueOf(value));
+            item.setExtradata(String.valueOf(normalizeFurniStateValue(item, value)));
             room.updateItemState(item);
             return true;
         }
@@ -492,7 +528,7 @@ public final class WiredInternalVariableSupport {
         return parseInteger(roomUnit.getStatus(status));
     }
 
-    private static boolean moveUserTo(Room room, RoomUnit roomUnit, int x, int y) {
+    private static boolean moveUserTo(Room room, RoomUnit roomUnit, int x, int y, int animationDuration, boolean noAnimation) {
         if (room == null || roomUnit == null || room.getLayout() == null) {
             return false;
         }
@@ -502,8 +538,95 @@ public final class WiredInternalVariableSupport {
             return false;
         }
 
-        double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
-        return WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), 0, true);
+        double targetZ = WiredUserMovementHelper.resolveUserTargetZ(room, targetTile);
+        return WiredUserMovementHelper.moveUser(
+            room,
+            roomUnit,
+            targetTile,
+            targetZ,
+            roomUnit.getBodyRotation(),
+            roomUnit.getHeadRotation(),
+            animationDuration,
+            noAnimation);
+    }
+
+    private static boolean stageUserMoveIfPossible(Room room, RoomUnit roomUnit, String normalizedKey, int value, int animationDuration, boolean noAnimation) {
+        if (room == null || roomUnit == null || normalizedKey == null) {
+            return false;
+        }
+
+        if (!"@position_x".equals(normalizedKey) && !"@position_y".equals(normalizedKey)) {
+            return false;
+        }
+
+        UserMoveBatch batch = USER_MOVE_BATCH.get();
+
+        if (batch == null) {
+            return false;
+        }
+
+        UserMoveBatchEntry entry = batch.entries.computeIfAbsent(roomUnit.getId(), ignored ->
+            new UserMoveBatchEntry(room, roomUnit, roomUnit.getX(), roomUnit.getY(), animationDuration, noAnimation));
+
+        entry.animationDuration = animationDuration;
+        entry.noAnimation = noAnimation;
+
+        if ("@position_x".equals(normalizedKey)) {
+            entry.targetX = value;
+            entry.xDirty = true;
+        } else {
+            entry.targetY = value;
+            entry.yDirty = true;
+        }
+
+        if (entry.xDirty && entry.yDirty && !entry.noAnimation) {
+            executeUserMoveBatchEntry(entry);
+        }
+
+        return true;
+    }
+
+    private static void flushUserMoveBatch(UserMoveBatch batch) {
+        if (batch == null || batch.entries.isEmpty()) {
+            return;
+        }
+
+        for (UserMoveBatchEntry entry : batch.entries.values()) {
+            executeUserMoveBatchEntry(entry);
+        }
+    }
+
+    private static void executeUserMoveBatchEntry(UserMoveBatchEntry entry) {
+        if (entry == null || entry.room == null || entry.roomUnit == null || entry.room.getLayout() == null) {
+            return;
+        }
+
+        if (!entry.xDirty && !entry.yDirty) {
+            return;
+        }
+
+        RoomTile targetTile = entry.room.getLayout().getTile((short) entry.targetX, (short) entry.targetY);
+
+        if (targetTile == null || targetTile.state == RoomTileState.INVALID) {
+            return;
+        }
+
+        double targetZ = WiredUserMovementHelper.resolveUserTargetZ(entry.room, targetTile);
+
+        WiredUserMovementHelper.moveUser(
+            entry.room,
+            entry.roomUnit,
+            targetTile,
+            targetZ,
+            entry.roomUnit.getBodyRotation(),
+            entry.roomUnit.getHeadRotation(),
+            entry.animationDuration,
+            entry.noAnimation);
+
+        entry.targetX = entry.roomUnit.getX();
+        entry.targetY = entry.roomUnit.getY();
+        entry.xDirty = false;
+        entry.yDirty = false;
     }
 
     private static boolean moveFurniTo(Room room, HabboItem item, int x, int y, int rotation, double z) {
@@ -518,6 +641,24 @@ public final class WiredInternalVariableSupport {
 
         FurnitureMovementError error = room.moveFurniTo(item, targetTile, rotation, z, null, true, true);
         return error == FurnitureMovementError.NONE;
+    }
+
+    private static int normalizeFurniStateValue(HabboItem item, int value) {
+        if (item == null || item.getBaseItem() == null) {
+            return value;
+        }
+
+        int stateCount = item.getBaseItem().getStateCount();
+        if (stateCount <= 0) {
+            return value;
+        }
+
+        int wrappedValue = value % stateCount;
+        if (wrappedValue < 0) {
+            wrappedValue += stateCount;
+        }
+
+        return wrappedValue;
     }
 
     private static int parseInteger(String value) {
@@ -551,4 +692,96 @@ public final class WiredInternalVariableSupport {
             this.typeId = typeId;
         }
     }
+
+    public static final class UserMoveInstantScope implements AutoCloseable {
+        private final Boolean previousValue;
+        private boolean closed;
+
+        private UserMoveInstantScope(Boolean previousValue) {
+            this.previousValue = previousValue;
+        }
+
+        @Override
+        public void close() {
+            if (this.closed) {
+                return;
+            }
+
+            this.closed = true;
+
+            if (this.previousValue == null) {
+                USER_MOVE_INSTANT_OVERRIDE.remove();
+                return;
+            }
+
+            USER_MOVE_INSTANT_OVERRIDE.set(this.previousValue);
+        }
+    }
+
+    public static final class UserMoveBatchScope implements AutoCloseable {
+        private final Integer previousDepth;
+        private boolean closed;
+
+        private UserMoveBatchScope(Integer previousDepth) {
+            this.previousDepth = previousDepth;
+        }
+
+        @Override
+        public void close() {
+            if (this.closed) {
+                return;
+            }
+
+            this.closed = true;
+
+            Integer currentDepth = USER_MOVE_BATCH_DEPTH.get();
+
+            if (currentDepth == null || currentDepth <= 1) {
+                UserMoveBatch currentBatch = USER_MOVE_BATCH.get();
+
+                if (currentBatch != null) {
+                    flushUserMoveBatch(currentBatch);
+                }
+
+                USER_MOVE_BATCH.remove();
+
+                if (this.previousDepth == null) {
+                    USER_MOVE_BATCH_DEPTH.remove();
+                } else {
+                    USER_MOVE_BATCH_DEPTH.set(this.previousDepth);
+                }
+
+                return;
+            }
+
+            USER_MOVE_BATCH_DEPTH.set(currentDepth - 1);
+        }
+    }
+
+    private static final class UserMoveBatch {
+        private final java.util.LinkedHashMap<Integer, UserMoveBatchEntry> entries = new java.util.LinkedHashMap<>();
+    }
+
+    private static final class UserMoveBatchEntry {
+        private final Room room;
+        private final RoomUnit roomUnit;
+        private int targetX;
+        private int targetY;
+        private int animationDuration;
+        private boolean noAnimation;
+        private boolean xDirty;
+        private boolean yDirty;
+
+        private UserMoveBatchEntry(Room room, RoomUnit roomUnit, int targetX, int targetY, int animationDuration, boolean noAnimation) {
+            this.room = room;
+            this.roomUnit = roomUnit;
+            this.targetX = targetX;
+            this.targetY = targetY;
+            this.animationDuration = animationDuration;
+            this.noAnimation = noAnimation;
+            this.xDirty = false;
+            this.yDirty = false;
+        }
+    }
+
 }

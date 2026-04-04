@@ -39,6 +39,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 
 /**
  * Manager class for the wired runtime.
@@ -85,6 +86,8 @@ public final class WiredManager {
     
     /** Whether the engine is initialized */
     private static volatile boolean initialized = false;
+    private static final ThreadLocal<Integer> EVENT_HANDLING_DEPTH = new ThreadLocal<>();
+    private static final ThreadLocal<ArrayDeque<WiredEvent>> DEFERRED_EFFECT_EVENTS = new ThreadLocal<>();
     private WiredManager() {
         // Static utility class
     }
@@ -236,8 +239,65 @@ public final class WiredManager {
         if (event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
             return false;
         }
-        
-        return engine.handleEvent(event);
+
+        Integer previousDepth = EVENT_HANDLING_DEPTH.get();
+        int nextDepth = (previousDepth == null) ? 1 : (previousDepth + 1);
+        EVENT_HANDLING_DEPTH.set(nextDepth);
+
+        if (previousDepth == null) {
+            DEFERRED_EFFECT_EVENTS.set(new ArrayDeque<>());
+        }
+
+        boolean handled = false;
+
+        try {
+            handled = engine.handleEvent(event);
+
+            if (nextDepth == 1) {
+                ArrayDeque<WiredEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+
+                while (deferredEvents != null && !deferredEvents.isEmpty()) {
+                    WiredEvent deferredEvent = deferredEvents.pollFirst();
+
+                    if (deferredEvent == null || RoomWiredDisableSupport.isWiredDisabled(deferredEvent.getRoom())) {
+                        continue;
+                    }
+
+                    handled = engine.handleEvent(deferredEvent) || handled;
+                }
+            }
+
+            return handled;
+        } finally {
+            if (previousDepth == null) {
+                EVENT_HANDLING_DEPTH.remove();
+                DEFERRED_EFFECT_EVENTS.remove();
+            } else {
+                EVENT_HANDLING_DEPTH.set(previousDepth);
+            }
+        }
+    }
+
+    public static boolean dispatchEffectTriggeredEvent(WiredEvent event) {
+        if (!isEnabled() || engine == null || event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
+            return false;
+        }
+
+        Integer currentDepth = EVENT_HANDLING_DEPTH.get();
+
+        if (currentDepth == null || currentDepth <= 0) {
+            return handleEvent(event);
+        }
+
+        ArrayDeque<WiredEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+
+        if (deferredEvents == null) {
+            deferredEvents = new ArrayDeque<>();
+            DEFERRED_EFFECT_EVENTS.set(deferredEvents);
+        }
+
+        deferredEvents.addLast(event);
+        return true;
     }
 
     /**

@@ -581,9 +581,11 @@ public final class WiredEngine {
 
         WiredMoveCarryHelper.beginMovementCollection();
 
-        try {
+        try (WiredInternalVariableSupport.UserMoveBatchScope ignored = WiredInternalVariableSupport.beginUserMoveBatch()) {
             // Execute selected effects
-            for (IWiredEffect effect : toExecute) {
+            for (int effectIndex = 0; effectIndex < toExecute.size(); effectIndex++) {
+                IWiredEffect effect = toExecute.get(effectIndex);
+
                 // Check if effect requires actor
                 if (effect.requiresActor() && !ctx.hasActor()) {
                     continue;
@@ -592,8 +594,30 @@ public final class WiredEngine {
                 // Handle delay
                 int delay = effect.getDelay();
                 if (delay > 0) {
-                    // Schedule delayed execution
-                    scheduleDelayedEffect(effect, ctx, delay, currentTime);
+                    List<IWiredEffect> delayedBatch = new ArrayList<>();
+                    delayedBatch.add(effect);
+
+                    while ((effectIndex + 1) < toExecute.size()) {
+                        IWiredEffect nextEffect = toExecute.get(effectIndex + 1);
+
+                        if (nextEffect == null || nextEffect.getDelay() != delay) {
+                            break;
+                        }
+
+                        if (nextEffect.requiresActor() && !ctx.hasActor()) {
+                            effectIndex++;
+                            continue;
+                        }
+
+                        delayedBatch.add(nextEffect);
+                        effectIndex++;
+                    }
+
+                    if (delayedBatch.size() == 1) {
+                        scheduleDelayedEffect(effect, ctx, delay, currentTime);
+                    } else {
+                        scheduleOrderedEffectBatch(delayedBatch, ctx, delay, currentTime);
+                    }
                 } else {
                     // Execute immediately
                     ctx.state().step();
@@ -672,82 +696,7 @@ public final class WiredEngine {
             return;
         }
 
-        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(
-                stack.triggerItem().getX(),
-                stack.triggerItem().getY());
-
-        if (extras == null || extras.isEmpty()) {
-            return;
-        }
-
-        int furniLimit = Integer.MAX_VALUE;
-        int userLimit = Integer.MAX_VALUE;
-        List<WiredExtraFilterFurniByVariable> furniVariableFilters = new ArrayList<>();
-        List<WiredExtraFilterUsersByVariable> userVariableFilters = new ArrayList<>();
-
-        for (InteractionWiredExtra extra : extras) {
-            if (extra instanceof WiredExtraFilterFurni) {
-                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterUser) {
-                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterFurniByVariable) {
-                furniVariableFilters.add((WiredExtraFilterFurniByVariable) extra);
-            } else if (extra instanceof WiredExtraFilterUsersByVariable) {
-                userVariableFilters.add((WiredExtraFilterUsersByVariable) extra);
-            }
-        }
-
-        furniVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
-        userVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
-
-        if (ctx.targets().isItemsModifiedBySelector()) {
-            Iterable<HabboItem> filteredItems = ctx.targets().items();
-
-            for (WiredExtraFilterFurniByVariable extra : furniVariableFilters) {
-                filteredItems = extra.filterItems(room, ctx, filteredItems);
-            }
-
-            if (furniLimit != Integer.MAX_VALUE) {
-                filteredItems = limitIterable(filteredItems, furniLimit);
-            }
-
-            ctx.targets().setItems(filteredItems);
-        }
-
-        if (ctx.targets().isUsersModifiedBySelector()) {
-            Iterable<RoomUnit> filteredUsers = ctx.targets().users();
-
-            for (WiredExtraFilterUsersByVariable extra : userVariableFilters) {
-                filteredUsers = extra.filterUsers(room, ctx, filteredUsers);
-            }
-
-            if (userLimit != Integer.MAX_VALUE) {
-                filteredUsers = limitIterable(filteredUsers, userLimit);
-            }
-
-            ctx.targets().setUsers(filteredUsers);
-        }
-    }
-
-    private <T> List<T> limitIterable(Iterable<T> values, int limit) {
-        List<T> result = new ArrayList<>();
-
-        if (values == null || limit <= 0) {
-            return result;
-        }
-
-        for (T value : values) {
-            if (value != null) {
-                result.add(value);
-            }
-        }
-
-        if (result.size() <= limit) {
-            return result;
-        }
-
-        Collections.shuffle(result, Emulator.getRandom());
-        return new ArrayList<>(result.subList(0, limit));
+        WiredSelectionFilterSupport.applySelectorFilters(room, stack.triggerItem(), ctx);
     }
     
     /**
@@ -916,7 +865,7 @@ public final class WiredEngine {
 
         WiredMoveCarryHelper.beginMovementCollection();
 
-        try {
+        try (WiredInternalVariableSupport.UserMoveBatchScope ignored = WiredInternalVariableSupport.beginUserMoveBatch()) {
             for (IWiredEffect effect : batch) {
                 try {
                     if (!useExecutionTimeForCooldown) {

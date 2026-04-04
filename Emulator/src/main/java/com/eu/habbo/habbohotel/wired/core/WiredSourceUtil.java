@@ -29,24 +29,36 @@ public final class WiredSourceUtil {
     }
 
     public static List<HabboItem> resolveItems(WiredContext ctx, int sourceType, Collection<HabboItem> selectedItems) {
+        List<HabboItem> resolvedItems;
+
         switch (sourceType) {
             case SOURCE_TRIGGER:
-                return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                resolvedItems = ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                break;
             case SOURCE_SELECTED:
-                return (selectedItems != null) ? new ArrayList<>(selectedItems) : Collections.emptyList();
+                resolvedItems = (selectedItems != null) ? new ArrayList<>(selectedItems) : Collections.emptyList();
+                break;
             case SOURCE_SELECTOR:
                 WiredTargets itemTargets = getSelectorTargets(ctx);
-                return itemTargets.isItemsModifiedBySelector()
+                resolvedItems = itemTargets.isItemsModifiedBySelector()
                         ? new ArrayList<>(itemTargets.items())
                         : Collections.emptyList();
+                break;
             case SOURCE_SIGNAL:
                 if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
-                    return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                    resolvedItems = ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                    break;
                 }
-                return Collections.emptyList();
+                resolvedItems = Collections.emptyList();
+                break;
             default:
-                return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                resolvedItems = ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                break;
         }
+
+        return (sourceType == SOURCE_SELECTOR)
+                ? resolvedItems
+                : WiredSelectionFilterSupport.filterItems(ctx.room(), ctx.triggerItem(), ctx, resolvedItems);
     }
 
     public static List<RoomUnit> resolveUsers(WiredContext ctx, int sourceType) {
@@ -54,29 +66,43 @@ public final class WiredSourceUtil {
     }
 
     public static List<RoomUnit> resolveUsers(WiredContext ctx, int sourceType, Collection<RoomUnit> selectedUsers) {
+        List<RoomUnit> resolvedUsers;
+
         switch (sourceType) {
             case SOURCE_TRIGGER:
-                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                resolvedUsers = ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                break;
             case SOURCE_CLICKED_USER:
                 if (ctx.eventType() == WiredEvent.Type.USER_CLICKS_USER) {
-                    return ctx.event().getTargetUnit().map(Collections::singletonList).orElse(Collections.emptyList());
+                    resolvedUsers = ctx.event().getTargetUnit().map(Collections::singletonList).orElse(Collections.emptyList());
+                    break;
                 }
-                return Collections.emptyList();
+                resolvedUsers = Collections.emptyList();
+                break;
             case SOURCE_SELECTED:
-                return (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
+                resolvedUsers = (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
+                break;
             case SOURCE_SELECTOR:
                 WiredTargets userTargets = getSelectorTargets(ctx);
-                return userTargets.isUsersModifiedBySelector()
+                resolvedUsers = userTargets.isUsersModifiedBySelector()
                         ? new ArrayList<>(userTargets.users())
                         : Collections.emptyList();
+                break;
             case SOURCE_SIGNAL:
                 if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
-                    return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                    resolvedUsers = ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                    break;
                 }
-                return Collections.emptyList();
+                resolvedUsers = Collections.emptyList();
+                break;
             default:
-                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                resolvedUsers = ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                break;
         }
+
+        return (sourceType == SOURCE_SELECTOR)
+                ? resolvedUsers
+                : WiredSelectionFilterSupport.filterUsers(ctx.room(), ctx.triggerItem(), ctx, resolvedUsers);
     }
 
     public static boolean isDefaultUserSource(int value) {
@@ -223,83 +249,6 @@ public final class WiredSourceUtil {
     }
 
     private static void applySelectionFilterExtras(Room room, HabboItem triggerItem, WiredContext selectorCtx) {
-        if (room == null || triggerItem == null || selectorCtx == null || room.getRoomSpecialTypes() == null) {
-            return;
-        }
-
-        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(triggerItem.getX(), triggerItem.getY());
-
-        if (extras == null || extras.isEmpty()) {
-            return;
-        }
-
-        int furniLimit = Integer.MAX_VALUE;
-        int userLimit = Integer.MAX_VALUE;
-        List<WiredExtraFilterFurniByVariable> furniVariableFilters = new ArrayList<>();
-        List<WiredExtraFilterUsersByVariable> userVariableFilters = new ArrayList<>();
-
-        for (InteractionWiredExtra extra : extras) {
-            if (extra instanceof WiredExtraFilterFurni) {
-                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterUser) {
-                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterFurniByVariable) {
-                furniVariableFilters.add((WiredExtraFilterFurniByVariable) extra);
-            } else if (extra instanceof WiredExtraFilterUsersByVariable) {
-                userVariableFilters.add((WiredExtraFilterUsersByVariable) extra);
-            }
-        }
-
-        furniVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
-        userVariableFilters.sort((left, right) -> Integer.compare(left.getId(), right.getId()));
-
-        if (selectorCtx.targets().isItemsModifiedBySelector()) {
-            Iterable<HabboItem> filteredItems = selectorCtx.targets().items();
-
-            for (WiredExtraFilterFurniByVariable extra : furniVariableFilters) {
-                filteredItems = extra.filterItems(room, selectorCtx, filteredItems);
-            }
-
-            if (furniLimit != Integer.MAX_VALUE) {
-                filteredItems = limitIterable(filteredItems, furniLimit);
-            }
-
-            selectorCtx.targets().setItems(filteredItems);
-        }
-
-        if (selectorCtx.targets().isUsersModifiedBySelector()) {
-            Iterable<RoomUnit> filteredUsers = selectorCtx.targets().users();
-
-            for (WiredExtraFilterUsersByVariable extra : userVariableFilters) {
-                filteredUsers = extra.filterUsers(room, selectorCtx, filteredUsers);
-            }
-
-            if (userLimit != Integer.MAX_VALUE) {
-                filteredUsers = limitIterable(filteredUsers, userLimit);
-            }
-
-            selectorCtx.targets().setUsers(filteredUsers);
-        }
-    }
-
-    private static <T> List<T> limitIterable(Iterable<T> values, int limit) {
-        List<T> result = new ArrayList<>();
-
-        if (values == null || limit <= 0) {
-            return result;
-        }
-
-        for (T value : values) {
-            if (value != null) {
-                result.add(value);
-            }
-        }
-
-        if (result.size() <= limit) {
-            return result;
-        }
-
-        Collections.shuffle(result, Emulator.getRandom());
-        return new ArrayList<>(result.subList(0, limit));
+        WiredSelectionFilterSupport.applySelectorFilters(room, triggerItem, selectorCtx);
     }
 }

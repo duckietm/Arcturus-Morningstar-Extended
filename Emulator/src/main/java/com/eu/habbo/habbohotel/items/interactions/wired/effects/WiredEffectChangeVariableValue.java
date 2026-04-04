@@ -595,7 +595,13 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
     }
 
     private boolean writeUserInternalValue(Room room, RoomUnit roomUnit, String key, int value) {
-        return WiredInternalVariableSupport.writeUserValue(room, roomUnit, key, value);
+        return WiredInternalVariableSupport.writeUserValue(
+            room,
+            roomUnit,
+            key,
+            value,
+            WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION,
+            false);
     }
 
     private Integer readFurniInternalValue(Room room, HabboItem item, String key) {
@@ -676,7 +682,15 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
         if (targetTile == null || targetTile.state == RoomTileState.INVALID) return false;
 
         double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
-        return WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), 0, true);
+        return WiredUserMovementHelper.moveUser(
+            room,
+            roomUnit,
+            targetTile,
+            targetZ,
+            roomUnit.getBodyRotation(),
+            roomUnit.getHeadRotation(),
+            WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION,
+            false);
     }
 
     private boolean moveFurniTo(Room room, HabboItem item, int x, int y, int rotation, double z) {

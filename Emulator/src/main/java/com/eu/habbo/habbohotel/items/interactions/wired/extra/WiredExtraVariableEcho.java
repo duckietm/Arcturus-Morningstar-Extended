@@ -671,8 +671,16 @@ public class WiredExtraVariableEcho extends InteractionWiredExtra {
         RoomTile targetTile = room.getLayout().getTile((short) x, (short) y);
         if (targetTile == null || targetTile.state == RoomTileState.INVALID) return false;
 
-        double targetZ = targetTile.getStackHeight() + ((targetTile.state == RoomTileState.SIT) ? -0.5 : 0);
-        return WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, targetZ, roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), 0, true);
+        double targetZ = WiredUserMovementHelper.resolveUserTargetZ(room, targetTile);
+        return WiredUserMovementHelper.moveUser(
+            room,
+            roomUnit,
+            targetTile,
+            targetZ,
+            roomUnit.getBodyRotation(),
+            roomUnit.getHeadRotation(),
+            WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION,
+            false);
     }
 
     private boolean moveFurniTo(Room room, HabboItem item, int x, int y, int rotation, double z) {

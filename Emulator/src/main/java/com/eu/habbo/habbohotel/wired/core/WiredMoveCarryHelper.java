@@ -35,6 +35,7 @@ public final class WiredMoveCarryHelper {
     private static final long USER_FOLLOWER_TTL_MS = 10000L;
     private static final ThreadLocal<Set<Integer>> SUPPRESSED_STATUS_ROOM_UNIT_IDS = new ThreadLocal<>();
     private static final ThreadLocal<List<WiredMovementsComposer.MovementData>> COLLECTED_MOVEMENTS = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> MOVEMENT_COLLECTION_DEPTH = new ThreadLocal<>();
     private static final ConcurrentHashMap<Integer, Long> SUPPRESSED_STATUS_COMPOSER_UNTIL = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, UserFollowEntry>> ACTIVE_USER_FOLLOWERS = new ConcurrentHashMap<>();
 
@@ -237,12 +238,28 @@ public final class WiredMoveCarryHelper {
     }
 
     public static void beginMovementCollection() {
-        COLLECTED_MOVEMENTS.set(new ArrayList<>());
+        Integer currentDepth = MOVEMENT_COLLECTION_DEPTH.get();
+
+        if (currentDepth == null || currentDepth <= 0) {
+            COLLECTED_MOVEMENTS.set(new ArrayList<>());
+            MOVEMENT_COLLECTION_DEPTH.set(1);
+            return;
+        }
+
+        MOVEMENT_COLLECTION_DEPTH.set(currentDepth + 1);
     }
 
     public static ServerMessage finishMovementCollection() {
+        Integer currentDepth = MOVEMENT_COLLECTION_DEPTH.get();
+
+        if (currentDepth != null && currentDepth > 1) {
+            MOVEMENT_COLLECTION_DEPTH.set(currentDepth - 1);
+            return null;
+        }
+
         List<WiredMovementsComposer.MovementData> movements = COLLECTED_MOVEMENTS.get();
         COLLECTED_MOVEMENTS.remove();
+        MOVEMENT_COLLECTION_DEPTH.remove();
 
         if (movements == null || movements.isEmpty()) {
             return null;

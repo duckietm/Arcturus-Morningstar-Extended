@@ -51,6 +51,10 @@ public class RoomUserWalkEvent extends MessageHandler {
 
     try {
       if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk() && !WiredFreezeUtil.isFrozen(roomUnit)) {
+        if (WiredUserMovementHelper.consumeSuppressedWalkCommand(roomUnit)) {
+          return;
+        }
+
         if (roomUnit.cmdTeleport) {
           handleTeleport(room, (short) x, (short) y, roomUnit, habboInfo);
           return;

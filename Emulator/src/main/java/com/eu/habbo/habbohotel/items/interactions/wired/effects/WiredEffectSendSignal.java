@@ -118,17 +118,19 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 : Collections.singletonList(defaultFurni);
 
         int nextDepth = currentDepth + 1;
+        boolean isolateBranchContext = (signalPerUser && forwardedUsers.size() > 1)
+                || (signalPerFurni && forwardedFurni.size() > 1);
 
         for (RoomUnit user : usersToSend) {
             for (HabboItem sourceItem : furniToSend) {
                 for (HabboItem antenna : resolvedAntennas) {
-                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth);
+                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth, isolateBranchContext);
                 }
             }
         }
     }
 
-    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth) {
+    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth, boolean isolateBranchContext) {
         if (antenna == null) return;
         RoomTile tile = room.getLayout().getTile(antenna.getX(), antenna.getY());
         if (tile == null) return;
@@ -146,13 +148,13 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 .signalChannel(signalChannel)
                 .signalUserCount(actor != null ? 1 : 0)
                 .signalFurniCount(sourceItem != null ? 1 : 0)
-                .contextVariableScope(ctx.contextVariables())
+                .contextVariableScope(isolateBranchContext ? ctx.contextVariables().copy() : ctx.contextVariables())
                 .triggeredByEffect(true);
 
         if (actor != null) builder.actor(actor);
         if (sourceItem != null) builder.sourceItem(sourceItem);
 
-        boolean result = WiredManager.handleEvent(builder.build());
+        boolean result = WiredManager.dispatchEffectTriggeredEvent(builder.build());
         LOGGER.debug("[SendSignal] handleEvent returned: {}", result);
     }
 
