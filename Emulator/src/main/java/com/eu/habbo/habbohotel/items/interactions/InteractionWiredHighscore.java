@@ -90,6 +90,7 @@ public class InteractionWiredHighscore extends HabboItem {
         try {
             int state = Integer.parseInt(this.getExtradata());
             this.setExtradata(Math.abs(state - 1) + "");
+            this.needsUpdate(true);
             room.updateItem(this);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
