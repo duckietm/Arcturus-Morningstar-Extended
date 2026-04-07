@@ -126,7 +126,7 @@ public class RoomPlaceItemEvent extends MessageHandler {
                 trackedUserId = this.client.getHabbo().getHabboInfo().getId();
             }
 
-            item.setUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
+            item.setVirtualUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
             BuildersClubRoomSupport.trackPlacedItem(item.getId(), trackedUserId, room.getId());
 
             BuildersClubRoomSupport.SyncResult syncResult = BuildersClubRoomSupport.syncRoom(room);
