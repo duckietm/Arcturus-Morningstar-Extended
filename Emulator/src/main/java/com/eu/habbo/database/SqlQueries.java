@@ -7,9 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 
 public final class SqlQueries {
 
@@ -19,6 +19,11 @@ public final class SqlQueries {
     @FunctionalInterface
     public interface RowMapper<T> {
         T map(ResultSet rs) throws SQLException;
+    }
+
+    @FunctionalInterface
+    public interface RowConsumer {
+        void accept(ResultSet rs) throws SQLException;
     }
 
     @FunctionalInterface
@@ -60,6 +65,19 @@ public final class SqlQueries {
         }
     }
 
+    public static void forEach(String sql, RowConsumer consumer, Object... params) {
+        try (Connection c = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            bindAll(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    consumer.accept(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("forEach failed: " + sql, e);
+        }
+    }
 
     public static int update(String sql, Object... params) {
         try (Connection c = Emulator.getDatabase().getDataSource().getConnection();
@@ -71,7 +89,7 @@ public final class SqlQueries {
         }
     }
 
-    public static <P> int[] batchUpdate(String sql, List<P> items, ParameterBinder<P> binder) {
+    public static <P> int[] batchUpdate(String sql, Collection<? extends P> items, ParameterBinder<P> binder) {
         try (Connection c = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             for (P item : items) {
