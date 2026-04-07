@@ -48,11 +48,11 @@ public class Database {
     }
 
     public void dispose() {
-        if (this.databasePool != null) {
-            this.databasePool.getDatabase().close();
+        // dataSource is the same instance returned by databasePool.getDatabase(),
+        // so close it exactly once.
+        if (this.dataSource != null && !this.dataSource.isClosed()) {
+            this.dataSource.close();
         }
-
-        this.dataSource.close();
     }
 
     public HikariDataSource getDataSource() {
