@@ -14,7 +14,6 @@ import com.eu.habbo.messages.outgoing.catalog.ClubCenterDataComposer;
 import com.eu.habbo.messages.outgoing.generic.PickMonthlyClubGiftNotificationComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserDataComposer;
 import com.eu.habbo.messages.outgoing.users.*;
-import gnu.trove.map.hash.THashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -215,7 +215,7 @@ public class SubscriptionHabboClub extends Subscription {
                 }
             }
 
-            THashMap<String, Object> queryParams = new THashMap<>();
+            Map<String, Object> queryParams = new HashMap<>();
             queryParams.put("@user_id", habbo.getId());
             queryParams.put("@timestamp_start", habbo.getHabboStats().lastHCPayday);
             queryParams.put("@timestamp_end", HC_PAYDAY_NEXT_DATE);
