@@ -198,7 +198,7 @@ public class HabboManager {
     public ArrayList<HabboInfo> getCloneAccounts(Habbo habbo, int limit) {
         ArrayList<HabboInfo> habboInfo = new ArrayList<>();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE ip_register = ? OR ip_current = ? AND id != ? ORDER BY id DESC LIMIT ?")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE (ip_register = ? OR ip_current = ?) AND id != ? ORDER BY id DESC LIMIT ?")) {
             statement.setString(1, habbo.getHabboInfo().getIpRegister());
             statement.setString(2, habbo.getHabboInfo().getIpLogin());
             statement.setInt(3, habbo.getHabboInfo().getId());
