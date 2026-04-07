@@ -45,6 +45,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
 
     private int id;
     private int userId;
+    private int databaseUserId;
     private int roomId;
     private Item baseItem;
     private String wallPosition;
@@ -62,6 +63,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     public HabboItem(ResultSet set, Item baseItem) throws SQLException {
         this.id = set.getInt("id");
         this.userId = set.getInt("user_id");
+        this.databaseUserId = this.userId;
         this.roomId = set.getInt("room_id");
         this.baseItem = baseItem;
         this.wallPosition = set.getString("wall_pos");
@@ -81,6 +83,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     public HabboItem(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         this.id = id;
         this.userId = userId;
+        this.databaseUserId = userId;
         this.roomId = 0;
         this.baseItem = item;
         this.wallPosition = "";
@@ -168,6 +171,11 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     }
 
     public void setUserId(int userId) {
+        this.userId = userId;
+        this.databaseUserId = userId;
+    }
+
+    public void setVirtualUserId(int userId) {
         this.userId = userId;
     }
 
@@ -275,7 +283,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                 }
             } else if (this.needsUpdate) {
                 try (PreparedStatement statement = connection.prepareStatement("UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ? WHERE id = ?")) {
-                    statement.setInt(1, this.userId);
+                    statement.setInt(1, this.databaseUserId);
                     statement.setInt(2, this.roomId);
                     statement.setString(3, this.wallPosition);
                     statement.setInt(4, this.x);

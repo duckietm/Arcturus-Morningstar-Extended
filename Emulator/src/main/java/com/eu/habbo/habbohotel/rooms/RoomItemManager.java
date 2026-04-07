@@ -628,7 +628,7 @@ public class RoomItemManager {
         }
 
         if (BuildersClubRoomSupport.isTrackedItem(item.getId()) && item.getUserId() != BuildersClubRoomSupport.VIRTUAL_OWNER_ID) {
-            item.setUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
+            item.setVirtualUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
             item.needsUpdate(true);
         }
 

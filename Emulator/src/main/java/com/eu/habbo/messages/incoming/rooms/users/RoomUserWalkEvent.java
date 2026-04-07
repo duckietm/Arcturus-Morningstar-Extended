@@ -26,9 +26,16 @@ public class RoomUserWalkEvent extends MessageHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(RoomUserWalkEvent.class);
   public static final String CONTROL_KEY = "control";
 
+  private static final String WALK_FLOOD_COUNT_KEY = "__walkFloodCount";
+  private static final String WALK_FLOOD_WINDOW_KEY = "__walkFloodWindow";
+  private static final String WALK_LAST_X_KEY = "__walkLastX";
+  private static final String WALK_LAST_Y_KEY = "__walkLastY";
+
+  private static final int MAX_WALKS_PER_SECOND = 15;
+
   @Override
   public int getRatelimit() {
-    return Emulator.getConfig().getInt("pathfinder.click.delay", 0);
+    return 0;
   }
 
   @Override
@@ -37,8 +44,43 @@ public class RoomUserWalkEvent extends MessageHandler {
       return;
     }
 
-    int x = this.packet.readInt(); // Position X
-    int y = this.packet.readInt(); // Position Y
+    int x = this.packet.readInt();
+    int y = this.packet.readInt();
+
+    RoomUnit unit = this.client.getHabbo().getRoomUnit();
+    if (unit != null) {
+      long now = System.currentTimeMillis();
+      Object windowObj = unit.getCacheable().get(WALK_FLOOD_WINDOW_KEY);
+      Object countObj = unit.getCacheable().get(WALK_FLOOD_COUNT_KEY);
+
+      long windowStart = (windowObj instanceof Long) ? (Long) windowObj : 0L;
+      int count = (countObj instanceof Integer) ? (Integer) countObj : 0;
+
+      if (now - windowStart > 1000) {
+        // New 1-second window
+        windowStart = now;
+        count = 0;
+      }
+
+      count++;
+      unit.getCacheable().put(WALK_FLOOD_WINDOW_KEY, windowStart);
+      unit.getCacheable().put(WALK_FLOOD_COUNT_KEY, count);
+
+      if (count > MAX_WALKS_PER_SECOND) {
+        unit.getCacheable().put(WALK_LAST_X_KEY, x);
+        unit.getCacheable().put(WALK_LAST_Y_KEY, y);
+        return;
+      }
+
+      Object lastX = unit.getCacheable().get(WALK_LAST_X_KEY);
+      Object lastY = unit.getCacheable().get(WALK_LAST_Y_KEY);
+      if (lastX != null && lastY != null) {
+        x = (Integer) lastX;
+        y = (Integer) lastY;
+        unit.getCacheable().remove(WALK_LAST_X_KEY);
+        unit.getCacheable().remove(WALK_LAST_Y_KEY);
+      }
+    }
 
     Habbo habbo = getControlledHabbo();
     if (habbo == null) {

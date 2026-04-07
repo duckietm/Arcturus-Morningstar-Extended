@@ -27,8 +27,8 @@ public class BuildersClubRoomSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildersClubRoomSupport.class);
 
     public static final int DEFAULT_TRIAL_FURNI_LIMIT = 50;
-    // Uses the built-in system account row so Builders Club furni have a valid foreign-key owner in `items`,
-    // while still being treated as virtual / non-user-owned everywhere else in the BC flow.
+    // Runtime-only owner marker used to display Builders Club furni as virtual/non-user-owned in-room.
+    // The actual DB owner for persistence/FK purposes is tracked separately on the item instance.
     public static final int VIRTUAL_OWNER_ID = 1;
     public static final String DISPLAY_OWNER_NAME = "Builders Club";
 

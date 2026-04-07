@@ -66,12 +66,14 @@ public class BuildersClubPlaceWallItemEvent extends MessageHandler {
             return;
         }
 
-        HabboItem item = Emulator.getGameEnvironment().getItemManager().createItem(BuildersClubRoomSupport.VIRTUAL_OWNER_ID, baseItem, 0, 0, (extraData != null && !extraData.isEmpty()) ? extraData : catalogItem.getExtradata());
+        HabboItem item = Emulator.getGameEnvironment().getItemManager().createItem(placementUserId, baseItem, 0, 0, (extraData != null && !extraData.isEmpty()) ? extraData : catalogItem.getExtradata());
 
         if (item == null) {
             this.client.sendResponse(new BubbleAlertComposer(BubbleAlertKeys.FURNITURE_PLACEMENT_ERROR.key, FurnitureMovementError.INVALID_MOVE.errorCode));
             return;
         }
+
+        item.setVirtualUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
 
         FurnitureMovementError error = room.placeWallFurniAt(item, wallPosition, this.client.getHabbo());
 
