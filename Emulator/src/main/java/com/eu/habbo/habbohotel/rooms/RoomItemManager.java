@@ -627,19 +627,28 @@ public class RoomItemManager {
             }
         }
 
+        if (BuildersClubRoomSupport.isTrackedItem(item.getId()) && item.getUserId() != BuildersClubRoomSupport.VIRTUAL_OWNER_ID) {
+            item.setUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
+            item.needsUpdate(true);
+        }
+
         synchronized (this.furniOwnerCount) {
             this.furniOwnerCount.put(item.getUserId(), this.furniOwnerCount.get(item.getUserId()) + 1);
         }
 
         synchronized (this.furniOwnerNames) {
             if (!this.furniOwnerNames.containsKey(item.getUserId())) {
-                HabboInfo habbo = HabboManager.getOfflineHabboInfo(item.getUserId());
-
-                if (habbo != null) {
-                    this.furniOwnerNames.put(item.getUserId(), habbo.getUsername());
+                if (item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID && BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+                    this.furniOwnerNames.put(item.getUserId(), BuildersClubRoomSupport.DISPLAY_OWNER_NAME);
                 } else {
-                    LOGGER.error("Failed to find username for item (ID: {}, UserID: {})", 
-                        item.getId(), item.getUserId());
+                    HabboInfo habbo = HabboManager.getOfflineHabboInfo(item.getUserId());
+
+                    if (habbo != null) {
+                        this.furniOwnerNames.put(item.getUserId(), habbo.getUsername());
+                    } else {
+                        LOGGER.error("Failed to find username for item (ID: {}, UserID: {})",
+                            item.getId(), item.getUserId());
+                    }
                 }
             }
         }
@@ -749,6 +758,9 @@ public class RoomItemManager {
             return;
         }
 
+        boolean trackedBuildersClubItem = BuildersClubRoomSupport.isTrackedItem(item.getId());
+        int trackedUserId = trackedBuildersClubItem ? BuildersClubRoomSupport.getTrackedUserId(item.getId()) : item.getUserId();
+
         HabboItem i;
         synchronized (this.roomItems) {
             i = this.roomItems.remove(item.getId());
@@ -770,6 +782,16 @@ public class RoomItemManager {
 
             // Unregister from special types
             this.unregisterItemFromSpecialTypes(item);
+        }
+
+        if (trackedBuildersClubItem) {
+            BuildersClubRoomSupport.deleteTrackedItem(item.getId());
+
+            if (BuildersClubRoomSupport.syncRoom(this.room) == BuildersClubRoomSupport.SyncResult.UNLOCKED) {
+                BuildersClubRoomSupport.sendRoomUnlockedBubble(this.room.getOwnerId());
+            }
+
+            BuildersClubRoomSupport.sendPlacementStatusForPool(this.room, trackedUserId);
         }
     }
 
@@ -992,6 +1014,8 @@ public class RoomItemManager {
             return;
         }
 
+        boolean trackedBuildersClubItem = BuildersClubRoomSupport.isTrackedItem(item.getId());
+
         if (Emulator.getPluginManager().isRegistered(FurniturePickedUpEvent.class, true)) {
             FurniturePickedUpEvent event = Emulator.getPluginManager()
                 .fireEvent(new FurniturePickedUpEvent(item, picker));
@@ -1036,6 +1060,11 @@ public class RoomItemManager {
             this.room.sendComposer(new RemoveWallItemComposer(item).compose());
         }
 
+        if (trackedBuildersClubItem) {
+            Emulator.getGameEnvironment().getItemManager().deleteItem(item);
+            return;
+        }
+
         Emulator.getThreading().run(item);
     }
 
@@ -1044,6 +1073,7 @@ public class RoomItemManager {
      */
     public void ejectUserFurni(int userId) {
         THashSet<HabboItem> items = new THashSet<>();
+        THashSet<HabboItem> inventoryItems = new THashSet<>();
 
         TIntObjectIterator<HabboItem> iterator = this.roomItems.iterator();
 
@@ -1056,15 +1086,20 @@ public class RoomItemManager {
 
             if (iterator.value().getUserId() == userId) {
                 items.add(iterator.value());
+
+                if (!BuildersClubRoomSupport.isTrackedItem(iterator.value().getId())) {
+                    inventoryItems.add(iterator.value());
+                }
+
                 iterator.value().setRoomId(0);
             }
         }
 
         Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
 
-        if (habbo != null) {
-            habbo.getInventory().getItemsComponent().addItems(items);
-            habbo.getClient().sendResponse(new AddHabboItemComposer(items));
+        if (habbo != null && !inventoryItems.isEmpty()) {
+            habbo.getInventory().getItemsComponent().addItems(inventoryItems);
+            habbo.getClient().sendResponse(new AddHabboItemComposer(inventoryItems));
         }
 
         for (HabboItem i : items) {
@@ -1116,15 +1151,23 @@ public class RoomItemManager {
         }
 
         for (Map.Entry<Integer, THashSet<HabboItem>> entrySet : userItemsMap.entrySet()) {
+            THashSet<HabboItem> inventoryItems = new THashSet<>();
+
+            for (HabboItem item : entrySet.getValue()) {
+                if (!BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+                    inventoryItems.add(item);
+                }
+            }
+
             for (HabboItem i : entrySet.getValue()) {
                 this.pickUpItem(i, null);
             }
 
             Habbo user = Emulator.getGameEnvironment().getHabboManager().getHabbo(entrySet.getKey());
 
-            if (user != null) {
-                user.getInventory().getItemsComponent().addItems(entrySet.getValue());
-                user.getClient().sendResponse(new AddHabboItemComposer(entrySet.getValue()));
+            if (user != null && !inventoryItems.isEmpty()) {
+                user.getInventory().getItemsComponent().addItems(inventoryItems);
+                user.getClient().sendResponse(new AddHabboItemComposer(inventoryItems));
             }
         }
     }
@@ -1268,7 +1311,7 @@ public class RoomItemManager {
         rotation %= 8;
         if (this.room.hasRights(habbo) || this.room.getGuildRightLevel(habbo)
             .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS) || habbo.hasPermission(
-            Permission.ACC_MOVEROTATE)) {
+            Permission.ACC_MOVEROTATE) || BuildersClubRoomSupport.canPlaceInRoom(habbo, this.room)) {
             return FurnitureMovementError.NONE;
         }
 
@@ -1526,7 +1569,7 @@ public class RoomItemManager {
         item.setY(tile.y);
         item.setRotation(rotation);
         if (!this.furniOwnerNames.containsKey(item.getUserId()) && owner != null) {
-            this.furniOwnerNames.put(item.getUserId(), owner.getHabboInfo().getUsername());
+            this.furniOwnerNames.put(item.getUserId(), this.resolveOwnerName(item, owner));
         }
 
         item.needsUpdate(true);
@@ -1563,7 +1606,7 @@ public class RoomItemManager {
      */
     public FurnitureMovementError placeWallFurniAt(HabboItem item, String wallPosition, Habbo owner) {
         if (!(this.room.hasRights(owner) || this.room.getGuildRightLevel(owner)
-            .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS))) {
+            .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS) || BuildersClubRoomSupport.canPlaceInRoom(owner, this.room))) {
             return FurnitureMovementError.NO_RIGHTS;
         }
 
@@ -1578,7 +1621,7 @@ public class RoomItemManager {
 
         item.setWallPosition(wallPosition);
         if (!this.furniOwnerNames.containsKey(item.getUserId()) && owner != null) {
-            this.furniOwnerNames.put(item.getUserId(), owner.getHabboInfo().getUsername());
+            this.furniOwnerNames.put(item.getUserId(), this.resolveOwnerName(item, owner));
         }
         this.room.sendComposer(
             new AddWallItemComposer(item, this.getFurniOwnerName(item.getUserId())).compose());
@@ -1588,6 +1631,14 @@ public class RoomItemManager {
         item.onPlace(this.room);
         Emulator.getThreading().run(item);
         return FurnitureMovementError.NONE;
+    }
+
+    private String resolveOwnerName(HabboItem item, Habbo owner) {
+        if (item != null && item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID) {
+            return BuildersClubRoomSupport.DISPLAY_OWNER_NAME;
+        }
+
+        return (owner != null) ? owner.getHabboInfo().getUsername() : "";
     }
 
     /**

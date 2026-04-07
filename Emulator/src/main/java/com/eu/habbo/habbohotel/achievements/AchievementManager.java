@@ -228,6 +228,10 @@ public class AchievementManager {
     }
 
     public static int getAchievementProgressForHabbo(int userId, Achievement achievement) {
+        if (achievement == null) {
+            return 0;
+        }
+
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT progress FROM users_achievements WHERE user_id = ? AND achievement_name = ? LIMIT 1")) {
             statement.setInt(1, userId);
             statement.setString(2, achievement.name);

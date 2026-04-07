@@ -3,9 +3,12 @@ package com.eu.habbo.messages.incoming.rooms.items;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.interactions.*;
 import com.eu.habbo.habbohotel.modtool.ScripterManager;
+import com.eu.habbo.habbohotel.rooms.BuildersClubRoomSupport;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.catalog.BuildersClubFurniCountComposer;
+import com.eu.habbo.messages.outgoing.catalog.BuildersClubSubscriptionStatusComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
 import com.eu.habbo.messages.outgoing.inventory.RemoveHabboItemComposer;
@@ -115,5 +118,29 @@ public class RoomPlaceItemEvent extends MessageHandler {
         this.client.sendResponse(new RemoveHabboItemComposer(item.getGiftAdjustedId()));
         this.client.getHabbo().getInventory().getItemsComponent().removeHabboItem(item.getId());
         item.setFromGift(false);
+
+        if (BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+            int trackedUserId = BuildersClubRoomSupport.getTrackedUserId(item.getId());
+
+            if (trackedUserId <= 0) {
+                trackedUserId = this.client.getHabbo().getHabboInfo().getId();
+            }
+
+            item.setUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
+            BuildersClubRoomSupport.trackPlacedItem(item.getId(), trackedUserId, room.getId());
+
+            BuildersClubRoomSupport.SyncResult syncResult = BuildersClubRoomSupport.syncRoom(room);
+
+            if (syncResult == BuildersClubRoomSupport.SyncResult.LOCKED) {
+                BuildersClubRoomSupport.sendRoomLockedBubble(room.getOwnerId());
+            } else if (syncResult == BuildersClubRoomSupport.SyncResult.UNLOCKED) {
+                BuildersClubRoomSupport.sendRoomUnlockedBubble(room.getOwnerId());
+            }
+
+            if (trackedUserId == this.client.getHabbo().getHabboInfo().getId()) {
+                this.client.sendResponse(new BuildersClubFurniCountComposer(BuildersClubRoomSupport.getTrackedFurniCount(trackedUserId)));
+                this.client.sendResponse(new BuildersClubSubscriptionStatusComposer(this.client.getHabbo()));
+            }
+        }
     }
 }

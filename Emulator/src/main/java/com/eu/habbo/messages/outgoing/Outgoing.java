@@ -376,6 +376,7 @@ public class Outgoing {
     public final static int BullyReportedMessageComposer = 3285; // PRODUCTION-201611291003-338511768
     public final static int UnknownQuestComposer3 = 1122; // PRODUCTION-201611291003-338511768
     public final static int FriendToolbarNotificationComposer = 3082; // PRODUCTION-201611291003-338511768
+    public final static int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public final static int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768
     public final static int CameraPriceComposer = 3878; // PRODUCTION-201611291003-338511768
     public final static int PetBreedingCompleted = 2527; // PRODUCTION-201611291003-338511768

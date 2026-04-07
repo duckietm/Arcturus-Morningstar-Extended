@@ -39,7 +39,7 @@ public class ItemsComponent {
     public static THashMap<Integer, HabboItem> loadItems(Habbo habbo) {
         THashMap<Integer, HabboItem> itemsList = new THashMap<>();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM items WHERE room_id = ? AND user_id = ?")) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT items.* FROM items LEFT JOIN builders_club_items ON builders_club_items.item_id = items.id WHERE items.room_id = ? AND items.user_id = ? AND builders_club_items.item_id IS NULL")) {
             statement.setInt(1, 0);
             statement.setInt(2, habbo.getHabboInfo().getId());
             try (ResultSet set = statement.executeQuery()) {

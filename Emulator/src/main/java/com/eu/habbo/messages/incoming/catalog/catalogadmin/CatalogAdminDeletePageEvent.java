@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.catalog.catalogadmin;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogPage;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
@@ -19,21 +20,26 @@ public class CatalogAdminDeletePageEvent extends MessageHandler {
         }
 
         int pageId = this.packet.readInt();
+        CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
 
-        CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().catalogPages.get(pageId);
+        CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().getCatalogPage(pageId, pageType);
 
         if (page == null) {
             this.client.sendResponse(new CatalogAdminResultComposer(false, "Page not found: " + pageId));
             return;
         }
 
+        String query = (pageType == CatalogPageType.BUILDER)
+                ? "DELETE FROM catalog_pages_bc WHERE id = ?"
+                : "DELETE FROM catalog_pages WHERE id = ?";
+
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM catalog_pages WHERE id = ?")) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, pageId);
             statement.execute();
         }
 
-        Emulator.getGameEnvironment().getCatalogManager().catalogPages.remove(pageId);
+        Emulator.getGameEnvironment().getCatalogManager().getCatalogPagesMap(pageType).remove(pageId);
 
         this.client.sendResponse(new CatalogAdminResultComposer(true, "Page deleted"));
     }

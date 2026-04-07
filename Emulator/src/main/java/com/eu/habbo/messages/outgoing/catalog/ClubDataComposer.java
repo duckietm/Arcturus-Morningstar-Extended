@@ -3,6 +3,7 @@ package com.eu.habbo.messages.outgoing.catalog;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.ClubOffer;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
@@ -22,12 +23,15 @@ public class ClubDataComposer extends MessageComposer {
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.ClubDataComposer);
 
-        List<ClubOffer> offers = Emulator.getGameEnvironment().getCatalogManager().getClubOffers();
+        List<ClubOffer> offers = Emulator.getGameEnvironment().getCatalogManager().getClubOffers(this.windowId);
         this.response.appendInt(offers.size());
 
-        //TODO Change this to a seperate table.
         for (ClubOffer offer : offers) {
-            offer.serialize(this.response, this.habbo.getHabboStats().getClubExpireTimestamp());
+            int expireTimestamp = offer.isBuildersClubSubscription()
+                    ? this.habbo.getHabboStats().getSubscriptionExpireTimestamp(Subscription.BUILDERS_CLUB)
+                    : (offer.isBuildersClubAddon() ? Emulator.getIntUnixTimestamp() : this.habbo.getHabboStats().getClubExpireTimestamp());
+
+            offer.serialize(this.response, expireTimestamp);
         }
 
         this.response.appendInt(this.windowId);

@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.catalog.catalogadmin;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
@@ -18,9 +19,10 @@ public class CatalogAdminDeleteOfferEvent extends MessageHandler {
         }
 
         int offerId = this.packet.readInt();
+        CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM catalog_items WHERE id = ?")) {
+             PreparedStatement statement = connection.prepareStatement((pageType == CatalogPageType.BUILDER) ? "DELETE FROM catalog_items_bc WHERE id = ?" : "DELETE FROM catalog_items WHERE id = ?")) {
             statement.setInt(1, offerId);
             statement.execute();
         }

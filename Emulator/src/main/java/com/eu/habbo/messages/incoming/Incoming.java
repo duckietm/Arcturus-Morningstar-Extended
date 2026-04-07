@@ -84,6 +84,9 @@ public class Incoming {
     public static final int RequestRecylerLogicEvent = 398;
     public static final int RequestGuildJoinEvent = 998;
     public static final int RequestCatalogIndexEvent = 2529;
+    public static final int BuildersClubQueryFurniCountEvent = 2529;
+    public static final int BuildersClubPlaceRoomItemEvent = 1051;
+    public static final int BuildersClubPlaceWallItemEvent = 462;
     public static final int RequestInventoryPetsEvent = 3095;
     public static final int ModToolRequestRoomVisitsEvent = 3526;
     public static final int ModToolWarnEvent = -1;//3763

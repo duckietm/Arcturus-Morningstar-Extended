@@ -177,6 +177,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private boolean allowUnderpass;
   private boolean jukeboxActive;
   private boolean hideWired;
+  private boolean buildersClubTrialLocked;
+  private RoomState buildersClubOriginalState;
   private RoomPromotion promotion;
   private volatile boolean needsUpdate;
   private volatile boolean loaded;
@@ -236,6 +238,19 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.promoted = set.getString("promoted").equals("1");
     this.jukeboxActive = set.getString("jukebox_active").equals("1");
     this.hideWired = set.getString("hidewired").equals("1");
+    this.buildersClubTrialLocked = set.getBoolean("builders_club_trial_locked");
+
+    String buildersClubOriginalState = set.getString("builders_club_original_state");
+
+    if (buildersClubOriginalState != null && !buildersClubOriginalState.isEmpty()) {
+      try {
+        this.buildersClubOriginalState = RoomState.valueOf(buildersClubOriginalState.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        this.buildersClubOriginalState = RoomState.OPEN;
+      }
+    } else {
+      this.buildersClubOriginalState = RoomState.OPEN;
+    }
 
     this.bannedHabbos = new TIntObjectHashMap<>();
 
@@ -781,6 +796,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
       return;
     }
 
+    boolean trackedBuildersClubItem = BuildersClubRoomSupport.isTrackedItem(item.getId());
+
     if (Emulator.getPluginManager().isRegistered(FurniturePickedUpEvent.class, true)) {
       Event furniturePickedUpEvent = new FurniturePickedUpEvent(item, picker);
       Emulator.getPluginManager().fireEvent(furniturePickedUpEvent);
@@ -823,9 +840,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
       this.sendComposer(new RemoveWallItemComposer(item).compose());
     }
 
+    if (trackedBuildersClubItem) {
+      Emulator.getGameEnvironment().getItemManager().deleteItem(item);
+      return;
+    }
+
     Habbo habbo = (picker != null && picker.getHabboInfo().getId() == item.getId() ? picker
         : Emulator.getGameServer().getGameClientManager().getHabbo(item.getUserId()));
-    if (habbo != null) {
+    if (!trackedBuildersClubItem && habbo != null) {
       habbo.getInventory().getItemsComponent().addItem(item);
       habbo.getClient().sendResponse(new AddHabboItemComposer(item));
       habbo.getClient().sendResponse(new InventoryRefreshComposer());
@@ -1129,7 +1151,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     if (this.needsUpdate) {
       try (Connection connection = Emulator.getDatabase().getDataSource()
           .getConnection(); PreparedStatement statement = connection.prepareStatement(
-          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ?, allow_underpass = ? WHERE id = ?")) {
+          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ?, allow_underpass = ?, builders_club_trial_locked = ?, builders_club_original_state = ? WHERE id = ?")) {
         statement.setString(1, this.name);
         statement.setString(2, this.description);
         statement.setString(3, this.password);
@@ -1179,7 +1201,9 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         statement.setString(38, this.jukeboxActive ? "1" : "0");
         statement.setString(39, this.hideWired ? "1" : "0");
         statement.setString(40, this.allowUnderpass ? "1" : "0");
-        statement.setInt(41, this.id);
+        statement.setString(41, this.buildersClubTrialLocked ? "1" : "0");
+        statement.setString(42, (this.buildersClubOriginalState != null ? this.buildersClubOriginalState : RoomState.OPEN).name().toLowerCase());
+        statement.setInt(43, this.id);
         statement.executeUpdate();
         this.needsUpdate = false;
       } catch (SQLException e) {
@@ -1296,6 +1320,22 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.state = state;
   }
 
+  public boolean isBuildersClubTrialLocked() {
+    return this.buildersClubTrialLocked;
+  }
+
+  public void setBuildersClubTrialLocked(boolean buildersClubTrialLocked) {
+    this.buildersClubTrialLocked = buildersClubTrialLocked;
+  }
+
+  public RoomState getBuildersClubOriginalState() {
+    return this.buildersClubOriginalState;
+  }
+
+  public void setBuildersClubOriginalState(RoomState buildersClubOriginalState) {
+    this.buildersClubOriginalState = buildersClubOriginalState;
+  }
+
   public int getUsersMax() {
     return this.usersMax;
   }
@@ -1395,11 +1435,28 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public int getGuildId() {
+    if (this.guild > 0) {
+      return this.guild;
+    }
+
+    try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+         PreparedStatement statement = connection.prepareStatement("SELECT guild_id FROM rooms WHERE id = ? LIMIT 1")) {
+      statement.setInt(1, this.id);
+
+      try (ResultSet set = statement.executeQuery()) {
+        if (set.next()) {
+          this.guild = set.getInt("guild_id");
+        }
+      }
+    } catch (SQLException e) {
+      LOGGER.error("Caught SQL exception resolving room guild", e);
+    }
+
     return this.guild;
   }
 
   public boolean hasGuild() {
-    return this.guild != 0;
+    return this.getGuildId() != 0;
   }
 
   public void setGuild(int guild) {
@@ -2129,11 +2186,18 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public RoomRightLevels getGuildRightLevel(Habbo habbo) {
-    if (this.guild > 0 && habbo.getHabboStats().hasGuild(this.guild)) {
-      Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(this.guild);
+    int guildId = this.getGuildId();
 
-      if (Emulator.getGameEnvironment().getGuildManager().getOnlyAdmins(guild)
-          .get(habbo.getHabboInfo().getId()) != null) {
+    if (guildId > 0 && habbo != null && habbo.getHabboInfo() != null) {
+      Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(guildId);
+
+      if (guild == null) {
+        return RoomRightLevels.NONE;
+      }
+
+      GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild.getId(), habbo.getHabboInfo().getId());
+
+      if ((member != null) && (member.getRank() == GuildRank.ADMIN || member.getRank() == GuildRank.OWNER)) {
         return RoomRightLevels.GUILD_ADMIN;
       }
 

@@ -188,6 +188,7 @@ public class CatalogManager {
     public static int PURCHASE_COOLDOWN = 1;
     public static boolean SORT_USING_ORDERNUM = false;
     public final TIntObjectMap<CatalogPage> catalogPages;
+    public final TIntObjectMap<CatalogPage> buildersClubCatalogPages;
     public final TIntObjectMap<CatalogFeaturedPage> catalogFeaturedPages;
     public final THashMap<Integer, THashSet<Item>> prizes;
     public final THashMap<Integer, Integer> giftWrappers;
@@ -197,6 +198,7 @@ public class CatalogManager {
     public final THashMap<Integer, TargetOffer> targetOffers;
     public final THashMap<Integer, ClothItem> clothing;
     public final TIntIntHashMap offerDefs;
+    public final TIntIntHashMap buildersClubOfferDefs;
     public final Item ecotronItem;
     public final THashMap<Integer, CatalogLimitedConfiguration> limitedNumbers;
     private final List<Voucher> vouchers;
@@ -204,6 +206,7 @@ public class CatalogManager {
     public CatalogManager() {
         long millis = System.currentTimeMillis();
         this.catalogPages = TCollections.synchronizedMap(new TIntObjectHashMap<>());
+        this.buildersClubCatalogPages = TCollections.synchronizedMap(new TIntObjectHashMap<>());
         this.catalogFeaturedPages = new TIntObjectHashMap<>();
         this.prizes = new THashMap<>();
         this.giftWrappers = new THashMap<>();
@@ -213,6 +216,7 @@ public class CatalogManager {
         this.targetOffers = new THashMap<>();
         this.clothing = new THashMap<>();
         this.offerDefs = new TIntIntHashMap();
+        this.buildersClubOfferDefs = new TIntIntHashMap();
         this.vouchers = new ArrayList<>();
         this.limitedNumbers = new THashMap<>();
 
@@ -229,8 +233,10 @@ public class CatalogManager {
 
         this.loadLimitedNumbers();
         this.loadCatalogPages();
+        this.loadBuildersClubCatalogPages();
         this.loadCatalogFeaturedPages();
         this.loadCatalogItems();
+        this.loadBuildersClubCatalogItems();
         this.loadClubOffers();
         this.loadTargetOffers();
         this.loadVouchers();
@@ -315,6 +321,57 @@ public class CatalogManager {
         LOGGER.info("Loaded {} Catalog Pages!", this.catalogPages.size());
     }
 
+    private synchronized void loadBuildersClubCatalogPages() {
+        this.buildersClubCatalogPages.clear();
+
+        final THashMap<Integer, CatalogPage> pages = new THashMap<>();
+        pages.put(-1, new CatalogRootLayout());
+
+        String query = "SELECT id, parent_id, caption, caption AS caption_save, page_layout, icon_color, icon_image, 1 AS min_rank, order_num, visible, enabled, '0' AS club_only, 'BUILDERS_CLUB' AS catalog_mode, page_headline, page_teaser, page_special, page_text1, page_text2, page_text_details, page_text_teaser, '' AS includes FROM catalog_pages_bc ORDER BY parent_id, id";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            try (ResultSet set = statement.executeQuery()) {
+                while (set.next()) {
+                    Class<? extends CatalogPage> pageClazz = pageDefinitions.get(set.getString("page_layout"));
+
+                    if (pageClazz == null) {
+                        LOGGER.info("Unknown Builders Club Page Layout: {}", set.getString("page_layout"));
+                        continue;
+                    }
+
+                    try {
+                        CatalogPage page = pageClazz.getConstructor(ResultSet.class).newInstance(set);
+                        pages.put(page.getId(), page);
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to load Builders Club layout: {}", set.getString("page_layout"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        pages.forEachValue((object) -> {
+            CatalogPage page = pages.get(object.parentId);
+
+            if (page != null) {
+                if (page.id != object.id) {
+                    page.addChildPage(object);
+                }
+            } else {
+                if (object.parentId != -2) {
+                    LOGGER.info("Builders Club parent page not found for {} (ID: {}, parent_id: {})", object.getPageName(), object.id, object.parentId);
+                }
+            }
+            return true;
+        });
+
+        this.buildersClubCatalogPages.putAll(pages);
+
+        LOGGER.info("Loaded {} Builders Club Catalog Pages!", this.buildersClubCatalogPages.size());
+    }
+
 
     private synchronized void loadCatalogFeaturedPages() {
         this.catalogFeaturedPages.clear();
@@ -386,6 +443,53 @@ public class CatalogManager {
 
                 if (p != null) {
                     page.getCatalogItems().putAll(p.getCatalogItems());
+                }
+            }
+        }
+    }
+
+    private synchronized void loadBuildersClubCatalogItems() {
+        this.buildersClubOfferDefs.clear();
+
+        String query = "SELECT id, item_ids, page_id, catalog_name, 0 AS cost_credits, 0 AS cost_points, 0 AS points_type, 1 AS amount, 0 AS limited_stack, 0 AS limited_sells, extradata, '0' AS club_only, '1' AS have_offer, id AS offer_id, order_number FROM catalog_items_bc";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet set = statement.executeQuery(query)) {
+            CatalogItem item;
+
+            while (set.next()) {
+                if (set.getString("item_ids").equals("0")) {
+                    continue;
+                }
+
+                CatalogPage page = this.buildersClubCatalogPages.get(set.getInt("page_id"));
+
+                if (page == null) {
+                    continue;
+                }
+
+                item = page.getCatalogItem(set.getInt("id"));
+
+                if (item == null) {
+                    item = new CatalogItem(set);
+                    page.addItem(item);
+                    page.addOfferId(item.getOfferId());
+                    this.buildersClubOfferDefs.put(item.getOfferId(), item.getId());
+                } else {
+                    item.update(set);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        for (CatalogPage page : this.buildersClubCatalogPages.valueCollection()) {
+            for (Integer id : page.getIncluded()) {
+                CatalogPage includedPage = this.buildersClubCatalogPages.get(id);
+
+                if (includedPage != null) {
+                    page.getCatalogItems().putAll(includedPage.getCatalogItems());
                 }
             }
         }
@@ -585,6 +689,10 @@ public class CatalogManager {
         return this.catalogPages.get(pageId);
     }
 
+    public CatalogPage getCatalogPage(int pageId, CatalogPageType pageType) {
+        return this.getCatalogPagesMap(pageType).get(pageId);
+    }
+
     public CatalogPage getCatalogPage(String captionSafe) {
         return this.catalogPages.valueCollection().stream()
                 .filter(p -> p != null && p.getPageName() != null && p.getPageName().equalsIgnoreCase(captionSafe))
@@ -603,9 +711,15 @@ public class CatalogManager {
     }
 
     public CatalogItem getCatalogItem(int id) {
+        return this.getCatalogItem(id, CatalogPageType.NORMAL);
+    }
+
+    public CatalogItem getCatalogItem(int id, CatalogPageType pageType) {
         final CatalogItem[] item = {null};
-        synchronized (this.catalogPages) {
-            this.catalogPages.forEachValue(new TObjectProcedure<CatalogPage>() {
+        final TIntObjectMap<CatalogPage> pagesMap = this.getCatalogPagesMap(pageType);
+
+        synchronized (pagesMap) {
+            pagesMap.forEachValue(new TObjectProcedure<CatalogPage>() {
                 @Override
                 public boolean execute(CatalogPage object) {
                     item[0] = object.getCatalogItem(id);
@@ -620,17 +734,28 @@ public class CatalogManager {
 
 
     public List<CatalogPage> getCatalogPages(int parentId, final Habbo habbo) {
-        final List<CatalogPage> pages = new ArrayList<>();
+        return this.getCatalogPages(parentId, habbo, CatalogPageType.NORMAL);
+    }
 
-        this.catalogPages.get(parentId).childPages.forEachValue(new TObjectProcedure<CatalogPage>() {
+    public List<CatalogPage> getCatalogPages(int parentId, final Habbo habbo, final CatalogPageType pageType) {
+        final List<CatalogPage> pages = new ArrayList<>();
+        final TIntObjectMap<CatalogPage> pagesMap = this.getCatalogPagesMap(pageType);
+        CatalogPage parentPage = pagesMap.get(parentId);
+
+        if (parentPage == null) {
+            return pages;
+        }
+
+        parentPage.childPages.forEachValue(new TObjectProcedure<CatalogPage>() {
             @Override
             public boolean execute(CatalogPage object) {
 
                 boolean isVisiblePage = object.visible;
                 boolean hasRightRank = object.getRank() <= habbo.getHabboInfo().getRank().getId();
                 boolean clubRightsOkay = !object.isClubOnly() || habbo.getHabboInfo().getHabboStats().hasActiveClub();
+                boolean pageTypeMatches = (pageType == CatalogPageType.BUILDER) || object.getCatalogPageType().matches(pageType);
 
-                if (isVisiblePage && hasRightRank && clubRightsOkay) {
+                if (isVisiblePage && hasRightRank && clubRightsOkay && pageTypeMatches) {
                     pages.add(object);
                 }
                 return true;
@@ -704,22 +829,42 @@ public class CatalogManager {
     }
 
 
-    public CatalogPage createCatalogPage(String caption, String captionSave, int roomId, int icon, CatalogPageLayouts layout, int minRank, int parentId) {
+    public CatalogPage createCatalogPage(String caption, String captionSave, int roomId, int icon, CatalogPageLayouts layout, int minRank, int parentId, CatalogPageType pageType, CatalogPageType catalogMode) {
         CatalogPage catalogPage = null;
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO catalog_pages (parent_id, caption, caption_save, icon_image, visible, enabled, min_rank, page_layout, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+        boolean buildersClubPage = (pageType == CatalogPageType.BUILDER);
+        String insertQuery = buildersClubPage
+                ? "INSERT INTO catalog_pages_bc (parent_id, caption, page_layout, icon_color, icon_image, order_num, visible, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                : "INSERT INTO catalog_pages (parent_id, caption, caption_save, icon_image, visible, enabled, min_rank, page_layout, room_id, catalog_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String selectQuery = buildersClubPage
+                ? "SELECT id, parent_id, caption, caption AS caption_save, page_layout, icon_color, icon_image, 1 AS min_rank, order_num, visible, enabled, '0' AS club_only, 'BUILDERS_CLUB' AS catalog_mode, page_headline, page_teaser, page_special, page_text1, page_text2, page_text_details, page_text_teaser, '' AS includes FROM catalog_pages_bc WHERE id = ?"
+                : "SELECT * FROM catalog_pages WHERE id = ?";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, parentId);
             statement.setString(2, caption);
-            statement.setString(3, captionSave);
-            statement.setInt(4, icon);
-            statement.setString(5, "1");
-            statement.setString(6, "1");
-            statement.setInt(7, minRank);
-            statement.setString(8, layout.name());
-            statement.setInt(9, roomId);
+
+            if (buildersClubPage) {
+                statement.setString(3, layout.name());
+                statement.setInt(4, 1);
+                statement.setInt(5, icon);
+                statement.setInt(6, 1);
+                statement.setString(7, "1");
+                statement.setString(8, "1");
+            } else {
+                statement.setString(3, captionSave);
+                statement.setInt(4, icon);
+                statement.setString(5, "1");
+                statement.setString(6, "1");
+                statement.setInt(7, minRank);
+                statement.setString(8, layout.name());
+                statement.setInt(9, roomId);
+                statement.setString(10, catalogMode.name());
+            }
             statement.execute();
             try (ResultSet set = statement.getGeneratedKeys()) {
                 if (set.next()) {
-                    try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM catalog_pages WHERE id = ?")) {
+                    try (PreparedStatement stmt = connection.prepareStatement(selectQuery)) {
                         stmt.setInt(1, set.getInt(1));
                         try (ResultSet page = stmt.executeQuery()) {
                             if (page.next()) {
@@ -744,7 +889,7 @@ public class CatalogManager {
         }
 
         if (catalogPage != null) {
-            this.catalogPages.put(catalogPage.getId(), catalogPage);
+            this.getCatalogPagesMap(pageType).put(catalogPage.getId(), catalogPage);
         }
 
         return catalogPage;
@@ -1144,14 +1289,23 @@ public class CatalogManager {
     }
 
     public List<ClubOffer> getClubOffers() {
+        return this.getClubOffers(ClubOffer.WINDOW_HABBO_CLUB);
+    }
+
+    public TIntObjectMap<CatalogPage> getCatalogPagesMap(CatalogPageType pageType) {
+        return (pageType == CatalogPageType.BUILDER) ? this.buildersClubCatalogPages : this.catalogPages;
+    }
+
+    public List<ClubOffer> getClubOffers(int windowId) {
         List<ClubOffer> offers = new ArrayList<>();
 
         for (Map.Entry<Integer, ClubOffer> entry : this.clubOffers.entrySet()) {
-            if (!entry.getValue().isDeal()) {
+            if (!entry.getValue().isDeal() && entry.getValue().belongsToWindow(windowId)) {
                 offers.add(entry.getValue());
             }
         }
 
+        offers.sort(Comparator.comparingInt(ClubOffer::getId));
         return offers;
     }
 

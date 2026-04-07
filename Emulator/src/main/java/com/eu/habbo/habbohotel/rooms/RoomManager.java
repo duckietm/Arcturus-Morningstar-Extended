@@ -569,6 +569,18 @@ public class RoomManager {
             return;
         }
 
+        if (room.isBuildersClubTrialLocked()
+                && habbo.getHabboInfo().getId() != room.getOwnerId()
+                && !overrideChecks
+                && !habbo.hasPermission(Permission.ACC_ANYROOMOWNER)
+                && !habbo.hasPermission(Permission.ACC_ENTERANYROOM)) {
+            BuildersClubRoomSupport.sendVisitDeniedOwnerBubble(room.getOwnerId(), habbo.getHabboInfo().getUsername());
+            BuildersClubRoomSupport.sendVisitDeniedVisitorAlert(habbo.getHabboInfo().getId());
+            habbo.getClient().sendResponse(new HotelViewComposer());
+            habbo.getHabboInfo().setLoadingRoom(0);
+            return;
+        }
+
         if (habbo.getHabboInfo().getRoomQueueId() != roomId) {
             Room queRoom = Emulator.getGameEnvironment().getRoomManager().getRoom(roomId);
 
@@ -782,6 +794,7 @@ public class RoomManager {
 
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
+        BuildersClubRoomSupport.sendCurrentRoomPlacementStatus(room);
         room.getUserVariableManager().restorePermanentAssignments(habbo);
 
         // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
@@ -1018,6 +1031,7 @@ public class RoomManager {
 
             this.logExit(habbo);
             room.removeHabbo(habbo, true);
+            BuildersClubRoomSupport.sendCurrentRoomPlacementStatus(room);
 
             if (redirectToHotelView) {
                 habbo.getClient().sendResponse(new HotelViewComposer());
