@@ -19,6 +19,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredConditionOperator;
+import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.api.IWiredCondition;
 import com.eu.habbo.habbohotel.wired.api.IWiredEffect;
 import com.eu.habbo.habbohotel.wired.api.WiredStack;
@@ -159,6 +160,10 @@ public final class WiredEngine {
      * @return true if any stack was triggered (useful for SAY_SOMETHING to suppress message)
      */
     public boolean handleEvent(WiredEvent event) {
+        return handleEvent(event, false);
+    }
+
+    public boolean handleEvent(WiredEvent event, boolean negateConditions) {
         if (event == null) {
             return false;
         }
@@ -192,7 +197,7 @@ public final class WiredEngine {
         roomRecursionDepth.put(roomId, currentDepth + 1);
 
         try {
-            return handleEventInternal(event, room);
+            return handleEventInternal(event, room, negateConditions);
         } finally {
             // Decrement recursion depth
             int newDepth = roomRecursionDepth.getOrDefault(roomId, 1) - 1;
@@ -329,7 +334,7 @@ public final class WiredEngine {
     /**
      * Internal event handling after recursion check.
      */
-    private boolean handleEventInternal(WiredEvent event, Room room) {
+    private boolean handleEventInternal(WiredEvent event, Room room, boolean negateConditions) {
 
         // Find candidate stacks for this event type
         List<WiredStack> stacks = index.getStacks(room, event.getType());
@@ -345,7 +350,7 @@ public final class WiredEngine {
 
         for (WiredStack stack : stacks) {
             try {
-                boolean triggered = processStack(stack, event, triggerTime);
+                boolean triggered = processStack(stack, event, triggerTime, negateConditions);
                 if (triggered) {
                     anyTriggered = true;
 
@@ -374,6 +379,10 @@ public final class WiredEngine {
      * Process a single wired stack.
      */
     private boolean processStack(WiredStack stack, WiredEvent event, long currentTime) {
+        return processStack(stack, event, currentTime, false);
+    }
+
+    private boolean processStack(WiredStack stack, WiredEvent event, long currentTime, boolean negateConditions) {
         Room room = event.getRoom();
         WiredTextInputCaptureSupport.CaptureResult captureResult = resolveTextInputCapture(stack, event);
 
@@ -417,17 +426,12 @@ public final class WiredEngine {
             applySelectionFilterExtras(stack, ctx, executedSelectors);
         }
 
-        // Evaluate conditions
-        if (stack.hasConditions()) {
-            debug(room, "Evaluating {} conditions...", stack.conditions().size());
-            boolean conditionsPassed = evaluateConditions(stack, ctx);
-            debug(room, "Conditions result: {}", conditionsPassed ? "PASSED" : "FAILED");
-            if (!conditionsPassed) {
-                debug(room, "Conditions failed, aborting stack");
-                return false;
-            }
-        } else {
-            debug(room, "No conditions in stack, proceeding to effects");
+        boolean conditionsPassedForExecution = getConditionOutcomeForExecution(stack, ctx, negateConditions);
+        List<IWiredEffect> executableEffects = getExecutableEffectsForCurrentExecution(stack, conditionsPassedForExecution);
+        boolean hasSpecialOutcome = conditionsPassedForExecution && hasSpecialTriggerOutcome(stack, event);
+
+        if (!shouldContinueAfterConditionCheck(stack, room, conditionsPassedForExecution, executableEffects, hasSpecialOutcome)) {
+            return false;
         }
 
         WiredExtraExecutionLimit executionLimitExtra = getExecutionLimitExtra(room, stack);
@@ -455,7 +459,8 @@ public final class WiredEngine {
             return false;
         }
 
-        if ((event.getType() == WiredEvent.Type.USER_CLICKS_USER)
+        if (conditionsPassedForExecution
+                && (event.getType() == WiredEvent.Type.USER_CLICKS_USER)
                 && (stack.triggerItem() instanceof WiredTriggerHabboClicksUser)
                 && event.getActor().isPresent()) {
             WiredTriggerHabboClicksUser clickUserTrigger = (WiredTriggerHabboClicksUser) stack.triggerItem();
@@ -477,8 +482,8 @@ public final class WiredEngine {
         finalizeSelectors(executedSelectors, ctx, currentTime);
 
         // Execute effects
-        if (stack.hasEffects()) {
-            executeEffects(stack, ctx, currentTime);
+        if (!executableEffects.isEmpty()) {
+            executeEffects(stack, executableEffects, ctx, currentTime);
         }
 
         // Fire executed event
@@ -492,6 +497,139 @@ public final class WiredEngine {
         );
 
         return true;
+    }
+
+    public boolean executeDirectStack(WiredStack stack, WiredEvent event, boolean negateConditions) {
+        if (stack == null || event == null) {
+            return false;
+        }
+
+        Room room = event.getRoom();
+        if (room == null) {
+            return false;
+        }
+
+        if (stack.trigger().requiresActor() && !event.getActor().isPresent()) {
+            return false;
+        }
+
+        if (!stackHasExecutableOutcome(stack, event)) {
+            return false;
+        }
+
+        long currentTime = System.currentTimeMillis();
+
+        WiredState state = new WiredState(maxStepsPerStack);
+        WiredContext ctx = new WiredContext(event, stack.triggerItem(), stack, services, state, null);
+        WiredRoomDiagnostics diagnostics = getDiagnostics(room.getId());
+
+        state.step();
+
+        int stackCost = estimateStackCost(stack, roomRecursionDepth.getOrDefault(room.getId(), 0));
+        String monitorSourceLabel = getMonitorSourceLabel(stack.triggerItem(), event);
+        int monitorSourceId = getMonitorSourceId(stack.triggerItem());
+
+        debug(room, "Direct stack execution for item {} (conditions: {}, effects: {}, negated: {})",
+                stack.triggerItem() != null ? stack.triggerItem().getId() : "null",
+                stack.conditions().size(),
+                stack.effects().size(),
+                negateConditions);
+
+        List<InteractionWiredEffect> executedSelectors = Collections.emptyList();
+        if (stack.hasEffects()) {
+            executedSelectors = executeSelectors(stack, ctx);
+            applySelectionFilterExtras(stack, ctx, executedSelectors);
+        }
+
+        boolean conditionsPassedForExecution = getConditionOutcomeForExecution(stack, ctx, negateConditions);
+        List<IWiredEffect> executableEffects = getExecutableEffectsForCurrentExecution(stack, conditionsPassedForExecution);
+        boolean hasSpecialOutcome = conditionsPassedForExecution && hasSpecialTriggerOutcome(stack, event);
+
+        if (!shouldContinueAfterConditionCheck(stack, room, conditionsPassedForExecution, executableEffects, hasSpecialOutcome)) {
+            return false;
+        }
+
+        WiredExtraExecutionLimit executionLimitExtra = getExecutionLimitExtra(room, stack);
+        if (executionLimitExtra != null && !executionLimitExtra.tryAcquireExecutionSlot(currentTime)) {
+            debug(room, "Execution limit blocked direct stack {} (max {} in {} ms)",
+                    stack.triggerItem() != null ? stack.triggerItem().getId() : "null",
+                    executionLimitExtra.getMaxExecutions(),
+                    executionLimitExtra.getTimeWindowMs());
+            return false;
+        }
+
+        if (!fireTriggeredEvent(stack, event)) {
+            debug(room, "Direct stack cancelled by plugin");
+            return false;
+        }
+
+        if (!diagnostics.tryConsumeExecutionBudget(
+                stackCost,
+                currentTime,
+                monitorSourceLabel,
+                monitorSourceId,
+                buildStackMonitorReason(stack, event, stackCost))) {
+            debug(room, "Execution cap blocked direct stack {}", stack.triggerItem() != null ? stack.triggerItem().getId() : "null");
+            return false;
+        }
+
+        RoomUnit actor = event.getActor().orElse(null);
+
+        if (stack.triggerItem() instanceof InteractionWiredTrigger) {
+            InteractionWiredTrigger trigger = (InteractionWiredTrigger) stack.triggerItem();
+            trigger.activateBox(room, actor, currentTime);
+        }
+
+        activateExtras(room, stack.triggerItem(), actor, currentTime);
+        finalizeSelectors(executedSelectors, ctx, currentTime);
+
+        if (!executableEffects.isEmpty()) {
+            executeEffects(stack, executableEffects, ctx, currentTime);
+        }
+
+        fireExecutedEvent(stack, event);
+        diagnostics.recordExecution(
+                state.elapsedMs(),
+                System.currentTimeMillis(),
+                monitorSourceLabel,
+                monitorSourceId,
+                buildExecutionMonitorReason(stack, state.elapsedMs())
+        );
+
+        return true;
+    }
+
+    public boolean shouldExecuteDirectStack(WiredStack stack, WiredEvent event, boolean negateConditions) {
+        if (stack == null || event == null) {
+            return false;
+        }
+
+        Room room = event.getRoom();
+        if (room == null) {
+            return false;
+        }
+
+        if (stack.trigger().requiresActor() && !event.getActor().isPresent()) {
+            return false;
+        }
+
+        if (!stack.hasEffects()) {
+            return false;
+        }
+
+        WiredState state = new WiredState(maxStepsPerStack);
+        WiredContext ctx = new WiredContext(event, stack.triggerItem(), stack, services, state, null);
+        state.step();
+
+        List<InteractionWiredEffect> executedSelectors = Collections.emptyList();
+        if (stack.hasEffects()) {
+            executedSelectors = executeSelectors(stack, ctx);
+            applySelectionFilterExtras(stack, ctx, executedSelectors);
+        }
+
+        boolean conditionsPassedForExecution = getConditionOutcomeForExecution(stack, ctx, negateConditions);
+        List<IWiredEffect> executableEffects = getExecutableEffectsForCurrentExecution(stack, conditionsPassedForExecution);
+        return !executableEffects.isEmpty();
     }
 
     private boolean wouldTriggerStack(WiredStack stack, WiredEvent event, long currentTime) {
@@ -522,7 +660,14 @@ public final class WiredEngine {
             applySelectionFilterExtras(stack, ctx, executedSelectors);
         }
 
-        if (stack.hasConditions() && !evaluateConditions(stack, ctx)) {
+        boolean conditionsPassedForExecution = getConditionOutcomeForExecution(stack, ctx, false);
+        if (!conditionsPassedForExecution) {
+            return false;
+        }
+
+        List<IWiredEffect> executableEffects = getExecutableEffectsForCurrentExecution(stack, true);
+        boolean hasSpecialOutcome = hasSpecialTriggerOutcome(stack, event);
+        if (executableEffects.isEmpty() && !hasSpecialOutcome) {
             return false;
         }
 
@@ -553,6 +698,67 @@ public final class WiredEngine {
         return false;
     }
 
+    private boolean hasSpecialTriggerOutcome(WiredStack stack, WiredEvent event) {
+        if (stack == null) {
+            return false;
+        }
+
+        if (stack.triggerItem() instanceof WiredTriggerHabboSaysKeyword) {
+            return ((WiredTriggerHabboSaysKeyword) stack.triggerItem()).isHideMessage();
+        }
+
+        if ((event != null)
+                && (event.getType() == WiredEvent.Type.USER_CLICKS_USER)
+                && (stack.triggerItem() instanceof WiredTriggerHabboClicksUser)) {
+            WiredTriggerHabboClicksUser trigger = (WiredTriggerHabboClicksUser) stack.triggerItem();
+            return trigger.isBlockMenuOpen() || trigger.isDoNotRotate();
+        }
+
+        return false;
+    }
+
+    private boolean getConditionOutcomeForExecution(WiredStack stack, WiredContext ctx, boolean negateConditions) {
+        if (!stack.hasConditions()) {
+            return !negateConditions;
+        }
+
+        return shouldConditionsPass(stack, ctx, negateConditions);
+    }
+
+    private List<IWiredEffect> getExecutableEffectsForCurrentExecution(WiredStack stack, boolean conditionsPassed) {
+        List<IWiredEffect> executableEffects = new ArrayList<>();
+
+        for (IWiredEffect effect : stack.effects()) {
+            if (effect == null || effect.isSelector()) {
+                continue;
+            }
+
+            boolean negativeEffect = isNegativeConditionEffect(effect);
+
+            if (conditionsPassed) {
+                if (!negativeEffect) {
+                    executableEffects.add(effect);
+                }
+                continue;
+            }
+
+            if (stack.hasConditions() && negativeEffect) {
+                executableEffects.add(effect);
+            }
+        }
+
+        return executableEffects;
+    }
+
+    private boolean isNegativeConditionEffect(IWiredEffect effect) {
+        if (!(effect instanceof InteractionWiredEffect)) {
+            return false;
+        }
+
+        WiredEffectType effectType = ((InteractionWiredEffect) effect).getType();
+        return effectType == WiredEffectType.NEG_CALL_STACKS || effectType == WiredEffectType.NEG_SEND_SIGNAL;
+    }
+
     private WiredTextInputCaptureSupport.CaptureResult resolveTextInputCapture(WiredStack stack, WiredEvent event) {
         if (stack == null || event == null) {
             return WiredTextInputCaptureSupport.CaptureResult.noMatch();
@@ -574,6 +780,48 @@ public final class WiredEngine {
         List<IWiredCondition> conditions = stack.conditions();
 
         return evaluateConditionsByMode(conditions, ctx, stack.conditionEvaluationMode(), stack.conditionEvaluationValue());
+    }
+
+    private boolean shouldContinueAfterConditionCheck(WiredStack stack, Room room, boolean conditionsPassedForExecution, List<IWiredEffect> executableEffects, boolean hasSpecialOutcome) {
+        if (stack.hasConditions()) {
+            debug(room, "Evaluating {} conditions...", stack.conditions().size());
+
+            if (!conditionsPassedForExecution && !executableEffects.isEmpty()) {
+                debug(room, "Conditions failed, executing negative effects");
+                return true;
+            }
+
+            if (!conditionsPassedForExecution) {
+                debug(room, "Conditions failed, aborting stack");
+                return false;
+            }
+
+            if (hasSpecialOutcome || !executableEffects.isEmpty()) {
+                return true;
+            }
+
+            debug(room, "Conditions passed, but no executable effects remain");
+            return false;
+        }
+
+        if (!conditionsPassedForExecution) {
+            debug(room, "No conditions in stack, negated execution aborted");
+            return false;
+        }
+
+        if (hasSpecialOutcome || !executableEffects.isEmpty()) {
+            debug(room, "No conditions in stack, proceeding to effects");
+            return true;
+        }
+
+        debug(room, "No conditions in stack, but no executable effects remain");
+        return false;
+    }
+
+    private boolean shouldConditionsPass(WiredStack stack, WiredContext ctx, boolean negateConditions) {
+        boolean conditionsPassed = evaluateConditions(stack, ctx);
+        debug(ctx.room(), "Conditions result: {}", conditionsPassed ? "PASSED" : "FAILED");
+        return negateConditions ? !conditionsPassed : conditionsPassed;
     }
 
     /**
@@ -638,17 +886,9 @@ public final class WiredEngine {
     /**
      * Execute effects in a stack.
      */
-    private void executeEffects(WiredStack stack, WiredContext ctx, long currentTime) {
-        List<IWiredEffect> effects = stack.effects();
-
+    private void executeEffects(WiredStack stack, List<IWiredEffect> effects, WiredContext ctx, long currentTime) {
         if (effects.isEmpty()) {
             return;
-        }
-
-        // Selectors already executed before conditions; only run regular effects here
-        List<IWiredEffect> regulars = new ArrayList<>();
-        for (IWiredEffect e : effects) {
-            if (!e.isSelector()) regulars.add(e);
         }
 
         // Determine which (regular) effects to execute
@@ -656,47 +896,47 @@ public final class WiredEngine {
 
         if (stack.useRandom()) {
             WiredExtraRandom randomExtra = getRandomExtra(ctx.room(), stack);
-            if (regulars.isEmpty()) {
+            if (effects.isEmpty()) {
                 toExecute = new ArrayList<>();
             } else if (randomExtra != null) {
-                toExecute = randomExtra.selectWiredEffects(regulars);
+                toExecute = randomExtra.selectWiredEffects(effects);
                 debug(ctx.room(), "Random mode: selected {} effect(s), skip window {}", toExecute.size(), randomExtra.getSkipExecutions());
             } else {
-                int randomIndex = new Random().nextInt(regulars.size());
-                toExecute = Collections.singletonList(regulars.get(randomIndex));
-                debug(ctx.room(), "Random mode: selected effect {}/{}", randomIndex + 1, regulars.size());
+                int randomIndex = new Random().nextInt(effects.size());
+                toExecute = Collections.singletonList(effects.get(randomIndex));
+                debug(ctx.room(), "Random mode: selected effect {}/{}", randomIndex + 1, effects.size());
             }
         } else if (stack.useUnseen()) {
             // Unseen mode: execute in stable order with memory
-            if (regulars.isEmpty()) {
+            if (effects.isEmpty()) {
                 toExecute = new ArrayList<>();
             } else {
                 WiredExtraUnseen unseenExtra = getUnseenExtra(ctx.room(), stack);
 
                 if (unseenExtra != null) {
-                    toExecute = unseenExtra.selectWiredEffects(regulars);
+                    toExecute = unseenExtra.selectWiredEffects(effects);
 
                     if (!toExecute.isEmpty()) {
-                        int selectedIndex = regulars.indexOf(toExecute.get(0));
-                        debug(ctx.room(), "Unseen mode: selected effect {}/{}", selectedIndex + 1, regulars.size());
+                        int selectedIndex = effects.indexOf(toExecute.get(0));
+                        debug(ctx.room(), "Unseen mode: selected effect {}/{}", selectedIndex + 1, effects.size());
                     } else {
                         debug(ctx.room(), "Unseen mode: no eligible effect found");
                     }
                 } else {
-                    int index = getNextUnseenIndex(stack, regulars.size());
-                    toExecute = Collections.singletonList(regulars.get(index));
-                    debug(ctx.room(), "Unseen mode fallback: selected effect {}/{}", index + 1, regulars.size());
+                    int index = getNextUnseenIndex(stack, effects.size());
+                    toExecute = Collections.singletonList(effects.get(index));
+                    debug(ctx.room(), "Unseen mode fallback: selected effect {}/{}", index + 1, effects.size());
                 }
             }
         } else if (stack.executeInOrder()) {
             debug(ctx.room(), "Ordered mode: executing effect batches in stack order by delay");
-            executeOrderedEffects(regulars, ctx, currentTime);
+            executeOrderedEffects(effects, ctx, currentTime);
             return;
         } else {
             // Normal mode: preserve the physical stack order.
             // This matches the legacy handler behavior and avoids visual/state races
             // for combinations such as Move/Rotate + Match To Snapshot in the same stack.
-            toExecute = new ArrayList<>(regulars);
+            toExecute = new ArrayList<>(effects);
         }
 
         WiredMoveCarryHelper.beginMovementCollection();

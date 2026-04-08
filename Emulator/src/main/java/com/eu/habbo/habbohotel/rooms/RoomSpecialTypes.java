@@ -348,7 +348,7 @@ public class RoomSpecialTypes {
     public static final int MAX_SENDERS_PER_RECEIVER = 5;
 
     public boolean isSignalSenderLimitReached() {
-        Set<InteractionWiredEffect> existing = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        Set<InteractionWiredEffect> existing = this.getSignalSenders();
         return existing != null && existing.size() >= MAX_SIGNAL_SENDERS_PER_ROOM;
     }
 
@@ -358,7 +358,7 @@ public class RoomSpecialTypes {
     }
 
     public int countSendersTargetingReceiver(int receiverItemId, InteractionWiredEffect excludeSender) {
-        Set<InteractionWiredEffect> senders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
         if (senders == null) return 0;
 
         int count = 0;
@@ -383,7 +383,7 @@ public class RoomSpecialTypes {
             return 0;
         }
 
-        Set<InteractionWiredEffect> senders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
         if (senders == null) {
             return 0;
         }
@@ -409,6 +409,62 @@ public class RoomSpecialTypes {
 
     public int countSendersTargetingAnyReceiver(Collection<Integer> receiverItemIds) {
         return countSendersTargetingAnyReceiver(receiverItemIds, null);
+    }
+
+    public boolean unlinkSignalAntennaReferences(int antennaItemId) {
+        if (antennaItemId <= 0) {
+            return false;
+        }
+
+        boolean changed = false;
+
+        THashSet<InteractionWiredTrigger> receivers = this.getTriggers(WiredTriggerType.RECEIVE_SIGNAL);
+        for (InteractionWiredTrigger trigger : receivers) {
+            if (!(trigger instanceof com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal receiver)) {
+                continue;
+            }
+
+            if (!receiver.unlinkAntenna(antennaItemId)) {
+                continue;
+            }
+
+            changed = true;
+            Emulator.getThreading().run(receiver);
+        }
+
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
+        if (senders != null) {
+            for (InteractionWiredEffect effect : senders) {
+                if (!(effect instanceof WiredEffectSendSignal sender)) {
+                    continue;
+                }
+
+                if (!sender.unlinkAntenna(antennaItemId)) {
+                    continue;
+                }
+
+                changed = true;
+                Emulator.getThreading().run(sender);
+            }
+        }
+
+        return changed;
+    }
+
+    private Set<InteractionWiredEffect> getSignalSenders() {
+        Set<InteractionWiredEffect> senders = new HashSet<>();
+
+        Set<InteractionWiredEffect> standardSenders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        if (standardSenders != null) {
+            senders.addAll(standardSenders);
+        }
+
+        Set<InteractionWiredEffect> negativeSenders = this.wiredEffects.get(WiredEffectType.NEG_SEND_SIGNAL);
+        if (negativeSenders != null) {
+            senders.addAll(negativeSenders);
+        }
+
+        return senders.isEmpty() ? null : senders;
     }
 
     public void addTrigger(InteractionWiredTrigger trigger) {

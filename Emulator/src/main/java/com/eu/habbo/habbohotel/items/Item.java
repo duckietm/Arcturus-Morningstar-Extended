@@ -91,7 +91,23 @@ public class Item implements ISerialize {
         this.allowGift = set.getBoolean("allow_gift");
         this.allowInventoryStack = set.getBoolean("allow_inventory_stack");
 
-        this.interactionType = Emulator.getGameEnvironment().getItemManager().getItemInteraction(set.getString("interaction_type").toLowerCase());
+        String interactionTypeName = set.getString("interaction_type");
+        if (interactionTypeName == null) {
+            interactionTypeName = "default";
+        }
+
+        this.interactionType = Emulator.getGameEnvironment().getItemManager().getItemInteraction(interactionTypeName.toLowerCase());
+
+        if ((this.interactionType != null)
+                && "default".equalsIgnoreCase(this.interactionType.getName())
+                && (this.fullName != null)
+                && this.fullName.toLowerCase().startsWith("wf_")) {
+            ItemInteraction fallbackInteraction = Emulator.getGameEnvironment().getItemManager().getItemInteraction(this.fullName.toLowerCase());
+
+            if ((fallbackInteraction != null) && !"default".equalsIgnoreCase(fallbackInteraction.getName())) {
+                this.interactionType = fallbackInteraction;
+            }
+        }
 
         this.stateCount = set.getShort("interaction_modes_count");
         this.effectM = set.getShort("effect_id_male");

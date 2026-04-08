@@ -457,7 +457,13 @@ public class RoomVariableManager {
 
         for (InteractionWiredExtra extra : extras) {
             if (extra instanceof WiredExtraRoomVariable) {
-                result.add((WiredExtraRoomVariable) extra);
+                WiredExtraRoomVariable definition = (WiredExtraRoomVariable) extra;
+
+                if (!hasVisibleDefinitionName(definition.getVariableName())) {
+                    continue;
+                }
+
+                result.add(definition);
             }
         }
 
@@ -503,6 +509,11 @@ public class RoomVariableManager {
 
         if (extra instanceof WiredExtraRoomVariable) {
             WiredExtraRoomVariable definition = (WiredExtraRoomVariable) extra;
+
+            if (!hasVisibleDefinitionName(definition.getVariableName())) {
+                return null;
+            }
+
             return new WiredVariableDefinitionInfo(
                 definition.getId(),
                 definition.getVariableName(),
@@ -515,11 +526,17 @@ public class RoomVariableManager {
 
         if (extra instanceof WiredExtraVariableReference && ((WiredExtraVariableReference) extra).isRoomReference()) {
             WiredExtraVariableReference reference = (WiredExtraVariableReference) extra;
+
+            if (!hasVisibleDefinitionName(reference.getVariableName())) {
+                return null;
+            }
+
             return new WiredVariableDefinitionInfo(reference.getId(), reference.getVariableName(), reference.hasValue(), reference.getAvailability(), false, reference.isReadOnly());
         }
 
         if (extra instanceof WiredExtraVariableEcho && ((WiredExtraVariableEcho) extra).isRoomEcho()) {
-            return ((WiredExtraVariableEcho) extra).createDefinitionInfo(this.room);
+            WiredVariableDefinitionInfo info = ((WiredExtraVariableEcho) extra).createDefinitionInfo(this.room);
+            return (info != null && hasVisibleDefinitionName(info.getName())) ? info : null;
         }
 
         return WiredVariableLevelSystemSupport.getDerivedDefinitionInfo(this.room, WiredVariableLevelSystemSupport.TARGET_ROOM, definitionItemId);
@@ -557,7 +574,13 @@ public class RoomVariableManager {
 
         for (InteractionWiredExtra extra : this.room.getRoomSpecialTypes().getExtras()) {
             if (extra instanceof WiredExtraVariableReference && ((WiredExtraVariableReference) extra).isRoomReference()) {
-                result.add((WiredExtraVariableReference) extra);
+                WiredExtraVariableReference reference = (WiredExtraVariableReference) extra;
+
+                if (!hasVisibleDefinitionName(reference.getVariableName())) {
+                    continue;
+                }
+
+                result.add(reference);
             }
         }
 
@@ -574,7 +597,13 @@ public class RoomVariableManager {
 
         for (InteractionWiredExtra extra : this.room.getRoomSpecialTypes().getExtras()) {
             if (extra instanceof WiredExtraVariableEcho && ((WiredExtraVariableEcho) extra).isRoomEcho()) {
-                result.add((WiredExtraVariableEcho) extra);
+                WiredExtraVariableEcho echo = (WiredExtraVariableEcho) extra;
+
+                if (!hasVisibleDefinitionName(echo.getVariableName())) {
+                    continue;
+                }
+
+                result.add(echo);
             }
         }
 
@@ -694,6 +723,10 @@ public class RoomVariableManager {
             return fallback;
         }
         return 0;
+    }
+
+    private static boolean hasVisibleDefinitionName(String name) {
+        return name != null && !name.trim().isEmpty();
     }
 
     public static class Snapshot {

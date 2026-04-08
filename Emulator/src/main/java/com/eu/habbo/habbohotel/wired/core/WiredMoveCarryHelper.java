@@ -981,7 +981,7 @@ public final class WiredMoveCarryHelper {
             return new ArrayList<>();
         }
 
-        return WiredSourceUtil.resolveItems(ctx, sourceType, null);
+        return WiredSourceUtil.resolveItemsRaw(ctx, sourceType, null);
     }
 
     private static Collection<RoomUnit> resolvePhysicsUsers(Room room, WiredContext ctx, int userSource) {
@@ -997,7 +997,7 @@ public final class WiredMoveCarryHelper {
             return new ArrayList<>();
         }
 
-        return WiredSourceUtil.resolveUsers(ctx, userSource);
+        return WiredSourceUtil.resolveUsersRaw(ctx, userSource);
     }
 
     private static WiredExtraMovePhysics getMovementPhysicsExtra(Room room, HabboItem stackItem) {

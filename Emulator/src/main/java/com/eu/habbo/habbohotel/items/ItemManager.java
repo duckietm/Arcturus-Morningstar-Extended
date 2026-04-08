@@ -281,6 +281,8 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_act_move_furni_to", WiredEffectMoveFurniTo.class));
         this.interactionsList.add(new ItemInteraction("wf_act_give_reward", WiredEffectGiveReward.class));
         this.interactionsList.add(new ItemInteraction("wf_act_call_stacks", WiredEffectTriggerStacks.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_neg_call_stack", WiredEffectNegativeTriggerStacks.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_neg_call_stacks", WiredEffectNegativeTriggerStacks.class));
         this.interactionsList.add(new ItemInteraction("wf_act_kick_user", WiredEffectKickHabbo.class));
         this.interactionsList.add(new ItemInteraction("wf_act_mute_triggerer", WiredEffectMuteHabbo.class));
         this.interactionsList.add(new ItemInteraction("wf_act_bot_teleport", WiredEffectBotTeleport.class));
@@ -324,6 +326,7 @@ public class ItemManager {
         this.interactionsList.add(new ItemInteraction("wf_slc_furni_with_var", WiredEffectFurniWithVariable.class));
         this.interactionsList.add(new ItemInteraction("wf_slc_users_with_var", WiredEffectUsersWithVariable.class));
         this.interactionsList.add(new ItemInteraction("wf_act_send_signal", WiredEffectSendSignal.class));
+        this.interactionsList.add(new ItemInteraction("wf_act_neg_send_signal", WiredEffectNegativeSendSignal.class));
         this.interactionsList.add(new ItemInteraction("wf_act_give_var", WiredEffectGiveVariable.class));
         this.interactionsList.add(new ItemInteraction("wf_act_remove_var", WiredEffectRemoveVariable.class));
         this.interactionsList.add(new ItemInteraction("wf_act_change_var_val", WiredEffectChangeVariableValue.class));

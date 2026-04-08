@@ -804,6 +804,11 @@ public class RoomItemManager {
             return;
         }
 
+        boolean cleanedSignalAntennaReferences = false;
+        if (this.isAntennaItem(item)) {
+            cleanedSignalAntennaReferences = specialTypes.unlinkSignalAntennaReferences(item.getId());
+        }
+
         this.room.getFurniVariableManager().removeAssignmentsForFurni(item.getId());
         
         boolean isWiredItem = false;
@@ -905,9 +910,18 @@ public class RoomItemManager {
         }
         
         // Invalidate wired cache when wired items are removed
-        if (isWiredItem) {
+        if (isWiredItem || cleanedSignalAntennaReferences) {
             WiredManager.invalidateRoom(this.room);
         }
+    }
+
+    private boolean isAntennaItem(HabboItem item) {
+        if (item == null || item.getBaseItem() == null || item.getBaseItem().getInteractionType() == null) {
+            return false;
+        }
+
+        String interactionType = item.getBaseItem().getInteractionType().getName();
+        return interactionType != null && interactionType.equalsIgnoreCase("antenna");
     }
 
     // ==================== ITEM UPDATES ====================

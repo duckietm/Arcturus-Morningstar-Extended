@@ -68,6 +68,52 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
         return channel;
     }
 
+    public boolean unlinkAntenna(int antennaItemId) {
+        if (antennaItemId <= 0) {
+            return false;
+        }
+
+        boolean changed = false;
+
+        if (!this.items.isEmpty()) {
+            THashSet<HabboItem> itemsToRemove = new THashSet<>();
+
+            for (HabboItem item : this.items) {
+                if (item == null || item.getId() == antennaItemId) {
+                    itemsToRemove.add(item);
+                }
+            }
+
+            if (!itemsToRemove.isEmpty()) {
+                this.items.removeAll(itemsToRemove);
+                changed = true;
+            }
+        }
+
+        if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
+            int nextChannel = 0;
+
+            if (!this.items.isEmpty()) {
+                HabboItem firstItem = this.items.iterator().next();
+                nextChannel = (firstItem != null) ? firstItem.getId() : 0;
+            }
+
+            if (this.channel != nextChannel) {
+                this.channel = nextChannel;
+                changed = true;
+            }
+        } else if (this.channel == antennaItemId) {
+            this.channel = 0;
+            changed = true;
+        }
+
+        if (changed) {
+            this.needsUpdate(true);
+        }
+
+        return changed;
+    }
+
     @Override
     public boolean isTriggeredByRoomUnit() {
         return false;

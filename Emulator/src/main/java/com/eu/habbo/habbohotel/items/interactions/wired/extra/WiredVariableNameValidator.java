@@ -20,21 +20,22 @@ final class WiredVariableNameValidator {
             return "";
         }
 
-        return value.trim()
+        return value
             .replace("\t", "")
             .replace("\r", "")
-            .replace("\n", "");
+            .replace("\n", "")
+            .replaceAll("\\s+", "_");
     }
 
     static String normalizeLegacy(String value) {
         String normalized = normalizeForSave(value);
 
         if (normalized.contains("=")) {
-            normalized = normalized.substring(0, normalized.indexOf('=')).trim();
+            normalized = normalized.substring(0, normalized.indexOf('='));
         }
 
         while (normalized.startsWith("@") || normalized.startsWith("~")) {
-            normalized = normalized.substring(1).trim();
+            normalized = normalized.substring(1);
         }
 
         if (normalized.length() > MAX_NAME_LENGTH) {

@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.wired.core.WiredContextVariableSupport;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
+import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +20,8 @@ import java.util.Map;
 
 public class WiredExtraVariableTextConnector extends InteractionWiredExtra {
     public static final int CODE = 79;
-    private static final int MAX_MAPPING_LENGTH = 4096;
+    public static final int MAX_MAPPING_LENGTH = 1000;
+    public static final int MAX_MAPPING_LINES = 30;
 
     private String mappingsText = "";
     private LinkedHashMap<Integer, String> mappings = new LinkedHashMap<>();
@@ -38,8 +40,10 @@ public class WiredExtraVariableTextConnector extends InteractionWiredExtra {
     }
 
     @Override
-    public boolean saveData(WiredSettings settings, GameClient gameClient) {
-        this.setMappingsText(settings.getStringParam());
+    public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
+        String mappingsText = normalizeMappingsText(settings.getStringParam());
+        validateMappingsText(mappingsText);
+        this.setMappingsText(mappingsText);
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
         if (room != null) {
@@ -156,13 +160,28 @@ public class WiredExtraVariableTextConnector extends InteractionWiredExtra {
             return "";
         }
 
-        String normalized = value.replace("\r", "");
+        return value.replace("\r", "");
+    }
 
-        if (normalized.length() > MAX_MAPPING_LENGTH) {
-            normalized = normalized.substring(0, MAX_MAPPING_LENGTH);
+    private static void validateMappingsText(String value) throws WiredSaveException {
+        if (value == null || value.isEmpty()) {
+            return;
         }
 
-        return normalized;
+        if (value.length() > MAX_MAPPING_LENGTH) {
+            throw new WiredSaveException("Variable text connector can contain at most 1000 characters.");
+        }
+
+        int lineCount = 1;
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) == '\n') {
+                lineCount++;
+            }
+        }
+
+        if (lineCount > MAX_MAPPING_LINES) {
+            throw new WiredSaveException("Variable text connector can contain at most 30 lines.");
+        }
     }
 
     private static LinkedHashMap<Integer, String> parseMappings(String value) {

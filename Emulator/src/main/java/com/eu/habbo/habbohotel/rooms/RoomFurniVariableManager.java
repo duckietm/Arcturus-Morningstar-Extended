@@ -147,12 +147,14 @@ public class RoomFurniVariableManager {
             return false;
         }
 
-        boolean changed = existingAssignment == null || !Objects.equals(existingAssignment.getValue(), normalizedValue);
+        boolean overwritten = existingAssignment != null && overrideExisting;
+        boolean valueChanged = existingAssignment == null || !Objects.equals(existingAssignment.getValue(), normalizedValue);
+        boolean changed = overwritten || valueChanged;
 
-        if (existingAssignment == null) {
+        if (existingAssignment == null || overwritten) {
             int now = Emulator.getIntUnixTimestamp();
             assignments.put(definitionItemId, new VariableAssignment(normalizedValue, now, now));
-        } else if (changed) {
+        } else if (valueChanged) {
             existingAssignment.setValue(normalizedValue, Emulator.getIntUnixTimestamp());
         }
 
@@ -613,7 +615,13 @@ public class RoomFurniVariableManager {
 
         for (InteractionWiredExtra extra : extras) {
             if (extra instanceof WiredExtraFurniVariable) {
-                result.add((WiredExtraFurniVariable) extra);
+                WiredExtraFurniVariable definition = (WiredExtraFurniVariable) extra;
+
+                if (!hasVisibleDefinitionName(definition.getVariableName())) {
+                    continue;
+                }
+
+                result.add(definition);
             }
         }
 
@@ -659,6 +667,11 @@ public class RoomFurniVariableManager {
 
         if (extra instanceof WiredExtraFurniVariable) {
             WiredExtraFurniVariable definition = (WiredExtraFurniVariable) extra;
+
+            if (!hasVisibleDefinitionName(definition.getVariableName())) {
+                return null;
+            }
+
             return new WiredVariableDefinitionInfo(
                 definition.getId(),
                 definition.getVariableName(),
@@ -670,7 +683,8 @@ public class RoomFurniVariableManager {
         }
 
         if (extra instanceof WiredExtraVariableEcho && ((WiredExtraVariableEcho) extra).isFurniEcho()) {
-            return ((WiredExtraVariableEcho) extra).createDefinitionInfo(this.room);
+            WiredVariableDefinitionInfo info = ((WiredExtraVariableEcho) extra).createDefinitionInfo(this.room);
+            return (info != null && hasVisibleDefinitionName(info.getName())) ? info : null;
         }
 
         return WiredVariableLevelSystemSupport.getDerivedDefinitionInfo(this.room, WiredVariableLevelSystemSupport.TARGET_FURNI, definitionItemId);
@@ -703,12 +717,22 @@ public class RoomFurniVariableManager {
 
         for (InteractionWiredExtra extra : this.room.getRoomSpecialTypes().getExtras()) {
             if (extra instanceof WiredExtraVariableEcho && ((WiredExtraVariableEcho) extra).isFurniEcho()) {
-                result.add((WiredExtraVariableEcho) extra);
+                WiredExtraVariableEcho echo = (WiredExtraVariableEcho) extra;
+
+                if (!hasVisibleDefinitionName(echo.getVariableName())) {
+                    continue;
+                }
+
+                result.add(echo);
             }
         }
 
         result.sort(Comparator.comparing(WiredExtraVariableEcho::getVariableName, String.CASE_INSENSITIVE_ORDER).thenComparingInt(WiredExtraVariableEcho::getId));
         return result;
+    }
+
+    private static boolean hasVisibleDefinitionName(String name) {
+        return name != null && !name.trim().isEmpty();
     }
 
     private VariableAssignment getRawAssignment(int furniId, int definitionItemId) {

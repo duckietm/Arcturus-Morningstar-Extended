@@ -169,11 +169,12 @@ public final class WiredVariableReferenceSupport {
         }
 
         int now = Emulator.getIntUnixTimestamp();
-        SharedUserAssignment nextAssignment = (existingAssignment == null)
+        boolean overwritten = existingAssignment != null && overrideExisting;
+        SharedUserAssignment nextAssignment = (existingAssignment == null || overwritten)
             ? new SharedUserAssignment(normalizedValue, now, now)
             : new SharedUserAssignment(normalizedValue, existingAssignment.getCreatedAt(), Objects.equals(existingAssignment.getValue(), normalizedValue) ? existingAssignment.getUpdatedAt() : now);
 
-        if (existingAssignment != null && Objects.equals(existingAssignment.getValue(), normalizedValue)) {
+        if (!overwritten && existingAssignment != null && Objects.equals(existingAssignment.getValue(), normalizedValue)) {
             return false;
         }
 

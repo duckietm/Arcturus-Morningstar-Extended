@@ -71,7 +71,7 @@ public final class WiredContextVariableSupport {
 
     public static WiredVariableDefinitionInfo getDefinitionInfo(Room room, int definitionItemId) {
         WiredExtraContextVariable definition = getDefinition(room, definitionItemId);
-        if (definition == null) {
+        if (definition == null || definition.getVariableName() == null || definition.getVariableName().trim().isEmpty()) {
             return null;
         }
 
@@ -85,7 +85,7 @@ public final class WiredContextVariableSupport {
     }
 
     public static boolean hasDefinition(Room room, int definitionItemId) {
-        return getDefinition(room, definitionItemId) != null;
+        return getDefinitionInfo(room, definitionItemId) != null;
     }
 
     public static boolean assignVariable(WiredContext ctx, Room room, int definitionItemId, Integer value, boolean overrideExisting) {

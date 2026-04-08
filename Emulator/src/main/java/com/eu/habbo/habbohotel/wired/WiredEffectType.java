@@ -59,7 +59,9 @@ public enum WiredEffectType {
     REMOVE_VAR(73),
     CHANGE_VAR_VAL(74),
     FURNI_WITH_VAR_SELECTOR(75),
-    USERS_WITH_VAR_SELECTOR(76);
+    USERS_WITH_VAR_SELECTOR(76),
+    NEG_CALL_STACKS(86),
+    NEG_SEND_SIGNAL(87);
 
     public final int code;
 

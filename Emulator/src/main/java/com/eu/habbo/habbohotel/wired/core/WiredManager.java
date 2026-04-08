@@ -18,6 +18,7 @@ import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredGiveRewardItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.api.WiredStack;
 import com.eu.habbo.habbohotel.wired.migrate.WiredEvents;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickService;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
@@ -40,6 +41,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Set;
 
 /**
  * Manager class for the wired runtime.
@@ -95,7 +100,7 @@ public final class WiredManager {
     /** Whether the engine is initialized */
     private static volatile boolean initialized = false;
     private static final ThreadLocal<Integer> EVENT_HANDLING_DEPTH = new ThreadLocal<>();
-    private static final ThreadLocal<ArrayDeque<WiredEvent>> DEFERRED_EFFECT_EVENTS = new ThreadLocal<>();
+    private static final ThreadLocal<ArrayDeque<DeferredEffectEvent>> DEFERRED_EFFECT_EVENTS = new ThreadLocal<>();
     private WiredManager() {
         // Static utility class
     }
@@ -241,6 +246,10 @@ public final class WiredManager {
      * @return true if any stack was triggered
      */
     public static boolean handleEvent(WiredEvent event) {
+        return handleEvent(event, false);
+    }
+
+    public static boolean handleEvent(WiredEvent event, boolean negateConditions) {
         if (!isEnabled() || engine == null) {
             return false;
         }
@@ -260,19 +269,19 @@ public final class WiredManager {
         boolean handled = false;
 
         try {
-            handled = engine.handleEvent(event);
+            handled = engine.handleEvent(event, negateConditions);
 
             if (nextDepth == 1) {
-                ArrayDeque<WiredEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+                ArrayDeque<DeferredEffectEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
 
                 while (deferredEvents != null && !deferredEvents.isEmpty()) {
-                    WiredEvent deferredEvent = deferredEvents.pollFirst();
+                    DeferredEffectEvent deferredEvent = deferredEvents.pollFirst();
 
-                    if (deferredEvent == null || RoomWiredDisableSupport.isWiredDisabled(deferredEvent.getRoom())) {
+                    if (deferredEvent == null || deferredEvent.event == null || RoomWiredDisableSupport.isWiredDisabled(deferredEvent.event.getRoom())) {
                         continue;
                     }
 
-                    handled = engine.handleEvent(deferredEvent) || handled;
+                    handled = engine.handleEvent(deferredEvent.event, deferredEvent.negateConditions) || handled;
                 }
             }
 
@@ -288,6 +297,14 @@ public final class WiredManager {
     }
 
     public static boolean dispatchEffectTriggeredEvent(WiredEvent event) {
+        return dispatchEffectTriggeredEvent(event, false);
+    }
+
+    public static boolean dispatchNegatedEffectTriggeredEvent(WiredEvent event) {
+        return dispatchEffectTriggeredEvent(event, true);
+    }
+
+    private static boolean dispatchEffectTriggeredEvent(WiredEvent event, boolean negateConditions) {
         if (!isEnabled() || engine == null || event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
             return false;
         }
@@ -295,17 +312,17 @@ public final class WiredManager {
         Integer currentDepth = EVENT_HANDLING_DEPTH.get();
 
         if (currentDepth == null || currentDepth <= 0) {
-            return handleEvent(event);
+            return handleEvent(event, negateConditions);
         }
 
-        ArrayDeque<WiredEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+        ArrayDeque<DeferredEffectEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
 
         if (deferredEvents == null) {
             deferredEvents = new ArrayDeque<>();
             DEFERRED_EFFECT_EVENTS.set(deferredEvents);
         }
 
-        deferredEvents.addLast(event);
+        deferredEvents.addLast(new DeferredEffectEvent(event, negateConditions));
         return true;
     }
 
@@ -971,6 +988,10 @@ public final class WiredManager {
      * @return true if any effects were executed
      */
     public static boolean executeEffectsAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (tiles == null || tiles.isEmpty() || room == null || engine == null || stackIndex == null) {
+            return false;
+        }
+
         for (RoomTile tile : tiles) {
             if (room != null) {
                 THashSet<HabboItem> items = room.getItemsAt(tile);
@@ -992,6 +1013,82 @@ public final class WiredManager {
         }
 
         return true;
+    }
+
+    public static boolean executeNegatedStacksAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (tiles == null || tiles.isEmpty() || room == null || engine == null || stackIndex == null) {
+            return false;
+        }
+
+        boolean handled = false;
+        WiredEvent event = WiredEvent.builder(WiredEvent.Type.CUSTOM, room)
+                .actor(roomUnit)
+                .callStackDepth(callStackDepth)
+                .build();
+
+        for (RoomTile tile : tiles) {
+            List<WiredStack> stacks = stackIndex.getStacksAtTile(room, tile);
+            if (stacks.isEmpty()) {
+                continue;
+            }
+
+            for (WiredStack stack : stacks) {
+                handled = engine.executeDirectStack(stack, event, true) || handled;
+            }
+        }
+
+        return handled;
+    }
+
+    public static boolean executeNegatedTargetStacks(Iterable<HabboItem> triggerItems, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (triggerItems == null || room == null || engine == null || stackIndex == null || room.getLayout() == null) {
+            return false;
+        }
+
+        boolean handled = false;
+        Set<Integer> seenTriggerIds = new HashSet<>();
+        WiredEvent event = WiredEvent.builder(WiredEvent.Type.CUSTOM, room)
+                .actor(roomUnit)
+                .callStackDepth(callStackDepth)
+                .build();
+
+        for (HabboItem triggerItem : triggerItems) {
+            if (triggerItem == null || !seenTriggerIds.add(triggerItem.getId())) {
+                continue;
+            }
+
+            RoomTile tile = room.getLayout().getTile(triggerItem.getX(), triggerItem.getY());
+            if (tile == null) {
+                continue;
+            }
+
+            List<WiredStack> stacks = stackIndex.getStacksAtTile(room, tile);
+            if (stacks.isEmpty()) {
+                continue;
+            }
+
+            for (WiredStack stack : stacks) {
+                HabboItem stackTriggerItem = stack.triggerItem();
+                if (stackTriggerItem == null || stackTriggerItem.getId() != triggerItem.getId()) {
+                    continue;
+                }
+
+                handled = engine.executeDirectStack(stack, event, true) || handled;
+                break;
+            }
+        }
+
+        return handled;
+    }
+
+    private static final class DeferredEffectEvent {
+        private final WiredEvent event;
+        private final boolean negateConditions;
+
+        private DeferredEffectEvent(WiredEvent event, boolean negateConditions) {
+            this.event = event;
+            this.negateConditions = negateConditions;
+        }
     }
 
     // ========== Reward System ==========

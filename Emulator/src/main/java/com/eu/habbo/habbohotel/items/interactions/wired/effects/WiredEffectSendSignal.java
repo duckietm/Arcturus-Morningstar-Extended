@@ -103,34 +103,30 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
         }
         LOGGER.debug("[SendSignal] Resolved {} antenna(s), firing signals", resolvedAntennas.size());
 
-        List<RoomUnit> forwardedUsers = WiredSourceUtil.resolveUsers(ctx, this.userForward);
-        List<HabboItem> forwardedFurni = WiredSourceUtil.resolveItems(ctx, this.furniForward, this.forwardItems);
+        List<RoomUnit> forwardedUsers = WiredSourceUtil.resolveUsersRaw(ctx, this.userForward);
+        List<HabboItem> forwardedFurni = WiredSourceUtil.resolveItemsRaw(ctx, this.furniForward, this.forwardItems);
 
         RoomUnit defaultUser = forwardedUsers.isEmpty() ? null : forwardedUsers.get(0);
-        HabboItem defaultFurni = forwardedFurni.isEmpty() ? null : forwardedFurni.get(0);
-
         Collection<RoomUnit> usersToSend = (signalPerUser && !forwardedUsers.isEmpty())
                 ? forwardedUsers
                 : Collections.singletonList(defaultUser);
 
-        Collection<HabboItem> furniToSend = (signalPerFurni && !forwardedFurni.isEmpty())
+        Collection<HabboItem> furniToSend = !forwardedFurni.isEmpty()
                 ? forwardedFurni
-                : Collections.singletonList(defaultFurni);
+                : Collections.singletonList(null);
 
         int nextDepth = currentDepth + 1;
-        boolean isolateBranchContext = (signalPerUser && forwardedUsers.size() > 1)
-                || (signalPerFurni && forwardedFurni.size() > 1);
 
         for (RoomUnit user : usersToSend) {
             for (HabboItem sourceItem : furniToSend) {
                 for (HabboItem antenna : resolvedAntennas) {
-                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth, isolateBranchContext);
+                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth);
                 }
             }
         }
     }
 
-    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth, boolean isolateBranchContext) {
+    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth) {
         if (antenna == null) return;
         RoomTile tile = room.getLayout().getTile(antenna.getX(), antenna.getY());
         if (tile == null) return;
@@ -148,13 +144,13 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 .signalChannel(signalChannel)
                 .signalUserCount(actor != null ? 1 : 0)
                 .signalFurniCount(sourceItem != null ? 1 : 0)
-                .contextVariableScope(isolateBranchContext ? ctx.contextVariables().copy() : ctx.contextVariables())
+                .contextVariableScope(ctx.contextVariables())
                 .triggeredByEffect(true);
 
         if (actor != null) builder.actor(actor);
         if (sourceItem != null) builder.sourceItem(sourceItem);
 
-        boolean result = WiredManager.dispatchEffectTriggeredEvent(builder.build());
+        boolean result = dispatchSignalEvent(builder.build());
         LOGGER.debug("[SendSignal] handleEvent returned: {}", result);
     }
 
@@ -452,9 +448,50 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
         return false;
     }
 
+    public boolean unlinkAntenna(int antennaItemId) {
+        if (antennaItemId <= 0) {
+            return false;
+        }
+
+        boolean changed = false;
+
+        Iterator<HabboItem> iterator = this.items.iterator();
+        while (iterator.hasNext()) {
+            HabboItem item = iterator.next();
+
+            if (item == null || item.getId() != antennaItemId) {
+                continue;
+            }
+
+            iterator.remove();
+            changed = true;
+        }
+
+        if (this.antennaSource == antennaItemId) {
+            if (!this.items.isEmpty()) {
+                HabboItem firstItem = this.items.iterator().next();
+                this.antennaSource = (firstItem != null) ? firstItem.getId() : ANTENNA_PICKED;
+            } else {
+                this.antennaSource = ANTENNA_PICKED;
+            }
+
+            changed = true;
+        }
+
+        if (changed) {
+            this.needsUpdate(true);
+        }
+
+        return changed;
+    }
+
     @Override
     protected long requiredCooldown() {
         return COOLDOWN_TRIGGER_STACKS;
+    }
+
+    protected boolean dispatchSignalEvent(WiredEvent event) {
+        return WiredManager.dispatchEffectTriggeredEvent(event);
     }
 
     static class JsonData {

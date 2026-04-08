@@ -5,6 +5,11 @@ import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariable
 import com.eu.habbo.habbohotel.rooms.Room;
 import gnu.trove.set.hash.THashSet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public final class WiredVariableTextConnectorSupport {
     private WiredVariableTextConnectorSupport() {
     }
@@ -18,31 +23,43 @@ public final class WiredVariableTextConnectorSupport {
     }
 
     public static WiredExtraVariableTextConnector getConnector(Room room, int definitionItemId) {
+        List<WiredExtraVariableTextConnector> connectors = getConnectors(room, definitionItemId);
+        return connectors.isEmpty() ? null : connectors.get(0);
+    }
+
+    public static List<WiredExtraVariableTextConnector> getConnectors(Room room, int definitionItemId) {
         if (room == null || room.getRoomSpecialTypes() == null || definitionItemId <= 0) {
-            return null;
+            return Collections.emptyList();
         }
 
         InteractionWiredExtra extra = room.getRoomSpecialTypes().getExtra(definitionItemId);
-        return getConnector(room, extra);
+        return getConnectors(room, extra);
     }
 
     public static WiredExtraVariableTextConnector getConnector(Room room, InteractionWiredExtra definition) {
+        List<WiredExtraVariableTextConnector> connectors = getConnectors(room, definition);
+        return connectors.isEmpty() ? null : connectors.get(0);
+    }
+
+    public static List<WiredExtraVariableTextConnector> getConnectors(Room room, InteractionWiredExtra definition) {
         if (room == null || definition == null || room.getRoomSpecialTypes() == null) {
-            return null;
+            return Collections.emptyList();
         }
 
         THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(definition.getX(), definition.getY());
         if (extras == null || extras.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
+
+        List<WiredExtraVariableTextConnector> connectors = new ArrayList<>();
 
         for (InteractionWiredExtra extra : WiredExecutionOrderUtil.sort(extras)) {
             if (extra instanceof WiredExtraVariableTextConnector) {
-                return (WiredExtraVariableTextConnector) extra;
+                connectors.add((WiredExtraVariableTextConnector) extra);
             }
         }
 
-        return null;
+        return connectors;
     }
 
     public static String toText(Room room, int definitionItemId, Integer value) {
@@ -50,12 +67,34 @@ public final class WiredVariableTextConnectorSupport {
             return "";
         }
 
-        WiredExtraVariableTextConnector connector = getConnector(room, definitionItemId);
-        return connector != null ? connector.resolveText(value) : String.valueOf(value);
+        for (WiredExtraVariableTextConnector connector : getConnectors(room, definitionItemId)) {
+            Map<Integer, String> mappings = connector.getMappings();
+            if (mappings.containsKey(value)) {
+                String mappedValue = mappings.get(value);
+                return mappedValue != null ? mappedValue : String.valueOf(value);
+            }
+        }
+
+        return String.valueOf(value);
     }
 
     public static Integer toValue(Room room, int definitionItemId, String text) {
-        WiredExtraVariableTextConnector connector = getConnector(room, definitionItemId);
-        return connector != null ? connector.resolveValue(text) : null;
+        if (text == null) {
+            return null;
+        }
+
+        String normalizedText = text.trim();
+        if (normalizedText.isEmpty()) {
+            return null;
+        }
+
+        for (WiredExtraVariableTextConnector connector : getConnectors(room, definitionItemId)) {
+            Integer mappedValue = connector.resolveValue(normalizedText);
+            if (mappedValue != null) {
+                return mappedValue;
+            }
+        }
+
+        return null;
     }
 }
