@@ -36,7 +36,8 @@ public class BadgeCommand extends Command {
             Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(params[1]);
 
             if (habbo != null) {
-                if (habbo.addBadge(params[2])) {
+                String senderName = gameClient.getHabbo().getHabboInfo().getUsername();
+                if (habbo.addBadge(params[2], senderName)) {
                     gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_badge.given").replace("%user%", params[1]).replace("%badge%", params[2]), RoomChatMessageBubbles.ALERT);
                 } else {
                     gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_badge.already_owned").replace("%user%", params[1]).replace("%badge%", params[2]), RoomChatMessageBubbles.ALERT);
