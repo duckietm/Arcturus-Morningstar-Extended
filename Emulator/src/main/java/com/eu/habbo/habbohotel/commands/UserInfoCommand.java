@@ -84,7 +84,7 @@ public class UserInfoCommand extends Command {
         if (onlineHabbo != null) {
             message.append("\r" + "<b>Other accounts (");
 
-            ArrayList<HabboInfo> users = Emulator.getGameEnvironment().getHabboManager().getCloneAccounts(onlineHabbo, 10);
+            List<HabboInfo> users = Emulator.getGameEnvironment().getHabboManager().getCloneAccounts(onlineHabbo, 10);
             users.sort(new Comparator<HabboInfo>() {
                 @Override
                 public int compare(HabboInfo o1, HabboInfo o2) {

@@ -2151,7 +2151,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.rightsManager.refreshRightsForHabbo(habbo);
   }
 
-  public THashMap<Integer, String> getUsersWithRights() {
+  public Map<Integer, String> getUsersWithRights() {
     return this.rightsManager.getUsersWithRights();
   }
 

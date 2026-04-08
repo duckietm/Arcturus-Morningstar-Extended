@@ -6,7 +6,7 @@
 
     <groupId>com.eu.habbo</groupId>
     <artifactId>Habbo</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -86,11 +86,11 @@
             <version>2.11.0</version>
         </dependency>
 
-        <!-- MySQL Connector -->
+        <!-- MariaDB Connector/J (native driver for MariaDB) -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>9.1.0</version>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.5.1</version>
             <scope>runtime</scope>
         </dependency>
 

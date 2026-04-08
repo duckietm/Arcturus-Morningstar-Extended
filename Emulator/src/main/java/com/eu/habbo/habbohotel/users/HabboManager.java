@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.users;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.modtool.ModToolBan;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.permissions.Rank;
@@ -22,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,37 +49,27 @@ public class HabboManager {
     }
 
     public static HabboInfo getOfflineHabboInfo(int id) {
-        HabboInfo info = null;
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE id = ? LIMIT 1")) {
-            statement.setInt(1, id);
-            try (ResultSet set = statement.executeQuery()) {
-                if (set.next()) {
-                    info = new HabboInfo(set);
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            return SqlQueries.queryOne(
+                    "SELECT * FROM users WHERE id = ? LIMIT 1",
+                    HabboInfo::new,
+                    id).orElse(null);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            return null;
         }
-
-        return info;
     }
 
     public static HabboInfo getOfflineHabboInfo(String username) {
-        HabboInfo info = null;
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE username = ? LIMIT 1")) {
-            statement.setString(1, username);
-
-            try (ResultSet set = statement.executeQuery()) {
-                if (set.next()) {
-                    info = new HabboInfo(set);
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            return SqlQueries.queryOne(
+                    "SELECT * FROM users WHERE username = ? LIMIT 1",
+                    HabboInfo::new,
+                    username).orElse(null);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            return null;
         }
-
-        return info;
     }
 
     public void addHabbo(Habbo habbo) {
@@ -195,43 +187,32 @@ public class HabboManager {
         LOGGER.info("Habbo Manager -> Disposed!");
     }
 
-    public ArrayList<HabboInfo> getCloneAccounts(Habbo habbo, int limit) {
-        ArrayList<HabboInfo> habboInfo = new ArrayList<>();
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE (ip_register = ? OR ip_current = ?) AND id != ? ORDER BY id DESC LIMIT ?")) {
-            statement.setString(1, habbo.getHabboInfo().getIpRegister());
-            statement.setString(2, habbo.getHabboInfo().getIpLogin());
-            statement.setInt(3, habbo.getHabboInfo().getId());
-            statement.setInt(4, limit);
-
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    habboInfo.add(new HabboInfo(set));
-                }
-            }
-        } catch (SQLException e) {
+    public List<HabboInfo> getCloneAccounts(Habbo habbo, int limit) {
+        try {
+            return SqlQueries.query(
+                    "SELECT * FROM users WHERE (ip_register = ? OR ip_current = ?) AND id != ? ORDER BY id DESC LIMIT ?",
+                    HabboInfo::new,
+                    habbo.getHabboInfo().getIpRegister(),
+                    habbo.getHabboInfo().getIpLogin(),
+                    habbo.getHabboInfo().getId(),
+                    limit);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            return new ArrayList<>();
         }
-
-        return habboInfo;
     }
 
     public List<Map.Entry<Integer, String>> getNameChanges(int userId, int limit) {
-        List<Map.Entry<Integer, String>> nameChanges = new ArrayList<>();
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT timestamp, new_name FROM namechange_log WHERE user_id = ? ORDER by timestamp DESC LIMIT ?")) {
-            statement.setInt(1, userId);
-            statement.setInt(2, limit);
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    nameChanges.add(new AbstractMap.SimpleEntry<>(set.getInt("timestamp"), set.getString("new_name")));
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            return SqlQueries.query(
+                    "SELECT timestamp, new_name FROM namechange_log WHERE user_id = ? ORDER by timestamp DESC LIMIT ?",
+                    rs -> new AbstractMap.SimpleEntry<>(rs.getInt("timestamp"), rs.getString("new_name")),
+                    userId,
+                    limit);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            return Collections.emptyList();
         }
-
-        return nameChanges;
     }
 
 
@@ -277,11 +258,9 @@ public class HabboManager {
             habbo.getClient().sendResponse(new RecyclerLogicComposer());
             habbo.alert(Emulator.getTexts().getValue("commands.generic.cmd_give_rank.new_rank").replace("id", newRank.getName()));
         } else {
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET `rank` = ? WHERE id = ? LIMIT 1")) {
-                statement.setInt(1, rankId);
-                statement.setInt(2, userId);
-                statement.execute();
-            } catch (SQLException e) {
+            try {
+                SqlQueries.update("UPDATE users SET `rank` = ? WHERE id = ? LIMIT 1", rankId, userId);
+            } catch (SqlQueries.DataAccessException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
         }
@@ -294,11 +273,9 @@ public class HabboManager {
         if (habbo != null) {
             habbo.giveCredits(credits);
         } else {
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET credits = credits + ? WHERE id = ? LIMIT 1")) {
-                statement.setInt(1, credits);
-                statement.setInt(2, userId);
-                statement.execute();
-            } catch (SQLException e) {
+            try {
+                SqlQueries.update("UPDATE users SET credits = credits + ? WHERE id = ? LIMIT 1", credits, userId);
+            } catch (SqlQueries.DataAccessException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
         }
