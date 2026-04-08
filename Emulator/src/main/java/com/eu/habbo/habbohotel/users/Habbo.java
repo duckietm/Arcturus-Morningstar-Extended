@@ -408,10 +408,14 @@ public class Habbo implements Runnable {
 
 
     public boolean addBadge(String code) {
+        return this.addBadge(code, "");
+    }
+
+    public boolean addBadge(String code, String senderName) {
         if (!this.habboInventory.getBadgesComponent().hasBadge(code)) {
             HabboBadge badge = BadgesComponent.createBadge(code, this);
             this.habboInventory.getBadgesComponent().addBadge(badge);
-            this.client.sendResponse(new AddUserBadgeComposer(badge));
+            this.client.sendResponse(new AddUserBadgeComposer(badge, senderName));
             this.client.sendResponse(new AddHabboItemComposer(badge.getId(), AddHabboItemComposer.AddHabboItemCategory.BADGE));
 
             THashMap<String, String> keys = new THashMap<>();
