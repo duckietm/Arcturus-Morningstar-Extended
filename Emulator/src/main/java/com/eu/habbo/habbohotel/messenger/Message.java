@@ -1,15 +1,14 @@
 package com.eu.habbo.habbohotel.messenger;
 
 import com.eu.habbo.Emulator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.eu.habbo.core.DatabaseLoggable;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class Message implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Message.class);
+public class Message implements Runnable, DatabaseLoggable {
+
+    private static final String QUERY = "INSERT INTO chatlogs_private (user_from_id, user_to_id, message, timestamp) VALUES (?, ?, ?, ?)";
 
     private final int fromId;
     private final int toId;
@@ -26,18 +25,23 @@ public class Message implements Runnable {
 
     @Override
     public void run() {
-        //TODO Turn into scheduler
         if (Messenger.SAVE_PRIVATE_CHATS) {
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO chatlogs_private (user_from_id, user_to_id, message, timestamp) VALUES (?, ?, ?, ?)")) {
-                statement.setInt(1, this.fromId);
-                statement.setInt(2, this.toId);
-                statement.setString(3, this.message);
-                statement.setInt(4, this.timestamp);
-                statement.execute();
-            } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
-            }
+            Emulator.getDatabaseLogger().store(this);
         }
+    }
+
+    @Override
+    public String getQuery() {
+        return QUERY;
+    }
+
+    @Override
+    public void log(PreparedStatement statement) throws SQLException {
+        statement.setInt(1, this.fromId);
+        statement.setInt(2, this.toId);
+        statement.setString(3, this.message);
+        statement.setInt(4, this.timestamp);
+        statement.addBatch();
     }
 
     public int getToId() {
