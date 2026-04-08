@@ -775,6 +775,15 @@ public class RoomManager {
             habbo.getRoomUnit().setHeadRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
         }
 
+        if (habbo.getRoomUnit().getCurrentLocation() == null) {
+            LOGGER.warn("Failed to resolve a valid door tile for room {} ({}) while {} was entering; sending user back to hotel view",
+                    room.getId(), room.getName(), habbo.getHabboInfo().getUsername());
+            habbo.getHabboInfo().setLoadingRoom(0);
+            habbo.getHabboInfo().setCurrentRoom(null);
+            habbo.getClient().sendResponse(new HotelViewComposer());
+            return;
+        }
+
         habbo.getRoomUnit().setPathFinderRoom(room);
         habbo.getRoomUnit().resetIdleTimer();
 
