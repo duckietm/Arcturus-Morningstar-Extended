@@ -6,13 +6,18 @@ import com.eu.habbo.messages.ClientMessage;
 import com.eu.habbo.networking.gameserver.GameServerAttributes;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class GameMessageRateLimit extends MessageToMessageDecoder<ClientMessage> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameMessageRateLimit.class);
+
     private static final int RESET_TIME = 1;
     private static final int MAX_COUNTER = 10;
+    private static final int DEFAULT_GLOBAL_MAX = 50;
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ClientMessage message, List<Object> out) throws Exception {
@@ -23,26 +28,36 @@ public class GameMessageRateLimit extends MessageToMessageDecoder<ClientMessage>
         }
 
         int count = 0;
+        int globalCount = 0;
 
-        // Check if reset time has passed.
         int timestamp = Emulator.getIntUnixTimestamp();
         if (timestamp - client.lastPacketCounterCleared > RESET_TIME) {
-            // Reset counter.
             client.incomingPacketCounter.clear();
             client.lastPacketCounterCleared = timestamp;
         } else {
-            // Get stored count for message id.
             count = client.incomingPacketCounter.getOrDefault(message.getMessageId(), 0);
+            for (int c : client.incomingPacketCounter.values()) {
+                globalCount += c;
+            }
         }
 
-        // If we exceeded the counter, drop the packet.
         if (count > MAX_COUNTER) {
+            return;
+        }
+
+        int globalMax = Emulator.getConfig().getInt("packet.global.rate.limit", DEFAULT_GLOBAL_MAX);
+        if (globalCount > globalMax) {
+            if (globalCount == globalMax + 1) {
+                String username = (client.getHabbo() != null && client.getHabbo().getHabboInfo() != null)
+                        ? client.getHabbo().getHabboInfo().getUsername() : "unauthenticated";
+                LOGGER.warn("Global packet rate limit exceeded for {} ({} packets/sec) — dropping excess packets",
+                        username, globalCount);
+            }
             return;
         }
 
         client.incomingPacketCounter.put(message.getMessageId(), ++count);
 
-        // Continue processing.
         out.add(message);
     }
 

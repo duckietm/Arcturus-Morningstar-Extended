@@ -1,0 +1,1 @@
+INSERT INTO emulator_settings (`key`, `value`) VALUES ('packet.global.rate.limit', '50');
