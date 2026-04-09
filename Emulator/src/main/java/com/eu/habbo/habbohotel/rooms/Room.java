@@ -175,7 +175,30 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private volatile boolean muted;
   private RoomSpecialTypes roomSpecialTypes;
   private TraxManager traxManager;
-  
+
+  private String youtubeCurrentVideo = "";
+  private String youtubeSenderName = "";
+  private final java.util.List<String> youtubePlaylist = new java.util.concurrent.CopyOnWriteArrayList<>();
+  private final java.util.Set<Integer> youtubeWatchers = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+  public String getYoutubeCurrentVideo() { return this.youtubeCurrentVideo; }
+  public String getYoutubeSenderName() { return this.youtubeSenderName; }
+  public java.util.List<String> getYoutubePlaylist() { return this.youtubePlaylist; }
+  public java.util.Set<Integer> getYoutubeWatchers() { return this.youtubeWatchers; }
+
+  public void setYoutubeVideo(String videoId, String senderName, java.util.List<String> playlist) {
+      this.youtubeCurrentVideo = videoId;
+      this.youtubeSenderName = senderName;
+      this.youtubePlaylist.clear();
+      if (playlist != null) this.youtubePlaylist.addAll(playlist);
+  }
+
+  public void clearYoutubeVideo() {
+      this.youtubeCurrentVideo = "";
+      this.youtubeSenderName = "";
+      this.youtubePlaylist.clear();
+  }
+
   public final THashMap<String, Object> cache;
 
   public Room(ResultSet set) throws SQLException {

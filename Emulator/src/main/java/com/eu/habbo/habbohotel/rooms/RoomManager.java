@@ -987,6 +987,17 @@ public class RoomManager {
             }
         }
 
+        if (!room.getYoutubeCurrentVideo().isEmpty()) {
+            habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomBroadcastComposer(
+                    room.getYoutubeCurrentVideo(),
+                    room.getYoutubeSenderName(),
+                    room.getYoutubePlaylist()).compose());
+        }
+        if (!room.getYoutubeWatchers().isEmpty()) {
+            habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomWatchersComposer(
+                    room.getYoutubeWatchers()).compose());
+        }
+
         WiredManager.triggerUserEntersRoom(room, habbo.getRoomUnit());
         room.habboEntered(habbo);
 

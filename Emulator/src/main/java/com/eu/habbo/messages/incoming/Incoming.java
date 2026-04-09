@@ -436,4 +436,8 @@ public class Incoming {
     public static final int SetActivePrefixEvent = 7012;
     public static final int DeletePrefixEvent = 7013;
     public static final int PurchasePrefixEvent = 7014;
+
+    // YouTube Room Broadcast
+    public static final int YouTubeRoomPlayEvent = 8001;
+    public static final int YouTubeRoomWatchingEvent = 8002;
 }
