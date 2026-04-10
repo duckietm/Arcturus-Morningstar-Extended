@@ -677,5 +677,10 @@ public class PacketManager {
         this.registerHandler(Incoming.GameCenterLeaveGameEvent, GameCenterLeaveGameEvent.class);
         this.registerHandler(Incoming.GameCenterEvent, GameCenterEvent.class);
         this.registerHandler(Incoming.GameCenterRequestGameStatusEvent, GameCenterRequestGameStatusEvent.class);
+
+        // YouTube Room Broadcast
+        this.registerHandler(Incoming.YouTubeRoomPlayEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomPlayEvent.class);
+        this.registerHandler(Incoming.YouTubeRoomWatchingEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomWatchingEvent.class);
+        this.registerHandler(Incoming.YouTubeRoomSettingsEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomSettingsEvent.class);
     }
 }
