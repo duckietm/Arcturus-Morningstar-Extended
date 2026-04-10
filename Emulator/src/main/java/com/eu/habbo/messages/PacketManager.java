@@ -681,5 +681,6 @@ public class PacketManager {
         // YouTube Room Broadcast
         this.registerHandler(Incoming.YouTubeRoomPlayEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomPlayEvent.class);
         this.registerHandler(Incoming.YouTubeRoomWatchingEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomWatchingEvent.class);
+        this.registerHandler(Incoming.YouTubeRoomSettingsEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomSettingsEvent.class);
     }
 }

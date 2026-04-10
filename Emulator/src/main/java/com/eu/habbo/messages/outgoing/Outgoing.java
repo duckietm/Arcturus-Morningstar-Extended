@@ -574,5 +574,6 @@ public class Outgoing {
     // YouTube Room Broadcast
     public static final int YouTubeRoomBroadcastComposer = 8001;
     public static final int YouTubeRoomWatchersComposer = 8002;
+    public static final int YouTubeRoomSettingsComposer = 8003;
 
 }

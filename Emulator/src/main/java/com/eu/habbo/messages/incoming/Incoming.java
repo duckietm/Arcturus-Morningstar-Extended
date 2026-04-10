@@ -440,4 +440,5 @@ public class Incoming {
     // YouTube Room Broadcast
     public static final int YouTubeRoomPlayEvent = 8001;
     public static final int YouTubeRoomWatchingEvent = 8002;
+    public static final int YouTubeRoomSettingsEvent = 8003;
 }

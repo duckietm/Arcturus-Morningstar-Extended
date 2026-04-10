@@ -790,7 +790,6 @@ public class RoomManager {
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
 
-        // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
         habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));
 
         List<Habbo> habbos = new ArrayList<>();
@@ -986,6 +985,9 @@ public class RoomManager {
                 habbo.getClient().sendResponse(new SimplePollAnswersComposer(room.noVotes, room.yesVotes));
             }
         }
+
+        habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomSettingsComposer(
+                room.isYoutubeEnabled()).compose());
 
         if (!room.getYoutubeCurrentVideo().isEmpty()) {
             habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomBroadcastComposer(

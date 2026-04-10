@@ -27,8 +27,7 @@ public class YouTubeRoomPlayEvent extends MessageHandler {
 
         Room room = habbo.getHabboInfo().getCurrentRoom();
         if (room == null) return;
-
-        // Only the room owner or users with rights can broadcast
+        if (!room.isYoutubeEnabled()) return;
         if (!room.isOwner(habbo) && !room.hasRights(habbo)) return;
 
         String videoId = this.packet.readString();
@@ -58,7 +57,7 @@ public class YouTubeRoomPlayEvent extends MessageHandler {
 
         // Broadcast to everyone in the room (empty videoId = stop)
         room.sendComposer(
-                new YouTubeRoomBroadcastComposer(videoId, habbo.getHabboInfo().getUsername(), playlist).compose()
+            new YouTubeRoomBroadcastComposer(videoId, habbo.getHabboInfo().getUsername(), playlist).compose()
         );
     }
 }
