@@ -430,6 +430,8 @@ public class Incoming {
     public static final int CatalogAdminMoveOfferEvent = 10056;
     public static final int CatalogAdminMovePageEvent = 10057;
     public static final int CatalogAdminPublishEvent = 10058;
+    public static final int CatalogAdminSavePageImagesEvent = 10060;
+    public static final int CatalogAdminSavePageIconEvent = 10061;
 
     // Custom Prefixes
     public static final int RequestUserPrefixesEvent = 7011;
