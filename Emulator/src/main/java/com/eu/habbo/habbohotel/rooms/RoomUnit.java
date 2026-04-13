@@ -411,11 +411,11 @@ public class RoomUnit {
   }
 
   public short getX() {
-    return this.currentLocation.x;
+    return this.currentLocation == null ? 0 : this.currentLocation.x;
   }
 
   public short getY() {
-    return this.currentLocation.y;
+    return this.currentLocation == null ? 0 : this.currentLocation.y;
   }
 
   public double getZ() {
@@ -598,6 +598,7 @@ public class RoomUnit {
   }
 
   public boolean isAtGoal() {
+    if (this.currentLocation == null) return true;
     return this.currentLocation.equals(this.goalLocation);
   }
 

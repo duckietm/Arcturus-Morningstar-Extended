@@ -74,8 +74,9 @@ public abstract class CatalogPage implements Comparable<CatalogPage>, ISerialize
         this.textDetails = set.getString("page_text_details");
         this.textTeaser = set.getString("page_text_teaser");
 
-        if (!set.getString("includes").isEmpty()) {
-            for (String id : set.getString("includes").split(";")) {
+        String includes = set.getString("includes");
+        if (includes != null && !includes.isEmpty()) {
+            for (String id : includes.split(";")) {
                 try {
                     this.included.add(Integer.valueOf(id));
                 } catch (Exception e) {

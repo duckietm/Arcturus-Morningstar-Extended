@@ -498,7 +498,7 @@ public class RoomManager {
                 h.getClient().sendResponse(new RoomScoreComposer(room.getScore(), !this.hasVotedForRoom(h, room)));
             }
 
-            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO room_votes VALUES (?, ?)")) {
+            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO room_votes (user_id, room_id) VALUES (?, ?)")) {
                 statement.setInt(1, habbo.getHabboInfo().getId());
                 statement.setInt(2, room.getId());
                 statement.execute();
@@ -789,6 +789,15 @@ public class RoomManager {
             habbo.getRoomUnit().setHeadRotation(RoomUserRotation.values()[room.getLayout().getDoorDirection()]);
         }
 
+        if (habbo.getRoomUnit().getCurrentLocation() == null) {
+            LOGGER.warn("Failed to resolve a valid door tile for room {} ({}) while {} was entering; sending user back to hotel view",
+                    room.getId(), room.getName(), habbo.getHabboInfo().getUsername());
+            habbo.getHabboInfo().setLoadingRoom(0);
+            habbo.getHabboInfo().setCurrentRoom(null);
+            habbo.getClient().sendResponse(new HotelViewComposer());
+            return;
+        }
+
         habbo.getRoomUnit().setPathFinderRoom(room);
         habbo.getRoomUnit().resetIdleTimer();
 
@@ -797,7 +806,6 @@ public class RoomManager {
         BuildersClubRoomSupport.sendCurrentRoomPlacementStatus(room);
         room.getUserVariableManager().restorePermanentAssignments(habbo);
 
-        // Pre-send own wearing badges so the client cache is populated before the user clicks themselves
         habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));
 
         List<Habbo> habbos = new ArrayList<>();
@@ -996,6 +1004,20 @@ public class RoomManager {
             if (room.hasVotedInWordQuiz(habbo)) {
                 habbo.getClient().sendResponse(new SimplePollAnswersComposer(room.noVotes, room.yesVotes));
             }
+        }
+
+        habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomSettingsComposer(
+                room.isYoutubeEnabled()).compose());
+
+        if (!room.getYoutubeCurrentVideo().isEmpty()) {
+            habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomBroadcastComposer(
+                    room.getYoutubeCurrentVideo(),
+                    room.getYoutubeSenderName(),
+                    room.getYoutubePlaylist()).compose());
+        }
+        if (!room.getYoutubeWatchers().isEmpty()) {
+            habbo.getClient().sendResponse(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomWatchersComposer(
+                    room.getYoutubeWatchers()).compose());
         }
 
         WiredManager.triggerUserEntersRoom(room, habbo.getRoomUnit());

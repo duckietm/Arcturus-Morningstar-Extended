@@ -190,11 +190,35 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   private volatile boolean muted;
   private RoomSpecialTypes roomSpecialTypes;
   private TraxManager traxManager;
-  private final Object wiredSettingsLock = new Object();
-  private volatile boolean wiredSettingsLoaded;
-  private int wiredInspectMask = WIRED_ACCESS_DEFAULT_INSPECT_MASK;
-  private int wiredModifyMask = WIRED_ACCESS_DEFAULT_MODIFY_MASK;
-  
+
+  // YouTube room broadcast state: tracks the current video being broadcast
+  // by the room owner, the owner's playlist, and which users have the player open.
+  private boolean youtubeEnabled = false;
+  private String youtubeCurrentVideo = "";
+  private String youtubeSenderName = "";
+  private final java.util.List<String> youtubePlaylist = new java.util.concurrent.CopyOnWriteArrayList<>();
+  private final java.util.Set<Integer> youtubeWatchers = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+  public boolean isYoutubeEnabled() { return this.youtubeEnabled; }
+  public void setYoutubeEnabled(boolean enabled) { this.youtubeEnabled = enabled; }
+  public String getYoutubeCurrentVideo() { return this.youtubeCurrentVideo; }
+  public String getYoutubeSenderName() { return this.youtubeSenderName; }
+  public java.util.List<String> getYoutubePlaylist() { return this.youtubePlaylist; }
+  public java.util.Set<Integer> getYoutubeWatchers() { return this.youtubeWatchers; }
+
+  public void setYoutubeVideo(String videoId, String senderName, java.util.List<String> playlist) {
+      this.youtubeCurrentVideo = videoId;
+      this.youtubeSenderName = senderName;
+      this.youtubePlaylist.clear();
+      if (playlist != null) this.youtubePlaylist.addAll(playlist);
+  }
+
+  public void clearYoutubeVideo() {
+      this.youtubeCurrentVideo = "";
+      this.youtubeSenderName = "";
+      this.youtubePlaylist.clear();
+  }
+
   public final THashMap<String, Object> cache;
 
   public Room(ResultSet set) throws SQLException {
@@ -222,6 +246,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.allowPetsEat = set.getBoolean("allow_other_pets_eat");
     this.allowWalkthrough = set.getBoolean("allow_walkthrough");
     this.hideWall = set.getBoolean("allow_hidewall");
+    try { this.youtubeEnabled = set.getBoolean("youtube_enabled"); } catch (Exception e) { this.youtubeEnabled = false; }
     this.chatMode = set.getInt("chat_mode");
     this.chatWeight = set.getInt("chat_weight");
     this.chatSpeed = set.getInt("chat_speed");
@@ -1151,7 +1176,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     if (this.needsUpdate) {
       try (Connection connection = Emulator.getDatabase().getDataSource()
           .getConnection(); PreparedStatement statement = connection.prepareStatement(
-          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ?, allow_underpass = ?, builders_club_trial_locked = ?, builders_club_original_state = ? WHERE id = ?")) {
+          "UPDATE rooms SET name = ?, description = ?, password = ?, state = ?, users_max = ?, category = ?, score = ?, paper_floor = ?, paper_wall = ?, paper_landscape = ?, thickness_wall = ?, wall_height = ?, thickness_floor = ?, moodlight_data = ?, tags = ?, allow_other_pets = ?, allow_other_pets_eat = ?, allow_walkthrough = ?, allow_hidewall = ?, chat_mode = ?, chat_weight = ?, chat_speed = ?, chat_hearing_distance = ?, chat_protection =?, who_can_mute = ?, who_can_kick = ?, who_can_ban = ?, poll_id = ?, guild_id = ?, roller_speed = ?, override_model = ?, is_staff_picked = ?, promoted = ?, trade_mode = ?, move_diagonally = ?, owner_id = ?, owner_name = ?, jukebox_active = ?, hidewired = ?, allow_underpass = ?, youtube_enabled = ? WHERE id = ?")) {
         statement.setString(1, this.name);
         statement.setString(2, this.description);
         statement.setString(3, this.password);
@@ -1201,9 +1226,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         statement.setString(38, this.jukeboxActive ? "1" : "0");
         statement.setString(39, this.hideWired ? "1" : "0");
         statement.setString(40, this.allowUnderpass ? "1" : "0");
-        statement.setString(41, this.buildersClubTrialLocked ? "1" : "0");
-        statement.setString(42, (this.buildersClubOriginalState != null ? this.buildersClubOriginalState : RoomState.OPEN).name().toLowerCase());
-        statement.setInt(43, this.id);
+        statement.setString(41, this.youtubeEnabled ? "1" : "0");
+        statement.setInt(42, this.id);
         statement.executeUpdate();
         this.needsUpdate = false;
       } catch (SQLException e) {
@@ -1865,11 +1889,29 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
   }
 
   public void removeHabbo(Habbo habbo) {
+    this.cleanupYoutubeWatcher(habbo);
     this.unitManager.removeHabbo(habbo);
   }
 
   public void removeHabbo(Habbo habbo, boolean sendRemovePacket) {
+    this.cleanupYoutubeWatcher(habbo);
     this.unitManager.removeHabbo(habbo, sendRemovePacket);
+  }
+
+  private void cleanupYoutubeWatcher(Habbo habbo) {
+    if (habbo == null) return;
+    int userId = habbo.getHabboInfo().getId();
+
+    // If the broadcast sender leaves, stop the broadcast for everyone
+    if (!this.youtubeCurrentVideo.isEmpty()
+        && habbo.getHabboInfo().getUsername().equals(this.youtubeSenderName)) {
+      this.clearYoutubeVideo();
+      this.sendComposer(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomBroadcastComposer("", "", java.util.Collections.emptyList()).compose());
+    }
+
+    if (this.youtubeWatchers.remove(userId)) {
+      this.sendComposer(new com.eu.habbo.messages.outgoing.rooms.youtube.YouTubeRoomWatchersComposer(this.youtubeWatchers).compose());
+    }
   }
 
   public void addBot(Bot bot) {
@@ -2337,7 +2379,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     this.rightsManager.refreshRightsForHabbo(habbo);
   }
 
-  public THashMap<Integer, String> getUsersWithRights() {
+  public Map<Integer, String> getUsersWithRights() {
     return this.rightsManager.getUsersWithRights();
   }
 

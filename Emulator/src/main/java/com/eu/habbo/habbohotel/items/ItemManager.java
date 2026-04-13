@@ -683,7 +683,7 @@ public class ItemManager {
             statement.execute();
 
             try (ResultSet set = statement.getGeneratedKeys()) {
-                try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO items_presents VALUES (?, ?)")) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO items_presents (item_id, base_item_reward) VALUES (?, ?)")) {
                     while (set.next() && item == null) {
                         preparedStatement.setInt(1, set.getInt(1));
                         preparedStatement.setInt(2, Integer.parseInt(itemId));

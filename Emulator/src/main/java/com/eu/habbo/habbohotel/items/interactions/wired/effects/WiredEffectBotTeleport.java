@@ -133,6 +133,10 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
             throw new WiredSaveException("Too many furni selected");
         }
 
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         List<HabboItem> newItems = new ArrayList<>();
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {

@@ -31,7 +31,7 @@ public class WiredTriggerReceiveSignal extends InteractionWiredTrigger {
 
     private static final long ACTIVATION_PULSE_MS = 300L;
     private static final String ANTENNA_INTERACTION = "antenna";
-    private static final String REQUIRE_ANTENNA_ERROR = "Puoi selezionare solo furni antenna.";
+    private static final String REQUIRE_ANTENNA_ERROR = "You can only select antenna furni.";
 
     private int channel = 0; // signal channel (0-based)
     private THashSet<HabboItem> items;

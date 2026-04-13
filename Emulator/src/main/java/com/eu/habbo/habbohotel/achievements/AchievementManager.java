@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.achievements;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboBadge;
@@ -49,16 +50,12 @@ public class AchievementManager {
             if (habbo != null) {
                 progressAchievement(habbo, achievement, amount);
             } else {
-                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-                     PreparedStatement statement = connection.prepareStatement("" +
-                             "INSERT INTO users_achievements_queue (user_id, achievement_id, amount) VALUES (?, ?, ?) " +
-                             "ON DUPLICATE KEY UPDATE amount = amount + ?")) {
-                    statement.setInt(1, habboId);
-                    statement.setInt(2, achievement.id);
-                    statement.setInt(3, amount);
-                    statement.setInt(4, amount);
-                    statement.execute();
-                } catch (SQLException e) {
+                try {
+                    SqlQueries.update(
+                            "INSERT INTO users_achievements_queue (user_id, achievement_id, amount) VALUES (?, ?, ?) "
+                                    + "ON DUPLICATE KEY UPDATE amount = amount + ?",
+                            habboId, achievement.id, amount, amount);
+                } catch (SqlQueries.DataAccessException e) {
                     LOGGER.error("Caught SQL exception", e);
                 }
             }
@@ -203,48 +200,41 @@ public class AchievementManager {
     }
 
     public static void createUserEntry(Habbo habbo, Achievement achievement) {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO users_achievements (user_id, achievement_name, progress) VALUES (?, ?, ?)")) {
-            statement.setInt(1, habbo.getHabboInfo().getId());
-            statement.setString(2, achievement.name);
-            statement.setInt(3, 1);
-            statement.execute();
-        } catch (SQLException e) {
+        try {
+            SqlQueries.update(
+                    "INSERT INTO users_achievements (user_id, achievement_name, progress) VALUES (?, ?, ?)",
+                    habbo.getHabboInfo().getId(), achievement.name, 1);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
 
     public static void saveAchievements(Habbo habbo) {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users_achievements SET progress = ? WHERE achievement_name = ? AND user_id = ? LIMIT 1")) {
-            statement.setInt(3, habbo.getHabboInfo().getId());
-            for (Map.Entry<Achievement, Integer> map : habbo.getHabboStats().getAchievementProgress().entrySet()) {
-                statement.setInt(1, map.getValue());
-                statement.setString(2, map.getKey().name);
-                statement.addBatch();
-            }
-            statement.executeBatch();
-        } catch (SQLException e) {
+        int userId = habbo.getHabboInfo().getId();
+        try {
+            SqlQueries.batchUpdate(
+                    "UPDATE users_achievements SET progress = ? WHERE achievement_name = ? AND user_id = ? LIMIT 1",
+                    habbo.getHabboStats().getAchievementProgress().entrySet(),
+                    (ps, entry) -> {
+                        ps.setInt(1, entry.getValue());
+                        ps.setString(2, entry.getKey().name);
+                        ps.setInt(3, userId);
+                    });
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
 
     public static int getAchievementProgressForHabbo(int userId, Achievement achievement) {
-        if (achievement == null) {
+        try {
+            return SqlQueries.queryOne(
+                    "SELECT progress FROM users_achievements WHERE user_id = ? AND achievement_name = ? LIMIT 1",
+                    rs -> rs.getInt("progress"),
+                    userId, achievement.name).orElse(0);
+        } catch (SqlQueries.DataAccessException e) {
+            LOGGER.error("Caught SQL exception", e);
             return 0;
         }
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT progress FROM users_achievements WHERE user_id = ? AND achievement_name = ? LIMIT 1")) {
-            statement.setInt(1, userId);
-            statement.setString(2, achievement.name);
-            try (ResultSet set = statement.executeQuery()) {
-                if (set.next()) {
-                    return set.getInt("progress");
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
-        }
-
-        return 0;
     }
 
     public void reload() {

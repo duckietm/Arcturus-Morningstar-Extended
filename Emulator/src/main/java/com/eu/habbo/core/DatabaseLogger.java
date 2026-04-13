@@ -7,6 +7,10 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DatabaseLogger {
@@ -24,19 +28,41 @@ public class DatabaseLogger {
             return;
         }
 
-        if (this.loggables.isEmpty()) {
+        // Drain the queue into a local snapshot so new loggables that arrive
+        // during this save cycle roll into the next flush instead of extending
+        // the current one indefinitely.
+        List<DatabaseLoggable> snapshot = new ArrayList<>();
+        DatabaseLoggable next;
+        while ((next = this.loggables.poll()) != null) {
+            snapshot.add(next);
+        }
+
+        if (snapshot.isEmpty()) {
             return;
         }
 
+        // Group by SQL query so each distinct statement only prepares and
+        // executeBatches once. LinkedHashMap preserves first-seen order so
+        // auto-increment ids on chat/log tables correlate with the time the
+        // events actually happened.
+        Map<String, List<DatabaseLoggable>> byQuery = new LinkedHashMap<>();
+        for (DatabaseLoggable loggable : snapshot) {
+            byQuery.computeIfAbsent(loggable.getQuery(), k -> new ArrayList<>()).add(loggable);
+        }
+
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
-            while (!this.loggables.isEmpty()) {
-                DatabaseLoggable loggable = this.loggables.remove();
-
-                try (PreparedStatement statement = connection.prepareStatement(loggable.getQuery())) {
-                    loggable.log(statement);
+            for (Map.Entry<String, List<DatabaseLoggable>> group : byQuery.entrySet()) {
+                List<DatabaseLoggable> entries = group.getValue();
+                try (PreparedStatement statement = connection.prepareStatement(group.getKey())) {
+                    for (DatabaseLoggable loggable : entries) {
+                        loggable.log(statement);
+                    }
                     statement.executeBatch();
+                } catch (SQLException e) {
+                    // One bad group shouldn't prevent other groups from flushing.
+                    LOGGER.error("Exception caught while saving loggable group of size {}: {}",
+                            entries.size(), group.getKey(), e);
                 }
-
             }
         } catch (SQLException e) {
             LOGGER.error("Exception caught while saving loggables to database.", e);

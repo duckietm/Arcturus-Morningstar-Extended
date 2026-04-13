@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.campaign.calendar;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.events.calendar.AdventCalendarProductComposer;
 import com.eu.habbo.plugin.events.users.calendar.UserClaimRewardEvent;
@@ -33,27 +34,27 @@ public class CalendarManager {
 
     public boolean reload() {
         this.dispose();
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM calendar_campaigns WHERE enabled = 1")) {
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    calendarCampaigns.put(set.getInt("id"), new CalendarCampaign(set));
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            SqlQueries.query(
+                    "SELECT * FROM calendar_campaigns WHERE enabled = 1",
+                    CalendarCampaign::new)
+                    .forEach(c -> calendarCampaigns.put(c.getId(), c));
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
             return false;
         }
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM calendar_rewards")) {
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    CalendarCampaign campaign = calendarCampaigns.get(set.getInt("campaign_id"));
-                    if(campaign != null){
-                        campaign.addReward(new CalendarRewardObject(set));
-                    }
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            SqlQueries.query(
+                    "SELECT * FROM calendar_rewards",
+                    rs -> Map.entry(rs.getInt("campaign_id"), new CalendarRewardObject(rs)))
+                    .forEach(entry -> {
+                        CalendarCampaign campaign = calendarCampaigns.get(entry.getKey());
+                        if (campaign != null) {
+                            campaign.addReward(entry.getValue());
+                        }
+                    });
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
             return false;
         }
@@ -94,14 +95,12 @@ public class CalendarManager {
     public boolean deleteCampaign(CalendarCampaign campaign) {
         calendarCampaigns.remove(campaign.getId());
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM calendar_campaigns WHERE id = ? LIMIT 1")) {
-            statement.setInt(1, campaign.getId());
-            return statement.execute();
-        } catch (SQLException e) {
+        try {
+            return SqlQueries.update("DELETE FROM calendar_campaigns WHERE id = ? LIMIT 1", campaign.getId()) > 0;
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            return false;
         }
-
-        return false;
     }
 
     public CalendarCampaign getCalendarCampaign(String campaignName) {
@@ -136,14 +135,15 @@ public class CalendarManager {
                     habbo.getHabboStats().calendarRewardsClaimed.add(new CalendarRewardClaimed(habbo.getHabboInfo().getId(), campaign.getId(), day, object.getId(), new Timestamp(System.currentTimeMillis())));
                     habbo.getClient().sendResponse(new AdventCalendarProductComposer(true, object, habbo));
                     object.give(habbo);
-                    try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO calendar_rewards_claimed (user_id, campaign_id, day, reward_id, timestamp) VALUES (?, ?, ?, ?, ?)")) {
-                        statement.setInt(1, habbo.getHabboInfo().getId());
-                        statement.setInt(2, campaign.getId());
-                        statement.setInt(3, day);
-                        statement.setInt(4, object.getId());
-                        statement.setInt(5, Emulator.getIntUnixTimestamp());
-                        statement.execute();
-                    } catch (SQLException e) {
+                    try {
+                        SqlQueries.update(
+                                "INSERT INTO calendar_rewards_claimed (user_id, campaign_id, day, reward_id, timestamp) VALUES (?, ?, ?, ?, ?)",
+                                habbo.getHabboInfo().getId(),
+                                campaign.getId(),
+                                day,
+                                object.getId(),
+                                Emulator.getIntUnixTimestamp());
+                    } catch (SqlQueries.DataAccessException e) {
                         LOGGER.error("Caught SQL exception", e);
                     }
                 }

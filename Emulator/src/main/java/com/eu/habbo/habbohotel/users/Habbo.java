@@ -273,7 +273,7 @@ public class Habbo implements Runnable {
             return;
 
         this.getHabboInfo().addPixels(event.points);
-        if (this.client != null) this.client.sendResponse(new UserCurrencyComposer(this.client.getHabbo()));
+        if (this.client != null) this.client.sendResponse(new UserCurrencyComposer(this));
     }
 
 
@@ -292,7 +292,7 @@ public class Habbo implements Runnable {
 
         this.getHabboInfo().addCurrencyAmount(event.type, event.points);
         if (this.client != null)
-            this.client.sendResponse(new UserPointsComposer(this.client.getHabbo().getHabboInfo().getCurrencyAmount(type), event.points, event.type));
+            this.client.sendResponse(new UserPointsComposer(this.getHabboInfo().getCurrencyAmount(type), event.points, event.type));
     }
 
 
@@ -303,7 +303,7 @@ public class Habbo implements Runnable {
 
     public void whisper(String message, RoomChatMessageBubbles bubble) {
         if (this.getRoomUnit().isInRoom()) {
-            this.client.sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(message, this.client.getHabbo().getRoomUnit(), bubble)));
+            this.client.sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(message, this.getRoomUnit(), bubble)));
         }
     }
 
@@ -315,7 +315,7 @@ public class Habbo implements Runnable {
 
     public void talk(String message, RoomChatMessageBubbles bubble) {
         if (this.getRoomUnit().isInRoom()) {
-            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserTalkComposer(new RoomChatMessage(message, this.client.getHabbo().getRoomUnit(), bubble)).compose());
+            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserTalkComposer(new RoomChatMessage(message, this.getRoomUnit(), bubble)).compose());
         }
     }
 
@@ -327,7 +327,7 @@ public class Habbo implements Runnable {
 
     public void shout(String message, RoomChatMessageBubbles bubble) {
         if (this.getRoomUnit().isInRoom()) {
-            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserShoutComposer(new RoomChatMessage(message, this.client.getHabbo().getRoomUnit(), bubble)).compose());
+            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserShoutComposer(new RoomChatMessage(message, this.getRoomUnit(), bubble)).compose());
         }
     }
 
@@ -408,10 +408,14 @@ public class Habbo implements Runnable {
 
 
     public boolean addBadge(String code) {
+        return this.addBadge(code, "");
+    }
+
+    public boolean addBadge(String code, String senderName) {
         if (!this.habboInventory.getBadgesComponent().hasBadge(code)) {
             HabboBadge badge = BadgesComponent.createBadge(code, this);
             this.habboInventory.getBadgesComponent().addBadge(badge);
-            this.client.sendResponse(new AddUserBadgeComposer(badge));
+            this.client.sendResponse(new AddUserBadgeComposer(badge, senderName));
             this.client.sendResponse(new AddHabboItemComposer(badge.getId(), AddHabboItemComposer.AddHabboItemCategory.BADGE));
 
             THashMap<String, String> keys = new THashMap<>();
@@ -446,7 +450,7 @@ public class Habbo implements Runnable {
             this.client.sendResponse(new FloodCounterComposer(remaining));
             this.client.sendResponse(new MutedWhisperComposer(remaining));
 
-            Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
+            Room room = this.getHabboInfo().getCurrentRoom();
             if (room != null && !isFlood) {
                 room.sendComposer(new RoomUserIgnoredComposer(this, RoomUserIgnoredComposer.MUTED).compose());
             }
@@ -456,7 +460,7 @@ public class Habbo implements Runnable {
     public void unMute() {
         this.habboStats.unMute();
         this.client.sendResponse(new FloodCounterComposer(3));
-        Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
+        Room room = this.getHabboInfo().getCurrentRoom();
         if (room != null) {
             room.sendComposer(new RoomUserIgnoredComposer(this, RoomUserIgnoredComposer.UNIGNORED).compose());
         }
@@ -493,18 +497,18 @@ public class Habbo implements Runnable {
 
 
     public void respect(Habbo target) {
-        if (target != null && target != this.client.getHabbo()) {
+        if (target != null && target != this) {
             target.getHabboStats().respectPointsReceived++;
-            this.client.getHabbo().getHabboStats().respectPointsGiven++;
-            this.client.getHabbo().getHabboStats().respectPointsToGive--;
-            this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserRespectComposer(target).compose());
-            this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserActionComposer(this.client.getHabbo().getRoomUnit(), RoomUserAction.THUMB_UP).compose());
+            this.getHabboStats().respectPointsGiven++;
+            this.getHabboStats().respectPointsToGive--;
+            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserRespectComposer(target).compose());
+            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserActionComposer(this.getRoomUnit(), RoomUserAction.THUMB_UP).compose());
 
-            AchievementManager.progressAchievement(this.client.getHabbo(), Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectGiven"));
+            AchievementManager.progressAchievement(this, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectGiven"));
             AchievementManager.progressAchievement(target, Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectEarned"));
 
-            this.client.getHabbo().getHabboInfo().getCurrentRoom().unIdle(this.client.getHabbo());
-            this.client.getHabbo().getHabboInfo().getCurrentRoom().dance(this.client.getHabbo().getRoomUnit(), DanceType.NONE);
+            this.getHabboInfo().getCurrentRoom().unIdle(this);
+            this.getHabboInfo().getCurrentRoom().dance(this.getRoomUnit(), DanceType.NONE);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.users;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.catalog.CatalogItem;
 import com.eu.habbo.habbohotel.games.Game;
 import com.eu.habbo.habbohotel.games.GamePlayer;
@@ -14,7 +15,6 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.procedure.TIntIntProcedure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,53 +104,47 @@ public class HabboInfo implements Runnable {
     private void loadCurrencies() {
         this.currencies = new TIntIntHashMap();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users_currency WHERE user_id = ?")) {
-            statement.setInt(1, this.id);
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    this.currencies.put(set.getInt("type"), set.getInt("amount"));
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            SqlQueries.forEach(
+                    "SELECT * FROM users_currency WHERE user_id = ?",
+                    rs -> this.currencies.put(rs.getInt("type"), rs.getInt("amount")),
+                    this.id);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
 
     private void saveCurrencies() {
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO users_currency (user_id, type, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?")) {
-            this.currencies.forEachEntry(new TIntIntProcedure() {
-                @Override
-                public boolean execute(int a, int b) {
-                    try {
-                        statement.setInt(1, HabboInfo.this.getId());
-                        statement.setInt(2, a);
-                        statement.setInt(3, b);
-                        statement.setInt(4, b);
-                        statement.addBatch();
-                    } catch (SQLException e) {
-                        LOGGER.error("Caught SQL exception", e);
-                    }
-                    return true;
-                }
-            });
-            statement.executeBatch();
-        } catch (SQLException e) {
-            LOGGER.error("Caught SQL exception", e);
+        List<int[]> entries = new ArrayList<>(this.currencies.size());
+        this.currencies.forEachEntry((type, amount) -> {
+            entries.add(new int[]{type, amount});
+            return true;
+        });
+
+        try {
+            SqlQueries.batchUpdate(
+                    "INSERT INTO users_currency (user_id, type, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = ?",
+                    entries,
+                    (ps, e) -> {
+                        ps.setInt(1, this.id);
+                        ps.setInt(2, e[0]);
+                        ps.setInt(3, e[1]);
+                        ps.setInt(4, e[1]);
+                    });
+        } catch (SqlQueries.DataAccessException ex) {
+            LOGGER.error("Caught SQL exception", ex);
         }
     }
 
     private void loadSavedSearches() {
-        this.savedSearches = new ArrayList<>();
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM users_saved_searches WHERE user_id = ?")) {
-            statement.setInt(1, this.id);
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    this.savedSearches.add(new NavigatorSavedSearch(set.getString("search_code"), set.getString("filter"), set.getInt("id")));
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            this.savedSearches = SqlQueries.query(
+                    "SELECT * FROM users_saved_searches WHERE user_id = ?",
+                    rs -> new NavigatorSavedSearch(rs.getString("search_code"), rs.getString("filter"), rs.getInt("id")),
+                    this.id);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            this.savedSearches = new ArrayList<>();
         }
     }
 
@@ -182,26 +176,22 @@ public class HabboInfo implements Runnable {
     public void deleteSavedSearch(NavigatorSavedSearch search) {
         this.savedSearches.remove(search);
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM users_saved_searches WHERE id = ?")) {
-            statement.setInt(1, search.getId());
-            statement.execute();
-        } catch (SQLException e) {
+        try {
+            SqlQueries.update("DELETE FROM users_saved_searches WHERE id = ?", search.getId());
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
 
     private void loadMessengerCategories() {
-        this.messengerCategories = new ArrayList<>();
-
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM messenger_categories WHERE user_id = ?")) {
-            statement.setInt(1, this.id);
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    this.messengerCategories.add(new MessengerCategory(set.getString("name"), set.getInt("user_id"), set.getInt("id")));
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            this.messengerCategories = SqlQueries.query(
+                    "SELECT * FROM messenger_categories WHERE user_id = ?",
+                    rs -> new MessengerCategory(rs.getString("name"), rs.getInt("user_id"), rs.getInt("id")),
+                    this.id);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
+            this.messengerCategories = new ArrayList<>();
         }
     }
 
@@ -232,10 +222,9 @@ public class HabboInfo implements Runnable {
     public void deleteMessengerCategory(MessengerCategory category) {
         this.messengerCategories.remove(category);
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM messenger_categories WHERE id = ?")) {
-            statement.setInt(1, category.getId());
-            statement.execute();
-        } catch (SQLException e) {
+        try {
+            SqlQueries.update("DELETE FROM messenger_categories WHERE id = ?", category.getId());
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
@@ -389,12 +378,10 @@ public class HabboInfo implements Runnable {
 
     public void setPixels(int pixels) {
         this.setCurrencyAmount(0, pixels);
-        this.run();
     }
 
     public void addPixels(int pixels) {
         this.addCurrencyAmount(0, pixels);
-        this.run();
     }
 
     public int getLastOnline() {
@@ -588,25 +575,26 @@ public class HabboInfo implements Runnable {
     public void run() {
         this.saveCurrencies();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ?, background_id = ?, background_stand_id = ?, background_overlay_id = ? WHERE id = ?")) {
-            statement.setString(1, this.motto);
-            statement.setString(2, this.online ? "1" : "0");
-            statement.setString(3, this.look);
-            statement.setString(4, this.gender.name());
-            statement.setInt(5, this.credits);
-            statement.setInt(7, this.lastOnline);
-            statement.setInt(6, Emulator.getIntUnixTimestamp());
-            statement.setInt(8, this.homeRoom);
-            statement.setString(9, this.ipLogin);
-            statement.setInt(10, this.rank != null ? this.rank.getId() : 1);
-            statement.setString(11, this.machineID);
-            statement.setString(12, this.username);
-            statement.setInt(13, this.InfostandBg);
-            statement.setInt(14, this.InfostandStand);
-            statement.setInt(15, this.InfostandOverlay);
-            statement.setInt(16, this.id);
-            statement.executeUpdate();
-        } catch (SQLException e) {
+        try {
+            SqlQueries.update(
+                    "UPDATE users SET motto = ?, online = ?, look = ?, gender = ?, credits = ?, last_login = ?, last_online = ?, home_room = ?, ip_current = ?, `rank` = ?, machine_id = ?, username = ?, background_id = ?, background_stand_id = ?, background_overlay_id = ? WHERE id = ?",
+                    this.motto,
+                    this.online ? "1" : "0",
+                    this.look,
+                    this.gender.name(),
+                    this.credits,
+                    Emulator.getIntUnixTimestamp(),
+                    this.lastOnline,
+                    this.homeRoom,
+                    this.ipLogin,
+                    this.rank != null ? this.rank.getId() : 1,
+                    this.machineID,
+                    this.username,
+                    this.InfostandBg,
+                    this.InfostandStand,
+                    this.InfostandOverlay,
+                    this.id);
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
     }
