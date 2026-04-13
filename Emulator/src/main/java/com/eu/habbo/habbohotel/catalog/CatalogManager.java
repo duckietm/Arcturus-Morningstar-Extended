@@ -831,17 +831,36 @@ public class CatalogManager {
 
     public CatalogPage createCatalogPage(String caption, String captionSave, int roomId, int icon, CatalogPageLayouts layout, int minRank, int parentId, CatalogPageType pageType, CatalogPageType catalogMode) {
         CatalogPage catalogPage = null;
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("INSERT INTO catalog_pages (parent_id, caption, caption_save, icon_image, visible, enabled, min_rank, page_layout, room_id, includes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+        boolean buildersClubPage = (pageType == CatalogPageType.BUILDER);
+        String insertQuery = buildersClubPage
+                ? "INSERT INTO catalog_pages_bc (parent_id, caption, page_layout, icon_color, icon_image, order_num, visible, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                : "INSERT INTO catalog_pages (parent_id, caption, caption_save, icon_image, visible, enabled, min_rank, page_layout, room_id, catalog_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String selectQuery = buildersClubPage
+                ? "SELECT id, parent_id, caption, caption AS caption_save, page_layout, icon_color, icon_image, 1 AS min_rank, order_num, visible, enabled, '0' AS club_only, 'BUILDERS_CLUB' AS catalog_mode, page_headline, page_teaser, page_special, page_text1, page_text2, page_text_details, page_text_teaser, '' AS includes FROM catalog_pages_bc WHERE id = ?"
+                : "SELECT * FROM catalog_pages WHERE id = ?";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, parentId);
             statement.setString(2, caption);
-            statement.setString(3, captionSave);
-            statement.setInt(4, icon);
-            statement.setString(5, "1");
-            statement.setString(6, "1");
-            statement.setInt(7, minRank);
-            statement.setString(8, layout.name());
-            statement.setInt(9, roomId);
-            statement.setString(10, "");
+
+            if (buildersClubPage) {
+                statement.setString(3, layout.name());
+                statement.setInt(4, 1);
+                statement.setInt(5, icon);
+                statement.setInt(6, 1);
+                statement.setString(7, "1");
+                statement.setString(8, "1");
+            } else {
+                statement.setString(3, captionSave);
+                statement.setInt(4, icon);
+                statement.setString(5, "1");
+                statement.setString(6, "1");
+                statement.setInt(7, minRank);
+                statement.setString(8, layout.name());
+                statement.setInt(9, roomId);
+                statement.setString(10, catalogMode.name());
+            }
             statement.execute();
             try (ResultSet set = statement.getGeneratedKeys()) {
                 if (set.next()) {
@@ -1117,7 +1136,7 @@ public class CatalogManager {
                                     if (extradata.length() > Emulator.getConfig().getInt("hotel.trophies.length.max", 300)) {
                                         extradata = extradata.substring(0, Emulator.getConfig().getInt("hotel.trophies.length.max", 300));
                                     }
-                                    
+
                                     extradata = habbo.getClient().getHabbo().getHabboInfo().getUsername() + (char) 9 + Calendar.getInstance().get(Calendar.DAY_OF_MONTH) + "-" + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-" + Calendar.getInstance().get(Calendar.YEAR) + (char) 9 + Emulator.getGameEnvironment().getWordFilter().filter(extradata.replace(((char) 9) + "", ""), habbo);
                                 }
 
@@ -1186,7 +1205,7 @@ public class CatalogManager {
 
                 if (badgeFound && item.getBaseItems().size() == 1) {
                     habbo.getClient().sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.ALREADY_HAVE_BADGE));
-                        return;
+                    return;
                 }
 
                 UserCatalogItemPurchasedEvent purchasedEvent = new UserCatalogItemPurchasedEvent(habbo, item, itemsList, totalCredits, totalPoints, badges);
