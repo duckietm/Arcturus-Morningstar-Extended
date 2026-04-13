@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectTrigg
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecutionLimit;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomWiredDisableSupport;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -17,6 +18,7 @@ import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredGiveRewardItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.api.WiredStack;
 import com.eu.habbo.habbohotel.wired.migrate.WiredEvents;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickService;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
@@ -38,19 +40,24 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Set;
 
 /**
- * Manager class for the new wired engine system.
+ * Manager class for the wired runtime.
  * <p>
- * This class serves as the integration point between the emulator and the new
- * wired engine. It provides static methods for triggering events and manages
- * the lifecycle of the engine.
+ * WiredManager is now the sole runtime entrypoint for wired execution. Legacy
+ * configuration keys are still read for backwards compatibility with existing
+ * databases, but they no longer switch execution back to {@code WiredHandler}.
  * </p>
  *
  * <h3>Configuration Options:</h3>
  * <ul>
- *   <li>{@code wired.engine.enabled} - Enable new engine (parallel mode)</li>
- *   <li>{@code wired.engine.exclusive} - Disable legacy handler when true</li>
+ *   <li>{@code wired.engine.enabled} - Compatibility flag kept for old configs</li>
+ *   <li>{@code wired.engine.exclusive} - Compatibility flag kept for old configs</li>
  *   <li>{@code wired.engine.maxStepsPerStack} - Loop protection limit</li>
  *   <li>{@code wired.engine.debug} - Verbose logging</li>
  * </ul>
@@ -80,8 +87,8 @@ public final class WiredManager {
     public static final String CONFIG_DEBUG = "wired.engine.debug";
 
     // Defaults
-    private static final boolean DEFAULT_ENABLED = false;
-    private static final boolean DEFAULT_EXCLUSIVE = false;
+    private static final boolean DEFAULT_ENABLED = true;
+    private static final boolean DEFAULT_EXCLUSIVE = true;
     private static final int DEFAULT_MAX_STEPS = 100;
 
     /** The singleton engine instance */
@@ -92,6 +99,8 @@ public final class WiredManager {
 
     /** Whether the engine is initialized */
     private static volatile boolean initialized = false;
+    private static final ThreadLocal<Integer> EVENT_HANDLING_DEPTH = new ThreadLocal<>();
+    private static final ThreadLocal<ArrayDeque<DeferredEffectEvent>> DEFERRED_EFFECT_EVENTS = new ThreadLocal<>();
     private WiredManager() {
         // Static utility class
     }
@@ -117,6 +126,7 @@ public final class WiredManager {
 
         // Load configuration
         boolean enabled = Emulator.getConfig().getBoolean(CONFIG_ENABLED, DEFAULT_ENABLED);
+        boolean exclusive = Emulator.getConfig().getBoolean(CONFIG_EXCLUSIVE, DEFAULT_EXCLUSIVE);
         int maxSteps = Emulator.getConfig().getInt(CONFIG_MAX_STEPS, DEFAULT_MAX_STEPS);
         boolean debug = Emulator.getConfig().getBoolean(CONFIG_DEBUG, false);
 
@@ -139,7 +149,11 @@ public final class WiredManager {
 
         initialized = true;
 
-        LOGGER.info("Wired Manager initialized - enabled: {}, maxSteps: {}, debug: {}",
+        if (!enabled || !exclusive) {
+            LOGGER.warn("wired.engine.enabled / wired.engine.exclusive are now compatibility-only flags. WiredManager runs as the exclusive engine runtime.");
+        }
+
+        LOGGER.info("Wired Manager initialized - enabled: {}, exclusive runtime active, maxSteps: {}, debug: {}",
                 enabled, maxSteps, debug);
     }
 
@@ -162,6 +176,8 @@ public final class WiredManager {
         }
 
         if (engine != null) {
+            engine.clearUnseenCache();
+            engine.clearAllDiagnostics();
             engine.clearAllExecutionCaches();
         }
 
@@ -174,7 +190,7 @@ public final class WiredManager {
      * @return true if enabled
      */
     public static boolean isEnabled() {
-        return Emulator.getConfig().getBoolean(CONFIG_ENABLED, DEFAULT_ENABLED);
+        return initialized && engine != null;
     }
 
     /**
@@ -182,7 +198,7 @@ public final class WiredManager {
      * @return true if exclusive mode
      */
     public static boolean isExclusive() {
-        return Emulator.getConfig().getBoolean(CONFIG_EXCLUSIVE, DEFAULT_EXCLUSIVE);
+        return true;
     }
 
     /**
@@ -201,6 +217,27 @@ public final class WiredManager {
         return stackIndex;
     }
 
+    /**
+     * Get the current monitor snapshot for a room.
+     * @param roomId the room ID
+     * @return the diagnostics snapshot, or null if the engine is unavailable
+     */
+    public static WiredRoomDiagnostics.Snapshot getDiagnosticsSnapshot(int roomId) {
+        if (engine == null) {
+            return null;
+        }
+
+        return engine.getDiagnosticsSnapshot(roomId);
+    }
+
+    public static void clearDiagnosticsLogs(int roomId) {
+        if (engine == null) {
+            return;
+        }
+
+        engine.clearRoomDiagnosticsLogs(roomId);
+    }
+
     // ========== Event Triggering Methods ==========
 
     /**
@@ -209,11 +246,84 @@ public final class WiredManager {
      * @return true if any stack was triggered
      */
     public static boolean handleEvent(WiredEvent event) {
+        return handleEvent(event, false);
+    }
+
+    public static boolean handleEvent(WiredEvent event, boolean negateConditions) {
         if (!isEnabled() || engine == null) {
             return false;
         }
 
-        return engine.handleEvent(event);
+        if (event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
+            return false;
+        }
+
+        Integer previousDepth = EVENT_HANDLING_DEPTH.get();
+        int nextDepth = (previousDepth == null) ? 1 : (previousDepth + 1);
+        EVENT_HANDLING_DEPTH.set(nextDepth);
+
+        if (previousDepth == null) {
+            DEFERRED_EFFECT_EVENTS.set(new ArrayDeque<>());
+        }
+
+        boolean handled = false;
+
+        try {
+            handled = engine.handleEvent(event, negateConditions);
+
+            if (nextDepth == 1) {
+                ArrayDeque<DeferredEffectEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+
+                while (deferredEvents != null && !deferredEvents.isEmpty()) {
+                    DeferredEffectEvent deferredEvent = deferredEvents.pollFirst();
+
+                    if (deferredEvent == null || deferredEvent.event == null || RoomWiredDisableSupport.isWiredDisabled(deferredEvent.event.getRoom())) {
+                        continue;
+                    }
+
+                    handled = engine.handleEvent(deferredEvent.event, deferredEvent.negateConditions) || handled;
+                }
+            }
+
+            return handled;
+        } finally {
+            if (previousDepth == null) {
+                EVENT_HANDLING_DEPTH.remove();
+                DEFERRED_EFFECT_EVENTS.remove();
+            } else {
+                EVENT_HANDLING_DEPTH.set(previousDepth);
+            }
+        }
+    }
+
+    public static boolean dispatchEffectTriggeredEvent(WiredEvent event) {
+        return dispatchEffectTriggeredEvent(event, false);
+    }
+
+    public static boolean dispatchNegatedEffectTriggeredEvent(WiredEvent event) {
+        return dispatchEffectTriggeredEvent(event, true);
+    }
+
+    private static boolean dispatchEffectTriggeredEvent(WiredEvent event, boolean negateConditions) {
+        if (!isEnabled() || engine == null || event == null || RoomWiredDisableSupport.isWiredDisabled(event.getRoom())) {
+            return false;
+        }
+
+        Integer currentDepth = EVENT_HANDLING_DEPTH.get();
+
+        if (currentDepth == null || currentDepth <= 0) {
+            return handleEvent(event, negateConditions);
+        }
+
+        ArrayDeque<DeferredEffectEvent> deferredEvents = DEFERRED_EFFECT_EVENTS.get();
+
+        if (deferredEvents == null) {
+            deferredEvents = new ArrayDeque<>();
+            DEFERRED_EFFECT_EVENTS.set(deferredEvents);
+        }
+
+        deferredEvents.addLast(new DeferredEffectEvent(event, negateConditions));
+        return true;
     }
 
     /**
@@ -320,20 +430,32 @@ public final class WiredManager {
      * Trigger when a user says something.
      */
     public static boolean triggerUserSays(Room room, RoomUnit user, String message) {
+        return triggerUserSays(room, user, message, -1, -1);
+    }
+
+    public static boolean triggerUserSays(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         if (!isEnabled() || room == null || user == null) {
             return false;
         }
 
-        WiredEvent event = WiredEvents.userSays(room, user, message);
+        WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
         return handleEvent(event);
     }
 
     public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message) {
+        return shouldSuppressUserSaysOutput(room, user, message, -1, -1);
+    }
+
+    public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         if (!isEnabled() || engine == null || room == null || user == null) {
             return false;
         }
 
-        WiredEvent event = WiredEvents.userSays(room, user, message);
+        if (RoomWiredDisableSupport.isWiredDisabled(room)) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
         return engine.shouldSuppressUserSaysOutput(event);
     }
 
@@ -370,6 +492,36 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.furniStateChanged(room, user, item);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerUserVariableChanged(Room room, int userId, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || definitionItemId <= 0) {
+            return false;
+        }
+
+        Habbo habbo = room.getHabbo(userId);
+        RoomUnit roomUnit = (habbo != null) ? habbo.getRoomUnit() : null;
+        WiredEvent event = WiredEvents.userVariableChanged(room, roomUnit, definitionItemId, created, deleted, changeKind);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerFurniVariableChanged(Room room, int furniId, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || furniId <= 0 || definitionItemId <= 0) {
+            return false;
+        }
+
+        HabboItem item = room.getHabboItem(furniId);
+        WiredEvent event = WiredEvents.furniVariableChanged(room, item, definitionItemId, created, deleted, changeKind);
+        return handleEvent(event);
+    }
+
+    public static boolean triggerRoomVariableChanged(Room room, int definitionItemId, WiredEvent.VariableChangeKind changeKind) {
+        if (!isEnabled() || room == null || definitionItemId <= 0) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.roomVariableChanged(room, definitionItemId, changeKind);
         return handleEvent(event);
     }
 
@@ -579,8 +731,8 @@ public final class WiredManager {
     }
 
     /**
-     * Trigger from legacy system for parallel running.
-     * This allows the new engine to run alongside the old one during migration.
+     * Compatibility bridge for code paths that still describe themselves as
+     * legacy-triggered. Execution still goes through the new engine only.
      */
     public static boolean triggerFromLegacy(WiredTriggerType triggerType, RoomUnit roomUnit, Room room, Object[] stuff) {
         if (!isEnabled() || room == null) {
@@ -758,6 +910,11 @@ public final class WiredManager {
      */
     public static void unregisterRoomTickables(Room room) {
         WiredTickService.getInstance().unregisterRoom(room);
+        if (room != null) {
+            room.getFurniVariableManager().clearTransientAssignments();
+            room.getRoomVariableManager().clearTransientAssignments();
+        }
+
         if (engine != null && room != null) {
             engine.clearRoomExecutionCaches(room.getId());
         }
@@ -831,6 +988,10 @@ public final class WiredManager {
      * @return true if any effects were executed
      */
     public static boolean executeEffectsAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (tiles == null || tiles.isEmpty() || room == null || engine == null || stackIndex == null) {
+            return false;
+        }
+
         for (RoomTile tile : tiles) {
             if (room != null) {
                 THashSet<HabboItem> items = room.getItemsAt(tile);
@@ -852,6 +1013,82 @@ public final class WiredManager {
         }
 
         return true;
+    }
+
+    public static boolean executeNegatedStacksAtTiles(THashSet<RoomTile> tiles, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (tiles == null || tiles.isEmpty() || room == null || engine == null || stackIndex == null) {
+            return false;
+        }
+
+        boolean handled = false;
+        WiredEvent event = WiredEvent.builder(WiredEvent.Type.CUSTOM, room)
+                .actor(roomUnit)
+                .callStackDepth(callStackDepth)
+                .build();
+
+        for (RoomTile tile : tiles) {
+            List<WiredStack> stacks = stackIndex.getStacksAtTile(room, tile);
+            if (stacks.isEmpty()) {
+                continue;
+            }
+
+            for (WiredStack stack : stacks) {
+                handled = engine.executeDirectStack(stack, event, true) || handled;
+            }
+        }
+
+        return handled;
+    }
+
+    public static boolean executeNegatedTargetStacks(Iterable<HabboItem> triggerItems, final RoomUnit roomUnit, final Room room, final int callStackDepth) {
+        if (triggerItems == null || room == null || engine == null || stackIndex == null || room.getLayout() == null) {
+            return false;
+        }
+
+        boolean handled = false;
+        Set<Integer> seenTriggerIds = new HashSet<>();
+        WiredEvent event = WiredEvent.builder(WiredEvent.Type.CUSTOM, room)
+                .actor(roomUnit)
+                .callStackDepth(callStackDepth)
+                .build();
+
+        for (HabboItem triggerItem : triggerItems) {
+            if (triggerItem == null || !seenTriggerIds.add(triggerItem.getId())) {
+                continue;
+            }
+
+            RoomTile tile = room.getLayout().getTile(triggerItem.getX(), triggerItem.getY());
+            if (tile == null) {
+                continue;
+            }
+
+            List<WiredStack> stacks = stackIndex.getStacksAtTile(room, tile);
+            if (stacks.isEmpty()) {
+                continue;
+            }
+
+            for (WiredStack stack : stacks) {
+                HabboItem stackTriggerItem = stack.triggerItem();
+                if (stackTriggerItem == null || stackTriggerItem.getId() != triggerItem.getId()) {
+                    continue;
+                }
+
+                handled = engine.executeDirectStack(stack, event, true) || handled;
+                break;
+            }
+        }
+
+        return handled;
+    }
+
+    private static final class DeferredEffectEvent {
+        private final WiredEvent event;
+        private final boolean negateConditions;
+
+        private DeferredEffectEvent(WiredEvent event, boolean negateConditions) {
+            this.event = event;
+            this.negateConditions = negateConditions;
+        }
     }
 
     // ========== Reward System ==========

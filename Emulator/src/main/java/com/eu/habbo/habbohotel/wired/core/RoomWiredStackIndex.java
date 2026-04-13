@@ -158,6 +158,34 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         return stacks.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(stacks);
     }
 
+    public List<WiredStack> getStacksAtTile(Room room, RoomTile tile) {
+        if (room == null || tile == null || room.getRoomSpecialTypes() == null) {
+            return Collections.emptyList();
+        }
+
+        RoomSpecialTypes specialTypes = room.getRoomSpecialTypes();
+        THashSet<InteractionWiredTrigger> triggers = specialTypes.getTriggers(tile.x, tile.y);
+
+        if (triggers == null || triggers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<WiredStack> stacks = new ArrayList<>();
+
+        for (InteractionWiredTrigger trigger : WiredExecutionOrderUtil.sort(triggers)) {
+            if (trigger == null) {
+                continue;
+            }
+
+            WiredStack stack = buildStack(room, specialTypes, trigger, tile.x, tile.y);
+            if (stack != null) {
+                stacks.add(stack);
+            }
+        }
+
+        return stacks.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(stacks);
+    }
+
     /**
      * Build a single wired stack for a trigger at a specific location.
      */

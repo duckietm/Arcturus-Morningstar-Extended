@@ -35,6 +35,7 @@ public final class WiredMoveCarryHelper {
     private static final long USER_FOLLOWER_TTL_MS = 10000L;
     private static final ThreadLocal<Set<Integer>> SUPPRESSED_STATUS_ROOM_UNIT_IDS = new ThreadLocal<>();
     private static final ThreadLocal<List<WiredMovementsComposer.MovementData>> COLLECTED_MOVEMENTS = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> MOVEMENT_COLLECTION_DEPTH = new ThreadLocal<>();
     private static final ConcurrentHashMap<Integer, Long> SUPPRESSED_STATUS_COMPOSER_UNTIL = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, UserFollowEntry>> ACTIVE_USER_FOLLOWERS = new ConcurrentHashMap<>();
 
@@ -176,7 +177,25 @@ public final class WiredMoveCarryHelper {
                 && !sendUpdates
                 && oldLocation != null
                 && (oldLocation.x != targetTile.x || oldLocation.y != targetTile.y || Double.compare(oldZ, movingItem.getZ()) != 0)) {
-            room.sendComposer(new FloorItemOnRollerComposer(movingItem, null, oldLocation, oldZ, targetTile, movingItem.getZ(), 0, room).compose());
+            List<WiredMovementsComposer.MovementData> collectedMovements = COLLECTED_MOVEMENTS.get();
+
+            if (collectedMovements != null) {
+                collectedMovements.add(WiredMovementsComposer.furniMovement(
+                        movingItem.getId(),
+                        oldLocation.x,
+                        oldLocation.y,
+                        targetTile.x,
+                        targetTile.y,
+                        oldZ,
+                        movingItem.getZ(),
+                        movingItem.getRotation(),
+                        WiredMovementsComposer.DEFAULT_DURATION,
+                        0,
+                        WiredMovementsComposer.FURNI_ANCHOR_NONE,
+                        0));
+            } else {
+                room.sendComposer(new FloorItemOnRollerComposer(movingItem, null, oldLocation, oldZ, targetTile, movingItem.getZ(), 0, room).compose());
+            }
         }
 
         return result;
@@ -219,12 +238,28 @@ public final class WiredMoveCarryHelper {
     }
 
     public static void beginMovementCollection() {
-        COLLECTED_MOVEMENTS.set(new ArrayList<>());
+        Integer currentDepth = MOVEMENT_COLLECTION_DEPTH.get();
+
+        if (currentDepth == null || currentDepth <= 0) {
+            COLLECTED_MOVEMENTS.set(new ArrayList<>());
+            MOVEMENT_COLLECTION_DEPTH.set(1);
+            return;
+        }
+
+        MOVEMENT_COLLECTION_DEPTH.set(currentDepth + 1);
     }
 
     public static ServerMessage finishMovementCollection() {
+        Integer currentDepth = MOVEMENT_COLLECTION_DEPTH.get();
+
+        if (currentDepth != null && currentDepth > 1) {
+            MOVEMENT_COLLECTION_DEPTH.set(currentDepth - 1);
+            return null;
+        }
+
         List<WiredMovementsComposer.MovementData> movements = COLLECTED_MOVEMENTS.get();
         COLLECTED_MOVEMENTS.remove();
+        MOVEMENT_COLLECTION_DEPTH.remove();
 
         if (movements == null || movements.isEmpty()) {
             return null;
@@ -384,6 +419,14 @@ public final class WiredMoveCarryHelper {
     public static int getAnimationDuration(Room room, HabboItem stackItem, int fallbackDuration) {
         WiredExtraAnimationTime extra = getAnimationTimeExtra(room, stackItem);
         return (extra != null) ? extra.getDurationMs() : fallbackDuration;
+    }
+
+    public static WiredMovementPhysics getUserMovementPhysics(Room room, HabboItem stackItem, WiredContext ctx) {
+        if (room == null || stackItem == null) {
+            return WiredMovementPhysics.NONE;
+        }
+
+        return getMovementPhysics(room, stackItem, null, ctx);
     }
 
     public static int resolveMoveStepElapsed(RoomUnit roomUnit) {
@@ -938,7 +981,7 @@ public final class WiredMoveCarryHelper {
             return new ArrayList<>();
         }
 
-        return WiredSourceUtil.resolveItems(ctx, sourceType, null);
+        return WiredSourceUtil.resolveItemsRaw(ctx, sourceType, null);
     }
 
     private static Collection<RoomUnit> resolvePhysicsUsers(Room room, WiredContext ctx, int userSource) {
@@ -954,7 +997,7 @@ public final class WiredMoveCarryHelper {
             return new ArrayList<>();
         }
 
-        return WiredSourceUtil.resolveUsers(ctx, userSource);
+        return WiredSourceUtil.resolveUsersRaw(ctx, userSource);
     }
 
     private static WiredExtraMovePhysics getMovementPhysicsExtra(Room room, HabboItem stackItem) {

@@ -167,9 +167,15 @@ public final class WiredEvents {
      * @return the event
      */
     public static WiredEvent userSays(Room room, RoomUnit user, String message) {
+        return userSays(room, user, message, -1, -1);
+    }
+
+    public static WiredEvent userSays(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         return WiredEvent.builder(WiredEvent.Type.USER_SAYS, room)
                 .actor(user)
                 .text(message)
+                .chatType(chatType)
+                .chatStyle(chatStyle)
                 .tile(user.getCurrentLocation())
                 .build();
     }
@@ -189,6 +195,42 @@ public final class WiredEvents {
                 .actor(user)
                 .sourceItem(item)
                 .tile(tile)
+                .build();
+    }
+
+    public static WiredEvent userVariableChanged(Room room, RoomUnit user, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .actor(user)
+                .tile((user != null) ? user.getCurrentLocation() : null)
+                .variableTargetType(0)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(created)
+                .variableDeleted(deleted)
+                .variableChangeKind(changeKind)
+                .build();
+    }
+
+    public static WiredEvent furniVariableChanged(Room room, HabboItem item, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        RoomTile tile = (item != null) ? room.getLayout().getTile(item.getX(), item.getY()) : null;
+
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .sourceItem(item)
+                .tile(tile)
+                .variableTargetType(1)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(created)
+                .variableDeleted(deleted)
+                .variableChangeKind(changeKind)
+                .build();
+    }
+
+    public static WiredEvent roomVariableChanged(Room room, int definitionItemId, WiredEvent.VariableChangeKind changeKind) {
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .variableTargetType(3)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(false)
+                .variableDeleted(false)
+                .variableChangeKind(changeKind)
                 .build();
     }
 

@@ -35,32 +35,29 @@ public class Rank {
     private int gotwTimerAmount;
 
     public Rank(ResultSet set) throws SQLException {
+        this(set.getInt("id"));
+        this.load(set);
+    }
+
+    public Rank(int id) {
         this.permissions = new THashMap<>();
         this.variables = new THashMap<>();
-        this.id = set.getInt("id");
-        this.level = set.getInt("level");
+        this.id = id;
+        this.level = 1;
         this.diamondsTimerAmount = 1;
         this.creditsTimerAmount = 1;
         this.pixelsTimerAmount = 1;
         this.gotwTimerAmount = 1;
-
-        this.load(set);
     }
 
     public void load(ResultSet set) throws SQLException {
+        this.permissions.clear();
+        this.variables.clear();
+
+        this.loadMetadata(set);
+
         ResultSetMetaData meta = set.getMetaData();
-        this.name = set.getString("rank_name");
-        this.badge = set.getString("badge");
-        this.roomEffect = set.getInt("room_effect");
-        this.logCommands = set.getString("log_commands").equals("1");
-        this.prefix = set.getString("prefix");
-        this.prefixColor = set.getString("prefix_color");
-        this.level = set.getInt("level");
-        this.diamondsTimerAmount = set.getInt("auto_points_amount");
-        this.creditsTimerAmount = set.getInt("auto_credits_amount");
-        this.pixelsTimerAmount = set.getInt("auto_pixels_amount");
-        this.gotwTimerAmount = set.getInt("auto_gotw_amount");
-        this.hasPrefix = !this.prefix.isEmpty();
+
         for (int i = 1; i < meta.getColumnCount() + 1; i++) {
             String columnName = meta.getColumnName(i);
             if (columnName.startsWith("cmd_") || columnName.startsWith("acc_")) {
@@ -69,6 +66,51 @@ public class Rank {
                 this.variables.put(meta.getColumnName(i), set.getString(i));
             }
         }
+    }
+
+    public void loadNormalizedMetadata(ResultSet set) throws SQLException {
+        this.permissions.clear();
+        this.variables.clear();
+        this.loadMetadata(set);
+        this.storeMetadataVariables();
+    }
+
+    public void setPermission(String key, PermissionSetting setting) {
+        this.permissions.put(key, new Permission(key, setting));
+    }
+
+    private void loadMetadata(ResultSet set) throws SQLException {
+        this.name = this.safeString(set.getString("rank_name"));
+        this.badge = this.safeString(set.getString("badge"));
+        this.roomEffect = set.getInt("room_effect");
+        this.logCommands = "1".equals(this.safeString(set.getString("log_commands")));
+        this.prefix = this.safeString(set.getString("prefix"));
+        this.prefixColor = this.safeString(set.getString("prefix_color"));
+        this.level = set.getInt("level");
+        this.diamondsTimerAmount = set.getInt("auto_points_amount");
+        this.creditsTimerAmount = set.getInt("auto_credits_amount");
+        this.pixelsTimerAmount = set.getInt("auto_pixels_amount");
+        this.gotwTimerAmount = set.getInt("auto_gotw_amount");
+        this.hasPrefix = !this.prefix.isEmpty();
+    }
+
+    private void storeMetadataVariables() {
+        this.variables.put("id", Integer.toString(this.id));
+        this.variables.put("rank_name", this.name);
+        this.variables.put("badge", this.badge);
+        this.variables.put("room_effect", Integer.toString(this.roomEffect));
+        this.variables.put("log_commands", this.logCommands ? "1" : "0");
+        this.variables.put("prefix", this.prefix);
+        this.variables.put("prefix_color", this.prefixColor);
+        this.variables.put("level", Integer.toString(this.level));
+        this.variables.put("auto_points_amount", Integer.toString(this.diamondsTimerAmount));
+        this.variables.put("auto_credits_amount", Integer.toString(this.creditsTimerAmount));
+        this.variables.put("auto_pixels_amount", Integer.toString(this.pixelsTimerAmount));
+        this.variables.put("auto_gotw_amount", Integer.toString(this.gotwTimerAmount));
+    }
+
+    private String safeString(String value) {
+        return value == null ? "" : value;
     }
 
     public boolean hasPermission(String key, boolean isRoomOwner) {

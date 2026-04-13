@@ -41,7 +41,7 @@ public class WiredApplySetConditionsEvent extends MessageHandler {
         if (room != null) {
 
             // Executing Habbo should be able to edit wireds
-            if (room.hasRights(this.client.getHabbo()) || room.isOwner(this.client.getHabbo())) {
+            if (room.canModifyWired(this.client.getHabbo())) {
 
                 List<HabboItem> wireds = new ArrayList<>();
                 wireds.addAll(room.getRoomSpecialTypes().getConditions());

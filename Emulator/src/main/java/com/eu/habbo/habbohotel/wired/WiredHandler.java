@@ -16,6 +16,7 @@ import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomWiredDisableSupport;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -71,6 +72,9 @@ public class WiredHandler {
         if (room == null)
             return false;
 
+        if (RoomWiredDisableSupport.isWiredDisabled(room))
+            return false;
+
         if (!room.isLoaded())
             return false;
 
@@ -118,6 +122,9 @@ public class WiredHandler {
         if (room == null)
             return false;
 
+        if (RoomWiredDisableSupport.isWiredDisabled(room))
+            return false;
+
         if (!room.isLoaded())
             return false;
 
@@ -159,6 +166,9 @@ public class WiredHandler {
     public static boolean handle(InteractionWiredTrigger trigger, final RoomUnit roomUnit, final Room room, final Object[] stuff) {
         long millis = System.currentTimeMillis();
         LegacyExecutionPlan executionPlan = new LegacyExecutionPlan();
+
+        if (RoomWiredDisableSupport.isWiredDisabled(room))
+            return false;
 
         if(handle(trigger, roomUnit, room, stuff, executionPlan)) {
             triggerEffects(executionPlan.effects, roomUnit, room, stuff, millis, executionPlan.executeInOrder);

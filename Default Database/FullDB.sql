@@ -1530,7 +1530,7 @@ CREATE TABLE `catalog_club_offers`  (
   `credits` int(0) NOT NULL DEFAULT 10,
   `points` int(0) NOT NULL DEFAULT 0,
   `points_type` int(0) NOT NULL DEFAULT 0,
-  `type` enum('HC','VIP') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'HC',
+  `type` enum('HC','VIP','BUILDERS_CLUB','BUILDERS_CLUB_ADDON') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'HC',
   `deal` enum('0','1') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT '0',
   `giftable` enum('1','0') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`) USING BTREE
@@ -13499,7 +13499,7 @@ CREATE TABLE `catalog_pages_bc`  (
   `id` int(0) NOT NULL AUTO_INCREMENT,
   `parent_id` int(0) NOT NULL DEFAULT -1,
   `caption` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `page_layout` enum('default_3x3','club_buy','club_gift','frontpage','spaces','recycler','recycler_info','recycler_prizes','trophies','plasto','marketplace','marketplace_own_items','spaces_new','soundmachine','guilds','guild_furni','info_duckets','info_rentables','info_pets','roomads','single_bundle','sold_ltd_items','badge_display','bots','pets','pets2','pets3','productpage1','room_bundle','recent_purchases','default_3x3_color_grouping','guild_forum','vip_buy','info_loyalty','loyalty_vip_buy','collectibles','petcustomization','frontpage_featured') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'default_3x3',
+  `page_layout` enum('default_3x3','club_buy','club_gift','frontpage','spaces','recycler','recycler_info','recycler_prizes','trophies','plasto','marketplace','marketplace_own_items','spaces_new','soundmachine','guilds','guild_furni','info_duckets','info_rentables','info_pets','roomads','single_bundle','sold_ltd_items','badge_display','bots','pets','pets2','pets3','productpage1','room_bundle','recent_purchases','default_3x3_color_grouping','guild_forum','vip_buy','info_loyalty','loyalty_vip_buy','collectibles','petcustomization','frontpage_featured','builders_club_frontpage','builders_club_addons','builders_club_loyalty') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'default_3x3',
   `icon_color` int(0) NOT NULL DEFAULT 1,
   `icon_image` int(0) NOT NULL DEFAULT 1,
   `order_num` int(0) NOT NULL DEFAULT 1,
@@ -30209,6 +30209,7 @@ CREATE TABLE `users_settings`  (
   `ui_flags` int(0) NOT NULL DEFAULT 1,
   `has_gotten_default_saved_searches` tinyint(1) NOT NULL DEFAULT 0,
   `hc_gifts_claimed` int(0) NULL DEFAULT 0,
+  `builders_club_bonus_furni` int(0) NOT NULL DEFAULT 0,
   `last_hc_payday` int(0) NULL DEFAULT 0,
   `max_rooms` int(0) NULL DEFAULT 50,
   `max_friends` int(0) NULL DEFAULT 300,
@@ -30223,7 +30224,7 @@ CREATE TABLE `users_settings`  (
 -- ----------------------------
 -- Records of users_settings
 -- ----------------------------
-INSERT INTO `users_settings` VALUES (1, 1, 0, 0, 3, 3, 0, 0, 0, '0', '1', '0', 0, 0, 0, 0, 0, 0, 0, '0', '0', '0', 100, 100, 100, '0', '0', 0, 0, 0, 'Arcturus Emulator;', 0, 0, 0, 0, 0, '0', -1, -1, '0', '0', '0', 0, '0', '0', 0, 1, 1, 0, 0, 50, 300);
+INSERT INTO `users_settings` VALUES (1, 1, 0, 0, 3, 3, 0, 0, 0, '0', '1', '0', 0, 0, 0, 0, 0, 0, 0, '0', '0', '0', 100, 100, 100, '0', '0', 0, 0, 0, 'Arcturus Emulator;', 0, 0, 0, 0, 0, '0', -1, -1, '0', '0', '0', 0, '0', '0', 0, 1, 1, 0, 0, 0, 50, 300);
 
 -- ----------------------------
 -- Table structure for users_subscriptions
@@ -30449,3 +30450,50 @@ INSERT INTO `youtube_playlists` VALUES (6587, 'PL4YfV2mXS8WXOkxFly7YsGL8cKtqp873
 INSERT INTO `youtube_playlists` VALUES (6587, 'PL80F08DAE1B614BA9', 0);
 
 SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `catalog_pages`
+  MODIFY COLUMN `page_layout` ENUM(
+    'default_3x3',
+    'club_buy',
+    'club_gift',
+    'frontpage',
+    'spaces',
+    'recycler',
+    'recycler_info',
+    'recycler_prizes',
+    'trophies',
+    'plasto',
+    'marketplace',
+    'marketplace_own_items',
+    'spaces_new',
+    'soundmachine',
+    'guilds',
+    'guild_furni',
+    'info_duckets',
+    'info_rentables',
+    'info_pets',
+    'roomads',
+    'single_bundle',
+    'sold_ltd_items',
+    'badge_display',
+    'bots',
+    'pets',
+    'pets2',
+    'pets3',
+    'productpage1',
+    'room_bundle',
+    'recent_purchases',
+    'default_3x3_color_grouping',
+    'guild_forum',
+    'vip_buy',
+    'info_loyalty',
+    'loyalty_vip_buy',
+    'collectibles',
+    'petcustomization',
+    'frontpage_featured',
+    'builders_club_frontpage',
+    'builders_club_addons',
+    'builders_club_loyalty'
+  ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'default_3x3';
+
+ALTER TABLE `catalog_pages`
+  ADD COLUMN `catalog_mode` ENUM('NORMAL','BUILDER','BOTH') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'NORMAL' AFTER `club_only`;

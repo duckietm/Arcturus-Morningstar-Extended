@@ -41,7 +41,13 @@ public class RoomFloorItemsComposer extends MessageComposer {
 
         for (HabboItem item : this.items) {
             item.serializeFloorData(this.response);
-            this.response.appendInt(item instanceof InteractionGift ? ((((InteractionGift) item).getColorId() * 1000) + ((InteractionGift) item).getRibbonId()) : (item instanceof InteractionMusicDisc ? ((InteractionMusicDisc) item).getSongId() : 1));
+            this.response.appendInt(
+                item instanceof InteractionGift
+                    ? ((((InteractionGift) item).getColorId() * 1000) + ((InteractionGift) item).getRibbonId())
+                    : (item instanceof InteractionMusicDisc
+                        ? ((InteractionMusicDisc) item).getSongId()
+                        : (item instanceof InteractionStackWalkHelper ? 2147483001 : 1))
+            );
             item.serializeExtradata(this.response);
             this.response.appendInt(-1);
             this.response.appendInt(item instanceof InteractionTeleport || item instanceof InteractionSwitch || item instanceof InteractionSwitchRemoteControl || item instanceof InteractionVendingMachine || item instanceof InteractionInformationTerminal || item instanceof InteractionPostIt || item instanceof InteractionPuzzleBox ? 2 : item.isUsable() ? 1 : 0);

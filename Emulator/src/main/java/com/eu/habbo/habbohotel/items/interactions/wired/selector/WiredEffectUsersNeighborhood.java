@@ -111,24 +111,46 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
     }
 
     private List<int[]> resolveSourcePositions(WiredContext ctx, Room room) {
-
-        if (isUserGroup(sourceType)) {
-            // Prefer the event tile for user-based sources because during walk-on/walk-off
-            // events the user's position (getX/getY) hasn't been updated yet (stale position).
-            // The event tile correctly represents where the triggering action occurred.
-            if (ctx.tile().isPresent()) {
-                return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
-            }
-            List<int[]> positions = ctx.targets().users().stream()
-                    .map(u -> new int[]{ u.getX(), u.getY() })
-                    .collect(Collectors.toList());
-            if (positions.isEmpty()) {
-                ctx.actor().ifPresent(a -> positions.add(new int[]{ a.getX(), a.getY() }));
-            }
-            return positions;
-        }
-
         switch (sourceType) {
+            case SOURCE_USER_TRIGGER: {
+                if (ctx.tile().isPresent()) {
+                    return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_SIGNAL: {
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_CLICKED: {
+                if (ctx.event().getTargetUnit().isPresent()) {
+                    RoomUnit targetUnit = ctx.event().getTargetUnit().get();
+
+                    return Collections.singletonList(new int[]{ targetUnit.getX(), targetUnit.getY() });
+                }
+
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return Collections.emptyList();
+            }
             case SOURCE_FURNI_TRIGGER: {
                 return ctx.sourceItem()
                         .map(i -> Collections.singletonList(new int[]{ i.getX(), i.getY() }))
@@ -142,9 +164,17 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
                         .collect(Collectors.toList());
             }
             case SOURCE_FURNI_SIGNAL: {
-                return ctx.targets().items().stream()
+                List<int[]> positions = ctx.targets().items().stream()
                         .map(i -> new int[]{ i.getX(), i.getY() })
                         .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.sourceItem()
+                        .map(item -> Collections.singletonList(new int[]{ item.getX(), item.getY() }))
+                        .orElse(Collections.emptyList());
             }
             default:
                 return Collections.emptyList();

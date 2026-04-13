@@ -43,6 +43,11 @@ public class UserSaveLookEvent extends MessageHandler {
         if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != null) {
             this.client.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserDataComposer(this.client.getHabbo()).compose());
         }
+        this.client.getHabbo().getMessenger().connectionChanged(
+                this.client.getHabbo(),
+                this.client.getHabbo().isOnline(),
+                this.client.getHabbo().getHabboInfo().getCurrentRoom() != null
+        );
 
         AchievementManager.progressAchievement(this.client.getHabbo(), Emulator.getGameEnvironment().getAchievementManager().getAchievement("AvatarLooks"));
     }

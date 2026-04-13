@@ -3,6 +3,7 @@ package com.eu.habbo.messages.incoming.catalog.catalogadmin;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogPage;
 import com.eu.habbo.habbohotel.catalog.CatalogPageLayouts;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
@@ -25,6 +26,8 @@ public class CatalogAdminCreatePageEvent extends MessageHandler {
         boolean enabled = this.packet.readBoolean();
         int orderNum = this.packet.readInt();
         int parentId = this.packet.readInt();
+        CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
+        CatalogPageType catalogMode = CatalogPageType.fromString(this.packet.readString());
 
         CatalogPageLayouts pageLayout;
         try {
@@ -34,7 +37,7 @@ public class CatalogAdminCreatePageEvent extends MessageHandler {
         }
 
         CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().createCatalogPage(
-            caption, caption2, 0, iconType, pageLayout, minRank, parentId
+            caption, caption2, 0, iconType, pageLayout, minRank, parentId, pageType, catalogMode
         );
 
         if (page == null) {

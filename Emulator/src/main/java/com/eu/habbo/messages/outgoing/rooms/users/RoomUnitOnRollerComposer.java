@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionRoller;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.RideablePet;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomQueueSpeedControlSupport;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitType;
@@ -157,7 +158,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                         }
                     }
                 }
-            }, this.room.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
+            }, RoomQueueSpeedControlSupport.getEffectiveRollerIntervalMs(this.room));
             /*
             RoomTile rollerTile = room.getLayout().getTile(this.roller.getX(), this.roller.getY());
             Emulator.getThreading().run(() -> {
@@ -177,7 +178,7 @@ public class RoomUnitOnRollerComposer extends MessageComposer {
                         }
                     }
                 }
-            }, this.room.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
+            }, RoomQueueSpeedControlSupport.getEffectiveRollerIntervalMs(this.room));
              */
         } else {
             this.roomUnit.setLocation(this.newLocation);

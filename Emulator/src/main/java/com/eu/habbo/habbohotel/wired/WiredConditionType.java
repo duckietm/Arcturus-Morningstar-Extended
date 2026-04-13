@@ -38,7 +38,11 @@ public enum WiredConditionType {
     MATCH_TIME(36),
     MATCH_DATE(37),
     ACTOR_DIR(38),
-    SLC_QUANTITY(39);
+    SLC_QUANTITY(39),
+    HAS_VAR(40),
+    NOT_HAS_VAR(41),
+    VAR_VAL_MATCH(42),
+    VAR_AGE_MATCH(43);
 
     public final int code;
 

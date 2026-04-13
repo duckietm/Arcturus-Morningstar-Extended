@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.catalog.layouts.*;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.pets.PetManager;
+import com.eu.habbo.habbohotel.rooms.BuildersClubRoomSupport;
 import com.eu.habbo.habbohotel.rooms.RoomManager;
 import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.habbohotel.users.HabboInventory;
@@ -14,6 +15,8 @@ import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.AlertPurchaseFailedComposer;
 import com.eu.habbo.messages.outgoing.catalog.AlertPurchaseUnavailableComposer;
+import com.eu.habbo.messages.outgoing.catalog.BuildersClubFurniCountComposer;
+import com.eu.habbo.messages.outgoing.catalog.BuildersClubSubscriptionStatusComposer;
 import com.eu.habbo.messages.outgoing.catalog.PurchaseOKComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertComposer;
 import com.eu.habbo.messages.outgoing.generic.alerts.BubbleAlertKeys;
@@ -139,10 +142,10 @@ public class CatalogBuyItemEvent extends MessageHandler {
                 return;
             }
 
-            if (page instanceof ClubBuyLayout || page instanceof VipBuyLayout) {
+            if (this.isClubOfferPage(page)) {
                 ClubOffer item = Emulator.getGameEnvironment().getCatalogManager().clubOffers.get(itemId);
 
-                if (item == null) {
+                if (item == null || !item.belongsToWindow(this.getClubOfferWindowId(page))) {
                     this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR).compose());
                     return;
                 }
@@ -170,19 +173,18 @@ public class CatalogBuyItemEvent extends MessageHandler {
                     if (!this.client.getHabbo().hasPermission(Permission.ACC_INFINITE_POINTS))
                         this.client.getHabbo().givePoints(item.getPointsType(), -totalDuckets);
 
+                    if (item.isBuildersClubAddon()) {
+                        this.client.getHabbo().getHabboStats().addBuildersClubBonusFurni(totalDays);
+                        this.client.sendResponse(new BuildersClubFurniCountComposer(BuildersClubRoomSupport.getTrackedFurniCount(this.client.getHabbo().getHabboInfo().getId())));
+                        this.client.sendResponse(new BuildersClubSubscriptionStatusComposer(this.client.getHabbo()));
+                    } else {
+                        String subscriptionType = item.isBuildersClubSubscription() ? Subscription.BUILDERS_CLUB : Subscription.HABBO_CLUB;
 
-                    if(this.client.getHabbo().getHabboStats().createSubscription(Subscription.HABBO_CLUB, (totalDays * 86400)) == null) {
-                        this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR).compose());
-                        throw new Exception("Unable to create or extend subscription");
+                        if (this.client.getHabbo().getHabboStats().createSubscription(subscriptionType, (totalDays * 86400)) == null) {
+                            this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR).compose());
+                            throw new Exception("Unable to create or extend subscription");
+                        }
                     }
-
-                    /*if (this.client.getHabbo().getHabboStats().getClubExpireTimestamp() <= Emulator.getIntUnixTimestamp())
-                        this.client.getHabbo().getHabboStats().setClubExpireTimestamp(Emulator.getIntUnixTimestamp());
-
-                    this.client.getHabbo().getHabboStats().setClubExpireTimestamp(this.client.getHabbo().getHabboStats().getClubExpireTimestamp() + (totalDays * 86400));
-
-                    this.client.sendResponse(new UserPermissionsComposer(this.client.getHabbo()));
-                    this.client.sendResponse(new UserClubComposer(this.client.getHabbo()));*/
 
                     this.client.sendResponse(new PurchaseOKComposer(null));
                     this.client.sendResponse(new InventoryRefreshComposer());
@@ -222,5 +224,25 @@ public class CatalogBuyItemEvent extends MessageHandler {
         } else {
             this.client.sendResponse(new AlertPurchaseFailedComposer(AlertPurchaseFailedComposer.SERVER_ERROR).compose());
         }
+    }
+
+    private boolean isClubOfferPage(CatalogPage page) {
+        return page instanceof ClubBuyLayout
+                || page instanceof VipBuyLayout
+                || page instanceof BuildersClubFrontPageLayout
+                || page instanceof BuildersClubAddonsLayout
+                || page instanceof BuildersClubLoyaltyLayout;
+    }
+
+    private int getClubOfferWindowId(CatalogPage page) {
+        if (page instanceof BuildersClubAddonsLayout) {
+            return ClubOffer.WINDOW_BUILDERS_CLUB_ADDONS;
+        }
+
+        if (page instanceof BuildersClubFrontPageLayout || page instanceof BuildersClubLoyaltyLayout) {
+            return ClubOffer.WINDOW_BUILDERS_CLUB;
+        }
+
+        return ClubOffer.WINDOW_HABBO_CLUB;
     }
 }

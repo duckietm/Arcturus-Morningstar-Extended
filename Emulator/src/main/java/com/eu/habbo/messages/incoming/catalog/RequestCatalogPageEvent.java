@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.catalog;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogPage;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.modtool.ScripterManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.CatalogPageComposer;
@@ -13,8 +14,9 @@ public class RequestCatalogPageEvent extends MessageHandler {
         int catalogPageId = this.packet.readInt();
         int offerId = this.packet.readInt();
         String mode = this.packet.readString();
+        CatalogPageType requestedType = CatalogPageType.fromString(mode);
 
-        CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().catalogPages.get(catalogPageId);
+        CatalogPage page = Emulator.getGameEnvironment().getCatalogManager().getCatalogPage(catalogPageId, requestedType);
 
         if (catalogPageId > 0 && page != null) {
             if (page.getRank() <= this.client.getHabbo().getHabboInfo().getRank().getId() && page.isEnabled()) {

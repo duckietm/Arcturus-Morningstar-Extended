@@ -120,6 +120,11 @@ public class Outgoing {
     public final static int EnableNotificationsComposer = 3284; // PRODUCTION-201611291003-338511768
     public final static int HallOfFameComposer = 3005; // PRODUCTION-201611291003-338511768
     public final static int WiredSavedComposer = 1155; // PRODUCTION-201611291003-338511768
+    public final static int WiredMonitorDataComposer = 5101; // CUSTOM
+    public final static int WiredRoomSettingsDataComposer = 5102; // CUSTOM
+    public final static int WiredUserVariablesDataComposer = 5103; // CUSTOM
+    public final static int ConfInvisStateComposer = 5104; // CUSTOM
+    public final static int AreaHideComposer = 6001; // CUSTOM
     public final static int RoomPaintComposer = 2454; // PRODUCTION-201611291003-338511768
     public final static int MarketplaceConfigComposer = 1823; // PRODUCTION-201611291003-338511768
     public final static int AddBotComposer = 1352; // PRODUCTION-201611291003-338511768
@@ -325,6 +330,7 @@ public class Outgoing {
     public final static int VerifyMobilePhoneCodeWindowComposer = 800; // PRODUCTION-201611291003-338511768
     public final static int VerifyMobilePhoneDoneComposer = 91; // PRODUCTION-201611291003-338511768
     public final static int RoomUserReceivedHandItemComposer = 354; // PRODUCTION-201611291003-338511768
+    public final static int HanditemBlockStateComposer = 5105;
     public final static int MutedWhisperComposer = 826; // PRODUCTION-201611291003-338511768
     public final static int UnknownHintComposer = 1787; // PRODUCTION-201611291003-338511768
     public final static int BullyReportClosedComposer = 2674; // PRODUCTION-201611291003-338511768
@@ -370,6 +376,7 @@ public class Outgoing {
     public final static int BullyReportedMessageComposer = 3285; // PRODUCTION-201611291003-338511768
     public final static int UnknownQuestComposer3 = 1122; // PRODUCTION-201611291003-338511768
     public final static int FriendToolbarNotificationComposer = 3082; // PRODUCTION-201611291003-338511768
+    public final static int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public final static int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768
     public final static int CameraPriceComposer = 3878; // PRODUCTION-201611291003-338511768
     public final static int PetBreedingCompleted = 2527; // PRODUCTION-201611291003-338511768

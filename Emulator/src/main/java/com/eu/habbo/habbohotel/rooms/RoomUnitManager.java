@@ -232,12 +232,14 @@ public class RoomUnitManager {
             habbo.getRoomUnit().getCurrentLocation().removeUnit(habbo.getRoomUnit());
         }
 
-        synchronized (this.room.roomUnitLock) {
-            this.currentHabbos.remove(habbo.getHabboInfo().getId());
-        }
+          synchronized (this.room.roomUnitLock) {
+              this.currentHabbos.remove(habbo.getHabboInfo().getId());
+          }
 
-        if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
-            this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
+          this.room.getUserVariableManager().clearAssignmentsForUser(habbo.getHabboInfo().getId());
+
+          if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
+              this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
         }
 
         if (habbo.getRoomUnit().getCurrentLocation() != null) {

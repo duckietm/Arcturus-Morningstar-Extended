@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
+import com.eu.habbo.habbohotel.items.interactions.InteractionStackWalkHelper;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWater;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWaterItem;
 import com.eu.habbo.habbohotel.items.interactions.interfaces.ConditionalGate;
@@ -325,7 +326,7 @@ public class RoomUnit {
       }
 
       Optional<HabboItem> stackHelper = room.getItemsAt(next).stream()
-          .filter(i -> i instanceof InteractionTileWalkMagic).findAny();
+          .filter(i -> i instanceof InteractionTileWalkMagic || i instanceof InteractionStackWalkHelper).findAny();
       if (stackHelper.isPresent()) {
         zHeight = stackHelper.get().getZ();
       }

@@ -59,6 +59,9 @@ public final class WiredContext {
     /** Extra settings from the trigger item (for legacy compatibility) */
     private final Object[] legacySettings;
 
+    /** Runtime-local context variables shared through the current execution chain. */
+    private WiredContextVariableScope contextVariables;
+
     /** Whether selector item resolution should include wired furniture too. */
     private boolean includeWiredSelectorItems = false;
 
@@ -108,6 +111,9 @@ public final class WiredContext {
         this.services = services;
         this.state = state;
         this.legacySettings = legacySettings;
+        this.contextVariables = (event.getContextVariableScope() != null)
+                ? event.getContextVariableScope()
+                : new WiredContextVariableScope();
         this.targets = new WiredTargets();
         
         // Default targets: include actor and trigger item for backwards compatibility
@@ -257,6 +263,14 @@ public final class WiredContext {
      */
     public Object[] legacySettings() {
         return legacySettings != null ? legacySettings : new Object[0];
+    }
+
+    public WiredContextVariableScope contextVariables() {
+        return this.contextVariables;
+    }
+
+    public void forkContextVariables() {
+        this.contextVariables = this.contextVariables.copy();
     }
 
     public boolean includeWiredSelectorItems() {

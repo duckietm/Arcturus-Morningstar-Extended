@@ -11,6 +11,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
@@ -51,7 +52,6 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         boolean includeWiredItems = this.includeWiredTargets(ctx);
 
         List<HabboItem> sourceFurni = resolveSourceFurni(ctx, room);
-        if (sourceFurni.isEmpty()) return;
 
         Set<String> matchKeys = new LinkedHashSet<>();
         for (HabboItem src : sourceFurni) {
@@ -85,12 +85,10 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
                     .collect(Collectors.toList());
             }
             case SOURCE_FURNI_SIGNAL: {
-                return new ArrayList<>(ctx.targets().items());
+                return WiredSourceUtil.resolveItemsRaw(ctx, WiredSourceUtil.SOURCE_SIGNAL, null);
             }
             case SOURCE_FURNI_TRIGGER: {
-                return ctx.sourceItem()
-                    .map(Collections::singletonList)
-                    .orElse(Collections.emptyList());
+                return WiredSourceUtil.resolveItemsRaw(ctx, WiredSourceUtil.SOURCE_TRIGGER, null);
             }
             default:
                 return Collections.emptyList();
@@ -104,7 +102,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
             throw new WiredSaveException("wf_slc_furni_bytype: intParams must have at least 4 elements");
         }
 
-        this.sourceType    = SOURCE_FURNI_PICKED;
+        this.sourceType    = normalizeSourceType(params[0]);
         this.matchState    = params.length > 1 && params[1] == 1;
         this.filterExisting = params.length > 2 && params[2] == 1;
         this.invert        = params.length > 3 && params[3] == 1;
@@ -138,7 +136,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         message.appendString("");
 
         message.appendInt(4);
-        message.appendInt(SOURCE_FURNI_PICKED);
+        message.appendInt(this.sourceType);
         message.appendInt(matchState      ? 1 : 0);
         message.appendInt(filterExisting  ? 1 : 0);
         message.appendInt(invert          ? 1 : 0);
@@ -168,7 +166,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            this.sourceType     = data.sourceType;
+            this.sourceType     = normalizeSourceType(data.sourceType);
             this.matchState     = data.matchState;
             this.filterExisting = data.filterExisting;
             this.invert         = data.invert;
@@ -189,6 +187,17 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) { return false; }
+
+    private int normalizeSourceType(int value) {
+        switch (value) {
+            case SOURCE_FURNI_SIGNAL:
+            case SOURCE_FURNI_TRIGGER:
+            case SOURCE_FURNI_PICKED:
+                return value;
+            default:
+                return SOURCE_FURNI_PICKED;
+        }
+    }
 
     static class JsonData {
         int            sourceType;

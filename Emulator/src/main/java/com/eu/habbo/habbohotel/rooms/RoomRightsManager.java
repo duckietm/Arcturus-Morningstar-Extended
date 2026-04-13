@@ -3,6 +3,8 @@ package com.eu.habbo.habbohotel.rooms;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.guilds.Guild;
+import com.eu.habbo.habbohotel.guilds.GuildMember;
+import com.eu.habbo.habbohotel.guilds.GuildRank;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.rooms.RoomAddRightsListComposer;
@@ -93,11 +95,16 @@ public class RoomRightsManager {
      */
     public RoomRightLevels getGuildRightLevel(Habbo habbo) {
         int guildId = this.room.getGuildId();
-        if (guildId > 0 && habbo.getHabboStats().hasGuild(guildId)) {
+        if (guildId > 0 && habbo != null && habbo.getHabboInfo() != null) {
             Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(guildId);
 
-            if (Emulator.getGameEnvironment().getGuildManager().getOnlyAdmins(guild)
-                .get(habbo.getHabboInfo().getId()) != null) {
+            if (guild == null) {
+                return RoomRightLevels.NONE;
+            }
+
+            GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild.getId(), habbo.getHabboInfo().getId());
+
+            if ((member != null) && (member.getRank() == GuildRank.ADMIN || member.getRank() == GuildRank.OWNER)) {
                 return RoomRightLevels.GUILD_ADMIN;
             }
 

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wired Send Signal - Flow Attuale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100">
+<div class="mx-auto max-w-7xl px-6 py-10">
+    <header class="mb-8">
+        <span class="inline-flex rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">
+            Wired · Send Signal
+        </span>
+        <h1 class="mt-4 text-4xl font-black tracking-tight text-white">Schema del flow attuale</h1>
+        <p class="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
+            Questa pagina descrive il comportamento attuale del wired <strong>send signal</strong>, con tutti i casi principali:
+            antenne, utenti, furni, conteggi e combinazioni finali. È pensata da inoltrare così com'è per un controllo del flow.
+        </p>
+    </header>
+
+    <section class="mb-8 grid gap-4 md:grid-cols-3">
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xl shadow-black/20">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Formula finale</p>
+            <p class="mt-3 text-2xl font-black text-emerald-300">antenne × utenti × furni</p>
+            <p class="mt-2 text-sm leading-6 text-slate-300">
+                Il numero totale di segnali emessi è dato dal prodotto tra antenne valide, rami utente e rami furni.
+            </p>
+        </article>
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xl shadow-black/20">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Regola utenti</p>
+            <p class="mt-3 text-sm leading-6 text-slate-300">
+                Con <strong>per ogni utente = disattivo</strong>, il ramo usa sempre l'utente che innesca.
+                Con <strong>per ogni utente = attivo</strong>, il ramo usa l'utente che innesca <em>più</em> gli utenti trovati dalla source.
+            </p>
+        </article>
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xl shadow-black/20">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Regola furni</p>
+            <p class="mt-3 text-sm leading-6 text-slate-300">
+                Se la source furni restituisce elementi, il flow attuale apre un ramo per ogni furni.
+                Se non restituisce nulla, viene emesso un solo ramo senza furni allegati.
+            </p>
+        </article>
+    </section>
+
+    <section class="mb-8 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20">
+        <h2 class="text-2xl font-black text-white">Pseudo flow</h2>
+        <ol class="mt-5 space-y-3 text-sm leading-6 text-slate-200">
+            <li><span class="font-bold text-sky-300">1.</span> Vengono risolte le antenne destinazione.</li>
+            <li><span class="font-bold text-sky-300">2.</span> Restano valide solo le antenne reali; se non ne resta nessuna, il flow si ferma.</li>
+            <li><span class="font-bold text-sky-300">3.</span> Viene preso l'utente che ha innescato, se esiste.</li>
+            <li><span class="font-bold text-sky-300">4.</span> Vengono risolti gli utenti dalla source utenti.</li>
+            <li><span class="font-bold text-sky-300">5.</span> Vengono risolti i furni dalla source furni.</li>
+            <li><span class="font-bold text-sky-300">6.</span> Se “per ogni utente” è attivo, si costruisce una lista unica con:
+                <ul class="mt-2 list-disc space-y-1 pl-6 text-slate-300">
+                    <li>sempre l'utente che innesca, se presente;</li>
+                    <li>poi tutti gli utenti della source;</li>
+                    <li>senza duplicati.</li>
+                </ul>
+            </li>
+            <li><span class="font-bold text-sky-300">7.</span> Se “per ogni utente” è disattivo, si usa un solo ramo utente:
+                l'utente che innesca.</li>
+            <li><span class="font-bold text-sky-300">8.</span> Se la source furni ha elementi, si apre un ramo per ogni furni.</li>
+            <li><span class="font-bold text-sky-300">9.</span> Se la source furni è vuota, si apre un solo ramo senza furni.</li>
+            <li><span class="font-bold text-sky-300">10.</span> Per ogni combinazione antenna + utente + furni viene emesso un segnale separato.</li>
+            <li><span class="font-bold text-sky-300">11.</span> Ogni segnale porta con sé:
+                <ul class="mt-2 list-disc space-y-1 pl-6 text-slate-300">
+                    <li>la tile dell'antenna;</li>
+                    <li>l'utente del ramo corrente, se presente;</li>
+                    <li>l'utente originario che ha innescato la chain, se presente;</li>
+                    <li>il furni del ramo corrente, se presente;</li>
+                    <li>le context variables;</li>
+                    <li>la profondità della chain aggiornata;</li>
+                    <li>i conteggi utenti/furni esposti al ramo ricevente.</li>
+                </ul>
+            </li>
+        </ol>
+    </section>
+
+    <section class="mb-8 grid gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20">
+            <h2 class="text-2xl font-black text-white">Tabella casi · Utenti</h2>
+            <div class="mt-5 overflow-hidden rounded-xl border border-slate-800">
+                <table class="min-w-full divide-y divide-slate-800 text-sm">
+                    <thead class="bg-slate-800/70 text-left text-slate-200">
+                    <tr>
+                        <th class="px-4 py-3 font-bold">Per ogni utente</th>
+                        <th class="px-4 py-3 font-bold">Utente che innesca</th>
+                        <th class="px-4 py-3 font-bold">Source utenti</th>
+                        <th class="px-4 py-3 font-bold">Rami utente emessi</th>
+                        <th class="px-4 py-3 font-bold">Nota</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 bg-slate-900/60 text-slate-300">
+                    <tr>
+                        <td class="px-4 py-3">Disattivo</td>
+                        <td class="px-4 py-3">Presente</td>
+                        <td class="px-4 py-3">Vuota</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Parte sempre con l'utente che innesca.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Disattivo</td>
+                        <td class="px-4 py-3">Presente</td>
+                        <td class="px-4 py-3">3 utenti</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Gli utenti source non diventano rami separati.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Disattivo</td>
+                        <td class="px-4 py-3">Assente</td>
+                        <td class="px-4 py-3">Vuota</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Parte un ramo senza utente.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Attivo</td>
+                        <td class="px-4 py-3">Presente</td>
+                        <td class="px-4 py-3">Vuota</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">L'utente che innesca viene sempre incluso.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Attivo</td>
+                        <td class="px-4 py-3">Presente</td>
+                        <td class="px-4 py-3">3 utenti diversi</td>
+                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3">Utente che innesca + 3 utenti della source.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Attivo</td>
+                        <td class="px-4 py-3">Presente</td>
+                        <td class="px-4 py-3">Contiene già l'utente che innesca</td>
+                        <td class="px-4 py-3">Utenti unici</td>
+                        <td class="px-4 py-3">Nessun duplicato.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Attivo</td>
+                        <td class="px-4 py-3">Assente</td>
+                        <td class="px-4 py-3">3 utenti</td>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3">Usa solo gli utenti trovati dalla source.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">Attivo</td>
+                        <td class="px-4 py-3">Assente</td>
+                        <td class="px-4 py-3">Vuota</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Parte un ramo senza utente.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20">
+            <h2 class="text-2xl font-black text-white">Tabella casi · Furni</h2>
+            <div class="mt-5 overflow-hidden rounded-xl border border-slate-800">
+                <table class="min-w-full divide-y divide-slate-800 text-sm">
+                    <thead class="bg-slate-800/70 text-left text-slate-200">
+                    <tr>
+                        <th class="px-4 py-3 font-bold">Source furni</th>
+                        <th class="px-4 py-3 font-bold">Furni trovati</th>
+                        <th class="px-4 py-3 font-bold">Rami furni emessi</th>
+                        <th class="px-4 py-3 font-bold">Dato nel singolo ramo</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 bg-slate-900/60 text-slate-300">
+                    <tr>
+                        <td class="px-4 py-3">Vuota</td>
+                        <td class="px-4 py-3">0</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Nessun furni allegato</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">1 furni</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Quel furni</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">3 furni</td>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3">Un furni diverso per ramo</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3">7 furni</td>
+                        <td class="px-4 py-3">7</td>
+                        <td class="px-4 py-3">7</td>
+                        <td class="px-4 py-3">Un furni diverso per ramo</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-slate-300">
+                Nel comportamento attuale, se la source furni restituisce elementi, il flow si apre sempre per furni singolo.
+            </p>
+        </article>
+    </section>
+
+    <section class="mb-8 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20">
+        <h2 class="text-2xl font-black text-white">Tabella casi · Combinazioni complete</h2>
+        <div class="mt-5 overflow-hidden rounded-xl border border-slate-800">
+            <table class="min-w-full divide-y divide-slate-800 text-sm">
+                <thead class="bg-slate-800/70 text-left text-slate-200">
+                <tr>
+                    <th class="px-4 py-3 font-bold">Caso</th>
+                    <th class="px-4 py-3 font-bold">Antenne</th>
+                    <th class="px-4 py-3 font-bold">Rami utente</th>
+                    <th class="px-4 py-3 font-bold">Rami furni</th>
+                    <th class="px-4 py-3 font-bold">Totale segnali</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 bg-slate-900/60 text-slate-300">
+                <tr>
+                    <td class="px-4 py-3">Utente che innesca presente, per ogni utente disattivo, 3 furni</td>
+                    <td class="px-4 py-3">2</td>
+                    <td class="px-4 py-3">1</td>
+                    <td class="px-4 py-3">3</td>
+                    <td class="px-4 py-3 font-bold text-emerald-300">6</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3">Utente che innesca presente, per ogni utente attivo, source utenti con 3 utenti, 3 furni</td>
+                    <td class="px-4 py-3">2</td>
+                    <td class="px-4 py-3">4</td>
+                    <td class="px-4 py-3">3</td>
+                    <td class="px-4 py-3 font-bold text-emerald-300">24</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3">Utente che innesca presente, selector utenti vuoto, 7 furni</td>
+                    <td class="px-4 py-3">1</td>
+                    <td class="px-4 py-3">1</td>
+                    <td class="px-4 py-3">7</td>
+                    <td class="px-4 py-3 font-bold text-emerald-300">7</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3">Nessun utente, source utenti vuota, 7 furni</td>
+                    <td class="px-4 py-3">1</td>
+                    <td class="px-4 py-3">1</td>
+                    <td class="px-4 py-3">7</td>
+                    <td class="px-4 py-3 font-bold text-emerald-300">7</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3">Nessuna antenna valida</td>
+                    <td class="px-4 py-3">0</td>
+                    <td class="px-4 py-3">qualsiasi</td>
+                    <td class="px-4 py-3">qualsiasi</td>
+                    <td class="px-4 py-3 font-bold text-rose-300">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="mb-8 grid gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20">
+            <h2 class="text-2xl font-black text-white">Conteggi esposti al ricevente</h2>
+            <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-300">
+                <li><strong class="text-white">Conteggio utenti con “per ogni utente” attivo:</strong> numero di utenti unici del merge tra utente che innesca e source utenti.</li>
+                <li><strong class="text-white">Conteggio utenti con “per ogni utente” disattivo:</strong> se la source utenti ha elementi, vale il numero di utenti trovati dalla source; altrimenti vale 1 se esiste l'utente che innesca, altrimenti 0.</li>
+                <li><strong class="text-white">Conteggio furni:</strong> nel singolo ramo vale 1 se c'è un furni allegato, altrimenti 0.</li>
+            </ul>
+        </article>
+        <article class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 shadow-2xl shadow-black/20">
+            <h2 class="text-2xl font-black text-amber-200">Nota importante sul comportamento attuale</h2>
+            <p class="mt-5 text-sm leading-6 text-amber-50/90">
+                Oggi il flow reale fa fan-out per furni quando la source furni restituisce elementi. Quindi, se dalla source arrivano 7 furni,
+                il sistema apre 7 rami furni distinti. Questo è importante perché impatta sia il numero totale dei segnali sia i conteggi
+                osservati a valle.
+            </p>
+            <p class="mt-4 text-sm leading-6 text-amber-50/90">
+                Inoltre il segnale conserva anche l'utente originario che ha avviato la chain, separato dall'utente del ramo corrente.
+            </p>
+        </article>
+    </section>
+
+    <footer class="border-t border-slate-800 pt-6 text-xs leading-6 text-slate-400">
+        File creato per documentare il flow attuale del wired send signal in modo leggibile e inoltrabile.
+    </footer>
+</div>
+</body>
+</html>
