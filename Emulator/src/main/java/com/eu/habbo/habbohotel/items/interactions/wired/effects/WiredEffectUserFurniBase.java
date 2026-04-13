@@ -275,6 +275,10 @@ public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
             throw new WiredSaveException("Too many furni selected");
         }
 
+        if (settings.getFurniIds().length > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
         if (room == null) {
             throw new WiredSaveException("Room not found");

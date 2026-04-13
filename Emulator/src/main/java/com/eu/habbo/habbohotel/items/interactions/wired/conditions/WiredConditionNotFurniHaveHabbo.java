@@ -163,6 +163,10 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         this.all = (params.length > 0) && (params[0] == 1);
         this.furniSource = (params.length > 1) ? params[1] : ((params.length > 0 && params[0] > 1) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER);
 
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         this.items.clear();
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {

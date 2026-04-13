@@ -59,6 +59,11 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         this.furniSource = settings.getIntParams()[2];
 
         int count = settings.getFurniIds().length;
+
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             for (int i = 0; i < count; i++) {
                 this.items.add(room.getHabboItem(settings.getFurniIds()[i]));
