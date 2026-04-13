@@ -163,6 +163,7 @@ public final class WiredEvent {
     private final Type type;
     private final Room room;
     private final RoomUnit actor;       // nullable - the user/bot that caused the event
+    private final RoomUnit originActor; // nullable - original user that started the chain, preserved across signals
     private final HabboItem sourceItem; // nullable - the furniture involved
     private final RoomTile tile;        // nullable - the tile where event occurred
     private final String text;          // nullable - text for say triggers
@@ -191,6 +192,7 @@ public final class WiredEvent {
         this.room = builder.room;
         this.actor = builder.actor;
         this.sourceItem = builder.sourceItem;
+        this.originActor = builder.originActor;
         this.tile = builder.tile;
         this.text = builder.text;
         this.targetUnit = builder.targetUnit;
@@ -238,6 +240,17 @@ public final class WiredEvent {
      */
     public Optional<RoomUnit> getActor() {
         return Optional.ofNullable(actor);
+    }
+
+    /**
+     * Get the original actor that started the current event chain.
+     * For signal events this can differ from {@link #getActor()} when the
+     * signal forwards users one-by-one but still needs to preserve who
+     * originally triggered the chain.
+     * @return optional containing the original actor, or empty if unavailable
+     */
+    public Optional<RoomUnit> getOriginActor() {
+        return Optional.ofNullable(originActor);
     }
 
     /**
@@ -407,6 +420,7 @@ public final class WiredEvent {
         private final Type type;
         private final Room room;
         private RoomUnit actor;
+        private RoomUnit originActor;
         private HabboItem sourceItem;
         private RoomTile tile;
         private String text;
@@ -444,6 +458,11 @@ public final class WiredEvent {
          */
         public Builder actor(RoomUnit actor) {
             this.actor = actor;
+            return this;
+        }
+
+        public Builder originActor(RoomUnit originActor) {
+            this.originActor = originActor;
             return this;
         }
 

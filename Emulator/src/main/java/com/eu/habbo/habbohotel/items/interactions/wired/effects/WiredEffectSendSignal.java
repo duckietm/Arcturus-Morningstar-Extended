@@ -103,30 +103,52 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
         }
         LOGGER.debug("[SendSignal] Resolved {} antenna(s), firing signals", resolvedAntennas.size());
 
+        RoomUnit triggeringUser = ctx.event().getOriginActor().orElseGet(() -> ctx.actor().orElse(null));
         List<RoomUnit> forwardedUsers = WiredSourceUtil.resolveUsersRaw(ctx, this.userForward);
         List<HabboItem> forwardedFurni = WiredSourceUtil.resolveItemsRaw(ctx, this.furniForward, this.forwardItems);
 
-        RoomUnit defaultUser = forwardedUsers.isEmpty() ? null : forwardedUsers.get(0);
-        Collection<RoomUnit> usersToSend = (signalPerUser && !forwardedUsers.isEmpty())
-                ? forwardedUsers
-                : Collections.singletonList(defaultUser);
+        List<RoomUnit> usersToSend;
+        if (signalPerUser) {
+            LinkedHashMap<Integer, RoomUnit> mergedUsers = new LinkedHashMap<>();
+
+            if (triggeringUser != null) {
+                mergedUsers.put(triggeringUser.getId(), triggeringUser);
+            }
+
+            for (RoomUnit forwardedUser : forwardedUsers) {
+                if (forwardedUser == null) {
+                    continue;
+                }
+
+                mergedUsers.put(forwardedUser.getId(), forwardedUser);
+            }
+
+            usersToSend = mergedUsers.isEmpty()
+                    ? Collections.singletonList(null)
+                    : new ArrayList<>(mergedUsers.values());
+        } else {
+            usersToSend = Collections.singletonList(triggeringUser);
+        }
 
         Collection<HabboItem> furniToSend = !forwardedFurni.isEmpty()
                 ? forwardedFurni
                 : Collections.singletonList(null);
 
         int nextDepth = currentDepth + 1;
+        int signalUserCount = signalPerUser
+                ? (int) usersToSend.stream().filter(Objects::nonNull).count()
+                : (!forwardedUsers.isEmpty() ? forwardedUsers.size() : (triggeringUser != null ? 1 : 0));
 
         for (RoomUnit user : usersToSend) {
             for (HabboItem sourceItem : furniToSend) {
                 for (HabboItem antenna : resolvedAntennas) {
-                    fireSignalAtAntenna(ctx, room, antenna, user, sourceItem, nextDepth);
+                    fireSignalAtAntenna(ctx, room, antenna, user, triggeringUser, sourceItem, signalUserCount, nextDepth);
                 }
             }
         }
     }
 
-    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, HabboItem sourceItem, int depth) {
+    private void fireSignalAtAntenna(WiredContext ctx, Room room, HabboItem antenna, RoomUnit actor, RoomUnit originActor, HabboItem sourceItem, int signalUserCount, int depth) {
         if (antenna == null) return;
         RoomTile tile = room.getLayout().getTile(antenna.getX(), antenna.getY());
         if (tile == null) return;
@@ -142,12 +164,13 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 .tile(tile)
                 .callStackDepth(depth)
                 .signalChannel(signalChannel)
-                .signalUserCount(actor != null ? 1 : 0)
+                .signalUserCount(signalUserCount)
                 .signalFurniCount(sourceItem != null ? 1 : 0)
                 .contextVariableScope(ctx.contextVariables())
                 .triggeredByEffect(true);
 
         if (actor != null) builder.actor(actor);
+        if (originActor != null) builder.originActor(originActor);
         if (sourceItem != null) builder.sourceItem(sourceItem);
 
         boolean result = dispatchSignalEvent(builder.build());
