@@ -702,16 +702,12 @@ DROP TEMPORARY TABLE IF EXISTS `tmp_permission_comments`;
 DROP PROCEDURE IF EXISTS `refresh_permission_definition_values`;
 
 DELIMITER $$
-
 CREATE PROCEDURE `refresh_permission_definition_values`()
 BEGIN
   DECLARE done INT DEFAULT 0;
   DECLARE current_rank_id INT;
   DECLARE current_column_name VARCHAR(32);
-
-  DECLARE rank_cursor CURSOR FOR 
-    SELECT `id` FROM `permission_ranks` ORDER BY `id` ASC;
-
+  DECLARE rank_cursor CURSOR FOR SELECT `id` FROM `permission_ranks` ORDER BY `id` ASC;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
   OPEN rank_cursor;
@@ -729,11 +725,9 @@ BEGIN
       CONCAT(
         'SELECT ''',
         REPLACE(`column_name`, '''', ''''''),
-        ''' AS permission_key, ',
-        'CAST(COALESCE(FLOOR(`',
+        ''' AS permission_key, CAST(COALESCE(`',
         REPLACE(`column_name`, '`', '``'),
-        '`), 0) AS UNSIGNED) AS permission_value ',
-        'FROM `permissions` WHERE `id` = ',
+        '`, ''0'') AS UNSIGNED) AS permission_value FROM `permissions` WHERE `id` = ',
         current_rank_id
       )
       ORDER BY `ordinal_position`
@@ -771,18 +765,17 @@ BEGIN
       '` = src.permission_value'
     );
 
-    PREPARE stmt FROM @permission_rank_update_sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-
+    PREPARE permission_rank_update_stmt FROM @permission_rank_update_sql;
+    EXECUTE permission_rank_update_stmt;
+    DEALLOCATE PREPARE permission_rank_update_stmt;
   END LOOP;
 
   CLOSE rank_cursor;
 END$$
-
 DELIMITER ;
 
 CALL `refresh_permission_definition_values`();
+
 
 CREATE TABLE IF NOT EXISTS `room_wired_settings` (
   `room_id` int(11) NOT NULL,
