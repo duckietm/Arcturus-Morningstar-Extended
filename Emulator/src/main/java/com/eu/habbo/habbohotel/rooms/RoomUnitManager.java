@@ -12,11 +12,11 @@ import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
-import com.eu.habbo.habbohotel.wired.WiredUserActionType;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
 import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
@@ -232,12 +232,14 @@ public class RoomUnitManager {
             habbo.getRoomUnit().getCurrentLocation().removeUnit(habbo.getRoomUnit());
         }
 
-        synchronized (this.room.roomUnitLock) {
-            this.currentHabbos.remove(habbo.getHabboInfo().getId());
-        }
+          synchronized (this.room.roomUnitLock) {
+              this.currentHabbos.remove(habbo.getHabboInfo().getId());
+          }
 
-        if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
-            this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
+          this.room.getUserVariableManager().clearAssignmentsForUser(habbo.getHabboInfo().getId());
+
+          if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
+              this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
         }
 
         if (habbo.getRoomUnit().getCurrentLocation() != null) {
@@ -1262,9 +1264,14 @@ public class RoomUnitManager {
         if (habbo == null || habbo.getRoomUnit() == null) {
             return;
         }
+
+        boolean wasIdle = habbo.getRoomUnit().isIdle();
         habbo.getRoomUnit().resetIdleTimer();
-        this.room.sendComposer(new RoomUnitIdleComposer(habbo.getRoomUnit()).compose());
-        WiredManager.triggerUserUnidles(this.room, habbo.getRoomUnit());
+
+        if (wasIdle) {
+            this.room.sendComposer(new RoomUnitIdleComposer(habbo.getRoomUnit()).compose());
+            WiredManager.triggerUserUnidles(this.room, habbo.getRoomUnit());
+        }
     }
 
     /**
@@ -1446,11 +1453,6 @@ public class RoomUnitManager {
         }
     }
 
-    // ==================== DISPOSAL ====================
-
-    /**
-     * Disposes the unit manager.
-     */
     public void dispose() {
         this.currentHabbos.clear();
         this.currentBots.clear();

@@ -67,6 +67,13 @@ import com.eu.habbo.messages.incoming.users.*;
 import com.eu.habbo.messages.incoming.wired.WiredApplySetConditionsEvent;
 import com.eu.habbo.messages.incoming.wired.WiredConditionSaveDataEvent;
 import com.eu.habbo.messages.incoming.wired.WiredEffectSaveDataEvent;
+import com.eu.habbo.messages.incoming.wired.WiredMonitorRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsSaveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserInspectMoveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableManageEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableUpdateEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariablesRequestEvent;
 import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
@@ -233,7 +240,9 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestGiftConfigurationEvent, RequestGiftConfigurationEvent.class);
         this.registerHandler(Incoming.GetMarketplaceConfigEvent, RequestMarketplaceConfigEvent.class);
         this.registerHandler(Incoming.RequestCatalogModeEvent, RequestCatalogModeEvent.class);
-        this.registerHandler(Incoming.RequestCatalogIndexEvent, RequestCatalogIndexEvent.class);
+        this.registerHandler(Incoming.BuildersClubQueryFurniCountEvent, BuildersClubQueryFurniCountEvent.class);
+        this.registerHandler(Incoming.BuildersClubPlaceRoomItemEvent, BuildersClubPlaceRoomItemEvent.class);
+        this.registerHandler(Incoming.BuildersClubPlaceWallItemEvent, BuildersClubPlaceWallItemEvent.class);
         this.registerHandler(Incoming.RequestCatalogPageEvent, RequestCatalogPageEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemAsGiftEvent, CatalogBuyItemAsGiftEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemEvent, CatalogBuyItemEvent.class);
@@ -279,6 +288,8 @@ public class PacketManager {
         this.registerHandler(Incoming.CatalogAdminMoveOfferEvent, CatalogAdminMoveOfferEvent.class);
         this.registerHandler(Incoming.CatalogAdminMovePageEvent, CatalogAdminMovePageEvent.class);
         this.registerHandler(Incoming.CatalogAdminPublishEvent, CatalogAdminPublishEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSavePageImagesEvent, CatalogAdminSavePageImagesEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSavePageIconEvent, CatalogAdminSavePageIconEvent.class);
     }
 
     private void registerEvent() throws Exception {
@@ -615,6 +626,13 @@ public class PacketManager {
         this.registerHandler(Incoming.WiredEffectSaveDataEvent, WiredEffectSaveDataEvent.class);
         this.registerHandler(Incoming.WiredConditionSaveDataEvent, WiredConditionSaveDataEvent.class);
         this.registerHandler(Incoming.WiredApplySetConditionsEvent, WiredApplySetConditionsEvent.class);
+        this.registerHandler(Incoming.WiredMonitorRequestEvent, WiredMonitorRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsRequestEvent, WiredRoomSettingsRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsSaveEvent, WiredRoomSettingsSaveEvent.class);
+        this.registerHandler(Incoming.WiredUserVariablesRequestEvent, WiredUserVariablesRequestEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableUpdateEvent, WiredUserVariableUpdateEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableManageEvent, WiredUserVariableManageEvent.class);
+        this.registerHandler(Incoming.WiredUserInspectMoveEvent, WiredUserInspectMoveEvent.class);
     }
 
     void registerUnknown() throws Exception {

@@ -28,6 +28,7 @@ public class SubscriptionManager {
 
     public void init() {
         this.types.put(Subscription.HABBO_CLUB, SubscriptionHabboClub.class);
+        this.types.put(Subscription.BUILDERS_CLUB, SubscriptionBuildersClub.class);
     }
 
     public void addSubscriptionType(String type, Class<? extends Subscription> clazz) {

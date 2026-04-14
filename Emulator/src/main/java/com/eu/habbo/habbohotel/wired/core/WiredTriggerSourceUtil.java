@@ -4,7 +4,9 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurniByVariable;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUsersByVariable;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -160,53 +162,6 @@ public final class WiredTriggerSourceUtil {
     }
 
     private static void applySelectionFilterExtras(Room room, HabboItem triggerItem, WiredContext selectorCtx) {
-        if (room == null || triggerItem == null || selectorCtx == null || room.getRoomSpecialTypes() == null) {
-            return;
-        }
-
-        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(triggerItem.getX(), triggerItem.getY());
-
-        if (extras == null || extras.isEmpty()) {
-            return;
-        }
-
-        int furniLimit = Integer.MAX_VALUE;
-        int userLimit = Integer.MAX_VALUE;
-
-        for (InteractionWiredExtra extra : extras) {
-            if (extra instanceof WiredExtraFilterFurni) {
-                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterUser) {
-                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
-            }
-        }
-
-        if (selectorCtx.targets().isItemsModifiedBySelector() && furniLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setItems(limitIterable(selectorCtx.targets().items(), furniLimit));
-        }
-
-        if (selectorCtx.targets().isUsersModifiedBySelector() && userLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setUsers(limitIterable(selectorCtx.targets().users(), userLimit));
-        }
-    }
-
-    private static <T> List<T> limitIterable(Iterable<T> values, int limit) {
-        List<T> result = new ArrayList<>();
-
-        if (values == null || limit <= 0) {
-            return result;
-        }
-
-        for (T value : values) {
-            if (value != null) {
-                result.add(value);
-            }
-        }
-
-        if (result.size() <= limit) {
-            return result;
-        }
-
-        return new ArrayList<>(result.subList(0, limit));
+        WiredSelectionFilterSupport.applySelectorFilters(room, triggerItem, selectorCtx);
     }
 }

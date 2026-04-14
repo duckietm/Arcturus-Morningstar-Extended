@@ -29,6 +29,7 @@
 --   15. 17032026_allow_underpass.sql
 --   16. 19032026_hotel_timezone.sql
 --   17. 21022026_user_prefixes.sql
+--   18. 06042026_builders_club_catalog_offers.sql
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -213,8 +214,8 @@ ON DUPLICATE KEY UPDATE `key` = `key`;
 
 -- Wired engine configuration
 INSERT INTO `emulator_settings` (`key`, `value`) VALUES
-('wired.engine.enabled', '0'),
-('wired.engine.exclusive', '0'),
+('wired.engine.enabled', '1'),
+('wired.engine.exclusive', '1'),
 ('wired.engine.maxStepsPerStack', '100'),
 ('wired.engine.debug', '0')
 ON DUPLICATE KEY UPDATE `key` = `key`;
@@ -406,6 +407,109 @@ CREATE TABLE IF NOT EXISTS `user_prefixes` (
   INDEX `idx_user_id` (`user_id`),
   INDEX `idx_user_active` (`user_id`, `active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =============================================================================
+-- From: 06042026_builders_club_catalog_offers.sql
+-- =============================================================================
+ALTER TABLE `catalog_club_offers`
+  MODIFY COLUMN `type` ENUM('HC','VIP','BUILDERS_CLUB','BUILDERS_CLUB_ADDON') NOT NULL DEFAULT 'HC';
+
+ALTER TABLE `catalog_pages`
+  MODIFY COLUMN `page_layout` ENUM(
+    'default_3x3',
+    'club_buy',
+    'club_gift',
+    'frontpage',
+    'spaces',
+    'recycler',
+    'recycler_info',
+    'recycler_prizes',
+    'trophies',
+    'plasto',
+    'marketplace',
+    'marketplace_own_items',
+    'spaces_new',
+    'soundmachine',
+    'guilds',
+    'guild_furni',
+    'info_duckets',
+    'info_rentables',
+    'info_pets',
+    'roomads',
+    'single_bundle',
+    'sold_ltd_items',
+    'badge_display',
+    'bots',
+    'pets',
+    'pets2',
+    'pets3',
+    'productpage1',
+    'room_bundle',
+    'recent_purchases',
+    'default_3x3_color_grouping',
+    'guild_forum',
+    'vip_buy',
+    'info_loyalty',
+    'loyalty_vip_buy',
+    'collectibles',
+    'petcustomization',
+    'frontpage_featured',
+    'builders_club_frontpage',
+    'builders_club_addons',
+    'builders_club_loyalty'
+  ) NOT NULL DEFAULT 'default_3x3';
+
+ALTER TABLE `catalog_pages`
+  ADD COLUMN `catalog_mode` ENUM('NORMAL','BUILDER','BOTH') NOT NULL DEFAULT 'NORMAL' AFTER `club_only`;
+
+ALTER TABLE `catalog_pages_bc`
+  MODIFY COLUMN `page_layout` ENUM(
+    'default_3x3',
+    'club_buy',
+    'club_gift',
+    'frontpage',
+    'spaces',
+    'recycler',
+    'recycler_info',
+    'recycler_prizes',
+    'trophies',
+    'plasto',
+    'marketplace',
+    'marketplace_own_items',
+    'spaces_new',
+    'soundmachine',
+    'guilds',
+    'guild_furni',
+    'info_duckets',
+    'info_rentables',
+    'info_pets',
+    'roomads',
+    'single_bundle',
+    'sold_ltd_items',
+    'badge_display',
+    'bots',
+    'pets',
+    'pets2',
+    'pets3',
+    'productpage1',
+    'room_bundle',
+    'recent_purchases',
+    'default_3x3_color_grouping',
+    'guild_forum',
+    'vip_buy',
+    'info_loyalty',
+    'loyalty_vip_buy',
+    'collectibles',
+    'petcustomization',
+    'frontpage_featured',
+    'builders_club_frontpage',
+    'builders_club_addons',
+    'builders_club_loyalty'
+  ) NOT NULL DEFAULT 'default_3x3';
+
+ALTER TABLE `users_settings`
+  ADD COLUMN IF NOT EXISTS `builders_club_bonus_furni` INT(11) NOT NULL DEFAULT 0 AFTER `hc_gifts_claimed`;
 
 
 -- =============================================================================

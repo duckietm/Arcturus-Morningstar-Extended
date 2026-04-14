@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.CALL_STACKS;
 
-    private THashSet<HabboItem> items;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected THashSet<HabboItem> items;
+    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectTriggerStacks(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -101,6 +101,10 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             throw new WiredSaveException("Too many furni selected");
         }
 
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         List<HabboItem> newItems = new ArrayList<>();
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
@@ -132,7 +136,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     /**
      * Maximum recursion depth to prevent infinite loops when trigger stacks call each other.
      */
-    private static final int MAX_STACK_DEPTH = 10;
+    protected static final int MAX_STACK_DEPTH = 10;
     
     @Override
     public void execute(WiredContext ctx) {
@@ -147,30 +151,8 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
             return;
         }
 
-        List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+        THashSet<RoomTile> usedTiles = collectTargetTiles(room, ctx);
 
-        THashSet<RoomTile> usedTiles = new THashSet<>();
-
-        for (HabboItem item : effectiveItems) {
-            if (item == null) continue;
-            
-            boolean found = false;
-            for (RoomTile tile : usedTiles) {
-                if (tile.x == item.getX() && tile.y == item.getY()) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
-                if (tile != null) {
-                    usedTiles.add(tile);
-                }
-            }
-        }
-        
-        // Execute effects at tiles with incremented call stack depth
         WiredManager.executeEffectsAtTiles(usedTiles, roomUnit, room, currentDepth + 1);
     }
 
@@ -244,6 +226,31 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     @Override
     protected long requiredCooldown() {
         return COOLDOWN_TRIGGER_STACKS;
+    }
+
+    protected List<HabboItem> resolveEffectiveItems(WiredContext ctx) {
+        return WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
+    }
+
+    protected THashSet<RoomTile> collectTargetTiles(Room room, WiredContext ctx) {
+        THashSet<RoomTile> usedTiles = new THashSet<>();
+
+        if (room == null || room.getLayout() == null) {
+            return usedTiles;
+        }
+
+        for (HabboItem item : resolveEffectiveItems(ctx)) {
+            if (item == null) {
+                continue;
+            }
+
+            RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+            if (tile != null) {
+                usedTiles.add(tile);
+            }
+        }
+
+        return usedTiles;
     }
 
     static class JsonData {

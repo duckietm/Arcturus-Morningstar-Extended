@@ -2,6 +2,8 @@ UPDATE `items_base` SET `interaction_type` = 'wf_cnd_time_more_than' WHERE `publ
 UPDATE `items_base` SET `interaction_type` = 'wf_cnd_time_less_than' WHERE `public_name` = 'wf_cnd_time_less_than';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_give_reward' WHERE `public_name` = 'wf_act_give_reward';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_call_stacks' WHERE `public_name` = 'wf_act_call_stacks';
+UPDATE `items_base` SET `interaction_type` = 'wf_act_neg_call_stack' WHERE `public_name` = 'wf_act_neg_call_stack';
+UPDATE `items_base` SET `interaction_type` = 'wf_act_neg_call_stacks' WHERE `public_name` = 'wf_act_neg_call_stacks';
 UPDATE `items_base` SET `interaction_type` = 'default' WHERE `public_name` = 'wf_maze';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_give_score_tm' WHERE `public_name` = 'wf_act_give_score_tm';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_move_to_dir' WHERE `public_name` = 'wf_act_move_to_dir';
@@ -111,6 +113,7 @@ UPDATE `items_base` SET `interaction_type` = 'wf_act_furni_to_furni' WHERE `publ
 UPDATE `items_base` SET `interaction_type` = 'wf_act_furni_to_user' WHERE `public_name` = 'wf_act_furni_to_user';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_rel_mov' WHERE `public_name` = 'wf_act_rel_mov';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_send_signal' WHERE `public_name` = 'wf_act_send_signal';
+UPDATE `items_base` SET `interaction_type` = 'wf_act_neg_send_signal' WHERE `public_name` = 'wf_act_neg_send_signal';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_set_altitude' WHERE `public_name` = 'wf_act_set_altitude';
 UPDATE `items_base` SET `interaction_type` = 'wf_act_unfreeze' WHERE `public_name` = 'wf_act_unfreeze';
 UPDATE `items_base` SET `interaction_type` = 'antenna' WHERE `public_name` = 'wf_antenna1';

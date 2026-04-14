@@ -93,6 +93,10 @@ public class RoomUserWalkEvent extends MessageHandler {
 
     try {
       if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk() && !WiredFreezeUtil.isFrozen(roomUnit)) {
+        if (WiredUserMovementHelper.consumeSuppressedWalkCommand(roomUnit)) {
+          return;
+        }
+
         if (roomUnit.cmdTeleport) {
           handleTeleport(room, (short) x, (short) y, roomUnit, habboInfo);
           return;
@@ -162,8 +166,19 @@ public class RoomUserWalkEvent extends MessageHandler {
             roomUnit.getMoveBlockingTask().get();
           }
 
-          if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit)) {
+          boolean needsLocationResync =
+              roomUnit.getCurrentLocation() != null
+                  && (roomUnit.getPreviousLocation() == null
+                  || roomUnit.getPreviousLocation().x != roomUnit.getCurrentLocation().x
+                  || roomUnit.getPreviousLocation().y != roomUnit.getCurrentLocation().y
+                  || Math.abs(roomUnit.getPreviousLocationZ() - roomUnit.getZ()) > 0.01D);
+
+          if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit) || needsLocationResync) {
             WiredUserMovementHelper.clearStatusComposerSuppression(roomUnit);
+            if (roomUnit.getCurrentLocation() != null) {
+              roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
+              roomUnit.setPreviousLocationZ(roomUnit.getZ());
+            }
             room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
           }
 

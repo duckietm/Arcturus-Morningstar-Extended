@@ -14,6 +14,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMovementPhysics;
 import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
@@ -47,6 +48,7 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         HabboItem item = this.resolveLastItem(ctx);
+        WiredMovementPhysics movementPhysics = WiredMoveCarryHelper.getUserMovementPhysics(room, this, ctx);
 
         if (room == null || item == null) {
             return;
@@ -58,7 +60,7 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
         }
 
         for (Habbo habbo : this.resolveHabbos(room, ctx)) {
-            this.moveHabboSmooth(room, habbo, item, targetTile);
+            this.moveHabboSmooth(room, habbo, item, targetTile, movementPhysics);
         }
     }
 
@@ -197,6 +199,10 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
             throw new WiredSaveException("Too many furni selected");
         }
 
+        if (settings.getFurniIds().length > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
         if (room == null) {
             throw new WiredSaveException("Room not found");
@@ -227,7 +233,7 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
         return true;
     }
 
-    private void moveHabboSmooth(Room room, Habbo habbo, HabboItem item, RoomTile targetTile) {
+    private void moveHabboSmooth(Room room, Habbo habbo, HabboItem item, RoomTile targetTile, WiredMovementPhysics movementPhysics) {
         if (room == null || habbo == null || item == null || targetTile == null || habbo.getRoomUnit() == null) {
             return;
         }
@@ -245,7 +251,7 @@ public class WiredEffectUserToFurni extends WiredEffectUserFurniBase {
         double newZ = item.getZ() + Item.getCurrentHeight(item);
         int animationDuration = noAnimation ? 0 : WiredMoveCarryHelper.getAnimationDuration(room, this, WiredUserMovementHelper.DEFAULT_ANIMATION_DURATION);
         if (!WiredUserMovementHelper.moveUser(room, roomUnit, targetTile, newZ,
-                roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), animationDuration, noAnimation)) {
+                roomUnit.getBodyRotation(), roomUnit.getHeadRotation(), animationDuration, noAnimation, movementPhysics)) {
             return;
         }
 

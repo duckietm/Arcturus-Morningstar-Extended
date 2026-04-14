@@ -54,11 +54,23 @@ public class ModToolManager {
         if (userId <= 0)
             return;
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT users.*, users_settings.*, permissions.rank_name, permissions.acc_hide_mail AS hide_mail, permissions.id AS rank_id FROM users INNER JOIN users_settings ON users.id = users_settings.user_id INNER JOIN permissions ON permissions.id = users.rank WHERE users.id = ? LIMIT 1")) {
+        String query = Emulator.getGameEnvironment().getPermissionsManager().isNormalizedSchemaEnabled()
+            ? "SELECT users.*, users_settings.*, permission_ranks.rank_name, permission_ranks.id AS rank_id " +
+                "FROM users " +
+                "INNER JOIN users_settings ON users.id = users_settings.user_id " +
+                "INNER JOIN permission_ranks ON permission_ranks.id = users.rank " +
+                "WHERE users.id = ? LIMIT 1"
+            : "SELECT users.*, users_settings.*, permissions.rank_name, permissions.acc_hide_mail AS hide_mail, permissions.id AS rank_id FROM users INNER JOIN users_settings ON users.id = users_settings.user_id INNER JOIN permissions ON permissions.id = users.rank WHERE users.id = ? LIMIT 1";
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userId);
             try (ResultSet set = statement.executeQuery()) {
                 while (set.next()) {
-                    client.sendResponse(new ModToolUserInfoComposer(set));
+                    boolean hideMail = Emulator.getGameEnvironment().getPermissionsManager().isNormalizedSchemaEnabled()
+                        ? Emulator.getGameEnvironment().getPermissionsManager().getRank(set.getInt("rank_id")).hasPermission("acc_hide_mail", false)
+                        : set.getBoolean("hide_mail");
+
+                    client.sendResponse(new ModToolUserInfoComposer(set, hideMail));
                 }
             }
         } catch (SQLException e) {

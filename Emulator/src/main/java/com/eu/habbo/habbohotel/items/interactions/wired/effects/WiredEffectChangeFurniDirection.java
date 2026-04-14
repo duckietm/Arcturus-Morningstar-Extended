@@ -290,6 +290,10 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
             throw new WiredSaveException("Too many furni selected");
         }
 
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         THashMap<HabboItem, WiredChangeDirectionSetting> newItems = new THashMap<>();
 
         for (int i = 0; i < itemsCount; i++) {

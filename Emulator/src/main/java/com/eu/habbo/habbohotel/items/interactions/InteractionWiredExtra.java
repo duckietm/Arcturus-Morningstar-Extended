@@ -23,7 +23,7 @@ public abstract class InteractionWiredExtra extends InteractionWired {
     @Override
     public void onClick(GameClient client, Room room, Object[] objects) throws Exception {
         if (client != null) {
-            if (room.hasRights(client.getHabbo())) {
+            if (room.canInspectWired(client.getHabbo())) {
                 if (this.hasConfiguration()) {
                     client.sendResponse(new WiredExtraDataComposer(this, room));
                 }

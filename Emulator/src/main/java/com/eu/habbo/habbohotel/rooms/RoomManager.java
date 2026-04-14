@@ -34,6 +34,8 @@ import com.eu.habbo.messages.outgoing.polls.PollStartComposer;
 import com.eu.habbo.messages.outgoing.polls.infobus.SimplePollAnswersComposer;
 import com.eu.habbo.messages.outgoing.polls.infobus.SimplePollStartComposer;
 import com.eu.habbo.messages.outgoing.rooms.*;
+import com.eu.habbo.messages.outgoing.rooms.items.ConfInvisStateComposer;
+import com.eu.habbo.messages.outgoing.rooms.items.HanditemBlockStateComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RoomFloorItemsComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RoomWallItemsComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
@@ -567,6 +569,18 @@ public class RoomManager {
             return;
         }
 
+        if (room.isBuildersClubTrialLocked()
+                && habbo.getHabboInfo().getId() != room.getOwnerId()
+                && !overrideChecks
+                && !habbo.hasPermission(Permission.ACC_ANYROOMOWNER)
+                && !habbo.hasPermission(Permission.ACC_ENTERANYROOM)) {
+            BuildersClubRoomSupport.sendVisitDeniedOwnerBubble(room.getOwnerId(), habbo.getHabboInfo().getUsername());
+            BuildersClubRoomSupport.sendVisitDeniedVisitorAlert(habbo.getHabboInfo().getId());
+            habbo.getClient().sendResponse(new HotelViewComposer());
+            habbo.getHabboInfo().setLoadingRoom(0);
+            return;
+        }
+
         if (habbo.getHabboInfo().getRoomQueueId() != roomId) {
             Room queRoom = Emulator.getGameEnvironment().getRoomManager().getRoom(roomId);
 
@@ -789,6 +803,8 @@ public class RoomManager {
 
         habbo.getRoomUnit().setInvisible(false);
         room.addHabbo(habbo);
+        BuildersClubRoomSupport.sendCurrentRoomPlacementStatus(room);
+        room.getUserVariableManager().restorePermanentAssignments(habbo);
 
         habbo.getClient().sendResponse(new UserBadgesComposer(habbo.getInventory().getBadgesComponent().getWearingBadges(), habbo.getHabboInfo().getId()));
 
@@ -892,6 +908,10 @@ public class RoomManager {
             habbo.getClient().sendResponse(new RoomFloorItemsComposer(room.getFurniOwnerNames(), floorItems));
             floorItems.clear();
         }
+
+        habbo.getClient().sendResponse(new ConfInvisStateComposer(room).compose());
+        RoomAreaHideSupport.sendState(room, habbo.getClient());
+        habbo.getClient().sendResponse(new HanditemBlockStateComposer(room).compose());
 
         if (!room.getCurrentPets().isEmpty()) {
             habbo.getClient().sendResponse(new RoomPetComposer(room.getCurrentPets()));
@@ -1033,6 +1053,7 @@ public class RoomManager {
 
             this.logExit(habbo);
             room.removeHabbo(habbo, true);
+            BuildersClubRoomSupport.sendCurrentRoomPlacementStatus(room);
 
             if (redirectToHotelView) {
                 habbo.getClient().sendResponse(new HotelViewComposer());

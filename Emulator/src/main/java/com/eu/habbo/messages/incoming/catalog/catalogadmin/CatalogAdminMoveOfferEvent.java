@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.catalog.catalogadmin;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
@@ -19,9 +20,10 @@ public class CatalogAdminMoveOfferEvent extends MessageHandler {
 
         int offerId = this.packet.readInt();
         int orderNumber = this.packet.readInt();
+        CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement("UPDATE catalog_items SET order_number = ? WHERE id = ?")) {
+             PreparedStatement statement = connection.prepareStatement((pageType == CatalogPageType.BUILDER) ? "UPDATE catalog_items_bc SET order_number = ? WHERE id = ?" : "UPDATE catalog_items SET order_number = ? WHERE id = ?")) {
             statement.setInt(1, orderNumber);
             statement.setInt(2, offerId);
             statement.execute();

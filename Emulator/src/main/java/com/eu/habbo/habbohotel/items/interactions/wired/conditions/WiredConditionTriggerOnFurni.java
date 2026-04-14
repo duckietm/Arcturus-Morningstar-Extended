@@ -186,6 +186,10 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
         this.userSource = (params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER;
         this.quantifier = (params.length > 2) ? this.normalizeQuantifier(params[2]) : QUANTIFIER_ALL;
 
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         this.items.clear();
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {

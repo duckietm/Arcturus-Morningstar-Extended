@@ -10,13 +10,16 @@ import com.eu.habbo.habbohotel.navigation.NavigatorSavedSearch;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomManager;
+import com.eu.habbo.habbohotel.rooms.BuildersClubRoomSupport;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.habbohotel.users.clothingvalidation.ClothingValidationManager;
+import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
 import com.eu.habbo.habbohotel.users.subscriptions.SubscriptionHabboClub;
 import com.eu.habbo.messages.NoAuthMessage;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.catalog.BuildersClubSubscriptionStatusComposer;
 import com.eu.habbo.messages.outgoing.commands.AvailableCommandsComposer;
 import com.eu.habbo.messages.outgoing.gamecenter.GameCenterAccountInfoComposer;
 import com.eu.habbo.messages.outgoing.gamecenter.GameCenterGameListComposer;
@@ -34,7 +37,6 @@ import com.eu.habbo.messages.outgoing.modtool.ModToolComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolSanctionInfoComposer;
 import com.eu.habbo.messages.outgoing.mysterybox.MysteryBoxKeysComposer;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSavedSearchesComposer;
-import com.eu.habbo.messages.outgoing.unknown.BuildersClubExpiredComposer;
 import com.eu.habbo.messages.outgoing.users.*;
 import com.eu.habbo.plugin.events.emulator.SSOAuthenticationEvent;
 import com.eu.habbo.plugin.events.users.UserLoginEvent;
@@ -220,7 +222,7 @@ public class SecureLoginEvent extends MessageHandler {
                 messages.add(new UserAchievementScoreComposer(this.client.getHabbo()).compose());
                 messages.add(new IsFirstLoginOfDayComposer(true).compose());
                 messages.add(new MysteryBoxKeysComposer().compose());
-                messages.add(new BuildersClubExpiredComposer().compose());
+                messages.add(new BuildersClubSubscriptionStatusComposer(this.client.getHabbo()).compose());
                 messages.add(new CfhTopicsMessageComposer().compose());
                 messages.add(new FavoriteRoomsCountComposer(this.client.getHabbo()).compose());
                 messages.add(new GameCenterGameListComposer().compose());
@@ -234,6 +236,33 @@ public class SecureLoginEvent extends MessageHandler {
                 }
 
                 this.client.sendResponses(messages);
+
+                if (!isSessionResume) {
+                    BuildersClubRoomSupport.syncOwnedRooms(this.client.getHabbo().getHabboInfo().getId());
+
+                    boolean hasActiveBuildersClub = this.client.getHabbo().getHabboStats().hasSubscription(Subscription.BUILDERS_CLUB);
+                    boolean hadBuildersClubBefore = false;
+
+                    for (com.eu.habbo.habbohotel.users.subscriptions.Subscription subscription : this.client.getHabbo().getHabboStats().subscriptions) {
+                        if (subscription.getSubscriptionType().equalsIgnoreCase(Subscription.BUILDERS_CLUB)) {
+                            hadBuildersClubBefore = true;
+                            break;
+                        }
+                    }
+
+                    if (hasActiveBuildersClub) {
+                        int remaining = BuildersClubRoomSupport.getMembershipSecondsLeft(this.client.getHabbo().getHabboInfo().getId());
+
+                        if (remaining > 0 && remaining <= (72 * 3600)) {
+                            BuildersClubRoomSupport.sendMembershipExpiringAlert(this.client.getHabbo().getHabboInfo().getId());
+                        }
+                    } else if (hadBuildersClubBefore) {
+                        BuildersClubRoomSupport.sendMembershipExpiredAlert(
+                                this.client.getHabbo().getHabboInfo().getId(),
+                                BuildersClubRoomSupport.hasTrackedItemsInOwnedRooms(this.client.getHabbo().getHabboInfo().getId())
+                        );
+                    }
+                }
 
                 //Hardcoded
                 //this.client.sendResponse(new ForumsTestComposer());

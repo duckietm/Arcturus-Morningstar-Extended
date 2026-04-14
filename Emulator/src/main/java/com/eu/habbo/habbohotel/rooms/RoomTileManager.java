@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionStackHelper;
+import com.eu.habbo.habbohotel.items.interactions.InteractionStackWalkHelper;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.plugin.events.furniture.FurnitureStackHeightEvent;
@@ -149,7 +150,7 @@ public class RoomTileManager {
             result = overriddenState;
         }
 
-        if (this.room.getItemManager().getItemsAt(tile).stream().anyMatch(i -> i instanceof InteractionTileWalkMagic)) {
+        if (this.room.getItemManager().getItemsAt(tile).stream().anyMatch(i -> i instanceof InteractionTileWalkMagic || i instanceof InteractionStackWalkHelper)) {
             result = RoomTileState.OPEN;
         }
 
@@ -211,14 +212,20 @@ public class RoomTileManager {
         boolean canStack = true;
 
         THashSet<HabboItem> stackHelpers = this.room.getItemManager().getItemsAt(InteractionStackHelper.class, x, y);
+        stackHelpers.addAll(this.room.getItemManager().getItemsAt(InteractionStackWalkHelper.class, x, y));
         stackHelpers.addAll(this.room.getItemManager().getItemsAt(InteractionTileWalkMagic.class, x, y));
 
         if (stackHelpers.size() > 0) {
+            double helperHeight = Double.NEGATIVE_INFINITY;
             for (HabboItem item : stackHelpers) {
                 if (item == exclude) {
                     continue;
                 }
-                return calculateHeightmap ? item.getZ() * 256.0D : item.getZ();
+                helperHeight = Math.max(helperHeight, item.getZ());
+            }
+
+            if (helperHeight != Double.NEGATIVE_INFINITY) {
+                return calculateHeightmap ? helperHeight * 256.0D : helperHeight;
             }
         }
 
@@ -425,6 +432,10 @@ public class RoomTileManager {
         HabboItem topItem = null;
         boolean canWalk = true;
         THashSet<HabboItem> items = this.room.getItemManager().getItemsAt(roomTile);
+        if (items != null && items.stream().anyMatch(item -> item instanceof InteractionTileWalkMagic || item instanceof InteractionStackWalkHelper)) {
+            return true;
+        }
+
         if (items != null) {
             for (HabboItem item : items) {
                 if (topItem == null) {

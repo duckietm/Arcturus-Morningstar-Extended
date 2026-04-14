@@ -19,7 +19,13 @@ public class AddFloorItemComposer extends MessageComposer {
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.AddFloorItemComposer);
         this.item.serializeFloorData(this.response);
-        this.response.appendInt(this.item instanceof InteractionGift ? ((((InteractionGift) this.item).getColorId() * 1000) + ((InteractionGift) this.item).getRibbonId()) : (this.item instanceof InteractionMusicDisc ? ((InteractionMusicDisc) this.item).getSongId() : 1));
+        this.response.appendInt(
+            this.item instanceof InteractionGift
+                ? ((((InteractionGift) this.item).getColorId() * 1000) + ((InteractionGift) this.item).getRibbonId())
+                : (this.item instanceof InteractionMusicDisc
+                    ? ((InteractionMusicDisc) this.item).getSongId()
+                    : (this.item instanceof InteractionStackWalkHelper ? 2147483001 : 1))
+        );
         this.item.serializeExtradata(this.response);
         this.response.appendInt(-1);
         this.response.appendInt(this.item instanceof InteractionTeleport || this.item instanceof InteractionSwitch || this.item instanceof InteractionSwitchRemoteControl || this.item instanceof InteractionVendingMachine || this.item instanceof InteractionInformationTerminal || this.item instanceof InteractionPostIt|| this.item instanceof InteractionPuzzleBox ? 2 : this.item.isUsable() ? 1 : 0);

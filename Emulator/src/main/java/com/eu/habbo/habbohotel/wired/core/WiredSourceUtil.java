@@ -4,7 +4,9 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurni;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterFurniByVariable;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUser;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFilterUsersByVariable;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -27,24 +29,19 @@ public final class WiredSourceUtil {
     }
 
     public static List<HabboItem> resolveItems(WiredContext ctx, int sourceType, Collection<HabboItem> selectedItems) {
-        switch (sourceType) {
-            case SOURCE_TRIGGER:
-                return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
-            case SOURCE_SELECTED:
-                return (selectedItems != null) ? new ArrayList<>(selectedItems) : Collections.emptyList();
-            case SOURCE_SELECTOR:
-                WiredTargets itemTargets = getSelectorTargets(ctx);
-                return itemTargets.isItemsModifiedBySelector()
-                        ? new ArrayList<>(itemTargets.items())
-                        : Collections.emptyList();
-            case SOURCE_SIGNAL:
-                if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
-                    return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
-                }
-                return Collections.emptyList();
-            default:
-                return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+        List<HabboItem> resolvedItems = resolveItemsInternal(ctx, sourceType, selectedItems, false);
+
+        if (ctx == null) {
+            return resolvedItems;
         }
+
+        return (sourceType == SOURCE_SELECTOR)
+                ? resolvedItems
+                : WiredSelectionFilterSupport.filterItems(ctx.room(), ctx.triggerItem(), ctx, resolvedItems);
+    }
+
+    public static List<HabboItem> resolveItemsRaw(WiredContext ctx, int sourceType, Collection<HabboItem> selectedItems) {
+        return resolveItemsInternal(ctx, sourceType, selectedItems, true);
     }
 
     public static List<RoomUnit> resolveUsers(WiredContext ctx, int sourceType) {
@@ -52,29 +49,23 @@ public final class WiredSourceUtil {
     }
 
     public static List<RoomUnit> resolveUsers(WiredContext ctx, int sourceType, Collection<RoomUnit> selectedUsers) {
-        switch (sourceType) {
-            case SOURCE_TRIGGER:
-                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
-            case SOURCE_CLICKED_USER:
-                if (ctx.eventType() == WiredEvent.Type.USER_CLICKS_USER) {
-                    return ctx.event().getTargetUnit().map(Collections::singletonList).orElse(Collections.emptyList());
-                }
-                return Collections.emptyList();
-            case SOURCE_SELECTED:
-                return (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
-            case SOURCE_SELECTOR:
-                WiredTargets userTargets = getSelectorTargets(ctx);
-                return userTargets.isUsersModifiedBySelector()
-                        ? new ArrayList<>(userTargets.users())
-                        : Collections.emptyList();
-            case SOURCE_SIGNAL:
-                if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
-                    return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
-                }
-                return Collections.emptyList();
-            default:
-                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+        List<RoomUnit> resolvedUsers = resolveUsersInternal(ctx, sourceType, selectedUsers);
+
+        if (ctx == null) {
+            return resolvedUsers;
         }
+
+        return (sourceType == SOURCE_SELECTOR)
+                ? resolvedUsers
+                : WiredSelectionFilterSupport.filterUsers(ctx.room(), ctx.triggerItem(), ctx, resolvedUsers);
+    }
+
+    public static List<RoomUnit> resolveUsersRaw(WiredContext ctx, int sourceType) {
+        return resolveUsersRaw(ctx, sourceType, null);
+    }
+
+    public static List<RoomUnit> resolveUsersRaw(WiredContext ctx, int sourceType, Collection<RoomUnit> selectedUsers) {
+        return resolveUsersInternal(ctx, sourceType, selectedUsers);
     }
 
     public static boolean isDefaultUserSource(int value) {
@@ -221,54 +212,77 @@ public final class WiredSourceUtil {
     }
 
     private static void applySelectionFilterExtras(Room room, HabboItem triggerItem, WiredContext selectorCtx) {
-        if (room == null || triggerItem == null || selectorCtx == null || room.getRoomSpecialTypes() == null) {
-            return;
+        WiredSelectionFilterSupport.applySelectorFilters(room, triggerItem, selectorCtx);
+    }
+
+    private static List<HabboItem> resolveItemsInternal(WiredContext ctx, int sourceType, Collection<HabboItem> selectedItems, boolean allowTriggerItemFallback) {
+        if (ctx == null) {
+            return Collections.emptyList();
         }
 
-        THashSet<InteractionWiredExtra> extras = room.getRoomSpecialTypes().getExtras(triggerItem.getX(), triggerItem.getY());
-
-        if (extras == null || extras.isEmpty()) {
-            return;
-        }
-
-        int furniLimit = Integer.MAX_VALUE;
-        int userLimit = Integer.MAX_VALUE;
-
-        for (InteractionWiredExtra extra : extras) {
-            if (extra instanceof WiredExtraFilterFurni) {
-                furniLimit = Math.min(furniLimit, ((WiredExtraFilterFurni) extra).getAmount());
-            } else if (extra instanceof WiredExtraFilterUser) {
-                userLimit = Math.min(userLimit, ((WiredExtraFilterUser) extra).getAmount());
-            }
-        }
-
-        if (selectorCtx.targets().isItemsModifiedBySelector() && furniLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setItems(limitIterable(selectorCtx.targets().items(), furniLimit));
-        }
-
-        if (selectorCtx.targets().isUsersModifiedBySelector() && userLimit != Integer.MAX_VALUE) {
-            selectorCtx.targets().setUsers(limitIterable(selectorCtx.targets().users(), userLimit));
+        switch (sourceType) {
+            case SOURCE_TRIGGER:
+                return resolveTriggerItems(ctx, allowTriggerItemFallback);
+            case SOURCE_SELECTED:
+                return (selectedItems != null) ? new ArrayList<>(selectedItems) : Collections.emptyList();
+            case SOURCE_SELECTOR:
+                WiredTargets itemTargets = getSelectorTargets(ctx);
+                return itemTargets.isItemsModifiedBySelector()
+                        ? new ArrayList<>(itemTargets.items())
+                        : Collections.emptyList();
+            case SOURCE_SIGNAL:
+                if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
+                    return ctx.sourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return Collections.emptyList();
+            default:
+                return resolveTriggerItems(ctx, allowTriggerItemFallback);
         }
     }
 
-    private static <T> List<T> limitIterable(Iterable<T> values, int limit) {
-        List<T> result = new ArrayList<>();
-
-        if (values == null || limit <= 0) {
-            return result;
+    private static List<RoomUnit> resolveUsersInternal(WiredContext ctx, int sourceType, Collection<RoomUnit> selectedUsers) {
+        if (ctx == null) {
+            return Collections.emptyList();
         }
 
-        for (T value : values) {
-            if (value != null) {
-                result.add(value);
-            }
+        switch (sourceType) {
+            case SOURCE_TRIGGER:
+                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+            case SOURCE_CLICKED_USER:
+                if (ctx.eventType() == WiredEvent.Type.USER_CLICKS_USER) {
+                    return ctx.event().getTargetUnit().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return Collections.emptyList();
+            case SOURCE_SELECTED:
+                return (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
+            case SOURCE_SELECTOR:
+                WiredTargets userTargets = getSelectorTargets(ctx);
+                return userTargets.isUsersModifiedBySelector()
+                        ? new ArrayList<>(userTargets.users())
+                        : Collections.emptyList();
+            case SOURCE_SIGNAL:
+                if (ctx.eventType() == WiredEvent.Type.SIGNAL_RECEIVED) {
+                    return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return Collections.emptyList();
+            default:
+                return ctx.actor().map(Collections::singletonList).orElse(Collections.emptyList());
+        }
+    }
+
+    private static List<HabboItem> resolveTriggerItems(WiredContext ctx, boolean allowTriggerItemFallback) {
+        if (ctx == null) {
+            return Collections.emptyList();
         }
 
-        if (result.size() <= limit) {
-            return result;
+        if (ctx.sourceItem().isPresent()) {
+            return Collections.singletonList(ctx.sourceItem().get());
         }
 
-        Collections.shuffle(result, Emulator.getRandom());
-        return new ArrayList<>(result.subList(0, limit));
+        if (allowTriggerItemFallback && ctx.triggerItem() != null) {
+            return Collections.singletonList(ctx.triggerItem());
+        }
+
+        return Collections.emptyList();
     }
 }

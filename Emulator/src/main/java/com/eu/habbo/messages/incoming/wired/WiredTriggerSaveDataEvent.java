@@ -4,7 +4,6 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
-import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
@@ -19,7 +18,7 @@ public class WiredTriggerSaveDataEvent extends MessageHandler {
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
 
         if (room != null) {
-            if (room.hasRights(this.client.getHabbo()) || room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER) || this.client.getHabbo().hasPermission(Permission.ACC_MOVEROTATE)) {
+            if (room.canModifyWired(this.client.getHabbo())) {
                 InteractionWiredTrigger trigger = room.getRoomSpecialTypes().getTrigger(itemId);
 
                 if (trigger != null) {

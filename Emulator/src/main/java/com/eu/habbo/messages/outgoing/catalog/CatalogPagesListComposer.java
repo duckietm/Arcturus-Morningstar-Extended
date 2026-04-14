@@ -2,6 +2,7 @@ package com.eu.habbo.messages.outgoing.catalog;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogPage;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
@@ -32,7 +33,8 @@ public class CatalogPagesListComposer extends MessageComposer {
     @Override
     protected ServerMessage composeInternal() {
         try {
-            List<CatalogPage> pages = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(-1, this.habbo);
+            CatalogPageType requestedType = CatalogPageType.fromString(this.mode);
+            List<CatalogPage> pages = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(-1, this.habbo, requestedType);
 
             this.response.init(Outgoing.CatalogPagesListComposer);
 
@@ -47,7 +49,7 @@ public class CatalogPagesListComposer extends MessageComposer {
             this.response.appendInt(childCount);
 
             for (int idx = 0; idx < childCount; idx++) {
-                this.append(pages.get(idx), 1);
+                this.append(pages.get(idx), 1, requestedType);
             }
 
             this.response.appendBoolean(false);
@@ -61,8 +63,8 @@ public class CatalogPagesListComposer extends MessageComposer {
         return null;
     }
 
-    private void append(CatalogPage category, int depth) {
-        List<CatalogPage> pagesList = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(category.getId(), this.habbo);
+    private void append(CatalogPage category, int depth, CatalogPageType requestedType) {
+        List<CatalogPage> pagesList = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(category.getId(), this.habbo, requestedType);
 
         this.response.appendBoolean(category.isVisible());
         this.response.appendInt(category.getIconImage());
@@ -87,7 +89,7 @@ public class CatalogPagesListComposer extends MessageComposer {
         this.response.appendInt(childCount);
 
         for (int idx = 0; idx < childCount; idx++) {
-            this.append(pagesList.get(idx), depth + 1);
+            this.append(pagesList.get(idx), depth + 1, requestedType);
         }
     }
 
