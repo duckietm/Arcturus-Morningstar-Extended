@@ -335,10 +335,11 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         }
 
         message.appendInt(this.clubOnly);
-        message.appendBoolean(haveOffer(this));
-        message.appendBoolean(false); //unknown
+        message.appendBoolean(false); //bundlePurchaseAllowed
+        message.appendBoolean(false); //isPet
         message.appendString(this.name + ".png");
         message.appendString(this.itemId == null ? "" : this.itemId);
+        message.appendBoolean(haveOffer(this));
     }
 
     @Override
