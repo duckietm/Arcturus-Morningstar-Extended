@@ -21,7 +21,7 @@ public class CatalogAdminCreateOfferEvent extends MessageHandler {
         }
 
         int pageId = this.packet.readInt();
-        int itemId = this.packet.readInt();
+        String itemIds = this.packet.readString();
         String catalogName = this.packet.readString();
         int costCredits = this.packet.readInt();
         int costPoints = this.packet.readInt();
@@ -39,12 +39,13 @@ public class CatalogAdminCreateOfferEvent extends MessageHandler {
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                 (pageType == CatalogPageType.BUILDER)
-                         ? "INSERT INTO catalog_items_bc (page_id, item_ids, catalog_name, order_number, extradata) VALUES (?, ?, ?, ?, ?)"
-                         : "INSERT INTO catalog_items (page_id, item_ids, catalog_name, cost_credits, cost_points, points_type, amount, club_only, extradata, have_offer, offer_id, limited_stack, order_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                 Statement.RETURN_GENERATED_KEYS)) {
+                     (pageType == CatalogPageType.BUILDER)
+                             ? "INSERT INTO catalog_items_bc (page_id, item_ids, catalog_name, order_number, extradata) VALUES (?, ?, ?, ?, ?)"
+                             : "INSERT INTO catalog_items (page_id, item_ids, catalog_name, cost_credits, cost_points, points_type, amount, club_only, extradata, have_offer, offer_id, limited_stack, order_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     Statement.RETURN_GENERATED_KEYS)) {
+            String cleanItemIds = (itemIds == null || itemIds.trim().isEmpty()) ? "0" : itemIds.trim();
             statement.setInt(1, pageId);
-            statement.setString(2, String.valueOf(itemId));
+            statement.setString(2, cleanItemIds);
             statement.setString(3, catalogName);
 
             if (pageType == CatalogPageType.BUILDER) {

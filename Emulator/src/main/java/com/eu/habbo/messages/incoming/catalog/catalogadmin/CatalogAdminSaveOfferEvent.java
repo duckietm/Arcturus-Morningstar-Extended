@@ -20,7 +20,7 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
 
         int offerId = this.packet.readInt();
         int pageId = this.packet.readInt();
-        int itemId = this.packet.readInt();
+        String itemIds = this.packet.readString();
         String catalogName = this.packet.readString();
         int costCredits = this.packet.readInt();
         int costPoints = this.packet.readInt();
@@ -34,31 +34,44 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
         int orderNumber = this.packet.readInt();
         CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
 
+        boolean updateItemIds = itemIds != null && !itemIds.trim().isEmpty();
+
+        String sql;
+        if (pageType == CatalogPageType.BUILDER) {
+            sql = updateItemIds
+                    ? "UPDATE catalog_items_bc SET page_id = ?, item_ids = ?, catalog_name = ?, order_number = ?, extradata = ? WHERE id = ?"
+                    : "UPDATE catalog_items_bc SET page_id = ?, catalog_name = ?, order_number = ?, extradata = ? WHERE id = ?";
+        } else {
+            sql = updateItemIds
+                    ? "UPDATE catalog_items SET page_id = ?, item_ids = ?, catalog_name = ?, cost_credits = ?, cost_points = ?, points_type = ?, amount = ?, club_only = ?, extradata = ?, have_offer = ?, offer_id = ?, limited_stack = ?, order_number = ? WHERE id = ?"
+                    : "UPDATE catalog_items SET page_id = ?, catalog_name = ?, cost_credits = ?, cost_points = ?, points_type = ?, amount = ?, club_only = ?, extradata = ?, have_offer = ?, offer_id = ?, limited_stack = ?, order_number = ? WHERE id = ?";
+        }
+
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                 (pageType == CatalogPageType.BUILDER)
-                         ? "UPDATE catalog_items_bc SET page_id = ?, item_ids = ?, catalog_name = ?, order_number = ?, extradata = ? WHERE id = ?"
-                         : "UPDATE catalog_items SET page_id = ?, item_ids = ?, catalog_name = ?, cost_credits = ?, cost_points = ?, points_type = ?, amount = ?, club_only = ?, extradata = ?, have_offer = ?, offer_id = ?, limited_stack = ?, order_number = ? WHERE id = ?")) {
-            statement.setInt(1, pageId);
-            statement.setString(2, String.valueOf(itemId));
-            statement.setString(3, catalogName);
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            int idx = 1;
+            statement.setInt(idx++, pageId);
+            if (updateItemIds) {
+                statement.setString(idx++, itemIds.trim());
+            }
+            statement.setString(idx++, catalogName);
 
             if (pageType == CatalogPageType.BUILDER) {
-                statement.setInt(4, orderNumber);
-                statement.setString(5, extradata);
-                statement.setInt(6, offerId);
+                statement.setInt(idx++, orderNumber);
+                statement.setString(idx++, extradata);
+                statement.setInt(idx, offerId);
             } else {
-                statement.setInt(4, costCredits);
-                statement.setInt(5, costPoints);
-                statement.setInt(6, pointsType);
-                statement.setInt(7, amount);
-                statement.setString(8, clubOnly == 1 ? "1" : "0");
-                statement.setString(9, extradata);
-                statement.setString(10, haveOffer ? "1" : "0");
-                statement.setInt(11, offerIdGroup);
-                statement.setInt(12, limitedStack);
-                statement.setInt(13, orderNumber);
-                statement.setInt(14, offerId);
+                statement.setInt(idx++, costCredits);
+                statement.setInt(idx++, costPoints);
+                statement.setInt(idx++, pointsType);
+                statement.setInt(idx++, amount);
+                statement.setString(idx++, clubOnly == 1 ? "1" : "0");
+                statement.setString(idx++, extradata);
+                statement.setString(idx++, haveOffer ? "1" : "0");
+                statement.setInt(idx++, offerIdGroup);
+                statement.setInt(idx++, limitedStack);
+                statement.setInt(idx++, orderNumber);
+                statement.setInt(idx, offerId);
             }
             statement.execute();
         }
