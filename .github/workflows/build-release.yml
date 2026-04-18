@@ -50,25 +50,22 @@ jobs:
           git commit -m "🆙 Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
           git push origin HEAD:main
 
-      - name: Generate release notes from commits
+      - name: Generate release notes from latest commit
         working-directory: ${{ github.workspace }}
+        env:
+          NEW_TAG: v${{ steps.bump.outputs.new_version }}
+          TRIGGER_SHA: ${{ github.sha }}
         run: |
           PREV_TAG=$(git tag --sort=-creatordate | head -n1 || true)
-          NEW_TAG="v${{ steps.bump.outputs.new_version }}"
-          if [ -z "$PREV_TAG" ]; then
-            RANGE="HEAD"
-            COMPARE_LINE=""
-          else
-            RANGE="${PREV_TAG}..HEAD"
-            COMPARE_LINE="**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${NEW_TAG}"
-          fi
           {
-            echo "## What's Changed in ${NEW_TAG}"
+            echo "## What's Changed"
             echo ""
-            git log --no-merges --pretty=format:"### %s%n%n%b%n---" $RANGE
+            git log -1 --pretty=format:"### %s%n%n%b" "$TRIGGER_SHA"
             echo ""
             echo ""
-            [ -n "$COMPARE_LINE" ] && echo "$COMPARE_LINE"
+            if [ -n "$PREV_TAG" ]; then
+              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${NEW_TAG}"
+            fi
           } > release_notes.md
           cat release_notes.md
 
