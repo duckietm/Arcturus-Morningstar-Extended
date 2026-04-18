@@ -42,6 +42,18 @@ public final class WiredEvent {
         
         /** User walks off furniture */
         USER_WALKS_OFF(WiredTriggerType.WALKS_OFF_FURNI),
+
+        /** User clicks furniture */
+        USER_CLICKS_FURNI(WiredTriggerType.CLICKS_FURNI),
+
+        /** User clicks invisible click tile furniture */
+        USER_CLICKS_TILE(WiredTriggerType.CLICKS_TILE),
+
+        /** User clicks another user */
+        USER_CLICKS_USER(WiredTriggerType.CLICKS_USER),
+
+        /** User performs an avatar action */
+        USER_PERFORMS_ACTION(WiredTriggerType.USER_PERFORMS_ACTION),
         
         /** Furniture state is toggled/changed */
         FURNI_STATE_CHANGED(WiredTriggerType.STATE_CHANGED),
@@ -51,12 +63,24 @@ public final class WiredEvent {
         
         /** Timer fires periodically/repeatedly */
         TIMER_REPEAT(WiredTriggerType.PERIODICALLY),
+
+        /** Up-counter reaches a configured elapsed time */
+        CLOCK_COUNTER_REACHED(WiredTriggerType.CLOCK_COUNTER),
+
+        /** A user, furni or global variable changed */
+        VARIABLE_CHANGED(WiredTriggerType.VARIABLE_CHANGED),
         
         /** Long timer repeat */
         TIMER_REPEAT_LONG(WiredTriggerType.PERIODICALLY_LONG),
+
+        /** Short timer repeat */
+        TIMER_REPEAT_SHORT(WiredTriggerType.PERIODICALLY_SHORT),
         
         /** User enters the room */
         USER_ENTERS_ROOM(WiredTriggerType.ENTER_ROOM),
+
+        /** User leaves the room */
+        USER_LEAVES_ROOM(WiredTriggerType.LEAVE_ROOM),
         
         /** Game starts */
         GAME_STARTS(WiredTriggerType.GAME_STARTS),
@@ -129,9 +153,17 @@ public final class WiredEvent {
         }
     }
 
+    public enum VariableChangeKind {
+        NONE,
+        INCREASED,
+        DECREASED,
+        UNCHANGED
+    }
+
     private final Type type;
     private final Room room;
     private final RoomUnit actor;       // nullable - the user/bot that caused the event
+    private final RoomUnit originActor; // nullable - original user that started the chain, preserved across signals
     private final HabboItem sourceItem; // nullable - the furniture involved
     private final RoomTile tile;        // nullable - the tile where event occurred
     private final String text;          // nullable - text for say triggers
@@ -141,6 +173,18 @@ public final class WiredEvent {
     private final boolean triggeredByEffect; // true if triggered by a wired effect (to prevent loops)
     private final int callStackDepth;   // recursion depth for trigger stacks effect
     private final int signalChannel;    // channel for signal routing (0-based)
+    private final int actionId;         // user action id for USER_PERFORMS_ACTION
+    private final int actionParameter;  // sign/dance parameter when relevant
+    private final int chatType;         // RoomChatType metadata for USER_SAYS
+    private final int chatStyle;        // bubble style for USER_SAYS
+    private final int signalUserCount;  // forwarded users in SIGNAL_RECEIVED
+    private final int signalFurniCount; // forwarded furni in SIGNAL_RECEIVED
+    private final int variableTargetType;
+    private final int variableDefinitionItemId;
+    private final boolean variableCreated;
+    private final boolean variableDeleted;
+    private final VariableChangeKind variableChangeKind;
+    private final WiredContextVariableScope contextVariableScope;
     private final long createdAtMs;
 
     private WiredEvent(Builder builder) {
@@ -148,6 +192,7 @@ public final class WiredEvent {
         this.room = builder.room;
         this.actor = builder.actor;
         this.sourceItem = builder.sourceItem;
+        this.originActor = builder.originActor;
         this.tile = builder.tile;
         this.text = builder.text;
         this.targetUnit = builder.targetUnit;
@@ -156,6 +201,18 @@ public final class WiredEvent {
         this.triggeredByEffect = builder.triggeredByEffect;
         this.callStackDepth = builder.callStackDepth;
         this.signalChannel = builder.signalChannel;
+        this.actionId = builder.actionId;
+        this.actionParameter = builder.actionParameter;
+        this.chatType = builder.chatType;
+        this.chatStyle = builder.chatStyle;
+        this.signalUserCount = builder.signalUserCount;
+        this.signalFurniCount = builder.signalFurniCount;
+        this.variableTargetType = builder.variableTargetType;
+        this.variableDefinitionItemId = builder.variableDefinitionItemId;
+        this.variableCreated = builder.variableCreated;
+        this.variableDeleted = builder.variableDeleted;
+        this.variableChangeKind = builder.variableChangeKind;
+        this.contextVariableScope = builder.contextVariableScope;
         this.createdAtMs = builder.createdAtMs;
     }
 
@@ -183,6 +240,17 @@ public final class WiredEvent {
      */
     public Optional<RoomUnit> getActor() {
         return Optional.ofNullable(actor);
+    }
+
+    /**
+     * Get the original actor that started the current event chain.
+     * For signal events this can differ from {@link #getActor()} when the
+     * signal forwards users one-by-one but still needs to preserve who
+     * originally triggered the chain.
+     * @return optional containing the original actor, or empty if unavailable
+     */
+    public Optional<RoomUnit> getOriginActor() {
+        return Optional.ofNullable(originActor);
     }
 
     /**
@@ -258,6 +326,54 @@ public final class WiredEvent {
         return signalChannel;
     }
 
+    public int getActionId() {
+        return actionId;
+    }
+
+    public int getActionParameter() {
+        return actionParameter;
+    }
+
+    public int getChatType() {
+        return chatType;
+    }
+
+    public int getChatStyle() {
+        return chatStyle;
+    }
+
+    public int getSignalUserCount() {
+        return signalUserCount;
+    }
+
+    public int getSignalFurniCount() {
+        return signalFurniCount;
+    }
+
+    public int getVariableTargetType() {
+        return variableTargetType;
+    }
+
+    public int getVariableDefinitionItemId() {
+        return variableDefinitionItemId;
+    }
+
+    public boolean isVariableCreated() {
+        return variableCreated;
+    }
+
+    public boolean isVariableDeleted() {
+        return variableDeleted;
+    }
+
+    public VariableChangeKind getVariableChangeKind() {
+        return variableChangeKind;
+    }
+
+    public WiredContextVariableScope getContextVariableScope() {
+        return contextVariableScope;
+    }
+
     /**
      * Get the timestamp when this event was created.
      * @return milliseconds since epoch
@@ -304,6 +420,7 @@ public final class WiredEvent {
         private final Type type;
         private final Room room;
         private RoomUnit actor;
+        private RoomUnit originActor;
         private HabboItem sourceItem;
         private RoomTile tile;
         private String text;
@@ -313,6 +430,18 @@ public final class WiredEvent {
         private boolean triggeredByEffect;
         private int callStackDepth;
         private int signalChannel;
+        private int actionId;
+        private int actionParameter = -1;
+        private int chatType = -1;
+        private int chatStyle = -1;
+        private int signalUserCount;
+        private int signalFurniCount;
+        private int variableTargetType = -1;
+        private int variableDefinitionItemId;
+        private boolean variableCreated;
+        private boolean variableDeleted;
+        private VariableChangeKind variableChangeKind = VariableChangeKind.NONE;
+        private WiredContextVariableScope contextVariableScope;
         private long createdAtMs = System.currentTimeMillis();
 
         private Builder(Type type, Room room) {
@@ -329,6 +458,11 @@ public final class WiredEvent {
          */
         public Builder actor(RoomUnit actor) {
             this.actor = actor;
+            return this;
+        }
+
+        public Builder originActor(RoomUnit originActor) {
+            this.originActor = originActor;
             return this;
         }
 
@@ -414,6 +548,66 @@ public final class WiredEvent {
 
         public Builder signalChannel(int signalChannel) {
             this.signalChannel = signalChannel;
+            return this;
+        }
+
+        public Builder actionId(int actionId) {
+            this.actionId = actionId;
+            return this;
+        }
+
+        public Builder actionParameter(int actionParameter) {
+            this.actionParameter = actionParameter;
+            return this;
+        }
+
+        public Builder chatType(int chatType) {
+            this.chatType = chatType;
+            return this;
+        }
+
+        public Builder chatStyle(int chatStyle) {
+            this.chatStyle = chatStyle;
+            return this;
+        }
+
+        public Builder signalUserCount(int signalUserCount) {
+            this.signalUserCount = Math.max(0, signalUserCount);
+            return this;
+        }
+
+        public Builder signalFurniCount(int signalFurniCount) {
+            this.signalFurniCount = Math.max(0, signalFurniCount);
+            return this;
+        }
+
+        public Builder variableTargetType(int variableTargetType) {
+            this.variableTargetType = variableTargetType;
+            return this;
+        }
+
+        public Builder variableDefinitionItemId(int variableDefinitionItemId) {
+            this.variableDefinitionItemId = Math.max(0, variableDefinitionItemId);
+            return this;
+        }
+
+        public Builder variableCreated(boolean variableCreated) {
+            this.variableCreated = variableCreated;
+            return this;
+        }
+
+        public Builder variableDeleted(boolean variableDeleted) {
+            this.variableDeleted = variableDeleted;
+            return this;
+        }
+
+        public Builder variableChangeKind(VariableChangeKind variableChangeKind) {
+            this.variableChangeKind = (variableChangeKind != null) ? variableChangeKind : VariableChangeKind.NONE;
+            return this;
+        }
+
+        public Builder contextVariableScope(WiredContextVariableScope contextVariableScope) {
+            this.contextVariableScope = contextVariableScope;
             return this;
         }
 

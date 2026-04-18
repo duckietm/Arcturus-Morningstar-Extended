@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Riferimento Completo Wired</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wired: {
+                            50: '#eef7ff',
+                            100: '#d9ecff',
+                            200: '#b8dbff',
+                            300: '#89c0ff',
+                            400: '#569dff',
+                            500: '#2d77ff',
+                            600: '#1f5ee5',
+                            700: '#1d4dcb',
+                            800: '#1e42a4',
+                            900: '#1d397f'
+                        }
+                    },
+                    boxShadow: {
+                        wired: '0 20px 50px rgba(15, 23, 42, 0.14)'
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(45, 119, 255, 0.12), transparent 35%),
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.10), transparent 30%),
+                linear-gradient(180deg, #f8fbff 0%, #f1f5f9 100%);
+        }
+
+        .doc-content h1,
+        .doc-content h2,
+        .doc-content h3,
+        .doc-content h4 {
+            scroll-margin-top: 110px;
+        }
+
+        .doc-content h1 {
+            font-size: 2.5rem;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 1.25rem;
+        }
+
+        .doc-content h2 {
+            font-size: 1.65rem;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid #dbeafe;
+        }
+
+        .doc-content h3 {
+            font-size: 1.15rem;
+            line-height: 1.45;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-top: 1.75rem;
+            margin-bottom: 0.85rem;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 0.9rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .doc-content h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-content p,
+        .doc-content li {
+            color: #334155;
+            line-height: 1.78;
+        }
+
+        .doc-content p {
+            margin: 0.75rem 0;
+        }
+
+        .doc-content ul,
+        .doc-content ol {
+            margin: 0.85rem 0 1rem 1.4rem;
+        }
+
+        .doc-content ul {
+            list-style: disc;
+        }
+
+        .doc-content ol {
+            list-style: decimal;
+        }
+
+        .doc-content li {
+            margin: 0.35rem 0;
+            padding-left: 0.2rem;
+        }
+
+        .doc-content hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #bfdbfe, transparent);
+            margin: 2.25rem 0;
+        }
+
+        .doc-content code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 0.16rem 0.38rem;
+            border-radius: 0.45rem;
+            font-size: 0.92em;
+        }
+
+        .doc-content pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.1rem;
+            border-radius: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0 1.25rem;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+        }
+
+        .doc-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .doc-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 0 1px #dbeafe;
+        }
+
+        .doc-content thead tr {
+            background: #dbeafe;
+        }
+
+        .doc-content th,
+        .doc-content td {
+            text-align: left;
+            padding: 0.8rem 0.95rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .doc-content th {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .doc-content tbody tr:nth-child(even) {
+            background: #f8fbff;
+        }
+
+        .doc-content blockquote {
+            margin: 1rem 0;
+            padding: 0.9rem 1rem;
+            border-left: 4px solid #60a5fa;
+            background: #f8fbff;
+            border-radius: 0 0.9rem 0.9rem 0;
+        }
+
+        .toc-link.active {
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <header class="mb-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-wired backdrop-blur">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div class="max-w-3xl">
+                    <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-wired-200 bg-wired-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-wired-700">
+                        <span class="h-2 w-2 rounded-full bg-wired-500"></span>
+                        Documentazione tecnica Wired
+                    </div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                        Riferimento Completo Wired
+                    </h1>
+                    <p class="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
+                        Questa pagina renderizza <code>wired_full_reference.md</code> in una vista HTML consultabile,
+                        con struttura e interfaccia in italiano. Gli identificatori tecnici dei wired, delle classi e
+                        delle chiavi restano invariati per mantenere la documentazione fedele al runtime.
+                    </p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-3 lg:w-[28rem]">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sorgente</div>
+                        <div class="mt-1 text-sm font-medium text-slate-800">Markdown vivo</div>
+                        <div class="mt-1 text-xs text-slate-500">La pagina legge il file `.md` locale.</div>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Lingua</div>
+                        <div class="mt-1 text-sm font-medium text-slate-800">Interfaccia italiana</div>
+                        <div class="mt-1 text-xs text-slate-500">Struttura e metadati localizzati.</div>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Stile</div>
+                        <div class="mt-1 text-sm font-medium text-slate-800">Tailwind CDN</div>
+                        <div class="mt-1 text-xs text-slate-500">Layout leggibile, sticky nav e indice.</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid gap-6 lg:grid-cols-[19rem,minmax(0,1fr)]">
+            <aside class="lg:sticky lg:top-6 lg:self-start">
+                <div class="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-wired backdrop-blur">
+                    <div class="mb-4">
+                        <label for="toc-search" class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Cerca sezione
+                        </label>
+                        <input
+                            id="toc-search"
+                            type="text"
+                            placeholder="Es. variabili, trigger, signal..."
+                            class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-wired-300 focus:bg-white focus:ring-2 focus:ring-wired-100"
+                        />
+                    </div>
+
+                    <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50/80 p-3 text-xs leading-6 text-amber-900">
+                        <div class="font-semibold">Nota</div>
+                        <div>
+                            La pagina mantiene nomi wired, classi Java e chiavi tecniche così come sono nel progetto.
+                        </div>
+                    </div>
+
+                    <div class="mb-3 flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-slate-900">Indice</h2>
+                        <a
+                            href="./wired_full_reference.md"
+                            class="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-wired-300 hover:text-wired-700"
+                        >
+                            Apri Markdown
+                        </a>
+                    </div>
+
+                    <nav id="toc" class="space-y-1 text-sm"></nav>
+                </div>
+            </aside>
+
+            <main>
+                <section class="mb-6 rounded-3xl border border-white/70 bg-white/90 p-5 shadow-wired backdrop-blur">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Panoramica</h2>
+                            <p class="mt-1 text-sm leading-7 text-slate-600">
+                                Trovi all’inizio le regole del motore wired, poi il catalogo completo di trigger, effect,
+                                selector, condition, extra e variabili.
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs font-medium">
+                            <span class="rounded-full bg-wired-50 px-3 py-2 text-wired-700">Engine + Tick</span>
+                            <span class="rounded-full bg-emerald-50 px-3 py-2 text-emerald-700">154 wired catalogati</span>
+                            <span class="rounded-full bg-fuchsia-50 px-3 py-2 text-fuchsia-700">HTML da Markdown</span>
+                        </div>
+                    </div>
+                </section>
+
+                <article class="rounded-3xl border border-white/70 bg-white/95 p-6 shadow-wired backdrop-blur sm:p-8">
+                    <div id="loading" class="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+                        Caricamento della reference in corso...
+                    </div>
+                    <div id="error" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700"></div>
+                    <div id="content" class="doc-content hidden"></div>
+                </article>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const headingTranslations = new Map([
+            ['# Wired Full Reference', '# Riferimento Completo Wired'],
+            ['## 1. Scope', '## 1. Ambito'],
+            ['## 2. Wired Engine, Tick, and General Runtime Rules', '## 2. Motore Wired, Tick e Regole Generali del Runtime'],
+            ['## 3. Triggers', '## 3. Trigger'],
+            ['## 4. Effects', '## 4. Effetti'],
+            ['## 5. Selectors', '## 5. Selettori'],
+            ['## 6. Conditions', '## 6. Condizioni'],
+            ['## 7. Extras', '## 7. Extra'],
+            ['## 8. Variable Definitions', '## 8. Definizioni Variabili'],
+            ['## 9. Special Wired Items', '## 9. Elementi Wired Speciali'],
+            ['## 10. Practical Design Notes', '## 10. Note Pratiche di Progettazione'],
+            ['## 11. Quick Alias / Shared Runtime Notes', '## 11. Alias Rapidi e Note sul Runtime Condiviso'],
+            ['### General selector notes', '### Note generali sui selettori'],
+            ['### General condition notes', '### Note generali sulle condizioni']
+        ]);
+
+        const lineTranslations = [
+            [/^- \*\*Class:\*\*/g, '- **Classe:**'],
+            [/^- \*\*Behavior:\*\*/g, '- **Comportamento:**'],
+            [/^- \*\*Main settings:\*\*/g, '- **Impostazioni principali:**'],
+            [/^- \*\*Notes:\*\*/g, '- **Note:**'],
+            [/^- \*\*Supported operations:\*\*/g, '- **Operazioni supportate:**'],
+            [/^- \*\*Supported sort modes:\*\*/g, '- **Modalità di ordinamento supportate:**']
+        ];
+
+        const paragraphTranslations = new Map([
+            ['This document is a code-based reference for the current wired runtime in `Arcturus-Morningstar-Extended`.', 'Questo documento è un riferimento tecnico basato sul codice per il runtime wired attuale di `Arcturus-Morningstar-Extended`.'],
+            ['It covers:', 'Copre:'],
+            ['Primary runtime sources used for this reference:', 'Sorgenti principali del runtime usate per questa reference:'],
+            ['This file is meant to describe the runtime behavior and configuration surface, not the Nitro UI layout in detail. For `:wired` monitor and inspection tooling, also see `Arcturus-Morningstar-Extended/docs/wired_tools_reference.md`.', 'Questo file descrive il comportamento del runtime e la superficie di configurazione, non il layout Nitro nel dettaglio. Per gli strumenti `:wired` di monitor e inspection, vedi anche `Arcturus-Morningstar-Extended/docs/wired_tools_reference.md`.'],
+            ['The modern wired runtime is centered around these components:', 'Il runtime wired moderno ruota attorno a questi componenti:'],
+            ['At a high level, the engine processes a stack like this:', 'A livello alto, il motore processa uno stack in questo modo:'],
+            ['Important consequences of this model:', 'Conseguenze importanti di questo modello:'],
+            ['The centralized tick service is defined in `WiredTickService`.', 'Il servizio tick centralizzato è definito in `WiredTickService`.'],
+            ['Current core rules:', 'Regole principali attuali:'],
+            ['This means:', 'Questo significa:'],
+            ['The classic wired delay value is stored in half-second steps.', 'Il valore classico del delay wired è memorizzato in step da mezzo secondo.'],
+            ['Runtime rule:', 'Regola runtime:'],
+            ['Examples:', 'Esempi:'],
+            ['There are several separate notions of order:', 'Esistono più concetti distinti di ordine di esecuzione:'],
+            ['Practical takeaway:', 'Conclusione pratica:'],
+            ['Selectors build or refine the `WiredTargets` inside `WiredContext`.', 'I selettori costruiscono o raffinano i `WiredTargets` dentro `WiredContext`.'],
+            ['In practice:', 'In pratica:'],
+            ['Conditions are evaluated after selectors.', 'Le condizioni vengono valutate dopo i selettori.'],
+            ['General behavior:', 'Comportamento generale:'],
+            ['The runtime supports both:', 'Il runtime supporta sia:'],
+            ['The wired runtime has multiple safety layers:', 'Il runtime wired ha più livelli di protezione:'],
+            ['Main defaults from runtime/config:', 'Default principali da runtime/config:'],
+            ['The new engine tracks room diagnostics through `WiredRoomDiagnostics`.', 'Il nuovo motore traccia le diagnostiche stanza tramite `WiredRoomDiagnostics`.'],
+            ['This is where `:wired` monitor gets values such as:', 'È da qui che il monitor `:wired` ottiene valori come:'],
+            ['Heavy/overload decisions are based on rolling windows, not on a single event.', 'Le decisioni di heavy/overload si basano su finestre scorrevoli, non su un singolo evento.'],
+            ['The project still contains `WiredHandler`.', 'Il progetto contiene ancora `WiredHandler`.'],
+            ['Important practical notes:', 'Note pratiche importanti:'],
+            ['So when documenting stacks, it is best to think in terms of:', 'Quindi, quando si documentano gli stack, conviene ragionare in termini di:'],
+            ['Custom wired variables are defined by:', 'Le variabili wired custom sono definite da:'],
+            ['Shared rules:', 'Regole condivise:'],
+            ['Availability rules:', 'Regole di disponibilità:'],
+            ['Timestamp rules:', 'Regole sui timestamp:'],
+            ['Current context-status note:', 'Nota sullo stato del contesto:'],
+            ['These are part of the wired ecosystem, even if they are not regular trigger/effect/selector/condition/extra boxes.', 'Questi fanno parte dell’ecosistema wired anche se non sono box classici trigger/effect/selector/condition/extra.'],
+            ['Use:', 'Usa:'],
+            ['Remember:', 'Ricorda:'],
+            ['Check:', 'Controlla:']
+        ]);
+
+        function normalizeText(raw) {
+            return raw
+                .replace(/â€œ/g, '“')
+                .replace(/â€/g, '”')
+                .replace(/â€™/g, '’')
+                .replace(/â€“/g, '–')
+                .replace(/â€”/g, '—')
+                .replace(/â€¦/g, '…');
+        }
+
+        function localizeMarkdown(raw) {
+            let output = normalizeText(raw);
+
+            headingTranslations.forEach((translated, original) => {
+                output = output.replace(original, translated);
+            });
+
+            paragraphTranslations.forEach((translated, original) => {
+                output = output.replaceAll(original, translated);
+            });
+
+            lineTranslations.forEach(([regex, replacement]) => {
+                output = output.replace(regex, replacement);
+            });
+
+            return output;
+        }
+
+        function slugify(text) {
+            return text
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[`"'’“”]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function buildToc() {
+            const toc = document.getElementById('toc');
+            const headings = [...document.querySelectorAll('#content h2, #content h3')];
+
+            toc.innerHTML = '';
+
+            headings.forEach((heading) => {
+                const text = heading.textContent.trim();
+                const id = slugify(text);
+                heading.id = id;
+
+                const link = document.createElement('a');
+                link.href = `#${id}`;
+                link.textContent = text;
+                link.className =
+                    `toc-link block rounded-2xl px-3 py-2 transition hover:bg-slate-100 hover:text-wired-700 ${
+                        heading.tagName === 'H3' ? 'ml-3 text-xs text-slate-500' : 'text-sm font-medium text-slate-700'
+                    }`;
+
+                toc.appendChild(link);
+            });
+        }
+
+        function wireSearch() {
+            const search = document.getElementById('toc-search');
+            const toc = document.getElementById('toc');
+
+            search.addEventListener('input', () => {
+                const needle = search.value.trim().toLowerCase();
+                const links = [...toc.querySelectorAll('a')];
+
+                links.forEach((link) => {
+                    const visible = !needle || link.textContent.toLowerCase().includes(needle);
+                    link.classList.toggle('hidden', !visible);
+                });
+            });
+        }
+
+        function wireActiveSection() {
+            const links = [...document.querySelectorAll('#toc a')];
+            const headingMap = links
+                .map((link) => {
+                    const target = document.querySelector(link.getAttribute('href'));
+                    return target ? { link, target } : null;
+                })
+                .filter(Boolean);
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const item = headingMap.find(({ target }) => target === entry.target);
+                        if (!item) return;
+                        item.link.classList.toggle('active', entry.isIntersecting);
+                    });
+                },
+                { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+            );
+
+            headingMap.forEach(({ target }) => observer.observe(target));
+        }
+
+        async function loadReference() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const content = document.getElementById('content');
+
+            try {
+                const response = await fetch('./wired_full_reference.md');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const raw = await response.text();
+                const localized = localizeMarkdown(raw);
+                const html = marked.parse(localized, { mangle: false, headerIds: false });
+
+                content.innerHTML = html;
+                content.classList.remove('hidden');
+                loading.classList.add('hidden');
+
+                buildToc();
+                wireSearch();
+                wireActiveSection();
+            } catch (err) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.textContent = `Impossibile caricare wired_full_reference.md (${err.message}).`;
+            }
+        }
+
+        loadReference();
+    </script>
+</body>
+</html>

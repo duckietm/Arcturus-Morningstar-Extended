@@ -75,6 +75,12 @@ public class MarketPlace {
                             return;
                         }
 
+                        ownerSet.first();
+                        if (ownerSet.getInt("user_id") != habbo.getHabboInfo().getId()) {
+                            LOGGER.warn("User {} attempted to take back marketplace offer {} owned by user {}", habbo.getHabboInfo().getId(), offer.getOfferId(), ownerSet.getInt("user_id"));
+                            return;
+                        }
+
                         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM marketplace_items WHERE id = ? AND state != 2")) {
                             statement.setInt(1, offer.getOfferId());
                             int count = statement.executeUpdate();
@@ -115,10 +121,10 @@ public class MarketPlace {
         List<MarketPlaceOffer> offers = new ArrayList<>(10);
         String query = "SELECT B.* FROM marketplace_items a INNER JOIN (SELECT b.item_id AS base_item_id, b.limited_data AS ltd_data, marketplace_items.*, AVG(price) as avg, MIN(marketplace_items.price) as minPrice, MAX(marketplace_items.price) as maxPrice, COUNT(*) as number, (SELECT COUNT(*) FROM marketplace_items c INNER JOIN items as items_b ON c.item_id = items_b.id WHERE state = 2 AND items_b.item_id = base_item_id AND DATE(from_unixtime(sold_timestamp)) = CURDATE()) as sold_count_today FROM marketplace_items INNER JOIN items b ON marketplace_items.item_id = b.id INNER JOIN items_base bi ON b.item_id = bi.id INNER JOIN catalog_items ci ON bi.id = ci.item_ids WHERE price = (SELECT MIN(e.price) FROM marketplace_items e, items d WHERE e.item_id = d.id AND d.item_id = b.item_id AND e.state = 1 AND e.timestamp > ? GROUP BY d.item_id) AND state = 1 AND timestamp > ?";
         if (minPrice > 0) {
-            query += " AND CEIL(price + (price / 100)) >= " + minPrice;
+            query += " AND CEIL(price + (price / 100)) >= ?";
         }
         if (maxPrice > 0 && maxPrice > minPrice) {
-            query += " AND CEIL(price + (price / 100)) <= " + maxPrice;
+            query += " AND CEIL(price + (price / 100)) <= ?";
         }
         if (!search.isEmpty()) {
             query += " AND ( bi.public_name LIKE ? OR ci.catalog_name LIKE ? ) ";
@@ -155,11 +161,18 @@ public class MarketPlace {
         query += " LIMIT 250";
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, Emulator.getIntUnixTimestamp() - 172800);
-            statement.setInt(2, Emulator.getIntUnixTimestamp() - 172800);
+            int paramIndex = 1;
+            statement.setInt(paramIndex++, Emulator.getIntUnixTimestamp() - 172800);
+            statement.setInt(paramIndex++, Emulator.getIntUnixTimestamp() - 172800);
+            if (minPrice > 0) {
+                statement.setInt(paramIndex++, minPrice);
+            }
+            if (maxPrice > 0 && maxPrice > minPrice) {
+                statement.setInt(paramIndex++, maxPrice);
+            }
             if (!search.isEmpty()) {
-                statement.setString(3, "%" + search + "%");
-                statement.setString(4, "%" + search + "%");
+                statement.setString(paramIndex++, "%" + search + "%");
+                statement.setString(paramIndex++, "%" + search + "%");
             }
 
             try (ResultSet set = statement.executeQuery()) {

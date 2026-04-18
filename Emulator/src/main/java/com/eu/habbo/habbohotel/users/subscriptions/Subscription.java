@@ -11,6 +11,7 @@ import java.sql.SQLException;
  */
 public class Subscription {
     public static final String HABBO_CLUB = "HABBO_CLUB";
+    public static final String BUILDERS_CLUB = "BUILDERS_CLUB";
 
     private final int id;
     private final int userId;

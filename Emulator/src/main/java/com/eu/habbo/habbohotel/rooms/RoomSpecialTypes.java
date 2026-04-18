@@ -30,7 +30,9 @@ import gnu.trove.set.hash.THashSet;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -346,7 +348,7 @@ public class RoomSpecialTypes {
     public static final int MAX_SENDERS_PER_RECEIVER = 5;
 
     public boolean isSignalSenderLimitReached() {
-        Set<InteractionWiredEffect> existing = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        Set<InteractionWiredEffect> existing = this.getSignalSenders();
         return existing != null && existing.size() >= MAX_SIGNAL_SENDERS_PER_ROOM;
     }
 
@@ -356,7 +358,7 @@ public class RoomSpecialTypes {
     }
 
     public int countSendersTargetingReceiver(int receiverItemId, InteractionWiredEffect excludeSender) {
-        Set<InteractionWiredEffect> senders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
         if (senders == null) return 0;
 
         int count = 0;
@@ -374,6 +376,95 @@ public class RoomSpecialTypes {
 
     public int countSendersTargetingReceiver(int receiverItemId) {
         return countSendersTargetingReceiver(receiverItemId, null);
+    }
+
+    public int countSendersTargetingAnyReceiver(Collection<Integer> receiverItemIds, InteractionWiredEffect excludeSender) {
+        if (receiverItemIds == null || receiverItemIds.isEmpty()) {
+            return 0;
+        }
+
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
+        if (senders == null) {
+            return 0;
+        }
+
+        Set<Integer> uniqueSenderIds = new HashSet<>();
+
+        for (InteractionWiredEffect effect : senders) {
+            if (excludeSender != null && effect.getId() == excludeSender.getId()) continue;
+            if (!(effect instanceof WiredEffectSendSignal)) continue;
+
+            WiredEffectSendSignal sender = (WiredEffectSendSignal) effect;
+            for (Integer receiverItemId : receiverItemIds) {
+                if (receiverItemId == null) continue;
+                if (!sender.hasPickedItem(receiverItemId)) continue;
+
+                uniqueSenderIds.add(effect.getId());
+                break;
+            }
+        }
+
+        return uniqueSenderIds.size();
+    }
+
+    public int countSendersTargetingAnyReceiver(Collection<Integer> receiverItemIds) {
+        return countSendersTargetingAnyReceiver(receiverItemIds, null);
+    }
+
+    public boolean unlinkSignalAntennaReferences(int antennaItemId) {
+        if (antennaItemId <= 0) {
+            return false;
+        }
+
+        boolean changed = false;
+
+        THashSet<InteractionWiredTrigger> receivers = this.getTriggers(WiredTriggerType.RECEIVE_SIGNAL);
+        for (InteractionWiredTrigger trigger : receivers) {
+            if (!(trigger instanceof com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal receiver)) {
+                continue;
+            }
+
+            if (!receiver.unlinkAntenna(antennaItemId)) {
+                continue;
+            }
+
+            changed = true;
+            Emulator.getThreading().run(receiver);
+        }
+
+        Set<InteractionWiredEffect> senders = this.getSignalSenders();
+        if (senders != null) {
+            for (InteractionWiredEffect effect : senders) {
+                if (!(effect instanceof WiredEffectSendSignal sender)) {
+                    continue;
+                }
+
+                if (!sender.unlinkAntenna(antennaItemId)) {
+                    continue;
+                }
+
+                changed = true;
+                Emulator.getThreading().run(sender);
+            }
+        }
+
+        return changed;
+    }
+
+    private Set<InteractionWiredEffect> getSignalSenders() {
+        Set<InteractionWiredEffect> senders = new HashSet<>();
+
+        Set<InteractionWiredEffect> standardSenders = this.wiredEffects.get(WiredEffectType.SEND_SIGNAL);
+        if (standardSenders != null) {
+            senders.addAll(standardSenders);
+        }
+
+        Set<InteractionWiredEffect> negativeSenders = this.wiredEffects.get(WiredEffectType.NEG_SEND_SIGNAL);
+        if (negativeSenders != null) {
+            senders.addAll(negativeSenders);
+        }
+
+        return senders.isEmpty() ? null : senders;
     }
 
     public void addTrigger(InteractionWiredTrigger trigger) {
@@ -684,6 +775,15 @@ public class RoomSpecialTypes {
         THashSet<InteractionWiredExtra> result = new THashSet<>();
         result.addAll(this.wiredExtras.values());
         return result;
+    }
+
+    /**
+     * Finds a wired extra by its item ID.
+     * @param itemId The item ID to search for
+     * @return The extra if found, null otherwise
+     */
+    public InteractionWiredExtra getExtra(int itemId) {
+        return this.wiredExtras.get(itemId);
     }
 
     /**

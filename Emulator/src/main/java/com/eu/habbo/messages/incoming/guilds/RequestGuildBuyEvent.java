@@ -12,6 +12,7 @@ import com.eu.habbo.messages.outgoing.catalog.PurchaseOKComposer;
 import com.eu.habbo.messages.outgoing.guilds.GuildBoughtComposer;
 import com.eu.habbo.messages.outgoing.guilds.GuildEditFailComposer;
 import com.eu.habbo.messages.outgoing.guilds.GuildInfoComposer;
+import com.eu.habbo.messages.outgoing.rooms.RoomDataComposer;
 import com.eu.habbo.plugin.events.guilds.GuildPurchasedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,20 +97,29 @@ public class RequestGuildBuyEvent extends MessageHandler {
                     r.removeAllRights();
                     r.setNeedsUpdate(true);
 
+                    Emulator.getGameEnvironment().getGuildManager().addGuild(guild);
+
                     if (Emulator.getConfig().getBoolean("imager.internal.enabled")) {
                         Emulator.getBadgeImager().generate(guild);
                     }
 
                     this.client.sendResponse(new PurchaseOKComposer());
                     this.client.sendResponse(new GuildBoughtComposer(guild));
-                    for (Habbo habbo : r.getHabbos()) {
-                        habbo.getClient().sendResponse(new GuildInfoComposer(guild, habbo.getClient(), false, null));
-                    }
                     r.refreshGuild(guild);
 
-                    Emulator.getPluginManager().fireEvent(new GuildPurchasedEvent(guild, this.client.getHabbo()));
+                    for (Habbo habbo : r.getHabbos()) {
+                        if (habbo.getClient() == null) {
+                            continue;
+                        }
 
-                    Emulator.getGameEnvironment().getGuildManager().addGuild(guild);
+                        habbo.getClient().sendResponse(new GuildInfoComposer(guild, habbo.getClient(), false, null));
+
+                        if (habbo.getHabboInfo().getId() != this.client.getHabbo().getHabboInfo().getId()) {
+                            habbo.getClient().sendResponse(new RoomDataComposer(r, habbo, true, false));
+                        }
+                    }
+
+                    Emulator.getPluginManager().fireEvent(new GuildPurchasedEvent(guild, this.client.getHabbo()));
                 }
             } else {
                 String message = Emulator.getTexts().getValue("scripter.warning.guild.buy.owner").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%roomname%", r.getName().replace("%owner%", r.getOwnerName()));

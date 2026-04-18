@@ -12,7 +12,11 @@ import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboGender;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.wired.WiredUserActionType;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.messages.outgoing.generic.alerts.GenericErrorMessagesComposer;
 import com.eu.habbo.messages.outgoing.inventory.AddPetComposer;
 import com.eu.habbo.messages.outgoing.rooms.pets.RoomPetComposer;
@@ -217,16 +221,25 @@ public class RoomUnitManager {
             return;
         }
 
+        if (habbo.getRoomUnit() != null) {
+            WiredManager.triggerUserLeavesRoom(this.room, habbo.getRoomUnit());
+            if (WiredFreezeUtil.isFrozen(habbo.getRoomUnit())) {
+                WiredFreezeUtil.unfreeze(this.room, habbo.getRoomUnit());
+            }
+        }
+
         if (habbo.getRoomUnit() != null && habbo.getRoomUnit().getCurrentLocation() != null) {
             habbo.getRoomUnit().getCurrentLocation().removeUnit(habbo.getRoomUnit());
         }
 
-        synchronized (this.room.roomUnitLock) {
-            this.currentHabbos.remove(habbo.getHabboInfo().getId());
-        }
+          synchronized (this.room.roomUnitLock) {
+              this.currentHabbos.remove(habbo.getHabboInfo().getId());
+          }
 
-        if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
-            this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
+          this.room.getUserVariableManager().clearAssignmentsForUser(habbo.getHabboInfo().getId());
+
+          if (sendRemovePacket && habbo.getRoomUnit() != null && !habbo.getRoomUnit().isTeleporting) {
+              this.room.sendComposer(new RoomUserRemoveComposer(habbo.getRoomUnit()).compose());
         }
 
         if (habbo.getRoomUnit().getCurrentLocation() != null) {
@@ -351,7 +364,13 @@ public class RoomUnitManager {
                 continue;
             }
 
+            if (WiredMoveCarryHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())
+                    || WiredUserMovementHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())) {
+                continue;
+            }
+
             double z = habbo.getRoomUnit().getCurrentLocation().getStackHeight();
+            boolean hadLayStatus = habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY);
 
             if (habbo.getRoomUnit().hasStatus(RoomUnitStatus.SIT)
                     || (topItem != null && topItem.getBaseItem().allowSit())) {
@@ -413,14 +432,26 @@ public class RoomUnitManager {
             }
 
             habbo.getRoomUnit().statusUpdate(true);
+
+            if (!hadLayStatus && habbo.getRoomUnit().hasStatus(RoomUnitStatus.LAY)) {
+                WiredManager.triggerUserPerformsAction(this.room, habbo.getRoomUnit(), WiredUserActionType.LAY, -1);
+            }
         }
 
         if (!habbos.isEmpty()) {
             THashSet<RoomUnit> roomUnits = new THashSet<>();
             for (Habbo habbo : habbos) {
+                if (habbo.getRoomUnit() == null
+                        || WiredMoveCarryHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())
+                        || WiredUserMovementHelper.shouldSuppressStatusUpdate(habbo.getRoomUnit())) {
+                    continue;
+                }
                 roomUnits.add(habbo.getRoomUnit());
             }
-            this.room.sendComposer(new RoomUserStatusComposer(roomUnits, true).compose());
+
+            if (!roomUnits.isEmpty()) {
+                this.room.sendComposer(new RoomUserStatusComposer(roomUnits, true).compose());
+            }
         }
 
         if (topItem != null && topItem.getBaseItem().allowLay()) {
@@ -1233,9 +1264,14 @@ public class RoomUnitManager {
         if (habbo == null || habbo.getRoomUnit() == null) {
             return;
         }
+
+        boolean wasIdle = habbo.getRoomUnit().isIdle();
         habbo.getRoomUnit().resetIdleTimer();
-        this.room.sendComposer(new RoomUnitIdleComposer(habbo.getRoomUnit()).compose());
-        WiredManager.triggerUserUnidles(this.room, habbo.getRoomUnit());
+
+        if (wasIdle) {
+            this.room.sendComposer(new RoomUnitIdleComposer(habbo.getRoomUnit()).compose());
+            WiredManager.triggerUserUnidles(this.room, habbo.getRoomUnit());
+        }
     }
 
     /**
@@ -1299,6 +1335,8 @@ public class RoomUnitManager {
      */
     public void teleportRoomUnitToLocation(RoomUnit roomUnit, short x, short y, double z) {
         if (this.room.isLoaded()) {
+            WiredFreezeUtil.onTeleport(this.room, roomUnit);
+
             RoomTile tile = this.room.getLayout().getTile(x, y);
 
             if (z < tile.z) {
@@ -1310,6 +1348,7 @@ public class RoomUnitManager {
             roomUnit.setZ(z);
             roomUnit.setPreviousLocationZ(z);
             this.room.updateRoomUnit(roomUnit);
+            WiredFreezeUtil.restoreWalkState(roomUnit);
         }
     }
 
@@ -1414,11 +1453,6 @@ public class RoomUnitManager {
         }
     }
 
-    // ==================== DISPOSAL ====================
-
-    /**
-     * Disposes the unit manager.
-     */
     public void dispose() {
         this.currentHabbos.clear();
         this.currentBots.clear();

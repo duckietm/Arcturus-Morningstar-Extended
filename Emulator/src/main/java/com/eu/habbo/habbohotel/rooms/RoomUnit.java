@@ -4,11 +4,14 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTileWalkMagic;
+import com.eu.habbo.habbohotel.items.interactions.InteractionStackWalkHelper;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWater;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWaterItem;
 import com.eu.habbo.habbohotel.items.interactions.interfaces.ConditionalGate;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.pets.RideablePet;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -72,6 +75,7 @@ public class RoomUnit {
   private int handItem;
   private long handItemTimestamp;
   private long lastRollerTime;
+  private long moveStatusTimestamp;
   private int walkTimeOut;
   private int effectId;
   private int effectEndTimestamp;
@@ -102,6 +106,7 @@ public class RoomUnit {
     this.goalLocation = null;
     this.startLocation = this.currentLocation;
     this.inRoom = false;
+    this.moveStatusTimestamp = 0L;
 
     this.status.clear();
 
@@ -321,7 +326,7 @@ public class RoomUnit {
       }
 
       Optional<HabboItem> stackHelper = room.getItemsAt(next).stream()
-          .filter(i -> i instanceof InteractionTileWalkMagic).findAny();
+          .filter(i -> i instanceof InteractionTileWalkMagic || i instanceof InteractionStackWalkHelper).findAny();
       if (stackHelper.isPresent()) {
         zHeight = stackHelper.get().getZ();
       }
@@ -406,11 +411,11 @@ public class RoomUnit {
   }
 
   public short getX() {
-    return this.currentLocation.x;
+    return this.currentLocation == null ? 0 : this.currentLocation.x;
   }
 
   public short getY() {
-    return this.currentLocation.y;
+    return this.currentLocation == null ? 0 : this.currentLocation.y;
   }
 
   public double getZ() {
@@ -593,6 +598,7 @@ public class RoomUnit {
   }
 
   public boolean isAtGoal() {
+    if (this.currentLocation == null) return true;
     return this.currentLocation.equals(this.goalLocation);
   }
 
@@ -609,11 +615,20 @@ public class RoomUnit {
   }
 
   public void removeStatus(RoomUnitStatus key) {
+    if (key == RoomUnitStatus.MOVE) {
+      this.moveStatusTimestamp = 0L;
+    }
     this.status.remove(key);
   }
 
   public void setStatus(RoomUnitStatus key, String value) {
     if (key != null && value != null) {
+      if (key == RoomUnitStatus.MOVE) {
+        this.moveStatusTimestamp = System.currentTimeMillis();
+        WiredMoveCarryHelper.clearStatusComposerSuppression(this);
+        WiredUserMovementHelper.clearStatusComposerSuppression(this);
+      }
+
       this.status.put(key, value);
     }
   }
@@ -623,6 +638,7 @@ public class RoomUnit {
   }
 
   public void clearStatus() {
+    this.moveStatusTimestamp = 0L;
     this.status.clear();
   }
 
@@ -648,6 +664,10 @@ public class RoomUnit {
 
   public void setLastRollerTime(long lastRollerTime) {
     this.lastRollerTime = lastRollerTime;
+  }
+
+  public long getMoveStatusTimestamp() {
+    return this.moveStatusTimestamp;
   }
 
   /**

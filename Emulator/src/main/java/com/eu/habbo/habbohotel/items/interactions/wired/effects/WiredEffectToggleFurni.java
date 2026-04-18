@@ -39,10 +39,13 @@ import java.util.stream.Collectors;
 
 public class WiredEffectToggleFurni extends InteractionWiredEffect {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectToggleFurni.class);
+    private static final int TOGGLE_TYPE_NEXT = 0;
+    private static final int TOGGLE_TYPE_PREVIOUS = 1;
 
     public static final WiredEffectType type = WiredEffectType.TOGGLE_STATE;
 
     private final THashSet<HabboItem> items;
+    private int toggleType = TOGGLE_TYPE_NEXT;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES = new ArrayList<Class<? extends HabboItem>>() {
@@ -122,7 +125,8 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(1);
+        message.appendInt(2);
+        message.appendInt(this.toggleType);
         message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -151,12 +155,22 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        if (params.length > 1) {
+            this.toggleType = normalizeToggleType(params[0]);
+            this.furniSource = params[1];
+        } else {
+            this.toggleType = TOGGLE_TYPE_NEXT;
+            this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        }
 
         int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
+        }
+
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
 
         List<HabboItem> newItems = new ArrayList<>();
@@ -204,15 +218,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
 
             try {
                 if (item.getBaseItem().getStateCount() > 1 || item instanceof InteractionGameTimer) {
-                    int state = 0;
-                    if (!item.getExtradata().isEmpty()) {
-                        try {
-                            state = Integer.parseInt(item.getExtradata()); // assumes that extradata is state, could be something else for trophies etc.
-                        } catch (NumberFormatException ignored) {
-
-                        }
-                    }
-                    item.onClick(habbo != null && !(item instanceof InteractionGameTimer) ? habbo.getClient() : null, room, new Object[]{state, this.getType()});
+                    this.toggleItemState(room, habbo, item);
                 }
             } catch (Exception e) {
                 LOGGER.error("Caught exception", e);
@@ -235,6 +241,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         return WiredManager.getGson().toJson(new JsonData(
                 this.getDelay(),
                 new ArrayList<>(this.items).stream().map(HabboItem::getId).collect(Collectors.toList()),
+                this.toggleType,
                 this.furniSource
         ));
     }
@@ -247,6 +254,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
+            this.toggleType = normalizeToggleType(data.toggleType);
             this.furniSource = data.furniSource;
             for (Integer id: data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -281,6 +289,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
                     }
                 }
             }
+            this.toggleType = TOGGLE_TYPE_NEXT;
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
         }
     }
@@ -288,6 +297,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.toggleType = TOGGLE_TYPE_NEXT;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }
@@ -297,14 +307,52 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
         return type;
     }
 
+    private int normalizeToggleType(int value) {
+        return (value == TOGGLE_TYPE_PREVIOUS) ? TOGGLE_TYPE_PREVIOUS : TOGGLE_TYPE_NEXT;
+    }
+
+    private void toggleItemState(Room room, Habbo habbo, HabboItem item) throws Exception {
+        if (item.getBaseItem().getStateCount() <= 1) {
+            return;
+        }
+
+        int stateCount = item.getBaseItem().getStateCount();
+        int currentState = 0;
+
+        if (!item.getExtradata().isEmpty()) {
+            try {
+                currentState = Integer.parseInt(item.getExtradata());
+            } catch (NumberFormatException ignored) {
+                if (this.toggleType == TOGGLE_TYPE_NEXT) {
+                    item.onClick(habbo != null ? habbo.getClient() : null, room, new Object[]{0, this.getType()});
+                }
+                return;
+            }
+        }
+
+        int nextState = (this.toggleType == TOGGLE_TYPE_PREVIOUS)
+                ? ((currentState - 1 + stateCount) % stateCount)
+                : ((currentState + 1) % stateCount);
+
+        if (currentState == nextState) {
+            return;
+        }
+
+        item.setExtradata(Integer.toString(nextState));
+        item.needsUpdate(true);
+        room.updateItemState(item);
+    }
+
     static class JsonData {
         int delay;
         List<Integer> itemIds;
+        int toggleType;
         int furniSource;
 
-        public JsonData(int delay, List<Integer> itemIds, int furniSource) {
+        public JsonData(int delay, List<Integer> itemIds, int toggleType, int furniSource) {
             this.delay = delay;
             this.itemIds = itemIds;
+            this.toggleType = toggleType;
             this.furniSource = furniSource;
         }
     }

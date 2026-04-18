@@ -11,9 +11,11 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
+import com.eu.habbo.habbohotel.wired.core.WiredBotSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredTextPlaceholderUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 import gnu.trove.procedure.TObjectProcedure;
@@ -31,6 +33,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
     private String botName = "";
     private String message = "";
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
 
     public WiredEffectBotTalkToHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -48,9 +51,10 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.mode);
         message.appendInt(this.userSource);
+        message.appendInt(this.botSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -80,6 +84,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         if(settings.getIntParams().length < 2) throw new WiredSaveException("Missing mode");
         int mode = settings.getIntParams()[0];
         this.userSource = settings.getIntParams()[1];
+        this.botSource = (settings.getIntParams().length > 2) ? WiredBotSourceUtil.normalizeBotSource(settings.getIntParams()[2]) : WiredBotSourceUtil.SOURCE_BOT_NAME;
 
         if(mode != 0 && mode != 1)
             throw new WiredSaveException("Mode is invalid");
@@ -116,9 +121,8 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
 
-        List<Bot> bots = room.getBots(this.botName);
-        if (bots.size() != 1) return;
-        Bot bot = bots.get(0);
+        List<Bot> bots = WiredBotSourceUtil.resolveBots(ctx, room, this.botSource, this.botName);
+        if (bots.isEmpty()) return;
 
         for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(roomUnit);
@@ -131,15 +135,19 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
                     .replace(Emulator.getTexts().getValue("wired.variable.points", "%points%"), habbo.getHabboInfo().getCurrencyAmount(Emulator.getConfig().getInt("seasonal.primary.type")) + "")
                     .replace(Emulator.getTexts().getValue("wired.variable.owner", "%owner%"), room.getOwnerName())
                     .replace(Emulator.getTexts().getValue("wired.variable.item_count", "%item_count%"), room.itemCount() + "")
-                    .replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), this.botName)
                     .replace(Emulator.getTexts().getValue("wired.variable.roomname", "%roomname%"), room.getName())
                     .replace(Emulator.getTexts().getValue("wired.variable.user_count", "%user_count%"), room.getUserCount() + "");
+            m = WiredTextPlaceholderUtil.applyUsernamePlaceholders(ctx, m);
 
-            if (!WiredManager.triggerUserSays(room, bot.getRoomUnit(), m)) {
-                if (this.mode == 1) {
-                    bot.whisper(m, habbo);
-                } else {
-                    bot.talk(habbo.getHabboInfo().getUsername() + ": " + m);
+            for (Bot bot : bots) {
+                String botMessage = m.replace(Emulator.getTexts().getValue("wired.variable.name", "%name%"), bot.getName());
+
+                if (!WiredManager.triggerUserSays(room, bot.getRoomUnit(), botMessage)) {
+                    if (this.mode == 1) {
+                        bot.whisper(botMessage, habbo);
+                    } else {
+                        bot.talk(habbo.getHabboInfo().getUsername() + ": " + botMessage);
+                    }
                 }
             }
         }
@@ -153,7 +161,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay(), this.userSource));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay(), this.userSource, this.botSource));
     }
 
     @Override
@@ -167,6 +175,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
             this.botName = data.bot_name;
             this.message = data.message;
             this.userSource = data.userSource;
+            this.botSource = (data.botSource != null) ? WiredBotSourceUtil.normalizeBotSource(data.botSource) : WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
@@ -180,6 +189,7 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
 
             this.needsUpdate(true);
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+            this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
     }
 
@@ -189,12 +199,13 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         this.message = "";
         this.mode = 0;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
+        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER || WiredBotSourceUtil.requiresTriggeringUser(this.botSource) || WiredTextPlaceholderUtil.requiresActor(this.getRoom(), this);
     }
 
     static class JsonData {
@@ -203,13 +214,15 @@ public class WiredEffectBotTalkToHabbo extends InteractionWiredEffect {
         String message;
         int delay;
         int userSource;
+        Integer botSource;
 
-        public JsonData(String bot_name, int mode, String message, int delay, int userSource) {
+        public JsonData(String bot_name, int mode, String message, int delay, int userSource, int botSource) {
             this.bot_name = bot_name;
             this.mode = mode;
             this.message = message;
             this.delay = delay;
             this.userSource = userSource;
+            this.botSource = botSource;
         }
     }
 }

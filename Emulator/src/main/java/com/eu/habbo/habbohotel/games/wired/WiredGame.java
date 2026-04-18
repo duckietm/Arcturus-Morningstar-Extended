@@ -6,6 +6,10 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.users.Habbo;
 
 public class WiredGame extends Game {
+    public static final int RED_EFFECT_ID = 223;
+    public static final int BLUE_EFFECT_ID = 224;
+    public static final int YELLOW_EFFECT_ID = 225;
+    public static final int GREEN_EFFECT_ID = 226;
     public GameState state = GameState.RUNNING;
 
     public WiredGame(Room room) {
@@ -28,7 +32,7 @@ public class WiredGame extends Game {
 
     @Override
     public boolean addHabbo(Habbo habbo, GameTeamColors teamColor) {
-        this.room.giveEffect(habbo, FreezeGame.effectId + teamColor.type, -1);
+        this.room.giveEffect(habbo, this.getEffectId(teamColor), -1);
         return super.addHabbo(habbo, teamColor);
     }
 
@@ -46,5 +50,20 @@ public class WiredGame extends Game {
     @Override
     public GameState getState() {
         return GameState.RUNNING;
+    }
+
+    private int getEffectId(GameTeamColors teamColor) {
+        switch (teamColor) {
+            case RED:
+                return RED_EFFECT_ID;
+            case BLUE:
+                return BLUE_EFFECT_ID;
+            case YELLOW:
+                return YELLOW_EFFECT_ID;
+            case GREEN:
+                return GREEN_EFFECT_ID;
+            default:
+                return FreezeGame.effectId + teamColor.type;
+        }
     }
 }

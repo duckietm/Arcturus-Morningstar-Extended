@@ -1,7 +1,10 @@
 package com.eu.habbo.habbohotel.rooms;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.guilds.Guild;
+import com.eu.habbo.habbohotel.guilds.GuildMember;
+import com.eu.habbo.habbohotel.guilds.GuildRank;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.outgoing.rooms.RoomAddRightsListComposer;
@@ -14,7 +17,6 @@ import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.plugin.events.users.UserRightsTakenEvent;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import org.slf4j.Logger;
@@ -24,6 +26,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Manages room rights, bans, and mutes.
@@ -90,11 +95,16 @@ public class RoomRightsManager {
      */
     public RoomRightLevels getGuildRightLevel(Habbo habbo) {
         int guildId = this.room.getGuildId();
-        if (guildId > 0 && habbo.getHabboStats().hasGuild(guildId)) {
+        if (guildId > 0 && habbo != null && habbo.getHabboInfo() != null) {
             Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(guildId);
 
-            if (Emulator.getGameEnvironment().getGuildManager().getOnlyAdmins(guild)
-                .get(habbo.getHabboInfo().getId()) != null) {
+            if (guild == null) {
+                return RoomRightLevels.NONE;
+            }
+
+            GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild.getId(), habbo.getHabboInfo().getId());
+
+            if ((member != null) && (member.getRank() == GuildRank.ADMIN || member.getRank() == GuildRank.OWNER)) {
                 return RoomRightLevels.GUILD_ADMIN;
             }
 
@@ -149,13 +159,11 @@ public class RoomRightsManager {
         }
 
         if (this.rights.add(userId)) {
-            try (Connection connection = Emulator.getDatabase().getDataSource()
-                .getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO room_rights VALUES (?, ?)")) {
-                statement.setInt(1, this.room.getId());
-                statement.setInt(2, userId);
-                statement.execute();
-            } catch (SQLException e) {
+            try {
+                SqlQueries.update(
+                    "INSERT INTO room_rights (room_id, user_id) VALUES (?, ?)",
+                    this.room.getId(), userId);
+            } catch (SqlQueries.DataAccessException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
         }
@@ -196,13 +204,11 @@ public class RoomRightsManager {
         this.room.sendComposer(new RoomRemoveRightsListComposer(this.room, userId).compose());
 
         if (this.rights.remove(userId)) {
-            try (Connection connection = Emulator.getDatabase().getDataSource()
-                .getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "DELETE FROM room_rights WHERE room_id = ? AND user_id = ?")) {
-                statement.setInt(1, this.room.getId());
-                statement.setInt(2, userId);
-                statement.execute();
-            } catch (SQLException e) {
+            try {
+                SqlQueries.update(
+                    "DELETE FROM room_rights WHERE room_id = ? AND user_id = ?",
+                    this.room.getId(), userId);
+            } catch (SqlQueries.DataAccessException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
         }
@@ -225,12 +231,9 @@ public class RoomRightsManager {
 
         this.rights.clear();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource()
-            .getConnection(); PreparedStatement statement = connection.prepareStatement(
-            "DELETE FROM room_rights WHERE room_id = ?")) {
-            statement.setInt(1, this.room.getId());
-            statement.execute();
-        } catch (SQLException e) {
+        try {
+            SqlQueries.update("DELETE FROM room_rights WHERE room_id = ?", this.room.getId());
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
 
@@ -288,25 +291,22 @@ public class RoomRightsManager {
     /**
      * Gets all users with rights in the room.
      */
-    public THashMap<Integer, String> getUsersWithRights() {
-        THashMap<Integer, String> rightsMap = new THashMap<>();
-
-        if (!this.rights.isEmpty()) {
-            try (Connection connection = Emulator.getDatabase().getDataSource()
-                .getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "SELECT users.username AS username, users.id as user_id FROM room_rights INNER JOIN users ON room_rights.user_id = users.id WHERE room_id = ?")) {
-                statement.setInt(1, this.room.getId());
-                try (ResultSet set = statement.executeQuery()) {
-                    while (set.next()) {
-                        rightsMap.put(set.getInt("user_id"), set.getString("username"));
-                    }
-                }
-            } catch (SQLException e) {
-                LOGGER.error("Caught SQL exception", e);
-            }
+    public Map<Integer, String> getUsersWithRights() {
+        if (this.rights.isEmpty()) {
+            return Collections.emptyMap();
         }
 
-        return rightsMap;
+        try {
+            return SqlQueries.query(
+                "SELECT users.username AS username, users.id as user_id FROM room_rights INNER JOIN users ON room_rights.user_id = users.id WHERE room_id = ?",
+                rs -> Map.entry(rs.getInt("user_id"), rs.getString("username")),
+                this.room.getId())
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+        } catch (SqlQueries.DataAccessException e) {
+            LOGGER.error("Caught SQL exception", e);
+            return Collections.emptyMap();
+        }
     }
 
     /**

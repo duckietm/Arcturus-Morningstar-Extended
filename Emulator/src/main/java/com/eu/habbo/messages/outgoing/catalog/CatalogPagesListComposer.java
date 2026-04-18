@@ -2,6 +2,7 @@ package com.eu.habbo.messages.outgoing.catalog;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.catalog.CatalogPage;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
@@ -14,6 +15,10 @@ import java.util.List;
 
 public class CatalogPagesListComposer extends MessageComposer {
     private static final Logger LOGGER = LoggerFactory.getLogger(CatalogPagesListComposer.class);
+
+    private static final int MAX_OFFERS = 1000;
+    private static final int MAX_CHILDREN = 500;
+    private static final int MAX_DEPTH = 20;
 
     private final Habbo habbo;
     private final String mode;
@@ -28,7 +33,8 @@ public class CatalogPagesListComposer extends MessageComposer {
     @Override
     protected ServerMessage composeInternal() {
         try {
-            List<CatalogPage> pages = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(-1, this.habbo);
+            CatalogPageType requestedType = CatalogPageType.fromString(this.mode);
+            List<CatalogPage> pages = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(-1, this.habbo, requestedType);
 
             this.response.init(Outgoing.CatalogPagesListComposer);
 
@@ -38,10 +44,12 @@ public class CatalogPagesListComposer extends MessageComposer {
             this.response.appendString("root");
             this.response.appendString("");
             this.response.appendInt(0);
-            this.response.appendInt(pages.size());
 
-            for (CatalogPage category : pages) {
-                this.append(category);
+            int childCount = Math.min(pages.size(), MAX_CHILDREN);
+            this.response.appendInt(childCount);
+
+            for (int idx = 0; idx < childCount; idx++) {
+                this.append(pages.get(idx), 1, requestedType);
             }
 
             this.response.appendBoolean(false);
@@ -55,24 +63,33 @@ public class CatalogPagesListComposer extends MessageComposer {
         return null;
     }
 
-    private void append(CatalogPage category) {
-        List<CatalogPage> pagesList = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(category.getId(), this.habbo);
+    private void append(CatalogPage category, int depth, CatalogPageType requestedType) {
+        List<CatalogPage> pagesList = Emulator.getGameEnvironment().getCatalogManager().getCatalogPages(category.getId(), this.habbo, requestedType);
 
         this.response.appendBoolean(category.isVisible());
         this.response.appendInt(category.getIconImage());
         this.response.appendInt(category.isEnabled() ? category.getId() : -1);
         this.response.appendString(category.getPageName());
         this.response.appendString(category.getCaption() + (this.hasPermission ? " (" + category.getId() + ")" : ""));
-        this.response.appendInt(category.getOfferIds().size());
 
-        for (int i : category.getOfferIds().toArray()) {
-            this.response.appendInt(i);
+        int[] offers = category.getOfferIds().toArray();
+        int offerCount = Math.min(offers.length, MAX_OFFERS);
+        this.response.appendInt(offerCount);
+
+        for (int idx = 0; idx < offerCount; idx++) {
+            this.response.appendInt(offers[idx]);
         }
 
-        this.response.appendInt(pagesList.size());
+        if (depth >= MAX_DEPTH) {
+            this.response.appendInt(0);
+            return;
+        }
 
-        for (CatalogPage page : pagesList) {
-            this.append(page);
+        int childCount = Math.min(pagesList.size(), MAX_CHILDREN);
+        this.response.appendInt(childCount);
+
+        for (int idx = 0; idx < childCount; idx++) {
+            this.append(pagesList.get(idx), depth + 1, requestedType);
         }
     }
 

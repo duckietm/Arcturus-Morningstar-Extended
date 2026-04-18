@@ -36,9 +36,11 @@ public final class WiredStack {
     private final List<IWiredEffect> effects;
     
     // Extra modifiers
-    private final boolean useOrMode;       // WiredExtraOrEval present
+    private final int conditionEvaluationMode; // WiredExtraOrEval mode
+    private final int conditionEvaluationValue; // WiredExtraOrEval numeric threshold
     private final boolean useRandom;        // WiredExtraRandom present
     private final boolean useUnseen;        // WiredExtraUnseen present
+    private final boolean executeInOrder;   // WiredExtraExecuteInOrder present
 
     /**
      * Create a new wired stack.
@@ -52,7 +54,7 @@ public final class WiredStack {
                       IWiredTrigger trigger,
                       List<IWiredCondition> conditions,
                       List<IWiredEffect> effects) {
-        this(triggerItem, trigger, conditions, effects, false, false, false);
+        this(triggerItem, trigger, conditions, effects, 0, 1, false, false, false);
     }
 
     /**
@@ -62,24 +64,30 @@ public final class WiredStack {
      * @param trigger the trigger implementation
      * @param conditions list of conditions
      * @param effects list of effects
-     * @param useOrMode if true, conditions use OR logic (any pass = success)
+     * @param conditionEvaluationMode condition evaluation mode from WiredExtraOrEval
+     * @param conditionEvaluationValue numeric comparison value from WiredExtraOrEval
      * @param useRandom if true, select one random effect instead of all
      * @param useUnseen if true, execute effects in "unseen" order (round-robin)
+     * @param executeInOrder if true, execute all regular effects in stable stack order
      */
     public WiredStack(HabboItem triggerItem,
                       IWiredTrigger trigger,
                       List<IWiredCondition> conditions,
                       List<IWiredEffect> effects,
-                      boolean useOrMode,
+                      int conditionEvaluationMode,
+                      int conditionEvaluationValue,
                       boolean useRandom,
-                      boolean useUnseen) {
+                      boolean useUnseen,
+                      boolean executeInOrder) {
         this.triggerItem = triggerItem;
         this.trigger = trigger;
         this.conditions = conditions != null ? Collections.unmodifiableList(conditions) : Collections.emptyList();
         this.effects = effects != null ? Collections.unmodifiableList(effects) : Collections.emptyList();
-        this.useOrMode = useOrMode;
+        this.conditionEvaluationMode = conditionEvaluationMode;
+        this.conditionEvaluationValue = conditionEvaluationValue;
         this.useRandom = useRandom;
         this.useUnseen = useUnseen;
+        this.executeInOrder = executeInOrder;
     }
 
     /**
@@ -131,12 +139,19 @@ public final class WiredStack {
     }
 
     /**
-     * Check if OR mode is enabled (WiredExtraOrEval).
-     * When true, any condition passing means all pass.
-     * @return true if OR mode is enabled
+     * Get the condition evaluation mode from WiredExtraOrEval.
+     * @return evaluation mode code
      */
-    public boolean useOrMode() {
-        return useOrMode;
+    public int conditionEvaluationMode() {
+        return conditionEvaluationMode;
+    }
+
+    /**
+     * Get the condition evaluation numeric value from WiredExtraOrEval.
+     * @return comparison value
+     */
+    public int conditionEvaluationValue() {
+        return conditionEvaluationValue;
     }
 
     /**
@@ -155,6 +170,15 @@ public final class WiredStack {
      */
     public boolean useUnseen() {
         return useUnseen;
+    }
+
+    /**
+     * Check if ordered execution mode is enabled (WiredExtraExecuteInOrder).
+     * When true, all regular effects execute in stable stack order.
+     * @return true if ordered execution is enabled
+     */
+    public boolean executeInOrder() {
+        return executeInOrder;
     }
 
     /**
@@ -180,9 +204,11 @@ public final class WiredStack {
                 ", trigger=" + (trigger != null ? trigger.listensTo() : "null") +
                 ", conditions=" + conditions.size() +
                 ", effects=" + effects.size() +
-                ", orMode=" + useOrMode +
+                ", conditionEvaluationMode=" + conditionEvaluationMode +
+                ", conditionEvaluationValue=" + conditionEvaluationValue +
                 ", random=" + useRandom +
                 ", unseen=" + useUnseen +
+                ", executeInOrder=" + executeInOrder +
                 '}';
     }
 }

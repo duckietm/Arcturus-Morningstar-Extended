@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.users.DanceType;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.rooms.RoomAccessDeniedComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitIdleComposer;
@@ -123,7 +124,19 @@ public class RoomCycleManager {
 
                 // Send status updates
                 if (!updatedUnit.isEmpty()) {
-                    this.room.sendComposer(new RoomUserStatusComposer(updatedUnit, true).compose());
+                    ServerMessage statusComposer = new RoomUserStatusComposer(updatedUnit, true).compose();
+                    WiredMoveCarryHelper.beginMovementCollection();
+                    WiredMoveCarryHelper.processUserFollowers(this.room, updatedUnit);
+                    ServerMessage wiredMovementsComposer = WiredMoveCarryHelper.finishMovementCollection();
+
+                    if (wiredMovementsComposer != null) {
+                        ArrayList<ServerMessage> batchedMessages = new ArrayList<>(2);
+                        batchedMessages.add(statusComposer);
+                        batchedMessages.add(wiredMovementsComposer);
+                        this.room.sendComposers(batchedMessages);
+                    } else {
+                        this.room.sendComposer(statusComposer);
+                    }
                 }
 
                 // Cycle trax manager
@@ -364,7 +377,8 @@ public class RoomCycleManager {
      * Processes roller cycle.
      */
     private void processRollers(THashSet<RoomUnit> updatedUnit) {
-        int rollerSpeed = this.room.getRollerSpeed();
+        Integer controlledRollerSpeed = RoomQueueSpeedControlSupport.getEffectiveRollerSpeed(this.room);
+        int rollerSpeed = (controlledRollerSpeed != null) ? controlledRollerSpeed : this.room.getRollerSpeed();
         if (rollerSpeed != -1 && this.rollerCycle >= rollerSpeed) {
             this.rollerCycle = 0;
             this.room.getRollerManager().processRollerCycle(updatedUnit, this.cycleTimestamp);

@@ -1,6 +1,8 @@
 package com.eu.habbo.threading.runnables;
 
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomHanditemBlockSupport;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserHandItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUserReceivedHandItemComposer;
 
@@ -20,6 +22,12 @@ public class HabboGiveHandItemToHabbo implements Runnable {
 
         if (this.from.getHabboInfo().getCurrentRoom() != this.target.getHabboInfo().getCurrentRoom())
             return;
+
+        Room room = this.from.getHabboInfo().getCurrentRoom();
+
+        if (RoomHanditemBlockSupport.isHanditemBlocked(room)) {
+            return;
+        }
 
         int itemId = this.from.getRoomUnit().getHandItem();
 

@@ -10,11 +10,11 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import com.eu.habbo.threading.runnables.WiredCollissionRunnable;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -53,7 +53,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
         this.lastDirections = new THashMap<>();
     }
 
-    public List<RoomUserRotation> getAvailableDirections(HabboItem item, Room room) {
+    public List<RoomUserRotation> getAvailableDirections(HabboItem item, Room room, WiredContext ctx) {
         List<RoomUserRotation> availableDirections = new ArrayList<>();
         RoomLayout layout = room.getLayout();
 
@@ -73,7 +73,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
             if (!layout.tileExists(tile.x, tile.y))
                 continue;
 
-            if (room.furnitureFitsAt(tile, item, item.getRotation()) == FurnitureMovementError.INVALID_MOVE)
+            if (WiredMoveCarryHelper.getMovementError(room, this, item, tile, item.getRotation(), ctx) != FurnitureMovementError.NONE)
                 continue;
 
             HabboItem topItem = room.getTopItemAt(tile.x, tile.y);
@@ -192,7 +192,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
                 3+ available - move in random direction, but never the opposite
              */
 
-            List<RoomUserRotation> availableDirections = this.getAvailableDirections(item, room);
+            List<RoomUserRotation> availableDirections = this.getAvailableDirections(item, room, ctx);
 
             if (moveDirection != null && !availableDirections.contains(moveDirection))
                 moveDirection = null;
@@ -228,13 +228,11 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
 
             RoomTile newTile = room.getLayout().getTileInFront(oldLocation, moveDirection.getValue());
 
-            double oldZ = item.getZ();
-
             if(newTile != null) {
                 lastDirections.put(item.getId(), moveDirection);
-                if(newTile.state != RoomTileState.INVALID && newTile != oldLocation && room.furnitureFitsAt(newTile, item, item.getRotation(), true) == FurnitureMovementError.NONE) {
-                    if (room.moveFurniTo(item, newTile, item.getRotation(), null, false) == FurnitureMovementError.NONE) {
-                        room.sendComposer(new FloorItemOnRollerComposer(item, null, oldLocation, oldZ, newTile, item.getZ(), 0, room).compose());
+                if (newTile.state != RoomTileState.INVALID && newTile != oldLocation
+                        && WiredMoveCarryHelper.getMovementError(room, this, item, newTile, item.getRotation(), ctx) == FurnitureMovementError.NONE) {
+                    if (WiredMoveCarryHelper.moveFurni(room, this, item, newTile, item.getRotation(), null, false, ctx) == FurnitureMovementError.NONE) {
                     }
                 }
             }
@@ -415,6 +413,10 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
+        }
+
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
 
         List<HabboItem> newItems = new ArrayList<>();

@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
+import com.eu.habbo.habbohotel.rooms.FurnitureMovementError;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -12,13 +13,12 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredMoveCarryHelper;
 import com.eu.habbo.habbohotel.wired.core.WiredSimulation;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import gnu.trove.set.hash.THashSet;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,6 +59,11 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         this.furniSource = settings.getIntParams()[2];
 
         int count = settings.getFurniIds().length;
+
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             for (int i = 0; i < count; i++) {
                 this.items.add(room.getHabboItem(settings.getFurniIds()[i]));
@@ -112,11 +117,6 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                         RoomTile objectTile = room.getLayout().getTile(targetItem.getX(), targetItem.getY());
 
                         if (objectTile != null) {
-                            RoomTile sourceTile = room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY());
-                            if (sourceTile == null) continue;
-                            
-                            THashSet<RoomTile> refreshTiles = room.getLayout().getTilesAt(sourceTile, ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation());
-
                             RoomTile tile = room.getLayout().getTileInFront(objectTile, this.direction, indexOffset);
                             if (tile == null || !tile.getAllowStack()) {
                                 indexOffset = 0;
@@ -127,13 +127,18 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                                 continue;
                             }
 
-                            room.sendComposer(new FloorItemOnRollerComposer((HabboItem) object, null, tile, tile.getStackHeight() - ((HabboItem) object).getZ(), room).compose());
-                            
-                            RoomTile newSourceTile = room.getLayout().getTile(((HabboItem) object).getX(), ((HabboItem) object).getY());
-                            if (newSourceTile != null) {
-                                refreshTiles.addAll(room.getLayout().getTilesAt(newSourceTile, ((HabboItem) object).getBaseItem().getWidth(), ((HabboItem) object).getBaseItem().getLength(), ((HabboItem) object).getRotation()));
+                            HabboItem movingItem = (HabboItem) object;
+                            RoomTile oldLocation = room.getLayout().getTile(movingItem.getX(), movingItem.getY());
+                            if (oldLocation == null) {
+                                continue;
                             }
-                            room.updateTiles(refreshTiles);
+
+                            FurnitureMovementError movementError = WiredMoveCarryHelper.moveFurni(room, this, movingItem, tile, movingItem.getRotation(), null, false, ctx);
+
+                            if (movementError != FurnitureMovementError.NONE) {
+                                continue;
+                            }
+
                             this.indexOffset.put(targetItem.getId(), indexOffset);
                         }
                     }

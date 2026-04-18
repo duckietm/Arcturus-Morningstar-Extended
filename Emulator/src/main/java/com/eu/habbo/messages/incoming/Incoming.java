@@ -84,6 +84,9 @@ public class Incoming {
     public static final int RequestRecylerLogicEvent = 398;
     public static final int RequestGuildJoinEvent = 998;
     public static final int RequestCatalogIndexEvent = 2529;
+    public static final int BuildersClubQueryFurniCountEvent = 2529;
+    public static final int BuildersClubPlaceRoomItemEvent = 1051;
+    public static final int BuildersClubPlaceWallItemEvent = 462;
     public static final int RequestInventoryPetsEvent = 3095;
     public static final int ModToolRequestRoomVisitsEvent = 3526;
     public static final int ModToolWarnEvent = -1;//3763
@@ -205,6 +208,7 @@ public class Incoming {
     public static final int RequestRoomDataEvent = 2230;
     public static final int RequestRoomHeightmapEvent = 2300;
     public static final int RequestGuildFurniWidgetEvent = 2651;
+    public static final int ClickFurniEvent = 6002;
     public static final int RequestOwnItemsEvent = 2105;
     public static final int RequestReportRoomEvent = 3267;
     public static final int ReportEvent = 1691;
@@ -379,7 +383,7 @@ public class Incoming {
 
     public static final int UNKNOWN_SNOWSTORM_6000 = 6000;
     public static final int UNKNOWN_SNOWSTORM_6001 = 6001;
-    public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
+    // public static final int UNKNOWN_SNOWSTORM_6002 = 6002;
     public static final int UNKNOWN_SNOWSTORM_6003 = 6003;
     public static final int UNKNOWN_SNOWSTORM_6004 = 6004;
     public static final int UNKNOWN_SNOWSTORM_6005 = 6005;
@@ -407,6 +411,46 @@ public class Incoming {
 
 	// CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
+    public static final int ClickUserEvent = 10020;
+    public static final int WiredMonitorRequestEvent = 10021;
+    public static final int WiredRoomSettingsRequestEvent = 10022;
+    public static final int WiredRoomSettingsSaveEvent = 10023;
+    public static final int WiredUserVariablesRequestEvent = 10024;
+    public static final int WiredUserVariableUpdateEvent = 10025;
+    public static final int WiredUserVariableManageEvent = 10026;
+    public static final int WiredUserInspectMoveEvent = 10027;
     public static final int RequestInventoryPetDelete = 10030;
     public static final int RequestInventoryBadgeDelete  = 10031;
+
+    // Furni Editor
+    public static final int FurniEditorSearchEvent = 10040;
+    public static final int FurniEditorDetailEvent = 10041;
+    public static final int FurniEditorBySpriteEvent = 10042;
+    public static final int FurniEditorInteractionsEvent = 10043;
+    public static final int FurniEditorUpdateEvent = 10044;
+    public static final int FurniEditorDeleteEvent = 10045;
+
+    // Catalog Admin
+    public static final int CatalogAdminSavePageEvent = 10050;
+    public static final int CatalogAdminCreatePageEvent = 10051;
+    public static final int CatalogAdminDeletePageEvent = 10052;
+    public static final int CatalogAdminSaveOfferEvent = 10053;
+    public static final int CatalogAdminCreateOfferEvent = 10054;
+    public static final int CatalogAdminDeleteOfferEvent = 10055;
+    public static final int CatalogAdminMoveOfferEvent = 10056;
+    public static final int CatalogAdminMovePageEvent = 10057;
+    public static final int CatalogAdminPublishEvent = 10058;
+    public static final int CatalogAdminSavePageImagesEvent = 10060;
+    public static final int CatalogAdminSavePageIconEvent = 10061;
+
+    // Custom Prefixes
+    public static final int RequestUserPrefixesEvent = 7011;
+    public static final int SetActivePrefixEvent = 7012;
+    public static final int DeletePrefixEvent = 7013;
+    public static final int PurchasePrefixEvent = 7014;
+
+    // YouTube Room Broadcast
+    public static final int YouTubeRoomPlayEvent = 8001;
+    public static final int YouTubeRoomWatchingEvent = 8002;
+    public static final int YouTubeRoomSettingsEvent = 8003;
 }

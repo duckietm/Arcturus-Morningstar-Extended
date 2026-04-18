@@ -42,6 +42,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
     private int             sourceType      = SOURCE_USER_TRIGGER;
     private boolean         filterExisting  = false;
     private boolean         invert          = false;
+    private int             targetOffsetX   = 0;
+    private int             targetOffsetY   = 0;
     private List<int[]>     tileOffsets     = new ArrayList<>();
     private List<Integer>   pickedFurniIds  = new ArrayList<>();
 
@@ -59,6 +61,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null || tileOffsets.isEmpty()) return;
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         List<int[]> sourcePositions = resolveSourcePositions(ctx, room);
         if (sourcePositions.isEmpty()) return;
 
@@ -68,12 +72,12 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         for (int[] src : sourcePositions) {
             LOGGER.info("[FurniNeighborhood] Source: ({},{}), offsets: {}", src[0], src[1], tileOffsets.size());
             for (int[] offset : tileOffsets) {
-                int tx = src[0] + offset[0];
-                int ty = src[1] + offset[1];
+                int tx = src[0] + (offset[0] - this.targetOffsetX);
+                int ty = src[1] + (offset[1] - this.targetOffsetY);
                 for (HabboItem item : room.getItemsAt(tx, ty)) {
                     if (item == null) continue;
                     totalRaw++;
-                    if (item instanceof InteractionWired) {
+                    if (!includeWiredItems && item instanceof InteractionWired) {
                         wiredSkipped++;
                         LOGGER.info("[FurniNeighborhood]   SKIP wired item {} ({}) at ({},{})",
                                 item.getId(), item.getClass().getSimpleName(), tx, ty);
@@ -87,18 +91,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         }
         LOGGER.info("[FurniNeighborhood] Raw={}, wiredSkipped={}, kept={}", totalRaw, wiredSkipped, result.size());
 
-        if (filterExisting) {
-            result.retainAll(ctx.targets().items());
-        }
-
-        if (invert) {
-            Set<HabboItem> all = new LinkedHashSet<>();
-            room.getFloorItems().forEach(item -> {
-                if (!(item instanceof InteractionWired)) all.add(item);
-            });
-            all.removeAll(result);
-            result = all;
-        }
+        result = this.applySelectorModifiers(result, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), filterExisting, invert);
 
         // Always set the selector result — even if empty.
         // An empty result means no items matched the neighborhood, so downstream
@@ -108,24 +101,46 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
     }
 
     private List<int[]> resolveSourcePositions(WiredContext ctx, Room room) {
-
-        if (isUserGroup(sourceType)) {
-            // Prefer the event tile for user-based sources because during walk-on/walk-off
-            // events the user's position (getX/getY) hasn't been updated yet (stale position).
-            // The event tile correctly represents where the triggering action occurred.
-            if (ctx.tile().isPresent()) {
-                return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
-            }
-            List<int[]> positions = ctx.targets().users().stream()
-                    .map(u -> new int[]{ u.getX(), u.getY() })
-                    .collect(Collectors.toList());
-            if (positions.isEmpty()) {
-                ctx.actor().ifPresent(a -> positions.add(new int[]{ a.getX(), a.getY() }));
-            }
-            return positions;
-        }
-
         switch (sourceType) {
+            case SOURCE_USER_TRIGGER: {
+                if (ctx.tile().isPresent()) {
+                    return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_SIGNAL: {
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_CLICKED: {
+                if (ctx.event().getTargetUnit().isPresent()) {
+                    RoomUnit targetUnit = ctx.event().getTargetUnit().get();
+
+                    return Collections.singletonList(new int[]{ targetUnit.getX(), targetUnit.getY() });
+                }
+
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return Collections.emptyList();
+            }
             case SOURCE_FURNI_TRIGGER: {
                 return ctx.sourceItem()
                         .map(i -> Collections.singletonList(new int[]{ i.getX(), i.getY() }))
@@ -139,9 +154,17 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
                         .collect(Collectors.toList());
             }
             case SOURCE_FURNI_SIGNAL: {
-                return ctx.targets().items().stream()
+                List<int[]> positions = ctx.targets().items().stream()
                         .map(i -> new int[]{ i.getX(), i.getY() })
                         .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.sourceItem()
+                        .map(item -> Collections.singletonList(new int[]{ item.getX(), item.getY() }))
+                        .orElse(Collections.emptyList());
             }
             default:
                 return Collections.emptyList();
@@ -158,12 +181,14 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         this.sourceType     = params[0];
         this.filterExisting = params.length > 1 && params[1] == 1;
         this.invert         = params.length > 2 && params[2] == 1;
+        this.targetOffsetX  = params.length > 3 ? params[3] : 0;
+        this.targetOffsetY  = params.length > 4 ? params[4] : 0;
 
         this.tileOffsets = new ArrayList<>();
-        if (params.length > 3) {
-            int n = params[3];
+        if (params.length > 5) {
+            int n = params[5];
             for (int i = 0; i < n && i < MAX_TILE_OFFSETS; i++) {
-                int xi = 4 + i * 2;
+                int xi = 6 + i * 2;
                 if (xi + 1 < params.length) {
                     tileOffsets.add(new int[]{ params[xi], params[xi + 1] });
                 }
@@ -180,8 +205,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
 
         this.setDelay(settings.getDelay());
 
-        LOGGER.info("[FurniNeighborhood] saveData: sourceType={}, filterExisting={}, invert={}, offsets={}, pickedFurniIds={}",
-                sourceType, filterExisting, invert, tileOffsets.size(), pickedFurniIds);
+        LOGGER.info("[FurniNeighborhood] saveData: sourceType={}, filterExisting={}, invert={}, target=({},{}), offsets={}, pickedFurniIds={}",
+                sourceType, filterExisting, invert, targetOffsetX, targetOffsetY, tileOffsets.size(), pickedFurniIds);
         for (int[] o : tileOffsets) {
             LOGGER.info("[FurniNeighborhood]   offset: ({}, {})", o[0], o[1]);
         }
@@ -208,11 +233,13 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         message.appendInt(this.getId());
         message.appendString("");
 
-        int paramCount = 4 + tileOffsets.size() * 2;
+        int paramCount = 6 + tileOffsets.size() * 2;
         message.appendInt(paramCount);
         message.appendInt(sourceType);
         message.appendInt(filterExisting ? 1 : 0);
         message.appendInt(invert ? 1 : 0);
+        message.appendInt(targetOffsetX);
+        message.appendInt(targetOffsetY);
         message.appendInt(tileOffsets.size());
         for (int[] offset : tileOffsets) {
             message.appendInt(offset[0]);
@@ -236,7 +263,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(
-                new JsonData(sourceType, filterExisting, invert, tileOffsets, pickedFurniIds, getDelay()));
+                new JsonData(sourceType, filterExisting, invert, targetOffsetX, targetOffsetY, tileOffsets, pickedFurniIds, getDelay()));
     }
 
     @Override
@@ -247,6 +274,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
             this.sourceType    = data.sourceType;
             this.filterExisting = data.filterExisting;
             this.invert        = data.invert;
+            this.targetOffsetX = data.targetOffsetX;
+            this.targetOffsetY = data.targetOffsetY;
             this.tileOffsets   = data.tileOffsets != null ? data.tileOffsets : new ArrayList<>();
             this.pickedFurniIds = data.pickedFurniIds != null ? data.pickedFurniIds : new ArrayList<>();
             this.setDelay(data.delay);
@@ -258,6 +287,8 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         this.sourceType    = SOURCE_USER_TRIGGER;
         this.filterExisting = false;
         this.invert        = false;
+        this.targetOffsetX = 0;
+        this.targetOffsetY = 0;
         this.tileOffsets   = new ArrayList<>();
         this.pickedFurniIds = new ArrayList<>();
         this.setDelay(0);
@@ -270,15 +301,19 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         int            sourceType;
         boolean        filterExisting;
         boolean        invert;
+        int            targetOffsetX;
+        int            targetOffsetY;
         List<int[]>    tileOffsets;
         List<Integer>  pickedFurniIds;
         int            delay;
 
-        JsonData(int sourceType, boolean filterExisting, boolean invert,
+        JsonData(int sourceType, boolean filterExisting, boolean invert, int targetOffsetX, int targetOffsetY,
                  List<int[]> tileOffsets, List<Integer> pickedFurniIds, int delay) {
             this.sourceType     = sourceType;
             this.filterExisting = filterExisting;
             this.invert         = invert;
+            this.targetOffsetX  = targetOffsetX;
+            this.targetOffsetY  = targetOffsetY;
             this.tileOffsets    = tileOffsets;
             this.pickedFurniIds = pickedFurniIds;
             this.delay          = delay;

@@ -14,6 +14,7 @@ import com.eu.habbo.messages.outgoing.rooms.items.FloorItemOnRollerComposer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 public class WiredApplySetConditionsEvent extends MessageHandler {
 
@@ -40,7 +41,7 @@ public class WiredApplySetConditionsEvent extends MessageHandler {
         if (room != null) {
 
             // Executing Habbo should be able to edit wireds
-            if (room.hasRights(this.client.getHabbo()) || room.isOwner(this.client.getHabbo())) {
+            if (room.canModifyWired(this.client.getHabbo())) {
 
                 List<HabboItem> wireds = new ArrayList<>();
                 wireds.addAll(room.getRoomSpecialTypes().getConditions());
@@ -81,13 +82,21 @@ public class WiredApplySetConditionsEvent extends MessageHandler {
                                     room.moveFurniTo(matchItem, oldLocation, setting.rotation, null, true);
                                 }
                             }
+                            else if(wired.shouldMatchAltitude() && !wired.shouldMatchPosition()) {
+                                int newRotation = wired.shouldMatchRotation() ? setting.rotation : matchItem.getRotation();
+                                if (BigDecimal.valueOf(matchItem.getZ()).compareTo(BigDecimal.valueOf(setting.z)) != 0
+                                        || newRotation != matchItem.getRotation()) {
+                                    room.moveFurniTo(matchItem, oldLocation, newRotation, setting.z, null, true, false);
+                                }
+                            }
                             else if(wired.shouldMatchPosition()) {
                                 boolean slideAnimation = !wired.shouldMatchRotation() || matchItem.getRotation() == setting.rotation;
                                 RoomTile newLocation = room.getLayout().getTile((short) setting.x, (short) setting.y);
                                 int newRotation = wired.shouldMatchRotation() ? setting.rotation : matchItem.getRotation();
+                                double newZ = wired.shouldMatchAltitude() ? setting.z : matchItem.getZ();
 
                                 if(newLocation != null && newLocation.state != RoomTileState.INVALID && (newLocation != oldLocation || newRotation != matchItem.getRotation()) && room.furnitureFitsAt(newLocation, matchItem, newRotation, true) == FurnitureMovementError.NONE) {
-                                    if(room.moveFurniTo(matchItem, newLocation, newRotation, null, !slideAnimation) == FurnitureMovementError.NONE) {
+                                    if(room.moveFurniTo(matchItem, newLocation, newRotation, newZ, null, !slideAnimation, true) == FurnitureMovementError.NONE) {
                                         if(slideAnimation) {
                                             room.sendComposer(new FloorItemOnRollerComposer(matchItem, null, oldLocation, oldZ, newLocation, matchItem.getZ(), 0, room).compose());
                                         }

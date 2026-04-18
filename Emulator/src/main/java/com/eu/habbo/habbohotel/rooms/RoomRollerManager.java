@@ -354,7 +354,7 @@ public class RoomRollerManager {
                                 LOGGER.error("Caught exception", e);
                             }
                         }
-                    }, this.room.getRollerSpeed() == 0 ? 250 : InteractionRoller.DELAY);
+                    }, RoomQueueSpeedControlSupport.getEffectiveRollerIntervalMs(this.room));
                 }
             }
 

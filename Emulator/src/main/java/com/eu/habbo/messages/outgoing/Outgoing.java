@@ -41,6 +41,7 @@ public class Outgoing {
     public final static int HotelViewComposer = 122;
     public final static int UpdateFriendComposer = 2800;
     public final static int FloorItemUpdateComposer = 3776;
+    public final static int WiredMovementsComposer = 3999;
     public final static int RoomAccessDeniedComposer = 878;
     public final static int GuildFurniWidgetComposer = 3293;
     public final static int GiftConfigurationComposer = 2234;
@@ -119,6 +120,11 @@ public class Outgoing {
     public final static int EnableNotificationsComposer = 3284; // PRODUCTION-201611291003-338511768
     public final static int HallOfFameComposer = 3005; // PRODUCTION-201611291003-338511768
     public final static int WiredSavedComposer = 1155; // PRODUCTION-201611291003-338511768
+    public final static int WiredMonitorDataComposer = 5101; // CUSTOM
+    public final static int WiredRoomSettingsDataComposer = 5102; // CUSTOM
+    public final static int WiredUserVariablesDataComposer = 5103; // CUSTOM
+    public final static int ConfInvisStateComposer = 5104; // CUSTOM
+    public final static int AreaHideComposer = 6001; // CUSTOM
     public final static int RoomPaintComposer = 2454; // PRODUCTION-201611291003-338511768
     public final static int MarketplaceConfigComposer = 1823; // PRODUCTION-201611291003-338511768
     public final static int AddBotComposer = 1352; // PRODUCTION-201611291003-338511768
@@ -324,6 +330,7 @@ public class Outgoing {
     public final static int VerifyMobilePhoneCodeWindowComposer = 800; // PRODUCTION-201611291003-338511768
     public final static int VerifyMobilePhoneDoneComposer = 91; // PRODUCTION-201611291003-338511768
     public final static int RoomUserReceivedHandItemComposer = 354; // PRODUCTION-201611291003-338511768
+    public final static int HanditemBlockStateComposer = 5105;
     public final static int MutedWhisperComposer = 826; // PRODUCTION-201611291003-338511768
     public final static int UnknownHintComposer = 1787; // PRODUCTION-201611291003-338511768
     public final static int BullyReportClosedComposer = 2674; // PRODUCTION-201611291003-338511768
@@ -369,6 +376,7 @@ public class Outgoing {
     public final static int BullyReportedMessageComposer = 3285; // PRODUCTION-201611291003-338511768
     public final static int UnknownQuestComposer3 = 1122; // PRODUCTION-201611291003-338511768
     public final static int FriendToolbarNotificationComposer = 3082; // PRODUCTION-201611291003-338511768
+    public final static int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public final static int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768
     public final static int CameraPriceComposer = 3878; // PRODUCTION-201611291003-338511768
     public final static int PetBreedingCompleted = 2527; // PRODUCTION-201611291003-338511768
@@ -504,6 +512,7 @@ public class Outgoing {
     public final static int WiredOpenComposer = 1830;
     public final static int UnknownCatalogPageOfferComposer = 1889;
     public final static int NuxAlertComposer = 2023;
+    public final static int InClientLinkComposer = 2023;
     public final static int HotelViewExpiringCatalogPageCommposer = 2515;
     public final static int UnknownHabboWayQuizComposer = 2772;
     public final static int PetLevelUpdatedComposer = 2824;
@@ -553,5 +562,25 @@ public class Outgoing {
     public static final int SnowStormGenericErrorComposer = 5028;
     public static final int SnowStormUserRematchedComposer = 5029;
 
+
+    // Furni Editor
+    public static final int FurniEditorSearchComposer = 10040;
+    public static final int FurniEditorDetailComposer = 10041;
+    public static final int FurniEditorInteractionsComposer = 10043;
+    public static final int FurniEditorResultComposer = 10044;
+
+    // Catalog Admin
+    public static final int CatalogAdminResultComposer = 10059;
+
+    // Custom Prefixes
+    public static final int UserPrefixesComposer = 7001;
+    public static final int PrefixReceivedComposer = 7002;
+    public static final int ActivePrefixUpdatedComposer = 7003;
+    public static final int AvailableCommandsComposer = 4050;
+
+    // YouTube Room Broadcast
+    public static final int YouTubeRoomBroadcastComposer = 8001;
+    public static final int YouTubeRoomWatchersComposer = 8002;
+    public static final int YouTubeRoomSettingsComposer = 8003;
 
 }

@@ -28,6 +28,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.NOT_FURNI_HAVE_HABBO;
     
     protected THashSet<HabboItem> items;
+    protected boolean all;
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredConditionNotFurniHaveHabbo(ResultSet set, Item baseItem) throws SQLException {
@@ -43,6 +44,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
     @Override
     public void onPickUp() {
         this.items.clear();
+        this.all = false;
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
     }
 
@@ -63,15 +65,11 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         Collection<Bot> bots = room.getCurrentBots().valueCollection();
         Collection<Pet> pets = room.getCurrentPets().valueCollection();
 
-        return targets.stream().filter(item -> item != null).noneMatch(item -> {
-            RoomTile baseTile = room.getLayout().getTile(item.getX(), item.getY());
-            if (baseTile == null) return false;
-            
-            THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(baseTile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
-            return habbos.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    bots.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
-                    pets.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()));
-        });
+        if (this.all) {
+            return targets.stream().filter(item -> item != null).allMatch(item -> !this.hasAvatarOnItem(item, room, habbos, bots, pets));
+        }
+
+        return targets.stream().filter(item -> item != null).anyMatch(item -> !this.hasAvatarOnItem(item, room, habbos, bots, pets));
     }
 
     @Deprecated
@@ -85,7 +83,8 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         this.refresh();
         return WiredManager.getGson().toJson(new JsonData(
                 this.items.stream().map(HabboItem::getId).collect(Collectors.toList()),
-                this.furniSource
+                this.furniSource,
+                this.all
         ));
     }
 
@@ -97,6 +96,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         if (wiredData.startsWith("{")) {
             WiredConditionFurniHaveHabbo.JsonData data = WiredManager.getGson().fromJson(wiredData, WiredConditionFurniHaveHabbo.JsonData.class);
             this.furniSource = data.furniSource;
+            this.all = data.all;
 
             for(int id : data.itemIds) {
                 HabboItem item = room.getHabboItem(id);
@@ -119,6 +119,7 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
                 }
             }
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
+            this.all = false;
         }
         if (this.furniSource == WiredSourceUtil.SOURCE_TRIGGER && !this.items.isEmpty()) {
             this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
@@ -144,7 +145,8 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(1);
+        message.appendInt(2);
+        message.appendInt(this.all ? 1 : 0);
         message.appendInt(this.furniSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -158,7 +160,12 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) return false;
 
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.all = (params.length > 0) && (params[0] == 1);
+        this.furniSource = (params.length > 1) ? params[1] : ((params.length > 0 && params[0] > 1) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER);
+
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
 
         this.items.clear();
 
@@ -176,6 +183,18 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
         }
 
         return true;
+    }
+
+    protected boolean hasAvatarOnItem(HabboItem item, Room room, Collection<Habbo> habbos, Collection<Bot> bots, Collection<Pet> pets) {
+        RoomTile baseTile = room.getLayout().getTile(item.getX(), item.getY());
+        if (baseTile == null) return false;
+
+        THashSet<RoomTile> occupiedTiles = room.getLayout().getTilesAt(baseTile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+        return occupiedTiles != null && (
+                habbos.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                bots.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation())) ||
+                pets.stream().anyMatch(character -> character.getRoomUnit() != null && occupiedTiles.contains(character.getRoomUnit().getCurrentLocation()))
+        );
     }
 
     private void refresh() {
@@ -199,10 +218,12 @@ public class WiredConditionNotFurniHaveHabbo extends InteractionWiredCondition {
     static class JsonData {
         List<Integer> itemIds;
         int furniSource;
+        boolean all;
 
-        public JsonData(List<Integer> itemIds, int furniSource) {
+        public JsonData(List<Integer> itemIds, int furniSource, boolean all) {
             this.itemIds = itemIds;
             this.furniSource = furniSource;
+            this.all = all;
         }
     }
 }

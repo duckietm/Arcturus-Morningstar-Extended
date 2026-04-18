@@ -13,6 +13,11 @@ import java.util.ArrayList;
 
 public class ModToolSanctionAlertEvent extends MessageHandler {
     @Override
+    public int getRatelimit() {
+        return 2000;
+    }
+
+    @Override
     public void handle() throws Exception {
         int userId = this.packet.readInt();
         String message = this.packet.readString();

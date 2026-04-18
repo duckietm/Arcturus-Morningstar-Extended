@@ -10,6 +10,8 @@ import com.eu.habbo.messages.incoming.ambassadors.AmbassadorAlertCommandEvent;
 import com.eu.habbo.messages.incoming.ambassadors.AmbassadorVisitCommandEvent;
 import com.eu.habbo.messages.incoming.camera.*;
 import com.eu.habbo.messages.incoming.catalog.*;
+import com.eu.habbo.messages.incoming.catalog.catalogadmin.*;
+import com.eu.habbo.messages.incoming.furnieditor.*;
 import com.eu.habbo.messages.incoming.catalog.marketplace.*;
 import com.eu.habbo.messages.incoming.catalog.recycler.OpenRecycleBoxEvent;
 import com.eu.habbo.messages.incoming.catalog.recycler.RecycleEvent;
@@ -34,6 +36,7 @@ import com.eu.habbo.messages.incoming.helper.MySanctionStatusEvent;
 import com.eu.habbo.messages.incoming.helper.RequestTalentTrackEvent;
 import com.eu.habbo.messages.incoming.hotelview.*;
 import com.eu.habbo.messages.incoming.inventory.*;
+import com.eu.habbo.messages.incoming.inventory.prefixes.*;
 import com.eu.habbo.messages.incoming.modtool.*;
 import com.eu.habbo.messages.incoming.navigator.*;
 import com.eu.habbo.messages.incoming.polls.AnswerPollEvent;
@@ -64,6 +67,13 @@ import com.eu.habbo.messages.incoming.users.*;
 import com.eu.habbo.messages.incoming.wired.WiredApplySetConditionsEvent;
 import com.eu.habbo.messages.incoming.wired.WiredConditionSaveDataEvent;
 import com.eu.habbo.messages.incoming.wired.WiredEffectSaveDataEvent;
+import com.eu.habbo.messages.incoming.wired.WiredMonitorRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsRequestEvent;
+import com.eu.habbo.messages.incoming.wired.WiredRoomSettingsSaveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserInspectMoveEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableManageEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariableUpdateEvent;
+import com.eu.habbo.messages.incoming.wired.WiredUserVariablesRequestEvent;
 import com.eu.habbo.messages.incoming.wired.WiredTriggerSaveDataEvent;
 import com.eu.habbo.plugin.EventHandler;
 import com.eu.habbo.plugin.events.emulator.EmulatorConfigUpdatedEvent;
@@ -230,7 +240,9 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestGiftConfigurationEvent, RequestGiftConfigurationEvent.class);
         this.registerHandler(Incoming.GetMarketplaceConfigEvent, RequestMarketplaceConfigEvent.class);
         this.registerHandler(Incoming.RequestCatalogModeEvent, RequestCatalogModeEvent.class);
-        this.registerHandler(Incoming.RequestCatalogIndexEvent, RequestCatalogIndexEvent.class);
+        this.registerHandler(Incoming.BuildersClubQueryFurniCountEvent, BuildersClubQueryFurniCountEvent.class);
+        this.registerHandler(Incoming.BuildersClubPlaceRoomItemEvent, BuildersClubPlaceRoomItemEvent.class);
+        this.registerHandler(Incoming.BuildersClubPlaceWallItemEvent, BuildersClubPlaceWallItemEvent.class);
         this.registerHandler(Incoming.RequestCatalogPageEvent, RequestCatalogPageEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemAsGiftEvent, CatalogBuyItemAsGiftEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemEvent, CatalogBuyItemEvent.class);
@@ -257,6 +269,27 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestClubCenterEvent, RequestClubCenterEvent.class);
         this.registerHandler(Incoming.CatalogRequestClubDiscountEvent, CatalogRequestClubDiscountEvent.class);
         this.registerHandler(Incoming.CatalogBuyClubDiscountEvent, CatalogBuyClubDiscountEvent.class);
+
+        // Furni Editor
+        this.registerHandler(Incoming.FurniEditorSearchEvent, FurniEditorSearchEvent.class);
+        this.registerHandler(Incoming.FurniEditorDetailEvent, FurniEditorDetailEvent.class);
+        this.registerHandler(Incoming.FurniEditorBySpriteEvent, FurniEditorBySpriteEvent.class);
+        this.registerHandler(Incoming.FurniEditorInteractionsEvent, FurniEditorInteractionsEvent.class);
+        this.registerHandler(Incoming.FurniEditorUpdateEvent, FurniEditorUpdateEvent.class);
+        this.registerHandler(Incoming.FurniEditorDeleteEvent, FurniEditorDeleteEvent.class);
+
+        // Catalog Admin
+        this.registerHandler(Incoming.CatalogAdminSavePageEvent, CatalogAdminSavePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminCreatePageEvent, CatalogAdminCreatePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminDeletePageEvent, CatalogAdminDeletePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSaveOfferEvent, CatalogAdminSaveOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminCreateOfferEvent, CatalogAdminCreateOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminDeleteOfferEvent, CatalogAdminDeleteOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminMoveOfferEvent, CatalogAdminMoveOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminMovePageEvent, CatalogAdminMovePageEvent.class);
+        this.registerHandler(Incoming.CatalogAdminPublishEvent, CatalogAdminPublishEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSavePageImagesEvent, CatalogAdminSavePageImagesEvent.class);
+        this.registerHandler(Incoming.CatalogAdminSavePageIconEvent, CatalogAdminSavePageIconEvent.class);
     }
 
     private void registerEvent() throws Exception {
@@ -370,6 +403,12 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestInventoryPetsEvent, RequestInventoryPetsEvent.class);
         this.registerHandler(Incoming.RequestInventoryPetDelete, RequestInventoryPetDelete.class);
         this.registerHandler(Incoming.RequestInventoryBadgeDelete, RequestInventoryBadgeDelete.class);
+
+        // Custom Prefixes
+        this.registerHandler(Incoming.RequestUserPrefixesEvent, RequestUserPrefixesEvent.class);
+        this.registerHandler(Incoming.SetActivePrefixEvent, SetActivePrefixEvent.class);
+        this.registerHandler(Incoming.DeletePrefixEvent, DeletePrefixEvent.class);
+        this.registerHandler(Incoming.PurchasePrefixEvent, PurchasePrefixEvent.class);
     }
 
     void registerRooms() throws Exception {
@@ -387,6 +426,8 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomPlacePaintEvent, RoomPlacePaintEvent.class);
         this.registerHandler(Incoming.RoomUserStartTypingEvent, RoomUserStartTypingEvent.class);
         this.registerHandler(Incoming.RoomUserStopTypingEvent, RoomUserStopTypingEvent.class);
+        this.registerHandler(Incoming.ClickFurniEvent, ClickFurniEvent.class);
+        this.registerHandler(Incoming.ClickUserEvent, ClickUserEvent.class);
         this.registerHandler(Incoming.ToggleFloorItemEvent, ToggleFloorItemEvent.class);
         this.registerHandler(Incoming.ToggleWallItemEvent, ToggleWallItemEvent.class);
         this.registerHandler(Incoming.RoomBackgroundEvent, RoomBackgroundEvent.class);
@@ -551,6 +592,7 @@ public class PacketManager {
         this.registerHandler(Incoming.GuildForumModerateMessageEvent, GuildForumModerateMessageEvent.class);
         this.registerHandler(Incoming.GuildForumModerateThreadEvent, GuildForumModerateThreadEvent.class);
         this.registerHandler(Incoming.GuildForumThreadUpdateEvent, GuildForumThreadUpdateEvent.class);
+        this.registerHandler(Incoming.GuildForumMarkAsReadEvent, GuildForumMarkAsReadEvent.class);
         this.registerHandler(Incoming.GetHabboGuildBadgesMessageEvent, GetHabboGuildBadgesMessageEvent.class);
 
 //        this.registerHandler(Incoming.GuildForumDataEvent,              GuildForumModerateMessageEvent.class);
@@ -584,6 +626,13 @@ public class PacketManager {
         this.registerHandler(Incoming.WiredEffectSaveDataEvent, WiredEffectSaveDataEvent.class);
         this.registerHandler(Incoming.WiredConditionSaveDataEvent, WiredConditionSaveDataEvent.class);
         this.registerHandler(Incoming.WiredApplySetConditionsEvent, WiredApplySetConditionsEvent.class);
+        this.registerHandler(Incoming.WiredMonitorRequestEvent, WiredMonitorRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsRequestEvent, WiredRoomSettingsRequestEvent.class);
+        this.registerHandler(Incoming.WiredRoomSettingsSaveEvent, WiredRoomSettingsSaveEvent.class);
+        this.registerHandler(Incoming.WiredUserVariablesRequestEvent, WiredUserVariablesRequestEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableUpdateEvent, WiredUserVariableUpdateEvent.class);
+        this.registerHandler(Incoming.WiredUserVariableManageEvent, WiredUserVariableManageEvent.class);
+        this.registerHandler(Incoming.WiredUserInspectMoveEvent, WiredUserInspectMoveEvent.class);
     }
 
     void registerUnknown() throws Exception {
@@ -646,5 +695,10 @@ public class PacketManager {
         this.registerHandler(Incoming.GameCenterLeaveGameEvent, GameCenterLeaveGameEvent.class);
         this.registerHandler(Incoming.GameCenterEvent, GameCenterEvent.class);
         this.registerHandler(Incoming.GameCenterRequestGameStatusEvent, GameCenterRequestGameStatusEvent.class);
+
+        // YouTube Room Broadcast
+        this.registerHandler(Incoming.YouTubeRoomPlayEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomPlayEvent.class);
+        this.registerHandler(Incoming.YouTubeRoomWatchingEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomWatchingEvent.class);
+        this.registerHandler(Incoming.YouTubeRoomSettingsEvent, com.eu.habbo.messages.incoming.rooms.youtube.YouTubeRoomSettingsEvent.class);
     }
 }

@@ -10,8 +10,12 @@ import com.eu.habbo.habbohotel.rooms.BedProfile;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectMoveRotateUser;
+import com.eu.habbo.habbohotel.wired.core.WiredFreezeUtil;
+import com.eu.habbo.habbohotel.wired.core.WiredUserMovementHelper;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.rooms.users.RoomUnitOnRollerComposer;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserStatusComposer;
 import com.eu.habbo.plugin.events.users.UserIdleEvent;
 import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
@@ -22,9 +26,16 @@ public class RoomUserWalkEvent extends MessageHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(RoomUserWalkEvent.class);
   public static final String CONTROL_KEY = "control";
 
+  private static final String WALK_FLOOD_COUNT_KEY = "__walkFloodCount";
+  private static final String WALK_FLOOD_WINDOW_KEY = "__walkFloodWindow";
+  private static final String WALK_LAST_X_KEY = "__walkLastX";
+  private static final String WALK_LAST_Y_KEY = "__walkLastY";
+
+  private static final int MAX_WALKS_PER_SECOND = 15;
+
   @Override
   public int getRatelimit() {
-    return Emulator.getConfig().getInt("pathfinder.click.delay", 0);
+    return 0;
   }
 
   @Override
@@ -33,8 +44,43 @@ public class RoomUserWalkEvent extends MessageHandler {
       return;
     }
 
-    int x = this.packet.readInt(); // Position X
-    int y = this.packet.readInt(); // Position Y
+    int x = this.packet.readInt();
+    int y = this.packet.readInt();
+
+    RoomUnit unit = this.client.getHabbo().getRoomUnit();
+    if (unit != null) {
+      long now = System.currentTimeMillis();
+      Object windowObj = unit.getCacheable().get(WALK_FLOOD_WINDOW_KEY);
+      Object countObj = unit.getCacheable().get(WALK_FLOOD_COUNT_KEY);
+
+      long windowStart = (windowObj instanceof Long) ? (Long) windowObj : 0L;
+      int count = (countObj instanceof Integer) ? (Integer) countObj : 0;
+
+      if (now - windowStart > 1000) {
+        // New 1-second window
+        windowStart = now;
+        count = 0;
+      }
+
+      count++;
+      unit.getCacheable().put(WALK_FLOOD_WINDOW_KEY, windowStart);
+      unit.getCacheable().put(WALK_FLOOD_COUNT_KEY, count);
+
+      if (count > MAX_WALKS_PER_SECOND) {
+        unit.getCacheable().put(WALK_LAST_X_KEY, x);
+        unit.getCacheable().put(WALK_LAST_Y_KEY, y);
+        return;
+      }
+
+      Object lastX = unit.getCacheable().get(WALK_LAST_X_KEY);
+      Object lastY = unit.getCacheable().get(WALK_LAST_Y_KEY);
+      if (lastX != null && lastY != null) {
+        x = (Integer) lastX;
+        y = (Integer) lastY;
+        unit.getCacheable().remove(WALK_LAST_X_KEY);
+        unit.getCacheable().remove(WALK_LAST_Y_KEY);
+      }
+    }
 
     Habbo habbo = getControlledHabbo();
     if (habbo == null) {
@@ -46,7 +92,11 @@ public class RoomUserWalkEvent extends MessageHandler {
     Room room = habboInfo.getCurrentRoom();
 
     try {
-      if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk()) {
+      if (roomUnit != null && roomUnit.isInRoom() && roomUnit.canWalk() && !WiredFreezeUtil.isFrozen(roomUnit)) {
+        if (WiredUserMovementHelper.consumeSuppressedWalkCommand(roomUnit)) {
+          return;
+        }
+
         if (roomUnit.cmdTeleport) {
           handleTeleport(room, (short) x, (short) y, roomUnit, habboInfo);
           return;
@@ -108,8 +158,28 @@ public class RoomUserWalkEvent extends MessageHandler {
 
         // This is where we set the end location and begin finding a path
         if (tile.isWalkable() || room.canSitOrLayAt(tile.x, tile.y)) {
+          if (WiredEffectMoveRotateUser.handleWalkWhileActive(room, roomUnit, tile)) {
+            return;
+          }
+
           if (roomUnit.getMoveBlockingTask() != null) {
             roomUnit.getMoveBlockingTask().get();
+          }
+
+          boolean needsLocationResync =
+              roomUnit.getCurrentLocation() != null
+                  && (roomUnit.getPreviousLocation() == null
+                  || roomUnit.getPreviousLocation().x != roomUnit.getCurrentLocation().x
+                  || roomUnit.getPreviousLocation().y != roomUnit.getCurrentLocation().y
+                  || Math.abs(roomUnit.getPreviousLocationZ() - roomUnit.getZ()) > 0.01D);
+
+          if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit) || needsLocationResync) {
+            WiredUserMovementHelper.clearStatusComposerSuppression(roomUnit);
+            if (roomUnit.getCurrentLocation() != null) {
+              roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
+              roomUnit.setPreviousLocationZ(roomUnit.getZ());
+            }
+            room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
           }
 
           roomUnit.setGoalLocation(tile);

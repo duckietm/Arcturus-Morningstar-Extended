@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
+import com.eu.habbo.habbohotel.wired.core.WiredBotSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
@@ -29,6 +30,7 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
     private List<HabboItem> items;
     private String botName = "";
     private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
 
     public WiredEffectBotWalkToFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -62,8 +64,9 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName);
-        message.appendInt(1);
+        message.appendInt(2);
         message.appendInt(this.furniSource);
+        message.appendInt(this.botSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -75,10 +78,15 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
         String botName = settings.getStringParam();
         int[] params = settings.getIntParams();
         this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.botSource = (params.length > 1) ? WiredBotSourceUtil.normalizeBotSource(params[1]) : WiredBotSourceUtil.SOURCE_BOT_NAME;
         int itemsCount = settings.getFurniIds().length;
 
         if(itemsCount > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) {
             throw new WiredSaveException("Too many furni selected");
+        }
+
+        if (itemsCount > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
 
         List<HabboItem> newItems = new ArrayList<>();
@@ -118,32 +126,30 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
     @Override
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
-        List<Bot> bots = room.getBots(this.botName);
+        List<Bot> bots = WiredBotSourceUtil.resolveBots(ctx, room, this.botSource, this.botName);
 
         List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {
             this.items.removeIf(item -> item == null || item.getRoomId() != this.getRoomId() || Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId()).getHabboItem(item.getId()) == null);
         }
 
-        if (effectiveItems.isEmpty() || bots.size() != 1) {
+        if (effectiveItems.isEmpty() || bots.isEmpty()) {
             return;
         }
 
-        Bot bot = bots.get(0);
+        for (Bot bot : bots) {
+            List<HabboItem> possibleItems = effectiveItems.stream()
+                    .filter(item -> !room.getBotsOnItem(item).contains(bot))
+                    .collect(Collectors.toList());
 
-        // Bots shouldn't walk to the tile they are already standing on
-        List<HabboItem> possibleItems = effectiveItems.stream()
-                .filter(item -> !room.getBotsOnItem(item).contains(bot))
-                .collect(Collectors.toList());
+            if (possibleItems.isEmpty()) {
+                continue;
+            }
 
-        // Get a random tile of possible tiles to walk to
-        if (possibleItems.size() > 0) {
             HabboItem item = possibleItems.get(Emulator.getRandom().nextInt(possibleItems.size()));
 
-            if (item.getRoomId() != 0 && item.getRoomId() == bot.getRoom().getId()) {
-                if (room.getLayout() != null) {
-                    bot.getRoomUnit().setGoalLocation(room.getLayout().getTile(item.getX(), item.getY()));
-                }
+            if (item.getRoomId() != 0 && item.getRoomId() == bot.getRoom().getId() && room.getLayout() != null) {
+                bot.getRoomUnit().setGoalLocation(room.getLayout().getTile(item.getX(), item.getY()));
             }
         }
     }
@@ -166,7 +172,7 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
             }
         }
 
-        return WiredManager.getGson().toJson(new JsonData(this.botName, itemIds, this.getDelay(), this.furniSource));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, itemIds, this.getDelay(), this.furniSource, this.botSource));
     }
 
     @Override
@@ -180,6 +186,9 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
             this.setDelay(data.delay);
             this.botName = data.bot_name;
             this.furniSource = data.furniSource;
+            this.botSource = (data.botSource != null)
+                    ? WiredBotSourceUtil.normalizeBotSource(data.botSource)
+                    : WiredBotSourceUtil.SOURCE_BOT_NAME;
 
             for(int itemId : data.items) {
                 HabboItem item = room.getHabboItem(itemId);
@@ -212,6 +221,7 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
 
             this.needsUpdate(true);
             this.furniSource = this.items.isEmpty() ? WiredSourceUtil.SOURCE_TRIGGER : WiredSourceUtil.SOURCE_SELECTED;
+            this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         }
     }
 
@@ -220,7 +230,13 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
         this.items.clear();
         this.botName = "";
         this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.setDelay(0);
+    }
+
+    @Override
+    public boolean requiresTriggeringUser() {
+        return WiredBotSourceUtil.requiresTriggeringUser(this.botSource);
     }
 
     static class JsonData {
@@ -228,12 +244,14 @@ public class WiredEffectBotWalkToFurni extends InteractionWiredEffect {
         List<Integer> items;
         int delay;
         int furniSource;
+        Integer botSource;
 
-        public JsonData(String bot_name, List<Integer> items, int delay, int furniSource) {
+        public JsonData(String bot_name, List<Integer> items, int delay, int furniSource, int botSource) {
             this.bot_name = bot_name;
             this.items = items;
             this.delay = delay;
             this.furniSource = furniSource;
+            this.botSource = botSource;
         }
     }
 }

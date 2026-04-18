@@ -24,13 +24,13 @@ import java.util.Arrays;
 public class InteractionGameTimer extends HabboItem {
     private static final Logger LOGGER = LoggerFactory.getLogger(InteractionGameTimer.class);
 
-    private int[] TIMER_INTERVAL_STEPS = new int[] { 30, 60, 120, 180, 300, 600 };
+    protected int[] TIMER_INTERVAL_STEPS = new int[] { 30, 60, 120, 180, 300, 600 };
 
-    private int baseTime = 0;
-    private int timeNow = 0;
-    private boolean isRunning = false;
-    private boolean isPaused = false;
-    private boolean threadActive = false;
+    protected int baseTime = 0;
+    protected int timeNow = 0;
+    protected boolean isRunning = false;
+    protected boolean isPaused = false;
+    protected boolean threadActive = false;
 
     public enum InteractionGameTimerAction {
         START_STOP(1),
@@ -83,7 +83,7 @@ public class InteractionGameTimer extends HabboItem {
         parseCustomParams(item);
     }
 
-    private void parseCustomParams(Item baseItem) {
+    protected void parseCustomParams(Item baseItem) {
         try {
             TIMER_INTERVAL_STEPS = Arrays.stream(baseItem.getCustomParams().split(","))
                     .mapToInt(s -> {
@@ -114,7 +114,7 @@ public class InteractionGameTimer extends HabboItem {
         }
     }
 
-    private void createNewGame(Room room) {
+    protected void createNewGame(Room room) {
         for(Class<? extends Game> gameClass : Emulator.getGameEnvironment().getRoomManager().getGameTypes()) {
             Game existingGame = room.getGame(gameClass);
 
@@ -132,13 +132,13 @@ public class InteractionGameTimer extends HabboItem {
         }
     }
 
-    private void pause(Room room) {
+    protected void pause(Room room) {
         for (Game game : room.getGames()) {
             game.pause();
         }
     }
 
-    private void unpause(Room room) {
+    protected void unpause(Room room) {
         for (Game game : room.getGames()) {
             game.unpause();
         }
@@ -155,7 +155,8 @@ public class InteractionGameTimer extends HabboItem {
     public void onPickUp(Room room) {
         this.endGame(room);
 
-        this.setExtradata(this.baseTime + "\t" + this.baseTime);
+        this.timeNow = this.getInitialTimeValue();
+        this.setExtradata(this.timeNow + "\t" + this.baseTime);
         this.needsUpdate(true);
     }
 
@@ -165,7 +166,7 @@ public class InteractionGameTimer extends HabboItem {
             this.baseTime = this.TIMER_INTERVAL_STEPS[0];
         }
 
-        this.timeNow = this.baseTime;
+        this.timeNow = this.getInitialTimeValue();
 
         this.setExtradata(this.timeNow + "\t" + this.baseTime);
         room.updateItem(this);
@@ -212,7 +213,7 @@ public class InteractionGameTimer extends HabboItem {
 
             this.createNewGame(room);
 
-            this.timeNow = this.baseTime;
+            this.resetTimeForStart();
             this.isRunning = true;
             this.isPaused = false;
 
@@ -221,7 +222,7 @@ public class InteractionGameTimer extends HabboItem {
 
             if (!this.threadActive) {
                 this.threadActive = true;
-                Emulator.getThreading().run(new GameTimer(this), 1000);
+                this.scheduleTimerRunnable(this.getTimerStartDelayMs());
             }
         } else if (client != null) {
             if (!(room.hasRights(client.getHabbo()) || client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)))
@@ -244,13 +245,13 @@ public class InteractionGameTimer extends HabboItem {
 
                             if (!this.threadActive) {
                                 this.threadActive = true;
-                                Emulator.getThreading().run(new GameTimer(this));
+                                this.scheduleTimerRunnable(this.getTimerResumeDelayMs());
                             }
                         }
                     } else {
                         this.isPaused = false;
                         this.isRunning = true;
-                        this.timeNow = this.baseTime;
+                        this.resetTimeForStart();
                         room.updateItem(this);
 
                         this.createNewGame(room);
@@ -258,7 +259,7 @@ public class InteractionGameTimer extends HabboItem {
 
                         if (!this.threadActive) {
                             this.threadActive = true;
-                            Emulator.getThreading().run(new GameTimer(this), 1000);
+                            this.scheduleTimerRunnable(this.getTimerStartDelayMs());
                         }
                     }
 
@@ -290,15 +291,15 @@ public class InteractionGameTimer extends HabboItem {
         if (!isRunning) {
             isRunning = true;
             isPaused = false;
-            if(timeNow <= 0) {
-                timeNow = baseTime;
+            if (this.shouldResetTimeOnStart()) {
+                this.resetTimeForStart();
                 room.updateItem(this);
             }
             this.createNewGame(room);
             WiredManager.triggerGameStarts(room);
             if (!threadActive) {
                 threadActive = true;
-                Emulator.getThreading().run(new GameTimer(this), 1000);
+                this.scheduleTimerRunnable(this.getTimerStartDelayMs());
             }
         }
     }
@@ -322,12 +323,12 @@ public class InteractionGameTimer extends HabboItem {
 
             if (!this.threadActive) {
                 this.threadActive = true;
-                Emulator.getThreading().run(new GameTimer(this), 1000);
+                this.scheduleTimerRunnable(this.getTimerResumeDelayMs());
             }
         }
     }
 
-    private void increaseTimer(Room room) {
+    protected void increaseTimer(Room room) {
         if (this.isRunning)
             return;
 
@@ -347,11 +348,43 @@ public class InteractionGameTimer extends HabboItem {
         }
 
         this.baseTime = baseTime;
+        this.timeNow = this.getInitialTimeValue();
         this.setExtradata(this.timeNow + "\t" + this.baseTime);
-
-        this.timeNow = this.baseTime;
         room.updateItem(this);
         this.needsUpdate(true);
+    }
+
+    protected int getInitialTimeValue() {
+        return this.baseTime;
+    }
+
+    protected boolean shouldResetTimeOnStart() {
+        return this.timeNow <= 0;
+    }
+
+    protected void resetTimeForStart() {
+        this.timeNow = this.baseTime;
+    }
+
+    protected Runnable createTimerRunnable() {
+        return new GameTimer(this);
+    }
+
+    protected long getTimerStartDelayMs() {
+        return 1000L;
+    }
+
+    protected long getTimerResumeDelayMs() {
+        return 0L;
+    }
+
+    protected void scheduleTimerRunnable(long delayMs) {
+        if (delayMs <= 0) {
+            Emulator.getThreading().run(this.createTimerRunnable());
+            return;
+        }
+
+        Emulator.getThreading().run(this.createTimerRunnable(), delayMs);
     }
 
     @Override
@@ -390,5 +423,9 @@ public class InteractionGameTimer extends HabboItem {
 
     public void setTimeNow(int timeNow) {
         this.timeNow = timeNow;
+    }
+
+    public int getBaseTime() {
+        return this.baseTime;
     }
 }

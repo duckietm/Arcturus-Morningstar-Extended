@@ -29,7 +29,7 @@ public class UnmuteCommand extends Command {
                 }
 
                 if (habbo.getHabboInfo().getCurrentRoom() != null && habbo.getHabboInfo().getCurrentRoom().isMuted(habbo)) {
-                    habbo.getHabboInfo().getCurrentRoom().muteHabbo(habbo, 1);
+                    habbo.getHabboInfo().getCurrentRoom().unmuteHabbo(habbo);
                 }
 
                 gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_unmute").replace("%user%", params[1]), RoomChatMessageBubbles.ALERT);

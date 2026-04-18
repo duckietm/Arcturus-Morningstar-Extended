@@ -177,6 +177,10 @@ public class WiredConditionFurniHaveFurni extends InteractionWiredCondition {
         int count = settings.getFurniIds().length;
         if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count")) return false;
 
+        if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         this.items.clear();
 
         if (this.furniSource == WiredSourceUtil.SOURCE_SELECTED) {

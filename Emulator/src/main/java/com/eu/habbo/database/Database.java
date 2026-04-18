@@ -4,16 +4,15 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.core.ConfigurationManager;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.hash.THashMap;
-import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Database {
 
@@ -48,11 +47,9 @@ public class Database {
     }
 
     public void dispose() {
-        if (this.databasePool != null) {
-            this.databasePool.getDatabase().close();
+        if (this.dataSource != null && !this.dataSource.isClosed()) {
+            this.dataSource.close();
         }
-
-        this.dataSource.close();
     }
 
     public HikariDataSource getDataSource() {
@@ -63,51 +60,77 @@ public class Database {
         return this.databasePool;
     }
 
-    public static PreparedStatement preparedStatementWithParams(Connection connection, String query, THashMap<String, Object> queryParams) throws SQLException {
-        THashMap<Integer, Object> params = new THashMap<Integer, Object>();
-        THashSet<String> quotedParams = new THashSet<>();
+    public static PreparedStatement preparedStatementWithParams(Connection connection,
+                                                                String query,
+                                                                Map<String, Object> queryParams) throws SQLException {
+        StringBuilder positional = new StringBuilder(query.length());
+        List<Object> bindValues = new ArrayList<>();
 
-        for(String key : queryParams.keySet()) {
-            quotedParams.add(Pattern.quote(key));
-        }
+        int i = 0;
+        int n = query.length();
 
-        String regex = "(" + String.join("|", quotedParams) + ")";
+        while (i < n) {
+            char c = query.charAt(i);
 
-        Matcher m = Pattern.compile(regex).matcher(query);
-
-        int i = 1;
-
-        while (m.find()) {
-            try {
-                params.put(i, queryParams.get(m.group(1)));
+            if (c == '\'') {
+                positional.append(c);
                 i++;
+                while (i < n) {
+                    char inner = query.charAt(i);
+                    positional.append(inner);
+                    i++;
+                    if (inner == '\'') {
+                        if (i < n && query.charAt(i) == '\'') {
+                            positional.append('\'');
+                            i++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                continue;
             }
-            catch (Exception ignored) { }
+
+            if (c == '@' && i + 1 < n && isNameStart(query.charAt(i + 1))) {
+                int start = i;
+                int j = i + 1;
+                while (j < n && isNamePart(query.charAt(j))) {
+                    j++;
+                }
+                String name = query.substring(start, j);
+                if (!queryParams.containsKey(name)) {
+                    throw new IllegalArgumentException(
+                            "SQL template references parameter '" + name + "' but no value was provided");
+                }
+                positional.append('?');
+                bindValues.add(queryParams.get(name));
+                i = j;
+                continue;
+            }
+
+            positional.append(c);
+            i++;
         }
 
-        PreparedStatement statement = connection.prepareStatement(query.replaceAll(regex, "?"));
-
-        for(Map.Entry<Integer, Object> set : params.entrySet()) {
-            if(set.getValue().getClass() == String.class) {
-                statement.setString(set.getKey(), (String)set.getValue());
-            }
-            else if(set.getValue().getClass() == Integer.class) {
-                statement.setInt(set.getKey(), (Integer)set.getValue());
-            }
-            else if(set.getValue().getClass() == Double.class) {
-                statement.setDouble(set.getKey(), (Double)set.getValue());
-            }
-            else if(set.getValue().getClass() == Float.class) {
-                statement.setFloat(set.getKey(), (Float)set.getValue());
-            }
-            else if(set.getValue().getClass() == Long.class) {
-                statement.setLong(set.getKey(), (Long)set.getValue());
-            }
-            else {
-                statement.setObject(set.getKey(), set.getValue());
-            }
+        PreparedStatement statement = connection.prepareStatement(positional.toString());
+        for (int k = 0; k < bindValues.size(); k++) {
+            statement.setObject(k + 1, bindValues.get(k));
         }
-
         return statement;
+    }
+
+    @Deprecated
+    public static PreparedStatement preparedStatementWithParams(Connection connection,
+                                                                String query,
+                                                                THashMap<String, Object> queryParams) throws SQLException {
+        return preparedStatementWithParams(connection, query, (Map<String, Object>) queryParams);
+    }
+
+    private static boolean isNameStart(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private static boolean isNamePart(char c) {
+        return isNameStart(c) || (c >= '0' && c <= '9');
     }
 }

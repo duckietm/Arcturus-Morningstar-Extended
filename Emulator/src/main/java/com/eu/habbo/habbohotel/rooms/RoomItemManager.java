@@ -16,6 +16,14 @@ import com.eu.habbo.habbohotel.items.interactions.games.tag.InteractionTagPole;
 import com.eu.habbo.habbohotel.items.interactions.pets.*;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendSignal;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredBlob;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraFurniVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRoomVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUserVariable;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableEcho;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableReference;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableTextConnector;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraContextVariable;
+import com.eu.habbo.habbohotel.wired.core.WiredContextVariableSupport;
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -23,6 +31,7 @@ import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredMovementPhysics;
 import com.eu.habbo.habbohotel.wired.tick.WiredTickable;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.*;
@@ -618,19 +627,28 @@ public class RoomItemManager {
             }
         }
 
+        if (BuildersClubRoomSupport.isTrackedItem(item.getId()) && item.getUserId() != BuildersClubRoomSupport.VIRTUAL_OWNER_ID) {
+            item.setVirtualUserId(BuildersClubRoomSupport.VIRTUAL_OWNER_ID);
+            item.needsUpdate(true);
+        }
+
         synchronized (this.furniOwnerCount) {
             this.furniOwnerCount.put(item.getUserId(), this.furniOwnerCount.get(item.getUserId()) + 1);
         }
 
         synchronized (this.furniOwnerNames) {
             if (!this.furniOwnerNames.containsKey(item.getUserId())) {
-                HabboInfo habbo = HabboManager.getOfflineHabboInfo(item.getUserId());
-
-                if (habbo != null) {
-                    this.furniOwnerNames.put(item.getUserId(), habbo.getUsername());
+                if (item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID && BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+                    this.furniOwnerNames.put(item.getUserId(), BuildersClubRoomSupport.DISPLAY_OWNER_NAME);
                 } else {
-                    LOGGER.error("Failed to find username for item (ID: {}, UserID: {})", 
-                        item.getId(), item.getUserId());
+                    HabboInfo habbo = HabboManager.getOfflineHabboInfo(item.getUserId());
+
+                    if (habbo != null) {
+                        this.furniOwnerNames.put(item.getUserId(), habbo.getUsername());
+                    } else {
+                        LOGGER.error("Failed to find username for item (ID: {}, UserID: {})",
+                            item.getId(), item.getUserId());
+                    }
                 }
             }
         }
@@ -740,6 +758,9 @@ public class RoomItemManager {
             return;
         }
 
+        boolean trackedBuildersClubItem = BuildersClubRoomSupport.isTrackedItem(item.getId());
+        int trackedUserId = trackedBuildersClubItem ? BuildersClubRoomSupport.getTrackedUserId(item.getId()) : item.getUserId();
+
         HabboItem i;
         synchronized (this.roomItems) {
             i = this.roomItems.remove(item.getId());
@@ -762,6 +783,16 @@ public class RoomItemManager {
             // Unregister from special types
             this.unregisterItemFromSpecialTypes(item);
         }
+
+        if (trackedBuildersClubItem) {
+            BuildersClubRoomSupport.deleteTrackedItem(item.getId());
+
+            if (BuildersClubRoomSupport.syncRoom(this.room) == BuildersClubRoomSupport.SyncResult.UNLOCKED) {
+                BuildersClubRoomSupport.sendRoomUnlockedBubble(this.room.getOwnerId());
+            }
+
+            BuildersClubRoomSupport.sendPlacementStatusForPool(this.room, trackedUserId);
+        }
     }
 
     /**
@@ -772,6 +803,13 @@ public class RoomItemManager {
         if (specialTypes == null) {
             return;
         }
+
+        boolean cleanedSignalAntennaReferences = false;
+        if (this.isAntennaItem(item)) {
+            cleanedSignalAntennaReferences = specialTypes.unlinkSignalAntennaReferences(item.getId());
+        }
+
+        this.room.getFurniVariableManager().removeAssignmentsForFurni(item.getId());
         
         boolean isWiredItem = false;
 
@@ -784,21 +822,53 @@ public class RoomItemManager {
             specialTypes.removeCycleTask((ICycleable) item);
         }
 
-        if (item instanceof InteractionBattleBanzaiTeleporter) {
-            specialTypes.removeBanzaiTeleporter((InteractionBattleBanzaiTeleporter) item);
-        } else if (item instanceof InteractionWiredTrigger) {
-            specialTypes.removeTrigger((InteractionWiredTrigger) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredEffect) {
-            specialTypes.removeEffect((InteractionWiredEffect) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredCondition) {
-            specialTypes.removeCondition((InteractionWiredCondition) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionWiredExtra) {
-            specialTypes.removeExtra((InteractionWiredExtra) item);
-            isWiredItem = true;
-        } else if (item instanceof InteractionRoller) {
+          if (item instanceof InteractionBattleBanzaiTeleporter) {
+              specialTypes.removeBanzaiTeleporter((InteractionBattleBanzaiTeleporter) item);
+          } else if (item instanceof InteractionWiredTrigger) {
+              specialTypes.removeTrigger((InteractionWiredTrigger) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredEffect) {
+              specialTypes.removeEffect((InteractionWiredEffect) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredCondition) {
+              specialTypes.removeCondition((InteractionWiredCondition) item);
+              isWiredItem = true;
+          } else if (item instanceof InteractionWiredExtra) {
+              boolean removedContextDefinition = false;
+              boolean removedVariableTextConnector = false;
+              if (item instanceof WiredExtraUserVariable) {
+                  this.room.getUserVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraFurniVariable) {
+                  this.room.getFurniVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraRoomVariable) {
+                  this.room.getRoomVariableManager().removeDefinition(item.getId());
+              } else if (item instanceof WiredExtraContextVariable) {
+                  removedContextDefinition = true;
+              } else if (item instanceof WiredExtraVariableTextConnector) {
+                  removedVariableTextConnector = true;
+              } else if (item instanceof WiredExtraVariableReference) {
+                  if (((WiredExtraVariableReference) item).isRoomReference()) {
+                      this.room.getRoomVariableManager().removeDefinition(item.getId());
+                  } else {
+                      this.room.getUserVariableManager().removeDefinition(item.getId());
+                  }
+              } else if (item instanceof WiredExtraVariableEcho) {
+                  WiredExtraVariableEcho echo = (WiredExtraVariableEcho) item;
+
+                  if (echo.isRoomEcho()) {
+                      this.room.getRoomVariableManager().removeDefinition(item.getId());
+                  } else if (echo.isFurniEcho()) {
+                      this.room.getFurniVariableManager().removeDefinition(item.getId());
+                  } else {
+                      this.room.getUserVariableManager().removeDefinition(item.getId());
+                  }
+              }
+              specialTypes.removeExtra((InteractionWiredExtra) item);
+              if (removedContextDefinition || removedVariableTextConnector) {
+                  WiredContextVariableSupport.broadcastDefinitions(this.room);
+              }
+              isWiredItem = true;
+          } else if (item instanceof InteractionRoller) {
             specialTypes.removeRoller((InteractionRoller) item);
         } else if (item instanceof InteractionGameScoreboard) {
             specialTypes.removeScoreboard((InteractionGameScoreboard) item);
@@ -840,9 +910,18 @@ public class RoomItemManager {
         }
         
         // Invalidate wired cache when wired items are removed
-        if (isWiredItem) {
+        if (isWiredItem || cleanedSignalAntennaReferences) {
             WiredManager.invalidateRoom(this.room);
         }
+    }
+
+    private boolean isAntennaItem(HabboItem item) {
+        if (item == null || item.getBaseItem() == null || item.getBaseItem().getInteractionType() == null) {
+            return false;
+        }
+
+        String interactionType = item.getBaseItem().getInteractionType().getName();
+        return interactionType != null && interactionType.equalsIgnoreCase("antenna");
     }
 
     // ==================== ITEM UPDATES ====================
@@ -949,6 +1028,8 @@ public class RoomItemManager {
             return;
         }
 
+        boolean trackedBuildersClubItem = BuildersClubRoomSupport.isTrackedItem(item.getId());
+
         if (Emulator.getPluginManager().isRegistered(FurniturePickedUpEvent.class, true)) {
             FurniturePickedUpEvent event = Emulator.getPluginManager()
                 .fireEvent(new FurniturePickedUpEvent(item, picker));
@@ -966,6 +1047,18 @@ public class RoomItemManager {
         if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
             this.room.sendComposer(new RemoveFloorItemComposer(item).compose());
 
+            if (RoomConfInvisSupport.isControllerItem(item) || RoomConfInvisSupport.isTarget(item)) {
+                RoomConfInvisSupport.sendState(this.room);
+            }
+
+            if (RoomAreaHideSupport.isControllerItem(item)) {
+                RoomAreaHideSupport.sendState(this.room, item);
+            }
+
+            if (RoomHanditemBlockSupport.isControllerItem(item)) {
+                RoomHanditemBlockSupport.sendState(this.room);
+            }
+
             THashSet<RoomTile> updatedTiles = this.room.getLayout().getTilesAt(
                 this.room.getLayout().getTile(item.getX(), item.getY()),
                 item.getBaseItem().getWidth(),
@@ -981,6 +1074,11 @@ public class RoomItemManager {
             this.room.sendComposer(new RemoveWallItemComposer(item).compose());
         }
 
+        if (trackedBuildersClubItem) {
+            Emulator.getGameEnvironment().getItemManager().deleteItem(item);
+            return;
+        }
+
         Emulator.getThreading().run(item);
     }
 
@@ -989,6 +1087,7 @@ public class RoomItemManager {
      */
     public void ejectUserFurni(int userId) {
         THashSet<HabboItem> items = new THashSet<>();
+        THashSet<HabboItem> inventoryItems = new THashSet<>();
 
         TIntObjectIterator<HabboItem> iterator = this.roomItems.iterator();
 
@@ -1001,15 +1100,20 @@ public class RoomItemManager {
 
             if (iterator.value().getUserId() == userId) {
                 items.add(iterator.value());
+
+                if (!BuildersClubRoomSupport.isTrackedItem(iterator.value().getId())) {
+                    inventoryItems.add(iterator.value());
+                }
+
                 iterator.value().setRoomId(0);
             }
         }
 
         Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
 
-        if (habbo != null) {
-            habbo.getInventory().getItemsComponent().addItems(items);
-            habbo.getClient().sendResponse(new AddHabboItemComposer(items));
+        if (habbo != null && !inventoryItems.isEmpty()) {
+            habbo.getInventory().getItemsComponent().addItems(inventoryItems);
+            habbo.getClient().sendResponse(new AddHabboItemComposer(inventoryItems));
         }
 
         for (HabboItem i : items) {
@@ -1061,15 +1165,23 @@ public class RoomItemManager {
         }
 
         for (Map.Entry<Integer, THashSet<HabboItem>> entrySet : userItemsMap.entrySet()) {
+            THashSet<HabboItem> inventoryItems = new THashSet<>();
+
+            for (HabboItem item : entrySet.getValue()) {
+                if (!BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+                    inventoryItems.add(item);
+                }
+            }
+
             for (HabboItem i : entrySet.getValue()) {
                 this.pickUpItem(i, null);
             }
 
             Habbo user = Emulator.getGameEnvironment().getHabboManager().getHabbo(entrySet.getKey());
 
-            if (user != null) {
-                user.getInventory().getItemsComponent().addItems(entrySet.getValue());
-                user.getClient().sendResponse(new AddHabboItemComposer(entrySet.getValue()));
+            if (user != null && !inventoryItems.isEmpty()) {
+                user.getInventory().getItemsComponent().addItems(inventoryItems);
+                user.getClient().sendResponse(new AddHabboItemComposer(inventoryItems));
             }
         }
     }
@@ -1213,7 +1325,7 @@ public class RoomItemManager {
         rotation %= 8;
         if (this.room.hasRights(habbo) || this.room.getGuildRightLevel(habbo)
             .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS) || habbo.hasPermission(
-            Permission.ACC_MOVEROTATE)) {
+            Permission.ACC_MOVEROTATE) || BuildersClubRoomSupport.canPlaceInRoom(habbo, this.room)) {
             return FurnitureMovementError.NONE;
         }
 
@@ -1253,13 +1365,75 @@ public class RoomItemManager {
     /**
      * Checks if furniture fits at a location with unit check option.
      */
+    private boolean isStackPlacementBypassItem(HabboItem item) {
+        return item instanceof InteractionStackHelper
+                || item instanceof InteractionTileWalkMagic
+                || item instanceof InteractionStackWalkHelper;
+    }
+
+    private boolean shouldPinStackHelperToFloor(HabboItem item) {
+        return item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic;
+    }
+
+    private boolean isStackHeightHelper(HabboItem item) {
+        return item instanceof InteractionStackHelper
+                || item instanceof InteractionTileWalkMagic
+                || item instanceof InteractionStackWalkHelper;
+    }
+
+    private HabboItem findStackHeightHelperAt(RoomTile tile, HabboItem exclude) {
+        if (tile == null) {
+            return null;
+        }
+
+        for (HabboItem helper : this.getItemsAt(tile)) {
+            if (helper != exclude && this.isStackHeightHelper(helper)) {
+                return helper;
+            }
+        }
+
+        return null;
+    }
+
+    private double getMinimumTileHeight(THashSet<RoomTile> occupiedTiles) {
+        double minimumHeight = 0.0D;
+
+        for (RoomTile occupiedTile : occupiedTiles) {
+            minimumHeight = Math.max(minimumHeight, this.room.getLayout().getHeightAtSquare(occupiedTile.x, occupiedTile.y));
+        }
+
+        return minimumHeight;
+    }
+
+    private double getConfiguredStackWalkHelperHeight(HabboItem item, THashSet<RoomTile> occupiedTiles) {
+        double height = 0.0D;
+
+        try {
+            if (item.getExtradata() != null && !item.getExtradata().isEmpty()) {
+                height = Double.parseDouble(item.getExtradata()) / 100.0D;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        return Math.max(height, this.getMinimumTileHeight(occupiedTiles));
+    }
+
+    private double resolveStackWalkHelperHeight(HabboItem item, RoomTile tile, THashSet<RoomTile> occupiedTiles) {
+        HabboItem helper = this.findStackHeightHelperAt(tile, item);
+        if (helper != null) {
+            return Math.max(helper.getZ(), this.getMinimumTileHeight(occupiedTiles));
+        }
+
+        return this.getConfiguredStackWalkHelperHeight(item, occupiedTiles);
+    }
+
     public FurnitureMovementError furnitureFitsAt(RoomTile tile, HabboItem item, int rotation, boolean checkForUnits) {
         RoomLayout layout = this.room.getLayout();
         if (!layout.fitsOnMap(tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation)) {
             return FurnitureMovementError.INVALID_MOVE;
         }
 
-        if (item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic) {
+        if (this.isStackPlacementBypassItem(item)) {
             return FurnitureMovementError.NONE;
         }
 
@@ -1289,6 +1463,56 @@ public class RoomItemManager {
             tileFurniList.add(Pair.create(t, this.getItemsAt(t)));
 
             HabboItem topItem = this.getTopItemAt(t.x, t.y, item);
+            if (topItem != null && !topItem.getBaseItem().allowStack() && !t.getAllowStack()) {
+                return FurnitureMovementError.CANT_STACK;
+            }
+        }
+
+        if (!item.canStackAt(this.room, tileFurniList)) {
+            return FurnitureMovementError.CANT_STACK;
+        }
+
+        return FurnitureMovementError.NONE;
+    }
+
+    public FurnitureMovementError furnitureFitsAtWithPhysics(RoomTile tile, HabboItem item, int rotation, boolean checkForUnits, WiredMovementPhysics physics) {
+        if (physics == null || !physics.isActive()) {
+            return furnitureFitsAt(tile, item, rotation, checkForUnits);
+        }
+
+        RoomLayout layout = this.room.getLayout();
+        if (!layout.fitsOnMap(tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation)) {
+            return FurnitureMovementError.INVALID_MOVE;
+        }
+
+        if (this.isStackPlacementBypassItem(item)) {
+            return FurnitureMovementError.NONE;
+        }
+
+        THashSet<RoomTile> occupiedTiles = layout.getTilesAt(tile, item.getBaseItem().getWidth(),
+            item.getBaseItem().getLength(), rotation);
+        for (RoomTile t : occupiedTiles) {
+            if (t.state == RoomTileState.INVALID) {
+                return FurnitureMovementError.INVALID_MOVE;
+            }
+
+            if (shouldCheckUnits(item, checkForUnits)) {
+                FurnitureMovementError unitCollision = this.getPhysicsUnitCollision(t, physics);
+                if (unitCollision != FurnitureMovementError.NONE) {
+                    return unitCollision;
+                }
+            }
+        }
+
+        if (this.hasBlockingPhysicsFurni(occupiedTiles, item, physics)) {
+            return FurnitureMovementError.CANT_STACK;
+        }
+
+        java.util.List<Pair<RoomTile, THashSet<HabboItem>>> tileFurniList = new java.util.ArrayList<>();
+        for (RoomTile t : occupiedTiles) {
+            tileFurniList.add(Pair.create(t, this.getPhysicsItemsAt(t, item, physics)));
+
+            HabboItem topItem = this.getTopPhysicsItemAt(t.x, t.y, item, physics);
             if (topItem != null && !topItem.getBaseItem().allowStack() && !t.getAllowStack()) {
                 return FurnitureMovementError.CANT_STACK;
             }
@@ -1359,7 +1583,7 @@ public class RoomItemManager {
         item.setY(tile.y);
         item.setRotation(rotation);
         if (!this.furniOwnerNames.containsKey(item.getUserId()) && owner != null) {
-            this.furniOwnerNames.put(item.getUserId(), owner.getHabboInfo().getUsername());
+            this.furniOwnerNames.put(item.getUserId(), this.resolveOwnerName(item, owner));
         }
 
         item.needsUpdate(true);
@@ -1369,6 +1593,18 @@ public class RoomItemManager {
         this.room.updateTiles(occupiedTiles);
         this.room.sendComposer(
             new AddFloorItemComposer(item, this.getFurniOwnerName(item.getUserId())).compose());
+
+        if (RoomConfInvisSupport.isControllerItem(item) || RoomConfInvisSupport.isTarget(item)) {
+            RoomConfInvisSupport.sendState(this.room);
+        }
+
+        if (RoomAreaHideSupport.isControllerItem(item)) {
+            RoomAreaHideSupport.sendState(this.room, item);
+        }
+
+        if (RoomHanditemBlockSupport.isControllerItem(item)) {
+            RoomHanditemBlockSupport.sendState(this.room);
+        }
 
         for (RoomTile t : occupiedTiles) {
             this.room.updateHabbosAt(t.x, t.y);
@@ -1384,7 +1620,7 @@ public class RoomItemManager {
      */
     public FurnitureMovementError placeWallFurniAt(HabboItem item, String wallPosition, Habbo owner) {
         if (!(this.room.hasRights(owner) || this.room.getGuildRightLevel(owner)
-            .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS))) {
+            .isEqualOrGreaterThan(RoomRightLevels.GUILD_RIGHTS) || BuildersClubRoomSupport.canPlaceInRoom(owner, this.room))) {
             return FurnitureMovementError.NO_RIGHTS;
         }
 
@@ -1399,7 +1635,7 @@ public class RoomItemManager {
 
         item.setWallPosition(wallPosition);
         if (!this.furniOwnerNames.containsKey(item.getUserId()) && owner != null) {
-            this.furniOwnerNames.put(item.getUserId(), owner.getHabboInfo().getUsername());
+            this.furniOwnerNames.put(item.getUserId(), this.resolveOwnerName(item, owner));
         }
         this.room.sendComposer(
             new AddWallItemComposer(item, this.getFurniOwnerName(item.getUserId())).compose());
@@ -1409,6 +1645,14 @@ public class RoomItemManager {
         item.onPlace(this.room);
         Emulator.getThreading().run(item);
         return FurnitureMovementError.NONE;
+    }
+
+    private String resolveOwnerName(HabboItem item, Habbo owner) {
+        if (item != null && item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID) {
+            return BuildersClubRoomSupport.DISPLAY_OWNER_NAME;
+        }
+
+        return (owner != null) ? owner.getHabboInfo().getUsername() : "";
     }
 
     /**
@@ -1437,9 +1681,7 @@ public class RoomItemManager {
 
         rotation %= 8;
 
-        boolean magicTile =
-                item instanceof InteractionStackHelper ||
-                        item instanceof InteractionTileWalkMagic;
+        boolean magicTile = this.isStackPlacementBypassItem(item);
 
         THashSet<RoomTile> occupiedTiles = layout.getTilesAt(
                 tile,
@@ -1502,9 +1744,11 @@ public class RoomItemManager {
         item.setY(tile.y);
         item.setZ(z);
 
-        if (magicTile) {
+        if (this.shouldPinStackHelperToFloor(item)) {
             item.setZ(tile.z);
             item.setExtradata("" + (item.getZ() * 100));
+        } else if (item instanceof InteractionStackWalkHelper) {
+            item.setZ(this.resolveStackWalkHelperHeight(item, tile, occupiedTiles));
         }
 
         if (item.getZ() > Room.MAXIMUM_FURNI_HEIGHT) {
@@ -1569,6 +1813,158 @@ public class RoomItemManager {
         return FurnitureMovementError.NONE;
     }
 
+    public FurnitureMovementError moveFurniToWithPhysics(HabboItem item, RoomTile tile, int rotation, double z, Habbo actor, boolean sendUpdates, boolean checkForUnits, WiredMovementPhysics physics) {
+        if (physics == null || !physics.isActive()) {
+            return moveFurniTo(item, tile, rotation, z, actor, sendUpdates, checkForUnits);
+        }
+
+        if (item == null || tile == null) {
+            return FurnitureMovementError.INVALID_MOVE;
+        }
+
+        RoomLayout layout = this.room.getLayout();
+        RoomTile oldLocation = layout.getTile(item.getX(), item.getY());
+
+        boolean pluginHelper = false;
+
+        if (Emulator.getPluginManager().isRegistered(FurnitureMovedEvent.class, true)) {
+            FurnitureMovedEvent event = Emulator.getPluginManager()
+                    .fireEvent(new FurnitureMovedEvent(item, actor, oldLocation, tile));
+
+            if (event.isCancelled()) {
+                return FurnitureMovementError.CANCEL_PLUGIN_MOVE;
+            }
+
+            pluginHelper = event.hasPluginHelper();
+        }
+
+        rotation %= 8;
+
+        boolean magicTile = this.isStackPlacementBypassItem(item);
+
+        THashSet<RoomTile> occupiedTiles = layout.getTilesAt(
+                tile,
+                item.getBaseItem().getWidth(),
+                item.getBaseItem().getLength(),
+                rotation
+        );
+
+        THashSet<RoomTile> oldOccupiedTiles = layout.getTilesAt(
+                layout.getTile(item.getX(), item.getY()),
+                item.getBaseItem().getWidth(),
+                item.getBaseItem().getLength(),
+                item.getRotation()
+        );
+
+        if (!pluginHelper) {
+            FurnitureMovementError fits = furnitureFitsAtWithPhysics(tile, item, rotation, checkForUnits, physics);
+            if (fits != FurnitureMovementError.NONE) {
+                return fits;
+            }
+        }
+
+        int oldRotation = item.getRotation();
+
+        if (oldRotation != rotation) {
+            item.setRotation(rotation);
+
+            if (Emulator.getPluginManager().isRegistered(FurnitureRotatedEvent.class, true)) {
+                Event rotatedEvent = new FurnitureRotatedEvent(item, actor, oldRotation);
+                Emulator.getPluginManager().fireEvent(rotatedEvent);
+
+                if (rotatedEvent.isCancelled()) {
+                    item.setRotation(oldRotation);
+                    return FurnitureMovementError.CANCEL_PLUGIN_ROTATE;
+                }
+            }
+        }
+
+        if (z > Room.MAXIMUM_FURNI_HEIGHT) {
+            return FurnitureMovementError.CANT_STACK;
+        }
+
+        if (z < layout.getHeightAtSquare(tile.x, tile.y)) {
+            return FurnitureMovementError.CANT_STACK;
+        }
+
+        if (Emulator.getPluginManager().isRegistered(FurnitureBuildheightEvent.class, true)) {
+            FurnitureBuildheightEvent event = Emulator.getPluginManager()
+                    .fireEvent(new FurnitureBuildheightEvent(item, actor, 0.00, z));
+
+            if (event.hasChangedHeight()) {
+                z = layout.getHeightAtSquare(tile.x, tile.y) + event.getUpdatedHeight();
+            }
+        }
+
+        item.setX(tile.x);
+        item.setY(tile.y);
+        item.setZ(z);
+
+        if (this.shouldPinStackHelperToFloor(item)) {
+            item.setZ(tile.z);
+            item.setExtradata("" + (item.getZ() * 100));
+        } else if (item instanceof InteractionStackWalkHelper) {
+            item.setZ(this.resolveStackWalkHelperHeight(item, tile, occupiedTiles));
+        }
+
+        if (item.getZ() > Room.MAXIMUM_FURNI_HEIGHT) {
+            item.setZ(Room.MAXIMUM_FURNI_HEIGHT);
+        }
+
+        if (oldLocation != null) {
+            if (item instanceof InteractionWiredTrigger) {
+                this.room.getRoomSpecialTypes().updateTriggerLocation((InteractionWiredTrigger) item, oldLocation.x, oldLocation.y);
+                WiredManager.invalidateRoom(this.room);
+            } else if (item instanceof InteractionWiredEffect) {
+                this.room.getRoomSpecialTypes().updateEffectLocation((InteractionWiredEffect) item, oldLocation.x, oldLocation.y);
+                WiredManager.invalidateRoom(this.room);
+            } else if (item instanceof InteractionWiredCondition) {
+                this.room.getRoomSpecialTypes().updateConditionLocation((InteractionWiredCondition) item, oldLocation.x, oldLocation.y);
+                WiredManager.invalidateRoom(this.room);
+            } else if (item instanceof InteractionWiredExtra) {
+                this.room.getRoomSpecialTypes().updateExtraLocation((InteractionWiredExtra) item, oldLocation.x, oldLocation.y);
+                WiredManager.invalidateRoom(this.room);
+            }
+        }
+
+        item.onMove(this.room, oldLocation, tile);
+        item.needsUpdate(true);
+        Emulator.getThreading().run(item);
+
+        if (sendUpdates) {
+            this.room.sendComposer(new FloorItemUpdateComposer(item).compose());
+        }
+
+        occupiedTiles.removeAll(oldOccupiedTiles);
+        occupiedTiles.addAll(oldOccupiedTiles);
+        this.room.updateTiles(occupiedTiles);
+
+        for (RoomTile t : occupiedTiles) {
+            this.room.updateHabbosAt(t.x, t.y, this.room.getHabbosAt(t.x, t.y));
+            this.room.updateBotsAt(t.x, t.y);
+        }
+
+        if (Emulator.getConfig().getBoolean("wired.place.under", false)) {
+            THashSet<RoomTile> newOccupiedTiles = layout.getTilesAt(
+                    tile,
+                    item.getBaseItem().getWidth(),
+                    item.getBaseItem().getLength(),
+                    rotation
+            );
+
+            for (RoomTile t : newOccupiedTiles) {
+                for (Habbo h : this.room.getHabbosAt(t.x, t.y)) {
+                    try {
+                        item.onWalkOn(h.getRoomUnit(), this.room, null);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+
+        return FurnitureMovementError.NONE;
+    }
+
     /**
      * Moves furniture to a new position.
      */
@@ -1600,10 +1996,9 @@ public class RoomItemManager {
             pluginHelper = event.hasPluginHelper();
         }
 
-        boolean magicTile = item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic;
+        boolean magicTile = this.isStackPlacementBypassItem(item);
 
-        java.util.Optional<HabboItem> stackHelper = this.getItemsAt(tile).stream()
-            .filter(i -> i instanceof InteractionStackHelper).findAny();
+        HabboItem stackHelper = this.findStackHeightHelperAt(tile, item);
 
         // Check if can be placed at new position
         THashSet<RoomTile> occupiedTiles = layout.getTilesAt(tile, item.getBaseItem().getWidth(),
@@ -1613,7 +2008,7 @@ public class RoomItemManager {
 
         HabboItem topItem = this.getTopItemAt(occupiedTiles, null);
 
-        if (!stackHelper.isPresent() && !pluginHelper) {
+        if (stackHelper == null && !pluginHelper) {
             if (oldLocation != tile) {
                 for (RoomTile t : occupiedTiles) {
                     HabboItem tileTopItem = this.getTopItemAt(t.x, t.y);
@@ -1670,7 +2065,7 @@ public class RoomItemManager {
                 }
             }
 
-            if ((!stackHelper.isPresent() && topItem != null && topItem != item && !topItem.getBaseItem()
+            if ((stackHelper == null && topItem != null && topItem != item && !topItem.getBaseItem()
                 .allowStack()) || (topItem != null && topItem != item
                 && topItem.getZ() + Item.getCurrentHeight(topItem) + Item.getCurrentHeight(item)
                 > Room.MAXIMUM_FURNI_HEIGHT)) {
@@ -1682,9 +2077,10 @@ public class RoomItemManager {
         // Place at new position
         double height;
 
-        if (stackHelper.isPresent()) {
-            height = stackHelper.get().getExtradata().isEmpty() ? Double.parseDouble("0.0")
-                : (Double.parseDouble(stackHelper.get().getExtradata()) / 100);
+        if (stackHelper != null) {
+            height = stackHelper.getZ();
+        } else if (item instanceof InteractionStackWalkHelper) {
+            height = this.resolveStackWalkHelperHeight(item, tile, occupiedTiles);
         } else if (item == topItem) {
             height = item.getZ();
         } else if (magicTile) {
@@ -1735,7 +2131,7 @@ public class RoomItemManager {
         item.setX(tile.x);
         item.setY(tile.y);
         item.setZ(height);
-        if (magicTile) {
+        if (this.shouldPinStackHelperToFloor(item)) {
             item.setZ(tile.z);
             item.setExtradata("" + item.getZ() * 100);
         }
@@ -1791,11 +2187,208 @@ public class RoomItemManager {
         return FurnitureMovementError.NONE;
     }
 
+    public FurnitureMovementError moveFurniToWithPhysics(HabboItem item, RoomTile tile, int rotation, Habbo actor, boolean sendUpdates, boolean checkForUnits, WiredMovementPhysics physics) {
+        if (physics == null || !physics.isActive()) {
+            return moveFurniTo(item, tile, rotation, actor, sendUpdates, checkForUnits);
+        }
+
+        RoomLayout layout = this.room.getLayout();
+        RoomTile oldLocation = layout.getTile(item.getX(), item.getY());
+
+        boolean pluginHelper = false;
+        if (Emulator.getPluginManager().isRegistered(FurnitureMovedEvent.class, true)) {
+            FurnitureMovedEvent event = Emulator.getPluginManager()
+                .fireEvent(new FurnitureMovedEvent(item, actor, oldLocation, tile));
+            if (event.isCancelled()) {
+                return FurnitureMovementError.CANCEL_PLUGIN_MOVE;
+            }
+            pluginHelper = event.hasPluginHelper();
+        }
+
+        boolean magicTile = this.isStackPlacementBypassItem(item);
+
+        HabboItem stackHelper = this.findStackHeightHelperAt(tile, item);
+
+        THashSet<RoomTile> occupiedTiles = layout.getTilesAt(tile, item.getBaseItem().getWidth(),
+            item.getBaseItem().getLength(), rotation);
+        THashSet<RoomTile> newOccupiedTiles = layout.getTilesAt(tile,
+            item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+
+        HabboItem topItem = this.getTopPhysicsItemAt(occupiedTiles, null, physics);
+
+        if (stackHelper == null && !pluginHelper) {
+            if (oldLocation != tile) {
+                for (RoomTile t : occupiedTiles) {
+                    HabboItem tileTopItem = this.getTopPhysicsItemAt(t.x, t.y, item, physics);
+                    if (!magicTile && ((tileTopItem != null && tileTopItem != item ? (
+                        t.state.equals(RoomTileState.INVALID) || !t.getAllowStack()
+                            || !tileTopItem.getBaseItem().allowStack())
+                        : this.room.calculateTileState(t, item).equals(RoomTileState.INVALID)))) {
+                        return FurnitureMovementError.CANT_STACK;
+                    }
+
+                    if (shouldCheckUnits(item, checkForUnits)) {
+                        FurnitureMovementError unitCollision = this.getPhysicsUnitCollision(t, physics);
+                        if (!magicTile && unitCollision != FurnitureMovementError.NONE) {
+                            return unitCollision;
+                        }
+                    }
+                }
+            }
+
+            if (this.hasBlockingPhysicsFurni(occupiedTiles, item, physics)) {
+                return FurnitureMovementError.CANT_STACK;
+            }
+
+            java.util.List<Pair<RoomTile, THashSet<HabboItem>>> tileFurniList = new java.util.ArrayList<>();
+            for (RoomTile t : occupiedTiles) {
+                tileFurniList.add(Pair.create(t, this.getPhysicsItemsAt(t, item, physics)));
+            }
+
+            if (!magicTile && !item.canStackAt(this.room, tileFurniList)) {
+                return FurnitureMovementError.CANT_STACK;
+            }
+        }
+
+        THashSet<RoomTile> oldOccupiedTiles = layout.getTilesAt(
+            layout.getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(),
+            item.getBaseItem().getLength(), item.getRotation());
+
+        int oldRotation = item.getRotation();
+
+        if (oldRotation != rotation) {
+            item.setRotation(rotation);
+            if (Emulator.getPluginManager().isRegistered(FurnitureRotatedEvent.class, true)) {
+                Event furnitureRotatedEvent = new FurnitureRotatedEvent(item, actor, oldRotation);
+                Emulator.getPluginManager().fireEvent(furnitureRotatedEvent);
+
+                if (furnitureRotatedEvent.isCancelled()) {
+                    item.setRotation(oldRotation);
+                    return FurnitureMovementError.CANCEL_PLUGIN_ROTATE;
+                }
+            }
+
+            if ((stackHelper == null && topItem != null && topItem != item && !topItem.getBaseItem()
+                .allowStack()) || (topItem != null && topItem != item
+                && topItem.getZ() + Item.getCurrentHeight(topItem) + Item.getCurrentHeight(item)
+                > Room.MAXIMUM_FURNI_HEIGHT)) {
+                item.setRotation(oldRotation);
+                return FurnitureMovementError.CANT_STACK;
+            }
+        }
+
+        double height;
+
+        if (stackHelper != null) {
+            height = stackHelper.getZ();
+        } else if (item instanceof InteractionStackWalkHelper) {
+            height = this.resolveStackWalkHelperHeight(item, tile, occupiedTiles);
+        } else if (item == topItem) {
+            height = item.getZ();
+        } else if (magicTile) {
+            if (topItem == null) {
+                height = this.getPhysicsStackHeight(tile.x, tile.y, item, physics);
+                for (RoomTile til : occupiedTiles) {
+                    double sHeight = this.getPhysicsStackHeight(til.x, til.y, item, physics);
+                    if (sHeight > height) {
+                        height = sHeight;
+                    }
+                }
+            } else {
+                height = topItem.getZ() + topItem.getBaseItem().getHeight();
+            }
+        } else {
+            height = this.getPhysicsStackHeight(tile.x, tile.y, item, physics);
+            for (RoomTile til : occupiedTiles) {
+                double sHeight = this.getPhysicsStackHeight(til.x, til.y, item, physics);
+                if (sHeight > height) {
+                    height = sHeight;
+                }
+            }
+        }
+
+        boolean cantStack = false;
+        boolean pluginHeight = false;
+
+        if (height > Room.MAXIMUM_FURNI_HEIGHT) {
+            cantStack = true;
+        }
+        if (height < layout.getHeightAtSquare(tile.x, tile.y)) {
+            cantStack = true;
+        }
+
+        if (Emulator.getPluginManager().isRegistered(FurnitureBuildheightEvent.class, true)) {
+            FurnitureBuildheightEvent event = Emulator.getPluginManager()
+                .fireEvent(new FurnitureBuildheightEvent(item, actor, 0.00, height));
+            if (event.hasChangedHeight()) {
+                height = layout.getHeightAtSquare(tile.x, tile.y) + event.getUpdatedHeight();
+                pluginHeight = true;
+            }
+        }
+
+        if (!pluginHeight && cantStack) {
+            return FurnitureMovementError.CANT_STACK;
+        }
+
+        item.setX(tile.x);
+        item.setY(tile.y);
+        item.setZ(height);
+        if (this.shouldPinStackHelperToFloor(item)) {
+            item.setZ(tile.z);
+            item.setExtradata("" + item.getZ() * 100);
+        }
+        if (item.getZ() > Room.MAXIMUM_FURNI_HEIGHT) {
+            item.setZ(Room.MAXIMUM_FURNI_HEIGHT);
+        }
+
+        if (item instanceof InteractionWiredTrigger) {
+            this.room.getRoomSpecialTypes().updateTriggerLocation((InteractionWiredTrigger) item, oldLocation.x, oldLocation.y);
+            WiredManager.invalidateRoom(this.room);
+        } else if (item instanceof InteractionWiredEffect) {
+            this.room.getRoomSpecialTypes().updateEffectLocation((InteractionWiredEffect) item, oldLocation.x, oldLocation.y);
+            WiredManager.invalidateRoom(this.room);
+        } else if (item instanceof InteractionWiredCondition) {
+            this.room.getRoomSpecialTypes().updateConditionLocation((InteractionWiredCondition) item, oldLocation.x, oldLocation.y);
+            WiredManager.invalidateRoom(this.room);
+        } else if (item instanceof InteractionWiredExtra) {
+            this.room.getRoomSpecialTypes().updateExtraLocation((InteractionWiredExtra) item, oldLocation.x, oldLocation.y);
+            WiredManager.invalidateRoom(this.room);
+        }
+
+        item.onMove(this.room, oldLocation, tile);
+        item.needsUpdate(true);
+        Emulator.getThreading().run(item);
+
+        if (sendUpdates) {
+            this.room.sendComposer(new FloorItemUpdateComposer(item).compose());
+        }
+
+        occupiedTiles.removeAll(oldOccupiedTiles);
+        occupiedTiles.addAll(oldOccupiedTiles);
+        this.room.updateTiles(occupiedTiles);
+
+        for (RoomTile t : occupiedTiles) {
+            this.room.updateHabbosAt(t.x, t.y, this.room.getHabbosAt(t.x, t.y));
+            this.room.updateBotsAt(t.x, t.y);
+        }
+        if (Emulator.getConfig().getBoolean("wired.place.under", false)) {
+            for (RoomTile t : newOccupiedTiles) {
+                for (Habbo h : this.room.getHabbosAt(t.x, t.y)) {
+                    try {
+                        item.onWalkOn(h.getRoomUnit(), this.room, null);
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }
+        return FurnitureMovementError.NONE;
+    }
+
     /**
      * Slides furniture to a new position.
      */
     public FurnitureMovementError slideFurniTo(HabboItem item, RoomTile tile, int rotation) {
-        boolean magicTile = item instanceof InteractionStackHelper;
+        boolean magicTile = this.isStackPlacementBypassItem(item);
 
         RoomLayout layout = this.room.getLayout();
         
@@ -1815,9 +2408,11 @@ public class RoomItemManager {
         item.setRotation(rotation);
 
         // Place at new position
-        if (magicTile) {
+        if (this.shouldPinStackHelperToFloor(item)) {
             item.setZ(tile.z);
             item.setExtradata("" + item.getZ() * 100);
+        } else if (item instanceof InteractionStackWalkHelper) {
+            item.setZ(this.resolveStackWalkHelperHeight(item, tile, occupiedTiles));
         }
         if (item.getZ() > Room.MAXIMUM_FURNI_HEIGHT) {
             item.setZ(Room.MAXIMUM_FURNI_HEIGHT);
@@ -1831,5 +2426,159 @@ public class RoomItemManager {
             this.room.updateBotsAt(t.x, t.y);
         }
         return FurnitureMovementError.NONE;
+    }
+
+    private boolean shouldCheckUnits(HabboItem item, boolean checkForUnits) {
+        if (!checkForUnits) {
+            return false;
+        }
+
+        if (!Emulator.getConfig().getBoolean("wired.place.under", false)) {
+            return true;
+        }
+
+        return !item.isWalkable()
+            && !item.getBaseItem().allowSit()
+            && !item.getBaseItem().allowLay();
+    }
+
+    private FurnitureMovementError getPhysicsUnitCollision(RoomTile tile, WiredMovementPhysics physics) {
+        for (RoomUnit roomUnit : this.room.getRoomUnits(tile)) {
+            if (roomUnit == null) {
+                continue;
+            }
+
+            switch (roomUnit.getRoomUnitType()) {
+                case BOT:
+                    return FurnitureMovementError.TILE_HAS_BOTS;
+                case PET:
+                    return FurnitureMovementError.TILE_HAS_PETS;
+                case USER:
+                    if (physics == null || !physics.shouldIgnoreUser(roomUnit)) {
+                        return FurnitureMovementError.TILE_HAS_HABBOS;
+                    }
+                    break;
+                default:
+                    return FurnitureMovementError.TILE_HAS_HABBOS;
+            }
+        }
+
+        return FurnitureMovementError.NONE;
+    }
+
+    private boolean hasBlockingPhysicsFurni(THashSet<RoomTile> occupiedTiles, HabboItem exclude, WiredMovementPhysics physics) {
+        if (physics == null || !physics.hasBlockingFurni()) {
+            return false;
+        }
+
+        for (RoomTile tile : occupiedTiles) {
+            for (HabboItem item : this.getItemsAt(tile)) {
+                if (item == null || item == exclude) {
+                    continue;
+                }
+
+                if (physics.isBlockingFurni(item)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private THashSet<HabboItem> getPhysicsItemsAt(RoomTile tile, HabboItem exclude, WiredMovementPhysics physics) {
+        THashSet<HabboItem> items = new THashSet<>();
+
+        for (HabboItem item : this.getItemsAt(tile)) {
+            if (item == null || item == exclude) {
+                continue;
+            }
+
+            if (physics != null && physics.shouldIgnoreFurni(item)) {
+                continue;
+            }
+
+            items.add(item);
+        }
+
+        return items;
+    }
+
+    private HabboItem getTopPhysicsItemAt(int x, int y, HabboItem exclude, WiredMovementPhysics physics) {
+        RoomTile tile = this.room.getLayout().getTile((short) x, (short) y);
+
+        if (tile == null) {
+            return null;
+        }
+
+        HabboItem highestItem = null;
+
+        for (HabboItem item : this.getPhysicsItemsAt(tile, exclude, physics)) {
+            if (highestItem != null && highestItem.getZ() + Item.getCurrentHeight(highestItem)
+                > item.getZ() + Item.getCurrentHeight(item)) {
+                continue;
+            }
+
+            highestItem = item;
+        }
+
+        return highestItem;
+    }
+
+    private HabboItem getTopPhysicsItemAt(THashSet<RoomTile> tiles, HabboItem exclude, WiredMovementPhysics physics) {
+        HabboItem highestItem = null;
+
+        for (RoomTile tile : tiles) {
+            if (tile == null) {
+                continue;
+            }
+
+            HabboItem topItem = this.getTopPhysicsItemAt(tile.x, tile.y, exclude, physics);
+            if (topItem == null) {
+                continue;
+            }
+
+            if (highestItem != null && highestItem.getZ() + Item.getCurrentHeight(highestItem)
+                > topItem.getZ() + Item.getCurrentHeight(topItem)) {
+                continue;
+            }
+
+            highestItem = topItem;
+        }
+
+        return highestItem;
+    }
+
+    private double getPhysicsStackHeight(short x, short y, HabboItem exclude, WiredMovementPhysics physics) {
+        RoomLayout layout = this.room.getLayout();
+
+        if (x < 0 || y < 0 || layout == null) {
+            return 0.0;
+        }
+
+        double height = layout.getHeightAtSquare(x, y);
+
+        RoomTile tile = layout.getTile(x, y);
+        if (tile == null) {
+            return height;
+        }
+
+        double helperHeight = Double.NEGATIVE_INFINITY;
+        for (HabboItem item : this.getPhysicsItemsAt(tile, exclude, physics)) {
+            if (item instanceof InteractionStackHelper || item instanceof InteractionTileWalkMagic || item instanceof InteractionStackWalkHelper) {
+                helperHeight = Math.max(helperHeight, item.getZ());
+            }
+        }
+
+        if (helperHeight != Double.NEGATIVE_INFINITY) {
+            return helperHeight;
+        }
+
+        HabboItem topItem = this.getTopPhysicsItemAt(x, y, exclude, physics);
+        if (topItem != null) {
+            return topItem.getZ() + (topItem.getBaseItem().allowSit() ? 0 : Item.getCurrentHeight(topItem));
+        }
+
+        return height;
     }
 }

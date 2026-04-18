@@ -3,10 +3,12 @@ package com.eu.habbo.messages.outgoing.rooms;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomPromotion;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
+import com.eu.habbo.util.HotelDateTimeUtil;
 
 public class RoomDataComposer extends MessageComposer {
     private final Room room;
@@ -23,6 +25,9 @@ public class RoomDataComposer extends MessageComposer {
 
     @Override
     protected ServerMessage composeInternal() {
+        final RoomPromotion promotion = this.room.getPromotion();
+        final boolean hasPromotion = this.room.isPromoted() && (promotion != null);
+
         this.response.init(Outgoing.RoomDataComposer);
         this.response.appendBoolean(this.enterRoom);
         this.response.appendInt(this.room.getId());
@@ -63,7 +68,7 @@ public class RoomDataComposer extends MessageComposer {
             base = base | 8;
         }
 
-        if (this.room.isPromoted()) {
+        if (hasPromotion) {
             base = base | 4;
         }
 
@@ -86,10 +91,10 @@ public class RoomDataComposer extends MessageComposer {
             }
         }
 
-        if (this.room.isPromoted()) {
-            this.response.appendString(this.room.getPromotion().getTitle());
-            this.response.appendString(this.room.getPromotion().getDescription());
-            this.response.appendInt((this.room.getPromotion().getEndTimestamp() - Emulator.getIntUnixTimestamp()) / 60);
+        if (hasPromotion) {
+            this.response.appendString(promotion.getTitle());
+            this.response.appendString(promotion.getDescription());
+            this.response.appendInt((promotion.getEndTimestamp() - Emulator.getIntUnixTimestamp()) / 60);
         }
 
         this.response.appendBoolean(this.roomForward);
@@ -108,6 +113,9 @@ public class RoomDataComposer extends MessageComposer {
         this.response.appendInt(this.room.getChatSpeed());
         this.response.appendInt(this.room.getChatDistance());
         this.response.appendInt(this.room.getChatProtection());
+        this.response.appendString(HotelDateTimeUtil.getTimezoneId());
+        this.response.appendString(String.valueOf(HotelDateTimeUtil.now().toInstant().toEpochMilli()));
+        this.response.appendInt(Room.MAXIMUM_FURNI);
 
 
         return this.response;

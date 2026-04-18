@@ -4,6 +4,7 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
+import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboClicksUser;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 
@@ -38,6 +39,9 @@ public class RoomUserLookAtPoint extends MessageHandler {
             return;
 
         if (roomUnit.isIdle())
+            return;
+
+        if (WiredTriggerHabboClicksUser.consumeIgnoreLook(roomUnit))
             return;
 
         int x = this.packet.readInt();

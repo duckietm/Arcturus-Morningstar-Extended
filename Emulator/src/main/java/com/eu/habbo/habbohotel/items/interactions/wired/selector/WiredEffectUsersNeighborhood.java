@@ -6,7 +6,6 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
-import com.eu.habbo.habbohotel.rooms.RoomUnitType;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
@@ -43,8 +42,8 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
     private int             sourceType      = SOURCE_USER_TRIGGER;
     private boolean         filterExisting  = false;
     private boolean         invert          = false;
-    private boolean         excludeBots     = false;
-    private boolean         excludePets     = false;
+    private int             targetOffsetX   = 0;
+    private int             targetOffsetY   = 0;
     private List<int[]>     tileOffsets     = new ArrayList<>();
     private List<Integer>   pickedFurniIds  = new ArrayList<>();
 
@@ -77,13 +76,11 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
                 tileOffsets.stream().map(o -> o[0] + "," + o[1]).collect(Collectors.joining(";")),
                 filterExisting, invert);
 
-        // Apply tile offsets relative to each source position.
-        // The offsets define a neighborhood pattern around the source furni/user.
         Set<String> targetTiles = new HashSet<>();
         for (int[] src : sourcePositions) {
             for (int[] offset : tileOffsets) {
-                int tx = src[0] + offset[0];
-                int ty = src[1] + offset[1];
+                int tx = src[0] + (offset[0] - this.targetOffsetX);
+                int ty = src[1] + (offset[1] - this.targetOffsetY);
                 targetTiles.add(tx + "," + ty);
             }
         }
@@ -92,22 +89,17 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
 
         List<RoomUnit> result = new ArrayList<>();
         for (RoomUnit unit : room.getRoomUnits()) {
-            if (excludeBots && unit.getRoomUnitType() == RoomUnitType.BOT) continue;
-            if (excludePets && unit.getRoomUnitType() == RoomUnitType.PET) continue;
-
             String pos = unit.getX() + "," + unit.getY();
             boolean onTile = targetTiles.contains(pos);
 
             LOGGER.debug("[Neighborhood] Unit id={} type={} pos={} onTile={}", unit.getId(), unit.getRoomUnitType(), pos, onTile);
 
-            if (invert ? !onTile : onTile) {
+            if (onTile) {
                 result.add(unit);
             }
         }
 
-        if (filterExisting) {
-            result.retainAll(ctx.targets().users());
-        }
+        result = new ArrayList<>(this.applySelectorModifiers(result, room.getRoomUnits(), ctx.targets().users(), filterExisting, invert));
 
         LOGGER.debug("[Neighborhood] Result: {} users selected", result.size());
 
@@ -119,24 +111,46 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
     }
 
     private List<int[]> resolveSourcePositions(WiredContext ctx, Room room) {
-
-        if (isUserGroup(sourceType)) {
-            // Prefer the event tile for user-based sources because during walk-on/walk-off
-            // events the user's position (getX/getY) hasn't been updated yet (stale position).
-            // The event tile correctly represents where the triggering action occurred.
-            if (ctx.tile().isPresent()) {
-                return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
-            }
-            List<int[]> positions = ctx.targets().users().stream()
-                    .map(u -> new int[]{ u.getX(), u.getY() })
-                    .collect(Collectors.toList());
-            if (positions.isEmpty()) {
-                ctx.actor().ifPresent(a -> positions.add(new int[]{ a.getX(), a.getY() }));
-            }
-            return positions;
-        }
-
         switch (sourceType) {
+            case SOURCE_USER_TRIGGER: {
+                if (ctx.tile().isPresent()) {
+                    return Collections.singletonList(new int[]{ ctx.tile().get().x, ctx.tile().get().y });
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_SIGNAL: {
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.actor()
+                        .map(actor -> Collections.singletonList(new int[]{ actor.getX(), actor.getY() }))
+                        .orElse(Collections.emptyList());
+            }
+            case SOURCE_USER_CLICKED: {
+                if (ctx.event().getTargetUnit().isPresent()) {
+                    RoomUnit targetUnit = ctx.event().getTargetUnit().get();
+
+                    return Collections.singletonList(new int[]{ targetUnit.getX(), targetUnit.getY() });
+                }
+
+                List<int[]> positions = ctx.targets().users().stream()
+                        .map(user -> new int[]{ user.getX(), user.getY() })
+                        .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return Collections.emptyList();
+            }
             case SOURCE_FURNI_TRIGGER: {
                 return ctx.sourceItem()
                         .map(i -> Collections.singletonList(new int[]{ i.getX(), i.getY() }))
@@ -150,9 +164,17 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
                         .collect(Collectors.toList());
             }
             case SOURCE_FURNI_SIGNAL: {
-                return ctx.targets().items().stream()
+                List<int[]> positions = ctx.targets().items().stream()
                         .map(i -> new int[]{ i.getX(), i.getY() })
                         .collect(Collectors.toList());
+
+                if (!positions.isEmpty()) {
+                    return positions;
+                }
+
+                return ctx.sourceItem()
+                        .map(item -> Collections.singletonList(new int[]{ item.getX(), item.getY() }))
+                        .orElse(Collections.emptyList());
             }
             default:
                 return Collections.emptyList();
@@ -169,8 +191,8 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
         this.sourceType     = params[0];
         this.filterExisting = params.length > 1 && params[1] == 1;
         this.invert         = params.length > 2 && params[2] == 1;
-        this.excludeBots    = params.length > 3 && params[3] == 1;
-        this.excludePets    = params.length > 4 && params[4] == 1;
+        this.targetOffsetX  = params.length > 3 ? params[3] : 0;
+        this.targetOffsetY  = params.length > 4 ? params[4] : 0;
 
         this.tileOffsets = new ArrayList<>();
         if (params.length > 5) {
@@ -218,8 +240,8 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
         message.appendInt(sourceType);
         message.appendInt(filterExisting ? 1 : 0);
         message.appendInt(invert ? 1 : 0);
-        message.appendInt(excludeBots ? 1 : 0);
-        message.appendInt(excludePets ? 1 : 0);
+        message.appendInt(targetOffsetX);
+        message.appendInt(targetOffsetY);
         message.appendInt(tileOffsets.size());
         for (int[] offset : tileOffsets) {
             message.appendInt(offset[0]);
@@ -243,7 +265,7 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
     @Override
     public String getWiredData() {
         return WiredManager.getGson().toJson(
-                new JsonData(sourceType, filterExisting, invert, excludeBots, excludePets, tileOffsets, pickedFurniIds, getDelay()));
+                new JsonData(sourceType, filterExisting, invert, targetOffsetX, targetOffsetY, tileOffsets, pickedFurniIds, getDelay()));
     }
 
     @Override
@@ -254,8 +276,8 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
             this.sourceType     = data.sourceType;
             this.filterExisting = data.filterExisting;
             this.invert         = data.invert;
-            this.excludeBots    = data.excludeBots;
-            this.excludePets    = data.excludePets;
+            this.targetOffsetX  = data.targetOffsetX;
+            this.targetOffsetY  = data.targetOffsetY;
             this.tileOffsets    = data.tileOffsets != null ? data.tileOffsets : new ArrayList<>();
             this.pickedFurniIds = data.pickedFurniIds != null ? data.pickedFurniIds : new ArrayList<>();
             this.setDelay(data.delay);
@@ -267,8 +289,8 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
         this.sourceType     = SOURCE_USER_TRIGGER;
         this.filterExisting = false;
         this.invert         = false;
-        this.excludeBots    = false;
-        this.excludePets    = false;
+        this.targetOffsetX  = 0;
+        this.targetOffsetY  = 0;
         this.tileOffsets    = new ArrayList<>();
         this.pickedFurniIds = new ArrayList<>();
         this.setDelay(0);
@@ -281,20 +303,20 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
         int            sourceType;
         boolean        filterExisting;
         boolean        invert;
-        boolean        excludeBots;
-        boolean        excludePets;
+        int            targetOffsetX;
+        int            targetOffsetY;
         List<int[]>    tileOffsets;
         List<Integer>  pickedFurniIds;
         int            delay;
 
         JsonData(int sourceType, boolean filterExisting, boolean invert,
-                 boolean excludeBots, boolean excludePets,
+                 int targetOffsetX, int targetOffsetY,
                  List<int[]> tileOffsets, List<Integer> pickedFurniIds, int delay) {
             this.sourceType     = sourceType;
             this.filterExisting = filterExisting;
             this.invert         = invert;
-            this.excludeBots    = excludeBots;
-            this.excludePets    = excludePets;
+            this.targetOffsetX  = targetOffsetX;
+            this.targetOffsetY  = targetOffsetY;
             this.tileOffsets    = tileOffsets;
             this.pickedFurniIds = pickedFurniIds;
             this.delay          = delay;

@@ -16,6 +16,8 @@ import com.eu.habbo.messages.outgoing.wired.WiredEffectDataComposer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -78,7 +80,7 @@ public abstract class InteractionWiredEffect extends InteractionWired implements
     @Override
     public void onClick(GameClient client, Room room, Object[] objects) throws Exception {
         if (client != null) {
-            if (room.hasRights(client.getHabbo())) {
+            if (room.canInspectWired(client.getHabbo())) {
                 client.sendResponse(new WiredEffectDataComposer(this, room));
                 this.activateBox(room);
             }
@@ -197,5 +199,67 @@ public abstract class InteractionWiredEffect extends InteractionWired implements
             || room.getHabboItem(item.getId()) == null
             || additionalRemoveCondition.test(item));
         return sizeBefore - items.size();
+    }
+
+    protected <T> LinkedHashSet<T> applySelectorModifiers(Iterable<T> matchedTargets,
+                                                          Iterable<T> availableTargets,
+                                                          Iterable<T> existingTargets,
+                                                          boolean filterExisting,
+                                                          boolean invert) {
+        LinkedHashSet<T> matched = toLinkedHashSet(matchedTargets);
+        LinkedHashSet<T> base = filterExisting
+            ? toLinkedHashSet(existingTargets)
+            : toLinkedHashSet(availableTargets);
+
+        if (invert) {
+            base.removeAll(matched);
+            return base;
+        }
+
+        if (filterExisting) {
+            matched.retainAll(base);
+        }
+
+        return matched;
+    }
+
+    protected LinkedHashSet<HabboItem> getSelectableFloorItems(Room room) {
+        return this.getSelectableFloorItems(room, null);
+    }
+
+    protected LinkedHashSet<HabboItem> getSelectableFloorItems(Room room, WiredContext ctx) {
+        LinkedHashSet<HabboItem> result = new LinkedHashSet<>();
+        if (room == null) {
+            return result;
+        }
+
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
+        room.getFloorItems().forEach(item -> {
+            if (item != null && (includeWiredItems || !(item instanceof InteractionWired))) {
+                result.add(item);
+            }
+        });
+
+        return result;
+    }
+
+    protected boolean includeWiredTargets(WiredContext ctx) {
+        return ctx != null && ctx.includeWiredSelectorItems();
+    }
+
+    protected <T> LinkedHashSet<T> toLinkedHashSet(Iterable<T> values) {
+        LinkedHashSet<T> result = new LinkedHashSet<>();
+        if (values == null) {
+            return result;
+        }
+
+        for (T value : values) {
+            if (value != null) {
+                result.add(value);
+            }
+        }
+
+        return result;
     }
 }

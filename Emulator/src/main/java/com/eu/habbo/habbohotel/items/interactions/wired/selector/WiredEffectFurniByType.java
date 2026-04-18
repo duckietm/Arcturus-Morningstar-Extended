@@ -11,6 +11,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
+import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
 
@@ -48,8 +49,9 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         Room room = ctx.room();
         if (room == null) return;
 
+        boolean includeWiredItems = this.includeWiredTargets(ctx);
+
         List<HabboItem> sourceFurni = resolveSourceFurni(ctx, room);
-        if (sourceFurni.isEmpty()) return;
 
         Set<String> matchKeys = new LinkedHashSet<>();
         for (HabboItem src : sourceFurni) {
@@ -59,33 +61,19 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
             matchKeys.add(key);
         }
 
-        Set<HabboItem> result = new LinkedHashSet<>();
+        Set<HabboItem> matched = new LinkedHashSet<>();
         room.getFloorItems().forEach(item -> {
-            if (item instanceof InteractionWired) return;
+            if (!includeWiredItems && item instanceof InteractionWired) return;
             String key = matchState
                 ? item.getBaseItem().getId() + ":" + item.getExtradata()
                 : String.valueOf(item.getBaseItem().getId());
             if (matchKeys.contains(key)) {
-                result.add(item);
+                matched.add(item);
             }
         });
 
-        if (filterExisting) {
-            result.retainAll(ctx.targets().items());
-        }
-
-        if (invert) {
-            Set<HabboItem> all = new LinkedHashSet<>();
-            room.getFloorItems().forEach(item -> {
-                if (!(item instanceof InteractionWired)) all.add(item);
-            });
-            all.removeAll(result);
-            if (!all.isEmpty()) {
-                ctx.targets().setItems(all);
-            }
-        } else if (!result.isEmpty()) {
-            ctx.targets().setItems(result);
-        }
+        Set<HabboItem> result = this.applySelectorModifiers(matched, this.getSelectableFloorItems(room, ctx), ctx.targets().items(), filterExisting, invert);
+        ctx.targets().setItems(result);
     }
 
     private List<HabboItem> resolveSourceFurni(WiredContext ctx, Room room) {
@@ -97,12 +85,10 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
                     .collect(Collectors.toList());
             }
             case SOURCE_FURNI_SIGNAL: {
-                return new ArrayList<>(ctx.targets().items());
+                return WiredSourceUtil.resolveItemsRaw(ctx, WiredSourceUtil.SOURCE_SIGNAL, null);
             }
             case SOURCE_FURNI_TRIGGER: {
-                return ctx.sourceItem()
-                    .map(Collections::singletonList)
-                    .orElse(Collections.emptyList());
+                return WiredSourceUtil.resolveItemsRaw(ctx, WiredSourceUtil.SOURCE_TRIGGER, null);
             }
             default:
                 return Collections.emptyList();
@@ -112,17 +98,17 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        if (params == null || params.length < 1) {
-            throw new WiredSaveException("wf_slc_furni_bytype: intParams must have at least 1 element");
+        if (params == null || params.length < 4) {
+            throw new WiredSaveException("wf_slc_furni_bytype: intParams must have at least 4 elements");
         }
 
-        this.sourceType    = params[0];
+        this.sourceType    = normalizeSourceType(params[0]);
         this.matchState    = params.length > 1 && params[1] == 1;
         this.filterExisting = params.length > 2 && params[2] == 1;
         this.invert        = params.length > 3 && params[3] == 1;
 
         this.pickedFurniIds = new ArrayList<>();
-        if (this.sourceType == SOURCE_FURNI_PICKED && settings.getFurniIds() != null) {
+        if (settings.getFurniIds() != null) {
             for (int id : settings.getFurniIds()) {
                 if (pickedFurniIds.size() >= MAX_PICKED_FURNI) break;
                 pickedFurniIds.add(id);
@@ -135,12 +121,10 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public void serializeWiredData(ServerMessage message, Room room) {
-        boolean pickMode = (sourceType == SOURCE_FURNI_PICKED);
+        message.appendBoolean(true);
+        message.appendInt(MAX_PICKED_FURNI);
 
-        message.appendBoolean(pickMode);
-        message.appendInt(pickMode ? MAX_PICKED_FURNI : 0);
-
-        if (pickMode && !pickedFurniIds.isEmpty()) {
+        if (!pickedFurniIds.isEmpty()) {
             message.appendInt(pickedFurniIds.size());
             pickedFurniIds.forEach(message::appendInt);
         } else {
@@ -152,7 +136,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         message.appendString("");
 
         message.appendInt(4);
-        message.appendInt(sourceType);
+        message.appendInt(this.sourceType);
         message.appendInt(matchState      ? 1 : 0);
         message.appendInt(filterExisting  ? 1 : 0);
         message.appendInt(invert          ? 1 : 0);
@@ -182,7 +166,7 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
         String wiredData = set.getString("wired_data");
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            this.sourceType     = data.sourceType;
+            this.sourceType     = normalizeSourceType(data.sourceType);
             this.matchState     = data.matchState;
             this.filterExisting = data.filterExisting;
             this.invert         = data.invert;
@@ -203,6 +187,17 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) { return false; }
+
+    private int normalizeSourceType(int value) {
+        switch (value) {
+            case SOURCE_FURNI_SIGNAL:
+            case SOURCE_FURNI_TRIGGER:
+            case SOURCE_FURNI_PICKED:
+                return value;
+            default:
+                return SOURCE_FURNI_PICKED;
+        }
+    }
 
     static class JsonData {
         int            sourceType;

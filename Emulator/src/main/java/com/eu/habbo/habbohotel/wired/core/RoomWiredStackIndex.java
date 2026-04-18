@@ -2,7 +2,9 @@ package com.eu.habbo.habbohotel.wired.core;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraExecuteInOrder;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraOrEval;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraRandom;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraUnseen;
@@ -156,6 +158,34 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         return stacks.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(stacks);
     }
 
+    public List<WiredStack> getStacksAtTile(Room room, RoomTile tile) {
+        if (room == null || tile == null || room.getRoomSpecialTypes() == null) {
+            return Collections.emptyList();
+        }
+
+        RoomSpecialTypes specialTypes = room.getRoomSpecialTypes();
+        THashSet<InteractionWiredTrigger> triggers = specialTypes.getTriggers(tile.x, tile.y);
+
+        if (triggers == null || triggers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<WiredStack> stacks = new ArrayList<>();
+
+        for (InteractionWiredTrigger trigger : WiredExecutionOrderUtil.sort(triggers)) {
+            if (trigger == null) {
+                continue;
+            }
+
+            WiredStack stack = buildStack(room, specialTypes, trigger, tile.x, tile.y);
+            if (stack != null) {
+                stacks.add(stack);
+            }
+        }
+
+        return stacks.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(stacks);
+    }
+
     /**
      * Build a single wired stack for a trigger at a specific location.
      */
@@ -173,18 +203,33 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         List<IWiredEffect> effects = collectEffects(rawEffects);
 
         // Check for extras
-        boolean useOrMode = specialTypes.hasExtraType(x, y, WiredExtraOrEval.class);
+        THashSet<InteractionWiredExtra> extras = specialTypes.getExtras(x, y);
+        int conditionEvaluationMode = WiredExtraOrEval.MODE_ALL;
+        int conditionEvaluationValue = 1;
         boolean useRandom = specialTypes.hasExtraType(x, y, WiredExtraRandom.class);
         boolean useUnseen = specialTypes.hasExtraType(x, y, WiredExtraUnseen.class);
+        boolean executeInOrder = specialTypes.hasExtraType(x, y, WiredExtraExecuteInOrder.class);
+
+        if (extras != null) {
+            for (InteractionWiredExtra extra : extras) {
+                if (extra instanceof WiredExtraOrEval) {
+                    conditionEvaluationMode = ((WiredExtraOrEval) extra).getEvaluationMode();
+                    conditionEvaluationValue = ((WiredExtraOrEval) extra).getCompareValue();
+                    break;
+                }
+            }
+        }
 
         return new WiredStack(
                 trigger,
                 wrappedTrigger,
                 conditions,
                 effects,
-                useOrMode,
+                conditionEvaluationMode,
+                conditionEvaluationValue,
                 useRandom,
-                useUnseen
+                useUnseen,
+                executeInOrder
         );
     }
 
@@ -197,7 +242,7 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         }
 
         List<IWiredCondition> conditions = new ArrayList<>(rawConditions.size());
-        for (InteractionWiredCondition condition : rawConditions) {
+        for (InteractionWiredCondition condition : WiredExecutionOrderUtil.sort(rawConditions)) {
             conditions.add(condition);
         }
         return conditions;
@@ -212,7 +257,7 @@ public final class RoomWiredStackIndex implements WiredStackIndex {
         }
 
         List<IWiredEffect> effects = new ArrayList<>(rawEffects.size());
-        for (InteractionWiredEffect effect : rawEffects) {
+        for (InteractionWiredEffect effect : WiredExecutionOrderUtil.sort(rawEffects)) {
             effects.add(effect);
         }
         return effects;

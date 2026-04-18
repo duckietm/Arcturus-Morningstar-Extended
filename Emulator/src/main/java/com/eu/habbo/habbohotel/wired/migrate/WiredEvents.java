@@ -68,6 +68,70 @@ public final class WiredEvents {
     }
 
     /**
+     * Create an event for when a user clicks furniture.
+     * @param room the room
+     * @param user the clicking user
+     * @param item the clicked furniture
+     * @return the event
+     */
+    public static WiredEvent userClicksFurni(Room room, RoomUnit user, HabboItem item) {
+        RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_FURNI, room)
+                .actor(user)
+                .sourceItem(item)
+                .tile(tile)
+                .build();
+    }
+
+    /**
+     * Create an event for when a user clicks invisible click tile furniture.
+     * @param room the room
+     * @param user the clicking user
+     * @param item the clicked furniture
+     * @return the event
+     */
+    public static WiredEvent userClicksTile(Room room, RoomUnit user, HabboItem item) {
+        RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_TILE, room)
+                .actor(user)
+                .sourceItem(item)
+                .tile(tile)
+                .build();
+    }
+
+    /**
+     * Create an event for when a user clicks another user.
+     * @param room the room
+     * @param clickingUser the user performing the click
+     * @param clickedUser the user who was clicked
+     * @return the event
+     */
+    public static WiredEvent userClicksUser(Room room, RoomUnit clickingUser, RoomUnit clickedUser) {
+        return WiredEvent.builder(WiredEvent.Type.USER_CLICKS_USER, room)
+                .actor(clickingUser)
+                .targetUnit(clickedUser)
+                .tile(clickedUser.getCurrentLocation())
+                .build();
+    }
+
+    /**
+     * Create an event for when a user performs an avatar action.
+     * @param room the room
+     * @param user the acting user
+     * @param actionId the wired action id
+     * @param actionParameter sign/dance parameter, or -1 when unused
+     * @return the event
+     */
+    public static WiredEvent userPerformsAction(Room room, RoomUnit user, int actionId, int actionParameter) {
+        return WiredEvent.builder(WiredEvent.Type.USER_PERFORMS_ACTION, room)
+                .actor(user)
+                .tile(user.getCurrentLocation())
+                .actionId(actionId)
+                .actionParameter(actionParameter)
+                .build();
+    }
+
+    /**
      * Create an event for when a user enters the room.
      * @param room the room
      * @param user the user who entered
@@ -75,6 +139,19 @@ public final class WiredEvents {
      */
     public static WiredEvent userEntersRoom(Room room, RoomUnit user) {
         return WiredEvent.builder(WiredEvent.Type.USER_ENTERS_ROOM, room)
+                .actor(user)
+                .tile(user.getCurrentLocation())
+                .build();
+    }
+
+    /**
+     * Create an event for when a user leaves the room.
+     * @param room the room
+     * @param user the user who left
+     * @return the event
+     */
+    public static WiredEvent userLeavesRoom(Room room, RoomUnit user) {
+        return WiredEvent.builder(WiredEvent.Type.USER_LEAVES_ROOM, room)
                 .actor(user)
                 .tile(user.getCurrentLocation())
                 .build();
@@ -90,9 +167,15 @@ public final class WiredEvents {
      * @return the event
      */
     public static WiredEvent userSays(Room room, RoomUnit user, String message) {
+        return userSays(room, user, message, -1, -1);
+    }
+
+    public static WiredEvent userSays(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
         return WiredEvent.builder(WiredEvent.Type.USER_SAYS, room)
                 .actor(user)
                 .text(message)
+                .chatType(chatType)
+                .chatStyle(chatStyle)
                 .tile(user.getCurrentLocation())
                 .build();
     }
@@ -112,6 +195,42 @@ public final class WiredEvents {
                 .actor(user)
                 .sourceItem(item)
                 .tile(tile)
+                .build();
+    }
+
+    public static WiredEvent userVariableChanged(Room room, RoomUnit user, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .actor(user)
+                .tile((user != null) ? user.getCurrentLocation() : null)
+                .variableTargetType(0)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(created)
+                .variableDeleted(deleted)
+                .variableChangeKind(changeKind)
+                .build();
+    }
+
+    public static WiredEvent furniVariableChanged(Room room, HabboItem item, int definitionItemId, boolean created, boolean deleted, WiredEvent.VariableChangeKind changeKind) {
+        RoomTile tile = (item != null) ? room.getLayout().getTile(item.getX(), item.getY()) : null;
+
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .sourceItem(item)
+                .tile(tile)
+                .variableTargetType(1)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(created)
+                .variableDeleted(deleted)
+                .variableChangeKind(changeKind)
+                .build();
+    }
+
+    public static WiredEvent roomVariableChanged(Room room, int definitionItemId, WiredEvent.VariableChangeKind changeKind) {
+        return WiredEvent.builder(WiredEvent.Type.VARIABLE_CHANGED, room)
+                .variableTargetType(3)
+                .variableDefinitionItemId(definitionItemId)
+                .variableCreated(false)
+                .variableDeleted(false)
+                .variableChangeKind(changeKind)
                 .build();
     }
 
@@ -141,6 +260,12 @@ public final class WiredEvents {
                 .build();
     }
 
+    public static WiredEvent clockCounter(Room room, HabboItem counterItem) {
+        return WiredEvent.builder(WiredEvent.Type.CLOCK_COUNTER_REACHED, room)
+                .sourceItem(counterItem)
+                .build();
+    }
+
     /**
      * Create an event for a long periodic timer.
      * @param room the room
@@ -149,6 +274,18 @@ public final class WiredEvents {
      */
     public static WiredEvent timerRepeatLong(Room room, HabboItem timerItem) {
         return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT_LONG, room)
+                .sourceItem(timerItem)
+                .build();
+    }
+
+    /**
+     * Create an event for a short periodic timer.
+     * @param room the room
+     * @param timerItem the timer furniture
+     * @return the event
+     */
+    public static WiredEvent timerRepeatShort(Room room, HabboItem timerItem) {
+        return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT_SHORT, room)
                 .sourceItem(timerItem)
                 .build();
     }

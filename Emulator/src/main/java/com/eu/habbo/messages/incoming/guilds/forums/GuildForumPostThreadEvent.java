@@ -9,6 +9,7 @@ import com.eu.habbo.habbohotel.guilds.forums.ForumThreadComment;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumAddCommentComposer;
+import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumDataComposer;
 import com.eu.habbo.messages.outgoing.guilds.forums.GuildForumThreadMessagesComposer;
 import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 
@@ -17,7 +18,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
 
     @Override
     public int getRatelimit() {
-        return 1000;
+        return 2000;
     }
     
     @Override
@@ -65,6 +66,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
 
             this.client.getHabbo().getHabboStats().forumPostsCount += 1;
             thread.setPostsCount(thread.getPostsCount() + 1);
+            GuildForumDataComposer.invalidateUnreadCache(guildId);
             this.client.sendResponse(new GuildForumThreadMessagesComposer(thread));
             return;
         }
@@ -74,6 +76,15 @@ public class GuildForumPostThreadEvent extends MessageHandler {
             return;
         }
 
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
+        if (thread.isLocked() && !isStaff) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
 
         if (!((guild.canPostMessages().state == 0)
                 || (guild.canPostMessages().state == 1 && member != null)
@@ -91,6 +102,7 @@ public class GuildForumPostThreadEvent extends MessageHandler {
             thread.setUpdatedAt(Emulator.getIntUnixTimestamp());
             this.client.getHabbo().getHabboStats().forumPostsCount += 1;
             thread.setPostsCount(thread.getPostsCount() + 1);
+            GuildForumDataComposer.invalidateUnreadCache(guildId);
             this.client.sendResponse(new GuildForumAddCommentComposer(comment));
         } else {
             this.client.sendResponse(new ConnectionErrorComposer(500));

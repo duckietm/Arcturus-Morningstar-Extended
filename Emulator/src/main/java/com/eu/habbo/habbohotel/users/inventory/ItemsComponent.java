@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.users.inventory;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.database.SqlQueries;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInventory;
@@ -9,7 +10,6 @@ import com.eu.habbo.plugin.events.inventory.InventoryItemAddedEvent;
 import com.eu.habbo.plugin.events.inventory.InventoryItemRemovedEvent;
 import com.eu.habbo.plugin.events.inventory.InventoryItemsAddedEvent;
 import gnu.trove.TCollections;
-import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -18,11 +18,9 @@ import gnu.trove.set.hash.THashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemsComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemsComponent.class);
@@ -39,25 +37,23 @@ public class ItemsComponent {
     public static THashMap<Integer, HabboItem> loadItems(Habbo habbo) {
         THashMap<Integer, HabboItem> itemsList = new THashMap<>();
 
-        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM items WHERE room_id = ? AND user_id = ?")) {
-            statement.setInt(1, 0);
-            statement.setInt(2, habbo.getHabboInfo().getId());
-            try (ResultSet set = statement.executeQuery()) {
-                while (set.next()) {
-                    try {
-                        HabboItem item = Emulator.getGameEnvironment().getItemManager().loadHabboItem(set);
-
-                        if (item != null) {
-                            itemsList.put(set.getInt("id"), item);
-                        } else {
-                            LOGGER.error("Failed to load HabboItem: {}", set.getInt("id"));
+        try {
+            SqlQueries.forEach(
+                    "SELECT * FROM items WHERE room_id = ? AND user_id = ?",
+                    rs -> {
+                        try {
+                            HabboItem item = Emulator.getGameEnvironment().getItemManager().loadHabboItem(rs);
+                            if (item != null) {
+                                itemsList.put(rs.getInt("id"), item);
+                            } else {
+                                LOGGER.error("Failed to load HabboItem: {}", rs.getInt("id"));
+                            }
+                        } catch (SQLException e) {
+                            LOGGER.error("Caught SQL exception", e);
                         }
-                    } catch (SQLException e) {
-                        LOGGER.error("Caught SQL exception", e);
-                    }
-                }
-            }
-        } catch (SQLException e) {
+                    },
+                    0, habbo.getHabboInfo().getId());
+        } catch (SqlQueries.DataAccessException e) {
             LOGGER.error("Caught SQL exception", e);
         }
 
@@ -151,22 +147,46 @@ public class ItemsComponent {
 
     public void dispose() {
         synchronized (this.items) {
-            TIntObjectIterator<HabboItem> items = this.items.iterator();
-
-            if (items == null) {
-                LOGGER.error("Items is NULL!");
-                return;
-            }
-
             if (!this.items.isEmpty()) {
-                for (int i = this.items.size(); i-- > 0; ) {
-                    try {
-                        items.advance();
-                    } catch (NoSuchElementException e) {
-                        break;
+                List<HabboItem> updates = new ArrayList<>();
+                List<HabboItem> deletes = new ArrayList<>();
+                for (HabboItem item : this.items.valueCollection()) {
+                    if (item.needsDelete()) {
+                        deletes.add(item);
+                        item.needsUpdate(false);
+                        item.needsDelete(false);
+                    } else if (item.needsUpdate()) {
+                        updates.add(item);
+                        item.needsUpdate(false);
                     }
-                    if (items.value().needsUpdate())
-                        Emulator.getThreading().run(items.value());
+                }
+
+                try {
+                    if (!deletes.isEmpty()) {
+                        SqlQueries.batchUpdate(
+                                "DELETE FROM items WHERE id = ?",
+                                deletes,
+                                (ps, item) -> ps.setInt(1, item.getId()));
+                    }
+                    if (!updates.isEmpty()) {
+                        SqlQueries.batchUpdate(
+                                "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ? WHERE id = ?",
+                                updates,
+                                (ps, item) -> {
+                                    ps.setInt(1, item.getUserId());
+                                    ps.setInt(2, item.getRoomId());
+                                    ps.setString(3, item.getWallPosition());
+                                    ps.setInt(4, item.getX());
+                                    ps.setInt(5, item.getY());
+                                    ps.setDouble(6, item.getZ());
+                                    ps.setInt(7, item.getRotation());
+                                    ps.setString(8, item.getExtradata());
+                                    ps.setString(9, item.getLimitedStack() + ":" + item.getLimitedSells());
+                                    ps.setInt(10, item.getId());
+                                });
+                    }
+                } catch (SqlQueries.DataAccessException e) {
+                    LOGGER.error("Caught SQL exception during batch item save", e);
                 }
             }
 

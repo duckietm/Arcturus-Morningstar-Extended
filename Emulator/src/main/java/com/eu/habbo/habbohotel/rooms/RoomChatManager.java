@@ -157,6 +157,15 @@ public class RoomChatManager {
     }
 
     /**
+     * Removes a room mute from a Habbo.
+     */
+    public void unmuteHabbo(Habbo habbo) {
+        synchronized (this.mutedHabbos) {
+            this.mutedHabbos.remove(habbo.getHabboInfo().getId());
+        }
+    }
+
+    /**
      * Checks if a Habbo is muted.
      */
     public boolean isMuted(Habbo habbo) {
@@ -183,7 +192,8 @@ public class RoomChatManager {
      */
     public int getMuteTimeRemaining(Habbo habbo) {
         if (this.mutedHabbos.containsKey(habbo.getHabboInfo().getId())) {
-            return this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp();
+            return Math.max(0,
+                this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp());
         }
         return 0;
     }
@@ -298,26 +308,29 @@ public class RoomChatManager {
 
             if (this.isMuted(habbo)) {
                 habbo.getClient().sendResponse(new MutedWhisperComposer(
-                    this.mutedHabbos.get(habbo.getHabboInfo().getId()) - Emulator.getIntUnixTimestamp()));
+                    Math.max(1, this.getMuteTimeRemaining(habbo))));
                 return;
             }
         }
 
+        String wiredSayMessage = roomChatMessage.getMessage();
+
         // Handle commands and wired
+        boolean suppressSaysOutput = false;
         if (chatType != RoomChatType.WHISPER) {
             if (CommandHandler.handleCommand(habbo.getClient(), roomChatMessage.getUnfilteredMessage())) {
-                WiredManager.triggerUserSays(habbo.getHabboInfo().getCurrentRoom(), habbo.getRoomUnit(), roomChatMessage.getMessage());
+                WiredManager.triggerUserSays(habbo.getHabboInfo().getCurrentRoom(), habbo.getRoomUnit(), wiredSayMessage);
                 roomChatMessage.isCommand = true;
                 return;
             }
 
             if (!ignoreWired) {
-                if (WiredManager.triggerUserSays(habbo.getHabboInfo().getCurrentRoom(), habbo.getRoomUnit(), roomChatMessage.getMessage())) {
-                    habbo.getClient().sendResponse(new RoomUserWhisperComposer(
-                        new RoomChatMessage(roomChatMessage.getMessage(), habbo, habbo,
-                            roomChatMessage.getBubble())));
-                    return;
-                }
+                suppressSaysOutput = WiredManager.shouldSuppressUserSaysOutput(
+                    habbo.getHabboInfo().getCurrentRoom(),
+                    habbo.getRoomUnit(),
+                    wiredSayMessage,
+                    chatType.ordinal(),
+                    roomChatMessage.getBubble() != null ? roomChatMessage.getBubble().getType() : -1);
             }
         }
 
@@ -378,9 +391,30 @@ public class RoomChatManager {
         if (chatType == RoomChatType.WHISPER) {
             this.handleWhisper(habbo, roomChatMessage, prefixMessage, clearPrefixMessage);
         } else if (chatType == RoomChatType.TALK) {
-            this.handleTalk(habbo, roomChatMessage, prefixMessage, clearPrefixMessage, tentRectangle);
+            if (suppressSaysOutput) {
+                habbo.getClient().sendResponse(new RoomUserWhisperComposer(
+                    new RoomChatMessage(roomChatMessage.getMessage(), habbo, habbo,
+                        roomChatMessage.getBubble())));
+            } else {
+                this.handleTalk(habbo, roomChatMessage, prefixMessage, clearPrefixMessage, tentRectangle);
+            }
         } else if (chatType == RoomChatType.SHOUT) {
-            this.handleShout(habbo, roomChatMessage, prefixMessage, clearPrefixMessage, tentRectangle);
+            if (suppressSaysOutput) {
+                habbo.getClient().sendResponse(new RoomUserWhisperComposer(
+                    new RoomChatMessage(roomChatMessage.getMessage(), habbo, habbo,
+                        roomChatMessage.getBubble())));
+            } else {
+                this.handleShout(habbo, roomChatMessage, prefixMessage, clearPrefixMessage, tentRectangle);
+            }
+        }
+
+        if (chatType != RoomChatType.WHISPER && !ignoreWired && !roomChatMessage.isCommand) {
+            WiredManager.triggerUserSays(
+                    habbo.getHabboInfo().getCurrentRoom(),
+                    habbo.getRoomUnit(),
+                    wiredSayMessage,
+                    chatType.ordinal(),
+                    roomChatMessage.getBubble() != null ? roomChatMessage.getBubble().getType() : -1);
         }
 
         // Notify bots and talking furniture

@@ -18,7 +18,7 @@ import com.eu.habbo.messages.outgoing.handshake.ConnectionErrorComposer;
 public class GuildForumModerateMessageEvent extends MessageHandler {
     @Override
     public int getRatelimit() {
-        return 500;
+        return 2000;
     }
 
     @Override
@@ -36,6 +36,11 @@ public class GuildForumModerateMessageEvent extends MessageHandler {
             return;
         }
 
+        if (thread.getGuildId() != guildId) {
+            this.client.sendResponse(new ConnectionErrorComposer(403));
+            return;
+        }
+
         ForumThreadComment comment = thread.getCommentById(messageId);
         if (comment == null) {
             this.client.sendResponse(new ConnectionErrorComposer(404));
@@ -45,19 +50,20 @@ public class GuildForumModerateMessageEvent extends MessageHandler {
         boolean hasStaffPermissions = this.client.getHabbo().hasPermission(Permission.ACC_MODTOOL_TICKET_Q);
 
         GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, this.client.getHabbo().getHabboInfo().getId());
-        if (member == null) {
+        if (member == null && !hasStaffPermissions) {
             this.client.sendResponse(new ConnectionErrorComposer(401));
             return;
         }
 
-        boolean isGuildAdministrator = (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || member.getRank().equals(GuildRank.ADMIN));
+        boolean isGuildAdministrator = (guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || (member != null && member.getRank().equals(GuildRank.ADMIN)));
 
         if (!isGuildAdministrator && !hasStaffPermissions) {
             this.client.sendResponse(new ConnectionErrorComposer(403));
             return;
         }
 
-        if (state == ForumThreadState.HIDDEN_BY_GUILD_ADMIN.getStateId() && !hasStaffPermissions) {
+        // Restrict state 20 (staff hidden) to staff only
+        if (state == 20 && !hasStaffPermissions) {
             this.client.sendResponse(new ConnectionErrorComposer(403));
             return;
         }

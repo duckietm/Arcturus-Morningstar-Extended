@@ -16,19 +16,18 @@ import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
-import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
+    private static final int OPERATION_ADD = 0;
+    private static final int OPERATION_REMOVE = 1;
     public static final WiredEffectType type = WiredEffectType.GIVE_SCORE_TEAM;
 
     private int points;
-    private int count;
+    private int operation = OPERATION_ADD;
     private GameTeamColors teamColor = GameTeamColors.RED;
-
-    private TIntIntHashMap startTimes = new TIntIntHashMap();
 
     public WiredEffectGiveScoreToTeam(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
@@ -43,16 +42,10 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
         Room room = ctx.room();
         for (Game game : room.getGames()) {
             if (game != null && game.state.equals(GameState.RUNNING)) {
-                int c = this.startTimes.get(game.getStartTime());
+                GameTeam team = game.getTeam(this.teamColor);
 
-                if (c < this.count) {
-                    GameTeam team = game.getTeam(this.teamColor);
-
-                    if (team != null) {
-                        team.addTeamScore(this.points);
-
-                        this.startTimes.put(game.getStartTime(), c + 1);
-                    }
+                if (team != null) {
+                    team.addTeamScore(this.getAppliedAmount(team));
                 }
             }
         }
@@ -66,7 +59,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.points, this.count, this.teamColor, this.getDelay()));
+        return WiredManager.getGson().toJson(new JsonData(this.points, this.operation, this.teamColor, this.getDelay()));
     }
 
     @Override
@@ -76,7 +69,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
         if(wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.points = data.score;
-            this.count = data.count;
+            this.operation = this.normalizeOperation(data.operation);
             this.teamColor = data.team;
             this.setDelay(data.delay);
         }
@@ -85,8 +78,8 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
 
             if (data.length == 4) {
                 this.points = Integer.parseInt(data[0]);
-                this.count = Integer.parseInt(data[1]);
-                this.teamColor = GameTeamColors.values()[Integer.parseInt(data[2])];
+                this.operation = OPERATION_ADD;
+                this.teamColor = GameTeamColors.fromType(Integer.parseInt(data[2]));
                 this.setDelay(Integer.parseInt(data[3]));
             }
 
@@ -96,9 +89,8 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
 
     @Override
     public void onPickUp() {
-        this.startTimes.clear();
         this.points = 0;
-        this.count = 0;
+        this.operation = OPERATION_ADD;
         this.teamColor = GameTeamColors.RED;
         this.setDelay(0);
     }
@@ -118,7 +110,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
         message.appendString("");
         message.appendInt(3);
         message.appendInt(this.points);
-        message.appendInt(this.count);
+        message.appendInt(this.operation);
         message.appendInt(this.teamColor.type);
         message.appendInt(0);
         message.appendInt(this.getType().code);
@@ -135,10 +127,7 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
         if(points < 1 || points > 100)
             throw new WiredSaveException("Points is invalid");
 
-        int timesPerGame = settings.getIntParams()[1];
-
-        if(timesPerGame < 1 || timesPerGame > 10)
-            throw new WiredSaveException("Times per game is invalid");
+        int operation = this.normalizeOperation(settings.getIntParams()[1]);
 
         int team = settings.getIntParams()[2];
 
@@ -151,22 +140,34 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
             throw new WiredSaveException("Delay too long");
 
         this.points = points;
-        this.count = timesPerGame;
-        this.teamColor = GameTeamColors.values()[team];
+        this.operation = operation;
+        this.teamColor = GameTeamColors.fromType(team);
         this.setDelay(delay);
 
         return true;
     }
 
+    private int normalizeOperation(int value) {
+        return (value == OPERATION_REMOVE) ? OPERATION_REMOVE : OPERATION_ADD;
+    }
+
+    private int getAppliedAmount(GameTeam team) {
+        if (this.operation != OPERATION_REMOVE) {
+            return this.points;
+        }
+
+        return -Math.min(this.points, team.getTeamScore());
+    }
+
     static class JsonData {
         int score;
-        int count;
+        int operation;
         GameTeamColors team;
         int delay;
 
-        public JsonData(int score, int count, GameTeamColors team, int delay) {
+        public JsonData(int score, int operation, GameTeamColors team, int delay) {
             this.score = score;
-            this.count = count;
+            this.operation = operation;
             this.team = team;
             this.delay = delay;
         }

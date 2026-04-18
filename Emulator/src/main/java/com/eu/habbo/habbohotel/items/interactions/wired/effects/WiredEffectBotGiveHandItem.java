@@ -28,10 +28,12 @@ import java.util.List;
 
 public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.BOT_GIVE_HANDITEM;
+    private static final int BOT_SOURCE_NAME = 100;
 
     private String botName = "";
     private int itemId;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int botSource = BOT_SOURCE_NAME;
 
     public WiredEffectBotGiveHandItem(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -49,9 +51,10 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName);
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.itemId);
         message.appendInt(this.userSource);
+        message.appendInt(this.botSource);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -80,11 +83,9 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         if(settings.getIntParams().length < 2) throw new WiredSaveException("Missing item id");
 
-        int itemId = settings.getIntParams()[0];
-        this.userSource = settings.getIntParams()[1];
-
-        if(itemId < 0)
-            itemId = 0;
+        int itemId = this.normalizeHandItem(settings.getIntParams()[0]);
+        this.userSource = this.normalizeUserSource(settings.getIntParams()[1]);
+        this.botSource = (settings.getIntParams().length > 2) ? this.normalizeBotSource(settings.getIntParams()[2]) : BOT_SOURCE_NAME;
 
         String botName = settings.getStringParam();
 
@@ -113,10 +114,9 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         RoomUnit roomUnit = targets.get(0);
 
         Habbo habbo = room.getHabbo(roomUnit);
-        List<Bot> bots = room.getBots(this.botName);
+        Bot bot = this.resolveBot(ctx, room);
 
-        if (habbo != null && bots.size() == 1) {
-            Bot bot = bots.get(0);
+        if (habbo != null && bot != null) {
 
             List<Runnable> tasks = new ArrayList<>();
             tasks.add(new RoomUnitGiveHanditem(roomUnit, room, this.itemId));
@@ -146,7 +146,7 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return WiredManager.getGson().toJson(new JsonData(this.botName, this.itemId, this.getDelay(), this.userSource));
+        return WiredManager.getGson().toJson(new JsonData(this.botName, this.itemId, this.getDelay(), this.userSource, this.botSource));
     }
 
     @Override
@@ -156,21 +156,25 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         if(wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
-            this.itemId = data.item_id;
+            this.itemId = this.normalizeHandItem(data.item_id);
             this.botName = data.bot_name;
-            this.userSource = data.userSource;
+            this.userSource = this.normalizeUserSource(data.userSource);
+            this.botSource = ((data.botSource == WiredSourceUtil.SOURCE_TRIGGER) && this.botName != null && !this.botName.isEmpty())
+                    ? BOT_SOURCE_NAME
+                    : this.normalizeBotSource(data.botSource);
         }
         else {
             String[] data = wiredData.split(((char) 9) + "");
 
             if (data.length == 3) {
                 this.setDelay(Integer.parseInt(data[0]));
-                this.itemId = Integer.parseInt(data[1]);
+                this.itemId = this.normalizeHandItem(Integer.parseInt(data[1]));
                 this.botName = data[2];
             }
 
             this.needsUpdate(true);
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+            this.botSource = BOT_SOURCE_NAME;
         }
     }
 
@@ -179,12 +183,13 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         this.botName = "";
         this.itemId = 0;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.botSource = BOT_SOURCE_NAME;
         this.setDelay(0);
     }
 
     @Override
     public boolean requiresTriggeringUser() {
-        return this.userSource == WiredSourceUtil.SOURCE_TRIGGER;
+        return (this.userSource == WiredSourceUtil.SOURCE_TRIGGER) || (this.botSource == WiredSourceUtil.SOURCE_TRIGGER);
     }
 
     static class JsonData {
@@ -192,12 +197,51 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         int item_id;
         int delay;
         int userSource;
+        int botSource;
 
-        public JsonData(String bot_name, int item_id, int delay, int userSource) {
+        public JsonData(String bot_name, int item_id, int delay, int userSource, int botSource) {
             this.bot_name = bot_name;
             this.item_id = item_id;
             this.delay = delay;
             this.userSource = userSource;
+            this.botSource = botSource;
         }
+    }
+
+    private int normalizeHandItem(int value) {
+        return Math.max(0, value);
+    }
+
+    private int normalizeUserSource(int value) {
+        return WiredSourceUtil.isDefaultUserSource(value) ? value : WiredSourceUtil.SOURCE_TRIGGER;
+    }
+
+    private int normalizeBotSource(int value) {
+        switch (value) {
+            case WiredSourceUtil.SOURCE_TRIGGER:
+            case BOT_SOURCE_NAME:
+            case WiredSourceUtil.SOURCE_SELECTOR:
+            case WiredSourceUtil.SOURCE_SIGNAL:
+                return value;
+            default:
+                return BOT_SOURCE_NAME;
+        }
+    }
+
+    private Bot resolveBot(WiredContext ctx, Room room) {
+        if (this.botSource == BOT_SOURCE_NAME) {
+            List<Bot> bots = room.getBots(this.botName);
+            return (bots.size() == 1) ? bots.get(0) : null;
+        }
+
+        for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.botSource)) {
+            Bot bot = room.getBot(roomUnit);
+
+            if (bot != null) {
+                return bot;
+            }
+        }
+
+        return null;
     }
 }

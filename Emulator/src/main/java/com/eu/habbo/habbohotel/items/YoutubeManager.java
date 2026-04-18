@@ -76,7 +76,11 @@ public class YoutubeManager {
 
     private final THashMap<Integer, ArrayList<YoutubePlaylist>> playlists = new THashMap<>();
     private final THashMap<String, YoutubePlaylist> playlistCache = new THashMap<>();
-    private final String apiKey = Emulator.getConfig().getValue("youtube.apikey");
+
+    private String getApiKey() {
+        String key = Emulator.getConfig().getValue("youtube.apikey");
+        return key != null ? key : "";
+    }
 
     public void load() {
         this.playlists.clear();
@@ -89,11 +93,19 @@ public class YoutubeManager {
 
             LOGGER.info("YouTube Manager -> Loading...");
 
+            if (getApiKey().isEmpty()) {
+                LOGGER.warn("YouTube Manager -> No API key configured (youtube.apikey). YouTube TVs will not work!");
+            }
+
+            int dbEntryCount = 0;
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("SELECT * FROM youtube_playlists")) {
                 try (ResultSet set = statement.executeQuery()) {
                     while (set.next()) {
                         final int itemId = set.getInt("item_id");
                         final String playlistId = set.getString("playlist_id");
+                        dbEntryCount++;
+
+                        LOGGER.info("YouTube Manager -> Loading playlist {} for base item #{}", playlistId, itemId);
 
                         youtubeDataLoaderPool.submit(() -> {
                             YoutubePlaylist playlist;
@@ -101,6 +113,9 @@ public class YoutubeManager {
                                 playlist = this.getPlaylistDataById(playlistId);
                                 if (playlist != null) {
                                     this.addPlaylistToItem(itemId, playlist);
+                                    LOGGER.info("YouTube Manager -> Successfully loaded playlist {} for base item #{}", playlistId, itemId);
+                                } else {
+                                    LOGGER.error("YouTube Manager -> Failed to load playlist {} for base item #{} (returned null - check API key and playlist ID)", playlistId, itemId);
                                 }
                             } catch (IOException e) {
                                 LOGGER.error("Failed to load YouTube playlist {} ERROR: {}", playlistId, e);
@@ -110,6 +125,10 @@ public class YoutubeManager {
                 }
             } catch (SQLException e) {
                 LOGGER.error("Caught SQL exception", e);
+            }
+
+            if (dbEntryCount == 0) {
+                LOGGER.warn("YouTube Manager -> No entries found in youtube_playlists table!");
             }
 
             youtubeDataLoaderPool.shutdown();
@@ -125,7 +144,12 @@ public class YoutubeManager {
 
     public YoutubePlaylist getPlaylistDataById(String playlistId) throws IOException {
         if (this.playlistCache.containsKey(playlistId)) return this.playlistCache.get(playlistId);
-        if(apiKey.isEmpty()) return null;
+
+        String apiKey = getApiKey();
+        if(apiKey.isEmpty()) {
+            LOGGER.error("YouTube API key is not configured! Set 'youtube.apikey' in emulator_settings to enable YouTube TV.");
+            return null;
+        }
 
         YoutubePlaylist playlist;
         URL playlistInfo = URI.create("https://youtube.googleapis.com/youtube/v3/playlists?part=snippet&id=" + playlistId + "&maxResults=1&key=" + apiKey).toURL();
