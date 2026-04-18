@@ -339,6 +339,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         message.appendBoolean(false); //unknown
         message.appendString(this.name + ".png");
         message.appendString(this.itemId == null ? "" : this.itemId);
+        message.appendBoolean(this.haveOffer);
     }
 
     @Override
