@@ -80,7 +80,6 @@ END//
 DELIMITER ;
 
 CALL `_add_fk_if_missing`('rooms', 'fk_rooms_owner', 'owner_id', 'users', 'id', 'CASCADE');
-CALL `_add_fk_if_missing`('items', 'fk_items_user', 'user_id', 'users', 'id', 'CASCADE');
 CALL `_add_fk_if_missing`('catalog_items', 'fk_catitems_page', 'page_id', 'catalog_pages', 'id', 'CASCADE');
 CALL `_add_fk_if_missing`('guilds', 'fk_guilds_user', 'user_id', 'users', 'id', 'CASCADE');
 
