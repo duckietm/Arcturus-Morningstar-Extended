@@ -1,1 +1,0 @@
-INSERT INTO emulator_settings (`key`, `value`) VALUES ('wired.tick.workers', '6');
