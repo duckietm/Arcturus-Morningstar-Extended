@@ -165,6 +165,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
+                    LOGGER.info("[auth/login] user not found username='{}' ip={}", username, ip);
                     AuthRateLimiter.recordFailure(ip);
                     sendJson(ctx, req, HttpResponseStatus.UNAUTHORIZED,
                             errorPayload("Invalid Habbo name or password."));
@@ -173,8 +174,13 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
 
                 int userId = rs.getInt("id");
                 String stored = rs.getString("password");
+                String storedPreview = stored == null
+                        ? "<null>"
+                        : (stored.isEmpty() ? "<empty>" : stored.substring(0, Math.min(7, stored.length())) + "…(" + stored.length() + " chars)");
 
                 if (stored == null || stored.isEmpty() || !checkPassword(password, stored)) {
+                    LOGGER.info("[auth/login] password mismatch for user id={} username='{}' stored='{}'",
+                            userId, username, storedPreview);
                     AuthRateLimiter.recordFailure(ip);
                     sendJson(ctx, req, HttpResponseStatus.UNAUTHORIZED,
                             errorPayload("Invalid Habbo name or password."));
@@ -249,13 +255,20 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             }
 
             try (PreparedStatement check = conn.prepareStatement(
-                    "SELECT 1 FROM users WHERE username = ? OR mail = ? LIMIT 1")) {
+                    "SELECT username, mail FROM users WHERE username = ? OR mail = ? LIMIT 1")) {
                 check.setString(1, username);
                 check.setString(2, email);
                 try (ResultSet rs = check.executeQuery()) {
                     if (rs.next()) {
-                        sendJson(ctx, req, HttpResponseStatus.CONFLICT,
-                                errorPayload("That Habbo name or email is already taken."));
+                        String existingUser = rs.getString("username");
+                        String existingMail = rs.getString("mail");
+                        boolean userTaken = existingUser != null && existingUser.equalsIgnoreCase(username);
+                        boolean mailTaken = existingMail != null && existingMail.equalsIgnoreCase(email);
+                        String message;
+                        if (userTaken && mailTaken)      message = "That Habbo name and email are already in use.";
+                        else if (userTaken)              message = "That Habbo name is already in use.";
+                        else                             message = "That email address is already in use.";
+                        sendJson(ctx, req, HttpResponseStatus.CONFLICT, errorPayload(message));
                         return;
                     }
                 }
@@ -287,7 +300,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             }
 
             JsonObject ok = new JsonObject();
-            ok.addProperty("message", "Welcome aboard! You can now log in.");
+            ok.addProperty("message", "Welcome aboard, " + username + "! Your account is ready — log in below with the password you just chose.");
             sendJson(ctx, req, HttpResponseStatus.OK, ok);
         } catch (Exception e) {
             LOGGER.error("Register query failed for username=" + username, e);
@@ -306,7 +319,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
 
         JsonObject ok = new JsonObject();
-        ok.addProperty("message", "If an account exists for that email a reset link has been sent.");
+        ok.addProperty("message", "Email sent! If an account matches that address you'll find a reset link in your inbox shortly (check spam if it doesn't show up within a minute).");
 
         try (Connection conn = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(
