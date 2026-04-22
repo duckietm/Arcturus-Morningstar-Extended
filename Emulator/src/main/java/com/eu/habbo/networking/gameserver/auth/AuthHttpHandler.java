@@ -2,6 +2,7 @@ package com.eu.habbo.networking.gameserver.auth;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.networking.gameserver.GameServerAttributes;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
@@ -31,10 +32,12 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
     private static final String LOGOUT_PATH          = "/api/auth/logout";
     private static final String CHECK_EMAIL_PATH     = "/api/auth/check-email";
     private static final String CHECK_USERNAME_PATH  = "/api/auth/check-username";
+    private static final String ROOM_TEMPLATES_PATH  = "/api/auth/room-templates";
     private static final String HEALTH_PATH          = "/api/health";
 
     private static final Pattern USERNAME_RE = Pattern.compile("^[A-Za-z0-9._-]{3,32}$");
     private static final Pattern EMAIL_RE = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern FIGURE_RE = Pattern.compile("^[A-Za-z0-9.\\-]{1,200}$");
     private static final SecureRandom RNG = new SecureRandom();
     private static final int MAX_BODY_BYTES = 8 * 1024;
 
@@ -50,6 +53,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         if (!path.equals(LOGIN_PATH) && !path.equals(REGISTER_PATH)
                 && !path.equals(FORGOT_PATH) && !path.equals(LOGOUT_PATH)
                 && !path.equals(CHECK_EMAIL_PATH) && !path.equals(CHECK_USERNAME_PATH)
+                && !path.equals(ROOM_TEMPLATES_PATH)
                 && !path.equals(HEALTH_PATH)) {
             super.channelRead(ctx, msg);
             return;
@@ -76,6 +80,15 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             JsonObject ok = new JsonObject();
             ok.addProperty("status", "ok");
             sendJson(ctx, req, HttpResponseStatus.OK, ok);
+            return;
+        }
+
+        if (path.equals(ROOM_TEMPLATES_PATH)) {
+            if (req.method() != HttpMethod.GET && req.method() != HttpMethod.HEAD) {
+                sendJson(ctx, req, HttpResponseStatus.METHOD_NOT_ALLOWED, errorPayload("Use GET."));
+                return;
+            }
+            handleRoomTemplates(ctx, req);
             return;
         }
 
@@ -333,6 +346,9 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         String username = readString(body, "username").trim();
         String email    = readString(body, "email").trim();
         String password = readString(body, "password");
+        String figure   = readString(body, "figure").trim();
+        String gender   = readString(body, "gender").trim().toUpperCase();
+        int templateId  = readInt(body, "templateId", 0);
 
         if (!USERNAME_RE.matcher(username).matches()) {
             sendJson(ctx, req, HttpResponseStatus.BAD_REQUEST,
@@ -392,11 +408,19 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             String defaultMotto = Emulator.getConfig().getValue("register.default.motto", "I love Habbo!");
             int now = Emulator.getIntUnixTimestamp();
 
+            String finalLook = (figure.isEmpty() || !FIGURE_RE.matcher(figure).matches()) ? defaultLook : figure;
+            String finalGender = (gender.equals("M") || gender.equals("F")) ? gender : "M";
+
+            int startingCredits  = Math.max(0, Emulator.getConfig().getInt("new_user_credits", 0));
+            int startingDuckets  = Math.max(0, Emulator.getConfig().getInt("new_user_duckets", 0));
+            int startingDiamonds = Math.max(0, Emulator.getConfig().getInt("new_user_diamonds", 0));
+
+            int newUserId = 0;
             try (PreparedStatement ins = conn.prepareStatement(
                     "INSERT INTO users (username, password, mail, account_created, " +
                             "ip_register, ip_current, last_online, last_login, motto, look, gender, " +
                             "credits, `rank`, home_room, machine_id, auth_ticket, online) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'M', 0, 1, 0, '', '', '0')",
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, '', '', '0')",
                     Statement.RETURN_GENERATED_KEYS)) {
                 ins.setString(1, username);
                 ins.setString(2, hashed);
@@ -407,8 +431,26 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 ins.setInt(7, now);
                 ins.setInt(8, now);
                 ins.setString(9, defaultMotto);
-                ins.setString(10, defaultLook);
+                ins.setString(10, finalLook);
+                ins.setString(11, finalGender);
+                ins.setInt(12, startingCredits);
                 ins.executeUpdate();
+                try (ResultSet keys = ins.getGeneratedKeys()) {
+                    if (keys.next()) newUserId = keys.getInt(1);
+                }
+            }
+
+            if (newUserId > 0 && (startingDuckets > 0 || startingDiamonds > 0)) {
+                seedUserCurrencies(conn, newUserId, startingDuckets, startingDiamonds);
+            }
+
+            LOGGER.info("[auth/register] user created id={} username='{}' templateId={} credits={} duckets={} diamonds={}",
+                    newUserId, username, templateId, startingCredits, startingDuckets, startingDiamonds);
+
+            if (newUserId > 0 && templateId > 0) {
+                cloneTemplateForUser(conn, templateId, newUserId, username);
+            } else if (templateId > 0) {
+                LOGGER.warn("[auth/register] skipping template clone: user insert did not return an id (username='{}')", username);
             }
 
             AvailabilityCache.invalidateEmail(email);
@@ -420,6 +462,209 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         } catch (Exception e) {
             LOGGER.error("Register query failed for username=" + username, e);
             sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
+        }
+    }
+
+    /**
+     * If the template carries a custom heightmap (override_model='1' and a
+     * non-empty heightmap), creates the matching room_models_custom row keyed
+     * by the new room id and renames the room's model to custom_&lt;newRoomId&gt;.
+     * Without this, cloned rooms reference a layout that doesn't exist
+     * (the source room's id) and load as a black screen.
+     */
+    private static void materializeCustomLayout(Connection conn, int templateId, int newRoomId) {
+        String overrideModel = "0";
+        String heightmap = "";
+        int doorX = 0, doorY = 0, doorDir = 2;
+        try (PreparedStatement sel = conn.prepareStatement(
+                "SELECT override_model, heightmap, door_x, door_y, door_dir " +
+                        "FROM room_templates WHERE template_id = ? LIMIT 1")) {
+            sel.setInt(1, templateId);
+            try (ResultSet rs = sel.executeQuery()) {
+                if (rs.next()) {
+                    overrideModel = rs.getString("override_model");
+                    heightmap = rs.getString("heightmap");
+                    doorX = rs.getInt("door_x");
+                    doorY = rs.getInt("door_y");
+                    doorDir = rs.getInt("door_dir");
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] reading template layout failed templateId=" + templateId, e);
+            return;
+        }
+
+        if (!"1".equals(overrideModel) || heightmap == null || heightmap.isEmpty()) {
+            return;
+        }
+
+        String customName = "custom_" + newRoomId;
+
+        try (PreparedStatement ins = conn.prepareStatement(
+                "INSERT INTO room_models_custom (id, name, door_x, door_y, door_dir, heightmap) " +
+                        "VALUES (?, ?, ?, ?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE name = VALUES(name), door_x = VALUES(door_x), " +
+                        "door_y = VALUES(door_y), door_dir = VALUES(door_dir), heightmap = VALUES(heightmap)")) {
+            ins.setInt(1, newRoomId);
+            ins.setString(2, customName);
+            ins.setInt(3, doorX);
+            ins.setInt(4, doorY);
+            ins.setInt(5, doorDir);
+            ins.setString(6, heightmap);
+            ins.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] room_models_custom insert failed roomId=" + newRoomId, e);
+            return;
+        }
+
+        try (PreparedStatement upd = conn.prepareStatement(
+                "UPDATE rooms SET model = ? WHERE id = ? LIMIT 1")) {
+            upd.setString(1, customName);
+            upd.setInt(2, newRoomId);
+            upd.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] rooms.model rename failed roomId=" + newRoomId, e);
+        }
+
+        LOGGER.info("[auth/register] materialized custom layout '{}' for roomId={}", customName, newRoomId);
+    }
+
+    /**
+     * Seeds starting balances into users_currency for duckets (type=0) and
+     * diamonds (type=5). Only inserts when the amount is &gt; 0. Credits live
+     * in users.credits and are set directly during the register INSERT.
+     */
+    private static void seedUserCurrencies(Connection conn, int userId, int duckets, int diamonds) {
+        try (PreparedStatement ins = conn.prepareStatement(
+                "INSERT INTO users_currency (user_id, type, amount) VALUES (?, ?, ?) " +
+                        "ON DUPLICATE KEY UPDATE amount = VALUES(amount)")) {
+            if (duckets > 0) {
+                ins.setInt(1, userId);
+                ins.setInt(2, 0);
+                ins.setInt(3, duckets);
+                ins.addBatch();
+            }
+            if (diamonds > 0) {
+                ins.setInt(1, userId);
+                ins.setInt(2, 5);
+                ins.setInt(3, diamonds);
+                ins.addBatch();
+            }
+            ins.executeBatch();
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] seeding users_currency failed userId=" + userId
+                    + " duckets=" + duckets + " diamonds=" + diamonds, e);
+        }
+    }
+
+    /* ─── Room templates (registration step 3) ─── */
+
+    private void handleRoomTemplates(ChannelHandlerContext ctx, FullHttpRequest req) {
+        JsonArray templates = new JsonArray();
+        try (Connection conn = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT template_id, title, description, thumbnail " +
+                             "FROM room_templates WHERE enabled = '1' " +
+                             "ORDER BY sort_order ASC, template_id ASC")) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    JsonObject t = new JsonObject();
+                    t.addProperty("templateId", rs.getInt("template_id"));
+                    t.addProperty("title", rs.getString("title"));
+                    t.addProperty("description", rs.getString("description"));
+                    t.addProperty("thumbnail", rs.getString("thumbnail"));
+                    templates.add(t);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("room-templates list failed", e);
+            sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
+            return;
+        }
+        JsonObject res = new JsonObject();
+        res.add("templates", templates);
+        sendJson(ctx, req, HttpResponseStatus.OK, res);
+    }
+
+    /**
+     * Clones a room_templates entry + its room_templates_items into the new
+     * user's rooms/items rows, then points their home_room at the new room.
+     * Failures here do not abort registration; the account is still created.
+     */
+    private static void cloneTemplateForUser(Connection conn, int templateId, int userId, String userName) {
+        LOGGER.info("[auth/register] cloning template id={} for user id={} name='{}'", templateId, userId, userName);
+
+        try (PreparedStatement check = conn.prepareStatement(
+                "SELECT 1 FROM room_templates WHERE template_id = ? AND enabled = '1' LIMIT 1")) {
+            check.setInt(1, templateId);
+            try (ResultSet rs = check.executeQuery()) {
+                if (!rs.next()) {
+                    LOGGER.warn("[auth/register] unknown/disabled room template id={} for user id={}", templateId, userId);
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] template lookup failed for templateId=" + templateId, e);
+            return;
+        }
+
+        int newRoomId = 0;
+        int roomsInserted = 0;
+        try (PreparedStatement ins = conn.prepareStatement(
+                "INSERT INTO rooms (owner_id, owner_name, name, description, model, password, state, " +
+                        "users_max, category, paper_floor, paper_wall, paper_landscape, thickness_wall, " +
+                        "thickness_floor, moodlight_data, override_model, trade_mode) " +
+                        "(SELECT ?, ?, name, room_description, model, password, state, " +
+                        "users_max, category, paper_floor, paper_wall, paper_landscape, thickness_wall, " +
+                        "thickness_floor, moodlight_data, override_model, trade_mode " +
+                        "FROM room_templates WHERE template_id = ?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ins.setInt(1, userId);
+            ins.setString(2, userName);
+            ins.setInt(3, templateId);
+            roomsInserted = ins.executeUpdate();
+            try (ResultSet keys = ins.getGeneratedKeys()) {
+                if (keys.next()) newRoomId = keys.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] clone rooms failed templateId=" + templateId + " userId=" + userId, e);
+            return;
+        }
+
+        LOGGER.info("[auth/register] rooms insert: rowsAffected={} newRoomId={}", roomsInserted, newRoomId);
+
+        if (newRoomId <= 0) {
+            LOGGER.warn("[auth/register] clone aborted - no roomId returned (templateId={}, userId={})", templateId, userId);
+            return;
+        }
+
+        materializeCustomLayout(conn, templateId, newRoomId);
+
+        int itemsInserted = 0;
+        try (PreparedStatement ins = conn.prepareStatement(
+                "INSERT INTO items (user_id, room_id, item_id, wall_pos, x, y, z, rot, " +
+                        "extra_data, wired_data, limited_data, guild_id) " +
+                        "(SELECT ?, ?, item_id, wall_pos, x, y, z, rot, extra_data, wired_data, '0:0', 0 " +
+                        "FROM room_templates_items WHERE template_id = ?)")) {
+            ins.setInt(1, userId);
+            ins.setInt(2, newRoomId);
+            ins.setInt(3, templateId);
+            itemsInserted = ins.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] clone items failed templateId=" + templateId
+                    + " roomId=" + newRoomId + " userId=" + userId, e);
+        }
+
+        LOGGER.info("[auth/register] items insert: rowsAffected={} roomId={}", itemsInserted, newRoomId);
+
+        try (PreparedStatement upd = conn.prepareStatement(
+                "UPDATE users SET home_room = ? WHERE id = ? LIMIT 1")) {
+            upd.setInt(1, newRoomId);
+            upd.setInt(2, userId);
+            int rows = upd.executeUpdate();
+            LOGGER.info("[auth/register] home_room update: rowsAffected={} userId={} roomId={}", rows, userId, newRoomId);
+        } catch (SQLException e) {
+            LOGGER.error("[auth/register] setting home_room failed userId=" + userId + " roomId=" + newRoomId, e);
         }
     }
 
@@ -507,6 +752,15 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             return obj.get(key).getAsString();
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    private static int readInt(JsonObject obj, String key, int defaultValue) {
+        if (obj == null || !obj.has(key) || obj.get(key).isJsonNull()) return defaultValue;
+        try {
+            return obj.get(key).getAsInt();
+        } catch (Exception e) {
+            return defaultValue;
         }
     }
 
