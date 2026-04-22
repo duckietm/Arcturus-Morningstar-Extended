@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class AuthRateLimiter {
 
     private static final Map<String, AtomicReference<State>> STATE = new ConcurrentHashMap<>();
+    private static final Map<String, AtomicReference<ProbeState>> PROBE_STATE = new ConcurrentHashMap<>();
 
     private AuthRateLimiter() {}
 
@@ -58,6 +59,35 @@ public final class AuthRateLimiter {
         STATE.remove(ip);
     }
 
+    public static boolean tryProbe(String ip) {
+        if (!isEnabled() || ip == null || ip.isEmpty()) return true;
+        if (isLocked(ip)) return false;
+
+        long now = System.currentTimeMillis();
+        long windowMs = configInt("login.probe.window_sec", 60) * 1000L;
+        int maxAttempts = configInt("login.probe.max_attempts", 20);
+
+        ProbeState next = PROBE_STATE.computeIfAbsent(ip, k -> new AtomicReference<>(new ProbeState(0, now)))
+                .updateAndGet(prev -> {
+                    if (prev == null || (now - prev.windowStartMillis) > windowMs) {
+                        return new ProbeState(1, now);
+                    }
+                    return new ProbeState(prev.count + 1, prev.windowStartMillis);
+                });
+
+        return next.count <= maxAttempts;
+    }
+
+    public static long secondsUntilProbeReset(String ip) {
+        AtomicReference<ProbeState> ref = PROBE_STATE.get(ip);
+        if (ref == null) return 0;
+        ProbeState current = ref.get();
+        if (current == null) return 0;
+        long windowMs = configInt("login.probe.window_sec", 60) * 1000L;
+        long remainingMs = (current.windowStartMillis + windowMs) - System.currentTimeMillis();
+        return remainingMs > 0 ? (remainingMs / 1000L) + 1L : 0L;
+    }
+
     private static boolean isEnabled() {
         return Emulator.getConfig() != null
                 && Emulator.getConfig().getBoolean("login.ratelimit.enabled", true);
@@ -68,4 +98,5 @@ public final class AuthRateLimiter {
     }
 
     private record State(int attempts, long windowStartMillis, long lockedUntilMillis) {}
+    private record ProbeState(int count, long windowStartMillis) {}
 }
