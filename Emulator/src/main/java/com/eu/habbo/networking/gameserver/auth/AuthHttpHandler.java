@@ -25,14 +25,18 @@ import java.util.regex.Pattern;
 public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthHttpHandler.class);
 
-    private static final String LOGIN_PATH    = "/api/auth/login";
-    private static final String REGISTER_PATH = "/api/auth/register";
-    private static final String FORGOT_PATH   = "/api/auth/forgot-password";
-    private static final String LOGOUT_PATH   = "/api/auth/logout";
+    private static final String LOGIN_PATH           = "/api/auth/login";
+    private static final String REGISTER_PATH        = "/api/auth/register";
+    private static final String FORGOT_PATH          = "/api/auth/forgot-password";
+    private static final String LOGOUT_PATH          = "/api/auth/logout";
+    private static final String CHECK_EMAIL_PATH     = "/api/auth/check-email";
+    private static final String CHECK_USERNAME_PATH  = "/api/auth/check-username";
+    private static final String HEALTH_PATH          = "/api/health";
 
     private static final Pattern USERNAME_RE = Pattern.compile("^[A-Za-z0-9._-]{3,32}$");
     private static final Pattern EMAIL_RE = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final SecureRandom RNG = new SecureRandom();
+    private static final int MAX_BODY_BYTES = 8 * 1024;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -44,7 +48,9 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         String path = new QueryStringDecoder(req.uri()).path();
 
         if (!path.equals(LOGIN_PATH) && !path.equals(REGISTER_PATH)
-                && !path.equals(FORGOT_PATH) && !path.equals(LOGOUT_PATH)) {
+                && !path.equals(FORGOT_PATH) && !path.equals(LOGOUT_PATH)
+                && !path.equals(CHECK_EMAIL_PATH) && !path.equals(CHECK_USERNAME_PATH)
+                && !path.equals(HEALTH_PATH)) {
             super.channelRead(ctx, msg);
             return;
         }
@@ -62,6 +68,17 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             return;
         }
 
+        if (path.equals(HEALTH_PATH)) {
+            if (req.method() != HttpMethod.GET && req.method() != HttpMethod.HEAD) {
+                sendJson(ctx, req, HttpResponseStatus.METHOD_NOT_ALLOWED, errorPayload("Use GET."));
+                return;
+            }
+            JsonObject ok = new JsonObject();
+            ok.addProperty("status", "ok");
+            sendJson(ctx, req, HttpResponseStatus.OK, ok);
+            return;
+        }
+
         if (req.method() != HttpMethod.POST) {
             sendJson(ctx, req, HttpResponseStatus.METHOD_NOT_ALLOWED, errorPayload("Use POST."));
             return;
@@ -73,6 +90,11 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             long secs = AuthRateLimiter.secondsUntilUnlock(ip);
             sendJson(ctx, req, HttpResponseStatus.TOO_MANY_REQUESTS,
                     errorPayload("Too many attempts. Try again in " + secs + "s."));
+            return;
+        }
+
+        if (req.content().readableBytes() > MAX_BODY_BYTES) {
+            sendJson(ctx, req, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE, errorPayload("Payload too large."));
             return;
         }
 
@@ -90,6 +112,15 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             return;
         }
 
+        if (path.equals(CHECK_EMAIL_PATH)) {
+            handleCheckEmail(ctx, req, body, ip);
+            return;
+        }
+        if (path.equals(CHECK_USERNAME_PATH)) {
+            handleCheckUsername(ctx, req, body, ip);
+            return;
+        }
+
         String turnstileToken = readString(body, "turnstileToken");
         if (!TurnstileVerifier.verify(turnstileToken, ip)) {
             AuthRateLimiter.recordFailure(ip);
@@ -104,7 +135,88 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /* ─── Logout ────────────────────────────────────────────────────────── */
+    /* ─── Availability probes ─── */
+
+    private void handleCheckEmail(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
+        if (!AuthRateLimiter.tryProbe(ip)) {
+            long secs = AuthRateLimiter.secondsUntilProbeReset(ip);
+            sendJson(ctx, req, HttpResponseStatus.TOO_MANY_REQUESTS,
+                    errorPayload("Too many requests. Try again in " + secs + "s."));
+            return;
+        }
+        String email = readString(body, "email").trim();
+        if (email.isEmpty() || email.length() > 254 || !EMAIL_RE.matcher(email).matches()) {
+            sendJson(ctx, req, HttpResponseStatus.BAD_REQUEST, errorPayload("Invalid email address."));
+            return;
+        }
+
+        Boolean cached = AvailabilityCache.lookupEmail(email);
+        boolean taken;
+        if (cached != null) {
+            taken = !cached;
+        } else {
+            try (Connection conn = Emulator.getDatabase().getDataSource().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT 1 FROM users WHERE mail = ? LIMIT 1")) {
+                stmt.setString(1, email);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    taken = rs.next();
+                }
+            } catch (Exception e) {
+                LOGGER.error("check-email failed", e);
+                sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
+                return;
+            }
+            AvailabilityCache.storeEmail(email, !taken);
+        }
+
+        JsonObject res = new JsonObject();
+        res.addProperty("available", !taken);
+        if (taken) res.addProperty("error", "This email is already in use.");
+        sendJson(ctx, req, HttpResponseStatus.OK, res);
+    }
+
+    private void handleCheckUsername(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
+        if (!AuthRateLimiter.tryProbe(ip)) {
+            long secs = AuthRateLimiter.secondsUntilProbeReset(ip);
+            sendJson(ctx, req, HttpResponseStatus.TOO_MANY_REQUESTS,
+                    errorPayload("Too many requests. Try again in " + secs + "s."));
+            return;
+        }
+        String username = readString(body, "username").trim();
+        if (!USERNAME_RE.matcher(username).matches()) {
+            sendJson(ctx, req, HttpResponseStatus.BAD_REQUEST,
+                    errorPayload("Username must be 3-32 chars (letters, numbers, . _ -)."));
+            return;
+        }
+
+        Boolean cached = AvailabilityCache.lookupUsername(username);
+        boolean taken;
+        if (cached != null) {
+            taken = !cached;
+        } else {
+            try (Connection conn = Emulator.getDatabase().getDataSource().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT 1 FROM users WHERE username = ? LIMIT 1")) {
+                stmt.setString(1, username);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    taken = rs.next();
+                }
+            } catch (Exception e) {
+                LOGGER.error("check-username failed", e);
+                sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
+                return;
+            }
+            AvailabilityCache.storeUsername(username, !taken);
+        }
+
+        JsonObject res = new JsonObject();
+        res.addProperty("available", !taken);
+        if (taken) res.addProperty("error", "This Habbo name is already taken.");
+        sendJson(ctx, req, HttpResponseStatus.OK, res);
+    }
+
+    /* ─── Logout ─── */
 
     private void handleLogout(ChannelHandlerContext ctx, FullHttpRequest req, com.google.gson.JsonObject body) {
         String ssoTicket = readString(body, "ssoTicket");
@@ -148,7 +260,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         sendJson(ctx, req, HttpResponseStatus.OK, ok);
     }
 
-    /* ─── Login ─────────────────────────────────────────────────────────── */
+    /* ─── Login ─── */
 
     private void handleLogin(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         String username = readString(body, "username").trim();
@@ -210,7 +322,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /* ─── Register ──────────────────────────────────────────────────────── */
+    /* ─── Register ─── */
 
     private void handleRegister(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         if (!Emulator.getConfig().getBoolean("login.register.enabled", true)) {
@@ -299,6 +411,9 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 ins.executeUpdate();
             }
 
+            AvailabilityCache.invalidateEmail(email);
+            AvailabilityCache.invalidateUsername(username);
+
             JsonObject ok = new JsonObject();
             ok.addProperty("message", "Welcome aboard, " + username + "! Your account is ready — log in below with the password you just chose.");
             sendJson(ctx, req, HttpResponseStatus.OK, ok);
@@ -308,7 +423,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /* ─── Forgot password ───────────────────────────────────────────────── */
+    /* ─── Forgot password ─── */
 
     private void handleForgot(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         String email = readString(body, "email").trim();
@@ -363,7 +478,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         sendJson(ctx, req, HttpResponseStatus.OK, ok);
     }
 
-    /* ─── Helpers ───────────────────────────────────────────────────────── */
+    /* ─── Helpers ─── */
 
     private static boolean checkPassword(String plain, String stored) {
         String compatible = stored.startsWith("$2y$") ? "$2a$" + stored.substring(4) : stored;
@@ -449,7 +564,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             response.headers().set("Vary", "Origin");
             response.headers().set("Access-Control-Allow-Credentials", "true");
         }
-        response.headers().set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        response.headers().set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
         response.headers().set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With");
     }
 
