@@ -1,0 +1,130 @@
+package com.eu.habbo.networking.gameserver.crypto;
+
+import com.eu.habbo.networking.gameserver.GameServerAttributes;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
+public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WsHandshakeHandler.class);
+
+    public static final String HANDLER_NAME = "wsCryptoHandshake";
+
+    private KeyPair serverKeyPair;
+    private boolean helloSent = false;
+    private boolean handshakeComplete = false;
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
+            sendServerHello(ctx);
+        }
+        super.userEventTriggered(ctx, evt);
+    }
+
+    private void sendServerHello(ChannelHandlerContext ctx) {
+        if (helloSent) return;
+        try {
+            this.serverKeyPair = WsSessionCrypto.generateEphemeralKeyPair();
+            byte[] spki = WsSessionCrypto.encodePublicKeySpki(serverKeyPair.getPublic());
+
+            ByteBuf buf = ctx.alloc().buffer(4 + 1 + 2 + spki.length);
+            buf.writeInt(WsSessionCrypto.HANDSHAKE_MAGIC);
+            buf.writeByte(WsSessionCrypto.TYPE_SERVER_HELLO);
+            buf.writeShort(spki.length);
+            buf.writeBytes(spki);
+
+            ctx.writeAndFlush(buf);
+            helloSent = true;
+        } catch (Exception e) {
+            LOGGER.error("[ws-crypto] failed to send server_hello", e);
+            ctx.close();
+        }
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (handshakeComplete) {
+            ctx.fireChannelRead(msg);
+            return;
+        }
+
+        if (!(msg instanceof ByteBuf)) {
+            ctx.fireChannelRead(msg);
+            return;
+        }
+
+        ByteBuf in = (ByteBuf) msg;
+        try {
+            if (in.readableBytes() < 7) {
+                LOGGER.warn("[ws-crypto] handshake frame too short ({} bytes) from {}", in.readableBytes(), clientAddress(ctx));
+                ctx.close();
+                return;
+            }
+
+            int magic = in.readInt();
+            if (magic != WsSessionCrypto.HANDSHAKE_MAGIC) {
+                LOGGER.warn("[ws-crypto] handshake magic mismatch: 0x{} from {}", Integer.toHexString(magic), clientAddress(ctx));
+                ctx.close();
+                return;
+            }
+
+            byte type = in.readByte();
+            if (type != WsSessionCrypto.TYPE_CLIENT_HELLO) {
+                LOGGER.warn("[ws-crypto] expected client_hello, got type=0x{} from {}", Integer.toHexString(type & 0xff), clientAddress(ctx));
+                ctx.close();
+                return;
+            }
+
+            int keyLen = in.readUnsignedShort();
+            if (keyLen <= 0 || keyLen > in.readableBytes() || keyLen > 2048) {
+                LOGGER.warn("[ws-crypto] invalid client key length {} from {}", keyLen, clientAddress(ctx));
+                ctx.close();
+                return;
+            }
+
+            byte[] clientSpki = new byte[keyLen];
+            in.readBytes(clientSpki);
+
+            PublicKey clientPub = WsSessionCrypto.decodePublicKeySpki(clientSpki);
+            PrivateKey ourPriv = serverKeyPair.getPrivate();
+            byte[] shared = WsSessionCrypto.deriveSharedSecret(ourPriv, clientPub);
+            byte[] aesKey = WsSessionCrypto.deriveAesKey(shared);
+
+            ctx.channel().attr(GameServerAttributes.WS_AES_KEY).set(aesKey);
+
+            ChannelPipeline p = ctx.pipeline();
+            p.addAfter(HANDLER_NAME, "wsAesDecoder", new WsAesDecoder());
+            p.addAfter(HANDLER_NAME, "wsAesEncoder", new WsAesEncoder());
+            handshakeComplete = true;
+            p.remove(this);
+
+            LOGGER.debug("[ws-crypto] handshake complete for {}", clientAddress(ctx));
+        } catch (Exception e) {
+            LOGGER.error("[ws-crypto] handshake failed from " + clientAddress(ctx), e);
+            ctx.close();
+        } finally {
+            in.release();
+        }
+    }
+
+    private static String clientAddress(ChannelHandlerContext ctx) {
+        String wsIp = ctx.channel().attr(GameServerAttributes.WS_IP).get();
+        if (wsIp != null && !wsIp.isEmpty()) return wsIp;
+        return String.valueOf(ctx.channel().remoteAddress());
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        LOGGER.error("[ws-crypto] handshake handler error", cause);
+        ctx.close();
+    }
+}

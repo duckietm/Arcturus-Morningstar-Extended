@@ -8,6 +8,9 @@ db.params=
 db.pool.minsize=25
 db.pool.maxsize=100
 
+# Encrypt your traffic
+crypto.ws.enabled=0
+
 #Game Configuration.
 #Host IP. Most likely just 0.0.0.0 Use 127.0.0.1 if you want to play on LAN.
 game.host=0.0.0.0
