@@ -190,7 +190,7 @@ public class CommandHandler {
         addCommand(new ControlCommand());
         addCommand(new CoordsCommand());
         addCommand(new CreditsCommand());
-		addCommand(new DanceCommand());
+        addCommand(new DanceCommand());
         addCommand(new DiagonalCommand());
         addCommand(new DisconnectCommand());
         addCommand(new EjectAllCommand());
@@ -230,7 +230,7 @@ public class CommandHandler {
         addCommand(new MutePetsCommand());
         addCommand(new PetInfoCommand());
         addCommand(new PickallCommand());
-		addCommand(new PingCommand());
+        addCommand(new PingCommand());
         addCommand(new PixelCommand());
         addCommand(new PluginsCommand());
         addCommand(new PointsCommand());
@@ -253,6 +253,7 @@ public class CommandHandler {
         addCommand(new SayCommand());
         addCommand(new SetMaxCommand());
         addCommand(new SetPollCommand());
+        addCommand(new SetRoomTemplateCommand());
         addCommand(new SetSpeedCommand());
         addCommand(new ShoutAllCommand());
         addCommand(new ShoutCommand());
