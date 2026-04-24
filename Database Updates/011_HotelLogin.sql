@@ -110,22 +110,26 @@ CREATE TABLE IF NOT EXISTS `room_templates_items` (
     FOREIGN KEY (`item_id`) REFERENCES `items_base` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE IF NOT EXISTS `users_remember_tokens` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `token_hash` char(64) NOT NULL,
-  `created_at` int(11) NOT NULL,
-  `expires_at` int(11) NOT NULL,
-  `ip_address` varchar(45) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `token_hash` (`token_hash`),
-  KEY `user_id` (`user_id`),
+CREATE TABLE IF NOT EXISTS `users_remember_families` (
+  `family_id`       char(36) NOT NULL,
+  `user_id`         int(11)  NOT NULL,
+  `current_version` int(11)  NOT NULL DEFAULT 1,
+  `created_at`      int(11)  NOT NULL,
+  `expires_at`      int(11)  NOT NULL,
+  `revoked`         tinyint(1) NOT NULL DEFAULT 0,
+  `last_ip`         varchar(45) NOT NULL DEFAULT '',
+  PRIMARY KEY (`family_id`),
+  KEY `user_id`    (`user_id`),
   KEY `expires_at` (`expires_at`),
-  CONSTRAINT `fk_remember_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_remember_family_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Optional: configure how long a remember token is valid (default 30 days).
+DROP TABLE IF EXISTS `users_remember_tokens`;
+
 INSERT INTO `emulator_settings` (`key`, `value`) VALUES
-  ('login.remember.duration.days', '30')
+  ('login.remember.duration.days',         '30'),
+  ('login.remember.rotate.interval.minutes', '15'),
+  ('login.remember.jwt.secret',            '')
 ON DUPLICATE KEY UPDATE `value` = `value`;
 
