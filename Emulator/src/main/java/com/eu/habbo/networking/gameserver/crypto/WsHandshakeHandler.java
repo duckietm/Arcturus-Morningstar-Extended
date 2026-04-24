@@ -3,6 +3,7 @@ package com.eu.habbo.networking.gameserver.crypto;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.networking.gameserver.GameServerAttributes;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
@@ -118,7 +119,7 @@ public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
 
             LOGGER.debug("[ws-crypto] handshake complete for {}", clientAddress(ctx));
         } catch (Exception e) {
-            LOGGER.error("[ws-crypto] handshake failed from " + clientAddress(ctx), e);
+            LOGGER.warn("[ws-crypto] handshake failed from {} : {}", clientAddress(ctx), friendlyReason(e));
             ctx.close();
         } finally {
             in.release();
@@ -131,9 +132,21 @@ public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
         return String.valueOf(ctx.channel().remoteAddress());
     }
 
+    private static String friendlyReason(Throwable t) {
+        if (t == null) return "unknown";
+        String name = t.getClass().getSimpleName();
+        String msg = t.getMessage();
+        return (msg == null || msg.isEmpty()) ? name : name + ": " + msg;
+    }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        LOGGER.error("[ws-crypto] handshake handler error", cause);
+        if (cause instanceof java.io.IOException) {
+            LOGGER.debug("[ws-crypto] client disconnected during handshake ({}): {}",
+                    clientAddress(ctx), friendlyReason(cause));
+        } else {
+            LOGGER.error("[ws-crypto] handshake handler error from " + clientAddress(ctx), cause);
+        }
         ctx.close();
     }
 }
