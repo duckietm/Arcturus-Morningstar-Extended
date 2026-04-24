@@ -39,7 +39,7 @@ public class WsAesDecoder extends MessageToMessageDecoder<ByteBuf> {
             byte[] plain = WsSessionCrypto.aesGcmDecrypt(key, nonce, ct);
             out.add(Unpooled.wrappedBuffer(plain));
         } catch (Exception e) {
-            LOGGER.warn("[ws-crypto] AES-GCM decrypt failed", e);
+            LOGGER.warn("[ws-crypto] AES-GCM decrypt failed ({}), closing channel", e.getClass().getSimpleName());
             ctx.close();
         }
     }
