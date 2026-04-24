@@ -34,6 +34,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
     private static final String CHECK_USERNAME_PATH  = "/api/auth/check-username";
     private static final String ROOM_TEMPLATES_PATH  = "/api/auth/room-templates";
     private static final String REMEMBER_PATH        = "/api/auth/remember";
+    private static final String REFRESH_PATH         = "/api/auth/refresh";
     private static final String HEALTH_PATH          = "/api/health";
 
     private static final Pattern USERNAME_RE = Pattern.compile("^[A-Za-z0-9._-]{3,32}$");
@@ -56,6 +57,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 && !path.equals(CHECK_EMAIL_PATH) && !path.equals(CHECK_USERNAME_PATH)
                 && !path.equals(ROOM_TEMPLATES_PATH)
                 && !path.equals(REMEMBER_PATH)
+                && !path.equals(REFRESH_PATH)
                 && !path.equals(HEALTH_PATH)) {
             super.channelRead(ctx, msg);
             return;
@@ -139,6 +141,10 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             handleRemember(ctx, req, body, ip);
             return;
         }
+        if (path.equals(REFRESH_PATH)) {
+            handleRefresh(ctx, req, body, ip);
+            return;
+        }
 
         String turnstileToken = readString(body, "turnstileToken");
         if (!TurnstileVerifier.verify(turnstileToken, ip)) {
@@ -153,8 +159,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             case FORGOT_PATH   -> handleForgot(ctx, req, body, ip);
         }
     }
-
-    /* ─── Availability probes ─── */
 
     private void handleCheckEmail(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         if (!AuthRateLimiter.tryProbe(ip)) {
@@ -235,8 +239,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         sendJson(ctx, req, HttpResponseStatus.OK, res);
     }
 
-    /* ─── Logout ─── */
-
     private void handleLogout(ChannelHandlerContext ctx, FullHttpRequest req, com.google.gson.JsonObject body) {
         String ssoTicket = readString(body, "ssoTicket");
         String rememberToken = readString(body, "rememberToken").trim();
@@ -273,17 +275,8 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 }
             }
 
-            // Delete only the specific remember token for this device.
-            // Other devices keep their tokens and can still silent-login.
             if (!rememberToken.isEmpty()) {
-                String hash = sha256Hex(rememberToken);
-                if (hash != null) {
-                    try (PreparedStatement del = conn.prepareStatement(
-                            "DELETE FROM users_remember_tokens WHERE token_hash = ?")) {
-                        del.setString(1, hash);
-                        del.executeUpdate();
-                    }
-                }
+                RememberJwtService.revokeFromToken(conn, rememberToken);
             }
         } catch (Exception e) {
             LOGGER.error("Logout cleanup failed", e);
@@ -292,69 +285,16 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         sendJson(ctx, req, HttpResponseStatus.OK, ok);
     }
 
-    /* ─── Remember me ─── */
-
     private void handleRemember(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
-        String rememberToken = readString(body, "rememberToken").trim();
-        if (rememberToken.isEmpty()) {
+        String jwt = readString(body, "rememberToken").trim();
+        if (jwt.isEmpty()) {
             sendJson(ctx, req, HttpResponseStatus.BAD_REQUEST, errorPayload("Missing rememberToken."));
             return;
         }
 
-        String hash = sha256Hex(rememberToken);
-        if (hash == null) {
-            sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
-            return;
-        }
-
-        int now = Emulator.getIntUnixTimestamp();
-
         try (Connection conn = Emulator.getDatabase().getDataSource().getConnection()) {
-            int userId = 0;
-            int tokenRowId = 0;
-
-            try (PreparedStatement sel = conn.prepareStatement(
-                    "SELECT id, user_id, expires_at FROM users_remember_tokens WHERE token_hash = ? LIMIT 1")) {
-                sel.setString(1, hash);
-                try (ResultSet rs = sel.executeQuery()) {
-                    if (rs.next()) {
-                        if (rs.getInt("expires_at") > now) {
-                            userId = rs.getInt("user_id");
-                            tokenRowId = rs.getInt("id");
-                        } else {
-                            tokenRowId = rs.getInt("id"); // expired - still purge below
-                        }
-                    }
-                }
-            }
-
-            if (userId <= 0) {
-                if (tokenRowId > 0) {
-                    try (PreparedStatement del = conn.prepareStatement(
-                            "DELETE FROM users_remember_tokens WHERE id = ?")) {
-                        del.setInt(1, tokenRowId);
-                        del.executeUpdate();
-                    }
-                }
-                sendJson(ctx, req, HttpResponseStatus.UNAUTHORIZED, errorPayload("Remember token invalid or expired."));
-                return;
-            }
-
-            String username = null;
-            try (PreparedStatement usr = conn.prepareStatement(
-                    "SELECT username FROM users WHERE id = ? LIMIT 1")) {
-                usr.setInt(1, userId);
-                try (ResultSet rs = usr.executeQuery()) {
-                    if (rs.next()) username = rs.getString("username");
-                }
-            }
-
-            if (username == null) {
-                try (PreparedStatement del = conn.prepareStatement(
-                        "DELETE FROM users_remember_tokens WHERE id = ?")) {
-                    del.setInt(1, tokenRowId);
-                    del.executeUpdate();
-                }
+            RememberJwtService.RotationResult rot = RememberJwtService.rotate(conn, jwt, ip);
+            if (rot == null) {
                 sendJson(ctx, req, HttpResponseStatus.UNAUTHORIZED, errorPayload("Remember token invalid or expired."));
                 return;
             }
@@ -364,23 +304,15 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                     "UPDATE users SET auth_ticket = ?, ip_current = ? WHERE id = ? LIMIT 1")) {
                 upd.setString(1, ssoTicket);
                 upd.setString(2, ip == null ? "" : ip);
-                upd.setInt(3, userId);
+                upd.setInt(3, rot.userId);
                 upd.executeUpdate();
             }
 
-            // Rotate: drop the consumed token and issue a new one.
-            try (PreparedStatement del = conn.prepareStatement(
-                    "DELETE FROM users_remember_tokens WHERE id = ?")) {
-                del.setInt(1, tokenRowId);
-                del.executeUpdate();
-            }
-
-            String newToken = issueRememberToken(conn, userId, ip);
-
             JsonObject ok = new JsonObject();
             ok.addProperty("ssoTicket", ssoTicket);
-            ok.addProperty("username", username);
-            if (newToken != null) ok.addProperty("rememberToken", newToken);
+            ok.addProperty("username", rot.username);
+            ok.addProperty("rememberToken", rot.jwt);
+            ok.addProperty("expiresAt", rot.expiresAt);
             sendJson(ctx, req, HttpResponseStatus.OK, ok);
         } catch (Exception e) {
             LOGGER.error("Remember login failed", e);
@@ -388,56 +320,28 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /**
-     * Generates a fresh remember-me token for a user, stores the hash,
-     * and returns the raw base64url string to embed in the response.
-     * Returns null on failure (the login still succeeds).
-     */
-    private static String issueRememberToken(Connection conn, int userId, String ip) {
-        byte[] buf = new byte[32];
-        RNG.nextBytes(buf);
-        String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(buf);
-        String hash = sha256Hex(raw);
-        if (hash == null) return null;
-
-        int now = Emulator.getIntUnixTimestamp();
-        int days = Math.max(1, Emulator.getConfig().getInt("login.remember.duration.days", 30));
-        int expiresAt = now + (days * 24 * 60 * 60);
-
-        try (PreparedStatement ins = conn.prepareStatement(
-                "INSERT INTO users_remember_tokens (user_id, token_hash, created_at, expires_at, ip_address) VALUES (?, ?, ?, ?, ?)")) {
-            ins.setInt(1, userId);
-            ins.setString(2, hash);
-            ins.setInt(3, now);
-            ins.setInt(4, expiresAt);
-            ins.setString(5, ip == null ? "" : ip);
-            ins.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Failed to persist remember token for userId=" + userId, e);
-            return null;
+    private void handleRefresh(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
+        String jwt = readString(body, "rememberToken").trim();
+        if (jwt.isEmpty()) {
+            sendJson(ctx, req, HttpResponseStatus.BAD_REQUEST, errorPayload("Missing rememberToken."));
+            return;
         }
 
-        return raw;
-    }
-
-    private static String sha256Hex(String input) {
-        try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
-                String h = Integer.toHexString(b & 0xff);
-                if (h.length() == 1) sb.append('0');
-                sb.append(h);
+        try (Connection conn = Emulator.getDatabase().getDataSource().getConnection()) {
+            RememberJwtService.RotationResult rot = RememberJwtService.rotate(conn, jwt, ip);
+            if (rot == null) {
+                sendJson(ctx, req, HttpResponseStatus.UNAUTHORIZED, errorPayload("Remember token invalid or expired."));
+                return;
             }
-            return sb.toString();
+            JsonObject ok = new JsonObject();
+            ok.addProperty("rememberToken", rot.jwt);
+            ok.addProperty("expiresAt", rot.expiresAt);
+            sendJson(ctx, req, HttpResponseStatus.OK, ok);
         } catch (Exception e) {
-            LOGGER.error("sha256Hex failed", e);
-            return null;
+            LOGGER.error("Refresh failed", e);
+            sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
         }
     }
-
-    /* ─── Login ─── */
 
     private void handleLogin(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         String username = readString(body, "username").trim();
@@ -487,7 +391,16 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                     upd.executeUpdate();
                 }
 
-                String rememberToken = rememberMe ? issueRememberToken(conn, userId, ip) : null;
+                String rememberToken = null;
+                if (rememberMe) {
+                    try {
+                        RememberJwtService.RotationResult issued = RememberJwtService.issueForNewFamily(
+                                conn, userId, rs.getString("username"), ip);
+                        rememberToken = issued.jwt;
+                    } catch (SQLException e) {
+                        LOGGER.error("Failed to issue remember-me JWT for userId=" + userId, e);
+                    }
+                }
 
                 AuthRateLimiter.recordSuccess(ip);
 
@@ -502,8 +415,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
             sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
         }
     }
-
-    /* ─── Register ─── */
 
     private void handleRegister(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         if (!Emulator.getConfig().getBoolean("login.register.enabled", true)) {
@@ -633,13 +544,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /**
-     * If the template carries a custom heightmap (override_model='1' and a
-     * non-empty heightmap), creates the matching room_models_custom row keyed
-     * by the new room id and renames the room's model to custom_&lt;newRoomId&gt;.
-     * Without this, cloned rooms reference a layout that doesn't exist
-     * (the source room's id) and load as a black screen.
-     */
     private static void materializeCustomLayout(Connection conn, int templateId, int newRoomId) {
         String overrideModel = "0";
         String heightmap = "";
@@ -697,11 +601,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         LOGGER.info("[auth/register] materialized custom layout '{}' for roomId={}", customName, newRoomId);
     }
 
-    /**
-     * Seeds starting balances into users_currency for duckets (type=0) and
-     * diamonds (type=5). Only inserts when the amount is &gt; 0. Credits live
-     * in users.credits and are set directly during the register INSERT.
-     */
     private static void seedUserCurrencies(Connection conn, int userId, int duckets, int diamonds) {
         try (PreparedStatement ins = conn.prepareStatement(
                 "INSERT INTO users_currency (user_id, type, amount) VALUES (?, ?, ?) " +
@@ -724,8 +623,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                     + " duckets=" + duckets + " diamonds=" + diamonds, e);
         }
     }
-
-    /* ─── Room templates (registration step 3) ─── */
 
     private void handleRoomTemplates(ChannelHandlerContext ctx, FullHttpRequest req) {
         JsonArray templates = new JsonArray();
@@ -754,11 +651,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         sendJson(ctx, req, HttpResponseStatus.OK, res);
     }
 
-    /**
-     * Clones a room_templates entry + its room_templates_items into the new
-     * user's rooms/items rows, then points their home_room at the new room.
-     * Failures here do not abort registration; the account is still created.
-     */
     private static void cloneTemplateForUser(Connection conn, int templateId, int userId, String userName) {
         LOGGER.info("[auth/register] cloning template id={} for user id={} name='{}'", templateId, userId, userName);
 
@@ -836,8 +728,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    /* ─── Forgot password ─── */
-
     private void handleForgot(ChannelHandlerContext ctx, FullHttpRequest req, JsonObject body, String ip) {
         String email = readString(body, "email").trim();
 
@@ -890,8 +780,6 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
 
         sendJson(ctx, req, HttpResponseStatus.OK, ok);
     }
-
-    /* ─── Helpers ─── */
 
     private static boolean checkPassword(String plain, String stored) {
         String compatible = stored.startsWith("$2y$") ? "$2a$" + stored.substring(4) : stored;
