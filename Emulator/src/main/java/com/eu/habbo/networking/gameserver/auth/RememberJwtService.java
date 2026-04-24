@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -181,8 +182,8 @@ public final class RememberJwtService {
         String newJwt = buildJwt(parsed.userId, parsed.familyId, newVersion, now, newExpiresAt);
         return new RotationResult(newJwt, parsed.userId, username, newExpiresAt);
     }
-	
-	public static void revokeFromToken(Connection conn, String jwt) {
+
+    public static void revokeFromToken(Connection conn, String jwt) {
         try {
             ParsedJwt p = verifyAndParse(jwt);
             revokeFamilyById(conn, p.familyId);

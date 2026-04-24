@@ -1,5 +1,6 @@
 package com.eu.habbo.networking.gameserver.crypto;
 
+import com.eu.habbo.Emulator;
 import com.eu.habbo.networking.gameserver.GameServerAttributes;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,9 +16,8 @@ import java.security.PublicKey;
 
 public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(WsHandshakeHandler.class);
-
     public static final String HANDLER_NAME = "wsCryptoHandshake";
-
+    private static final boolean SIGN_ENABLED = Emulator.getConfig().getBoolean("crypto.ws.signing.enabled", false);
     private KeyPair serverKeyPair;
     private boolean helloSent = false;
     private boolean handshakeComplete = false;
@@ -35,12 +35,23 @@ public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
         try {
             this.serverKeyPair = WsSessionCrypto.generateEphemeralKeyPair();
             byte[] spki = WsSessionCrypto.encodePublicKeySpki(serverKeyPair.getPublic());
+            byte[] sigIeee = null;
+            if (SIGN_ENABLED) {
+                KeyPair signingKp = CryptoSigningKeyManager.get();
+                byte[] sigDer = WsSessionCrypto.signEcdsaSha256(signingKp.getPrivate(), spki);
+                sigIeee = WsSessionCrypto.derToIeee1363(sigDer);
+            }
 
-            ByteBuf buf = ctx.alloc().buffer(4 + 1 + 2 + spki.length);
+            int frameLen = 4 + 1 + 2 + spki.length + (sigIeee != null ? 2 + sigIeee.length : 0);
+            ByteBuf buf = ctx.alloc().buffer(frameLen);
             buf.writeInt(WsSessionCrypto.HANDSHAKE_MAGIC);
             buf.writeByte(WsSessionCrypto.TYPE_SERVER_HELLO);
             buf.writeShort(spki.length);
             buf.writeBytes(spki);
+            if (sigIeee != null) {
+                buf.writeShort(sigIeee.length);
+                buf.writeBytes(sigIeee);
+            }
 
             ctx.writeAndFlush(buf);
             helloSent = true;
@@ -98,9 +109,7 @@ public class WsHandshakeHandler extends ChannelInboundHandlerAdapter {
             PrivateKey ourPriv = serverKeyPair.getPrivate();
             byte[] shared = WsSessionCrypto.deriveSharedSecret(ourPriv, clientPub);
             byte[] aesKey = WsSessionCrypto.deriveAesKey(shared);
-
             ctx.channel().attr(GameServerAttributes.WS_AES_KEY).set(aesKey);
-
             ChannelPipeline p = ctx.pipeline();
             p.addAfter(HANDLER_NAME, "wsAesDecoder", new WsAesDecoder());
             p.addAfter(HANDLER_NAME, "wsAesEncoder", new WsAesEncoder());
