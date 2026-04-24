@@ -8,6 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -95,5 +96,68 @@ public final class WsSessionCrypto {
         byte[] n = new byte[NONCE_LEN];
         RNG.nextBytes(n);
         return n;
+    }
+
+    public static KeyPair generateSigningKeyPair() throws GeneralSecurityException {
+        return generateEphemeralKeyPair();
+    }
+
+    public static PrivateKey decodePrivateKeyPkcs8(byte[] pkcs8) throws GeneralSecurityException {
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        return kf.generatePrivate(new PKCS8EncodedKeySpec(pkcs8));
+    }
+
+    public static byte[] encodePrivateKeyPkcs8(PrivateKey privateKey) {
+        return privateKey.getEncoded();
+    }
+
+    public static byte[] signEcdsaSha256(PrivateKey signingKey, byte[] message) throws GeneralSecurityException {
+        Signature sig = Signature.getInstance("SHA256withECDSA");
+        sig.initSign(signingKey);
+        sig.update(message);
+        return sig.sign();
+    }
+
+    public static byte[] derToIeee1363(byte[] der) throws GeneralSecurityException {
+        if (der == null || der.length < 8 || der[0] != 0x30) {
+            throw new GeneralSecurityException("Malformed DER signature");
+        }
+
+        int seqLen;
+        int idx;
+        if ((der[1] & 0x80) == 0) {
+            seqLen = der[1] & 0xff;
+            idx = 2;
+        } else {
+            int lenBytes = der[1] & 0x7f;
+            if (lenBytes > 2) throw new GeneralSecurityException("DER length too big");
+            seqLen = 0;
+            for (int i = 0; i < lenBytes; i++) seqLen = (seqLen << 8) | (der[2 + i] & 0xff);
+            idx = 2 + lenBytes;
+        }
+        if (idx + seqLen > der.length) throw new GeneralSecurityException("DER truncated");
+
+        if (der[idx] != 0x02) throw new GeneralSecurityException("Expected INTEGER r");
+        int rLen = der[idx + 1] & 0xff;
+        int rStart = idx + 2;
+
+        int sHeader = rStart + rLen;
+        if (der[sHeader] != 0x02) throw new GeneralSecurityException("Expected INTEGER s");
+        int sLen = der[sHeader + 1] & 0xff;
+        int sStart = sHeader + 2;
+
+        byte[] r = stripLeadingZero(Arrays.copyOfRange(der, rStart, rStart + rLen));
+        byte[] s = stripLeadingZero(Arrays.copyOfRange(der, sStart, sStart + sLen));
+
+        byte[] out = new byte[64];
+        System.arraycopy(r, 0, out, 32 - r.length, r.length);
+        System.arraycopy(s, 0, out, 64 - s.length, s.length);
+        return out;
+    }
+
+    private static byte[] stripLeadingZero(byte[] v) {
+        int i = 0;
+        while (i < v.length - 1 && v[i] == 0x00) i++;
+        return Arrays.copyOfRange(v, i, v.length);
     }
 }

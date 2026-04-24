@@ -35,6 +35,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
     private static final String ROOM_TEMPLATES_PATH  = "/api/auth/room-templates";
     private static final String REMEMBER_PATH        = "/api/auth/remember";
     private static final String REFRESH_PATH         = "/api/auth/refresh";
+    private static final String SERVER_KEY_PATH      = "/api/auth/server-key";
     private static final String HEALTH_PATH          = "/api/health";
 
     private static final Pattern USERNAME_RE = Pattern.compile("^[A-Za-z0-9._-]{3,32}$");
@@ -58,6 +59,7 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 && !path.equals(ROOM_TEMPLATES_PATH)
                 && !path.equals(REMEMBER_PATH)
                 && !path.equals(REFRESH_PATH)
+                && !path.equals(SERVER_KEY_PATH)
                 && !path.equals(HEALTH_PATH)) {
             super.channelRead(ctx, msg);
             return;
@@ -93,6 +95,15 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
                 return;
             }
             handleRoomTemplates(ctx, req);
+            return;
+        }
+
+        if (path.equals(SERVER_KEY_PATH)) {
+            if (req.method() != HttpMethod.GET && req.method() != HttpMethod.HEAD) {
+                sendJson(ctx, req, HttpResponseStatus.METHOD_NOT_ALLOWED, errorPayload("Use GET."));
+                return;
+            }
+            handleServerKey(ctx, req);
             return;
         }
 
@@ -649,6 +660,18 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
         JsonObject res = new JsonObject();
         res.add("templates", templates);
         sendJson(ctx, req, HttpResponseStatus.OK, res);
+    }
+
+    private void handleServerKey(ChannelHandlerContext ctx, FullHttpRequest req) {
+        try {
+            JsonObject ok = new JsonObject();
+            ok.addProperty("publicKey", com.eu.habbo.networking.gameserver.crypto.CryptoSigningKeyManager.publicKeyBase64());
+            ok.addProperty("algorithm", "ECDSA-P256-SHA256");
+            sendJson(ctx, req, HttpResponseStatus.OK, ok);
+        } catch (Exception e) {
+            LOGGER.error("server-key fetch failed", e);
+            sendJson(ctx, req, HttpResponseStatus.INTERNAL_SERVER_ERROR, errorPayload("Server error."));
+        }
     }
 
     private static void cloneTemplateForUser(Connection conn, int templateId, int userId, String userName) {

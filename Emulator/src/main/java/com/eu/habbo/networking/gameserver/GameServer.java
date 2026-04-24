@@ -96,6 +96,16 @@ public class GameServer extends Server {
             LOGGER.error("Failed to start WebSocket server on {}:{}", wsHost, wsPort);
         } else {
             LOGGER.info("WebSocket server started on {}:{} (SSL: {})", wsHost, wsPort, wsInitializer.isSslEnabled());
+
+            if (com.eu.habbo.Emulator.getConfig().getBoolean("crypto.ws.signing.enabled", false)) {
+                try {
+                    com.eu.habbo.networking.gameserver.crypto.CryptoSigningKeyManager.get();
+                    LOGGER.info("[ws-crypto] signing public key ready: {}",
+                            com.eu.habbo.networking.gameserver.crypto.CryptoSigningKeyManager.publicKeyBase64());
+                } catch (Exception e) {
+                    LOGGER.error("[ws-crypto] failed to warm signing keypair", e);
+                }
+            }
         }
     }
 
