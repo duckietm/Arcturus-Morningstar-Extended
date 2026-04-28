@@ -219,6 +219,10 @@ public class Messenger {
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         }
+
+        if (habbo.hasPermission(StaffChatBuddy.PERMISSION_KEY)) {
+            this.friends.putIfAbsent(StaffChatBuddy.BUDDY_ID, new StaffChatBuddy(habbo.getHabboInfo().getId()));
+        }
     }
 
     public MessengerBuddy loadFriend(Habbo habbo, int userId) {

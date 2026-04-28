@@ -1,37 +1,3 @@
--- =============================================================================
--- Consolidated Database Updates - All-in-One
--- =============================================================================
--- This file combines ALL individual update scripts from SQL/Database Updates/
--- into a single idempotent migration. Every statement is safe to re-run:
---   - ALTER TABLE ADD COLUMN IF NOT EXISTS  (MariaDB 10.0+)
---   - ALTER TABLE CHANGE/MODIFY COLUMN IF EXISTS
---   - CREATE TABLE IF NOT EXISTS
---   - INSERT IGNORE / ON DUPLICATE KEY UPDATE for settings
---   - TRUNCATE + re-insert for reference data (breeding)
---
--- Run order: This file FIRST, then 001_optimize_gameserver.sql
---
--- Source files (in applied order):
---   1.  UpdateDatabase_Allow_diagonale.sql
---   2.  UpdateDatabase_BOT.sql
---   3.  UpdateDatabase_Banners.sql
---   4.  UpdateDatabase_DanceCMD.sql
---   5.  UpdateDatabase_Happiness.sql
---   6.  UpdateDatabase_Websocket.sql
---   7.  UpdateDatabase_unignorable.sql
---   8.  Default_Camera.sql
---   9.  07012026_UpdateDatabase_to_4-0-1.sql
---   10. 09012026_UpdateDatabase_to_4-0-2.sql
---   11. 12012026_Battle Banzai.sql  (same as #10, deduplicated)
---   12. 12012026_Breeding Fixes.sql
---   13. 12012026_ChatBubbles.sql
---   14. 16032026_updateall_command.sql
---   15. 17032026_allow_underpass.sql
---   16. 19032026_hotel_timezone.sql
---   17. 21022026_user_prefixes.sql
---   18. 06042026_builders_club_catalog_offers.sql
--- =============================================================================
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 SET @OLD_SQL_MODE = @@SQL_MODE;
@@ -512,8 +478,13 @@ ALTER TABLE `users_settings`
   ADD COLUMN IF NOT EXISTS `builders_club_bonus_furni` INT(11) NOT NULL DEFAULT 0 AFTER `hc_gifts_claimed`;
 
 
+INSERT INTO `permission_definitions` (`permission_key`, `max_value`, `comment`)
+VALUES ( 'acc_staff_chat', 1, 'Grants access to the in-game Staff Chat group buddy: receives broadcasts from other staff and can broadcast to anyone holding this permission.' )
+ON DUPLICATE KEY UPDATE `max_value` = VALUES(`max_value`), `comment`   = VALUES(`comment`);
+
 -- =============================================================================
--- Done
+-- Done.
 -- =============================================================================
+
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_MODE = @OLD_SQL_MODE;
