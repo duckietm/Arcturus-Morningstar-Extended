@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.GameEnvironment;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
@@ -38,6 +39,9 @@ import java.util.List;
 public class WiredConditionTriggerFurniAdjacentState extends InteractionWiredCondition {
 
     public static final WiredConditionType type = WiredConditionType.TRG_FURNI_ADJACENT_STATE;
+
+    /** The cap {@link WiredConditionUserOnFurniWithState} puts on its state. */
+    private static final int MAX_STATE_LENGTH = 256;
 
     private String requiredState = "";
     private final HashSet<Integer> selectedFurni = new HashSet<>();
@@ -81,7 +85,7 @@ public class WiredConditionTriggerFurniAdjacentState extends InteractionWiredCon
         var allowedBaseItems = new HashSet<Integer>();
         for (int itemId : this.selectedFurni) {
             HabboItem selected = room.getHabboItem(itemId);
-            if (selected != null) {
+            if (selected != null && selected.getBaseItem() != null) {
                 allowedBaseItems.add(selected.getBaseItem().getId());
             }
         }
@@ -98,8 +102,10 @@ public class WiredConditionTriggerFurniAdjacentState extends InteractionWiredCon
                     continue;
                 }
 
+                // A furni without a base item has no type to scope by; it only counts when nothing is.
                 if (!allowedBaseItems.isEmpty()
-                        && !allowedBaseItems.contains(item.getBaseItem().getId())) {
+                        && (item.getBaseItem() == null
+                                || !allowedBaseItems.contains(item.getBaseItem().getId()))) {
                     continue;
                 }
 
@@ -143,35 +149,58 @@ public class WiredConditionTriggerFurniAdjacentState extends InteractionWiredCon
 
     @Override
     public boolean saveData(WiredSettings settings) {
-        String state = settings.getStringParam();
-        this.requiredState = (state == null) ? "" : state;
-
+        this.requiredState = normalizeRequiredState(settings.getStringParam());
         this.selectedFurni.clear();
 
-        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
-
         int[] furniIds = settings.getFurniIds();
-        if (furniIds != null) {
-            int maxFurni = Emulator.getConfig()
-                    .getInt("hotel.wired.furni.selection.count", WiredManager.MAXIMUM_FURNI_SELECTION);
-            if (furniIds.length > maxFurni) {
-                return false;
-            }
+        if (furniIds == null || furniIds.length == 0) {
+            return true;
+        }
 
-            for (int itemId : furniIds) {
-                if (room == null) {
-                    this.selectedFurni.add(itemId);
-                    continue;
-                }
+        int maxFurni =
+                Emulator.getConfig().getInt("hotel.wired.furni.selection.count", WiredManager.MAXIMUM_FURNI_SELECTION);
+        if (furniIds.length > maxFurni) {
+            return false;
+        }
 
-                HabboItem item = room.getHabboItem(itemId);
-                if (item != null) {
-                    this.selectedFurni.add(item.getId());
-                }
+        // Only furni the room can resolve are kept: an id nobody can look up is not a selection.
+        Room room = this.resolveRoom(settings);
+        if (room == null) {
+            return true;
+        }
+
+        for (int itemId : furniIds) {
+            HabboItem item = room.getHabboItem(itemId);
+            if (item != null) {
+                this.selectedFurni.add(item.getId());
             }
         }
 
         return true;
+    }
+
+    /** The room this box stands in, looked up through the room manager. */
+    private Room resolveRoom(WiredSettings settings) {
+        GameEnvironment environment = Emulator.getGameEnvironment();
+        if (environment == null || environment.getRoomManager() == null) {
+            return null;
+        }
+
+        return environment.getRoomManager().getRoom(this.getRoomId());
+    }
+
+    /** Trimmed and capped, as {@link WiredConditionUserOnFurniWithState#normalizeRequiredState} does it. */
+    static String normalizeRequiredState(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String trimmed = value.trim();
+        if (trimmed.length() > MAX_STATE_LENGTH) {
+            return trimmed.substring(0, MAX_STATE_LENGTH);
+        }
+
+        return trimmed;
     }
 
     @Override
@@ -201,7 +230,7 @@ public class WiredConditionTriggerFurniAdjacentState extends InteractionWiredCon
                 return;
             }
 
-            this.requiredState = (data.state == null) ? "" : data.state;
+            this.requiredState = normalizeRequiredState(data.state);
 
             if (data.furni != null) {
                 for (Integer itemId : data.furni) {

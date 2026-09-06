@@ -10,9 +10,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class WiredConditionNotUserPerformsAction extends WiredConditionUserPerformsAction {
-    private static final int QUANTIFIER_ANY_NOT_MATCH = 0;
-    private static final int QUANTIFIER_NONE_MATCH = 1;
-
     public static final WiredConditionType type = WiredConditionType.NOT_USER_PERFORMS_ACTION;
 
     public WiredConditionNotUserPerformsAction(ResultSet set, Item baseItem) throws SQLException {
@@ -31,11 +28,13 @@ public class WiredConditionNotUserPerformsAction extends WiredConditionUserPerfo
             return false;
         }
 
-        if (this.getQuantifier() == QUANTIFIER_NONE_MATCH) {
-            return targets.stream().noneMatch(roomUnit -> this.matchesAction(ctx, roomUnit));
+        // The positive box's answer with the same quantifier, turned around: "any" is "not any
+        // acts" and "all" is "not all act", as every other negative condition reads it.
+        if (this.getQuantifier() == QUANTIFIER_ANY) {
+            return !targets.stream().anyMatch(roomUnit -> this.matchesAction(ctx, roomUnit));
         }
 
-        return targets.stream().anyMatch(roomUnit -> !this.matchesAction(ctx, roomUnit));
+        return !targets.stream().allMatch(roomUnit -> this.matchesAction(ctx, roomUnit));
     }
 
     @Override

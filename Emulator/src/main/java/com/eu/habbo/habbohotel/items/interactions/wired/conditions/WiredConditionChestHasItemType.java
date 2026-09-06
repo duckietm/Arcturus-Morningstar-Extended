@@ -1,5 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.conditions;
 
+import com.eu.habbo.WiredPlatform;
+import com.eu.habbo.core.ConfigurationManager;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredComparison;
@@ -69,9 +71,31 @@ public class WiredConditionChestHasItemType extends InteractionWiredCondition {
         this.amount = (params.length > 1) ? Math.max(1, params[1]) : 1;
         this.comparison = (params.length > 2) ? WiredComparison.normalize(params[2]) : WiredComparison.GREATER_EQUAL;
 
+        return this.selectChests(settings);
+    }
+
+    /**
+     * Keeps only the selected furni that are chests the room knows, and no more of them than the hotel
+     * lets a wired box select - a plain furni or an id nobody can look up is not a chest.
+     */
+    private boolean selectChests(WiredSettings settings) {
+        int[] furniIds = (settings.getFurniIds() != null) ? settings.getFurniIds() : new int[0];
+        ConfigurationManager config = WiredPlatform.configuration();
+        int cap = (config == null) ? Integer.MAX_VALUE : config.getInt("hotel.wired.furni.selection.count");
+        if (furniIds.length > cap) {
+            return false;
+        }
+
+        Room room = (WiredPlatform.gameEnvironment() == null)
+                ? null
+                : WiredPlatform.gameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (room == null) {
+            return false;
+        }
+
         this.chestIds.clear();
-        if (settings.getFurniIds() != null) {
-            for (int id : settings.getFurniIds()) {
+        for (int id : furniIds) {
+            if (room.getHabboItem(id) instanceof InteractionWiredChest) {
                 this.chestIds.add(id);
             }
         }

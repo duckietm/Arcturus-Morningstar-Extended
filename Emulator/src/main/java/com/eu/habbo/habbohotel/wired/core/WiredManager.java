@@ -662,6 +662,18 @@ public final class WiredManager {
     }
 
     /**
+     * Trigger the long one-shot timer.
+     */
+    public static boolean triggerTimerTickLong(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null || timerItem == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerTickLong(room, timerItem);
+        return handleEventForSourceItem(event, timerItem);
+    }
+
+    /**
      * Trigger a short periodic timer.
      */
     public static boolean triggerTimerRepeatShort(Room room, HabboItem timerItem) {

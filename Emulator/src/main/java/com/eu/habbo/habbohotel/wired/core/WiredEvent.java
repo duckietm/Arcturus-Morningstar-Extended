@@ -73,6 +73,9 @@ public final class WiredEvent {
         /** Long timer repeat */
         TIMER_REPEAT_LONG(WiredTriggerType.PERIODICALLY_LONG),
 
+        /** The long one-shot timer fires; its own event because the room index looks stacks up by legacy type */
+        TIMER_TICK_LONG(WiredTriggerType.AT_GIVEN_TIME_LONG),
+
         /** Short timer repeat */
         TIMER_REPEAT_SHORT(WiredTriggerType.PERIODICALLY_SHORT),
 

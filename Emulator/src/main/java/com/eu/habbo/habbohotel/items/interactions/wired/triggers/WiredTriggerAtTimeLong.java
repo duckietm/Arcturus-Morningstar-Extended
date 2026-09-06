@@ -20,15 +20,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Long-interval one-shot timer wired trigger.
+ * Long-interval one-shot timer wired trigger: {@link WiredTriggerRepeaterLong} is to
+ * {@link WiredTriggerRepeater} what this is to the plain given-time timer.
  * <p>
- * Uses the new 50ms tick system via {@link WiredTickable} for accurate
- * timing with 5-second increments.
+ * Uses the new 50ms tick system via {@link WiredTickable} for accurate timing with 5-second
+ * increments. Stored values are milliseconds, so rows written while this was a half-second clone
+ * keep loading; only the client units changed. It reports
+ * {@link WiredTriggerType#AT_GIVEN_TIME_LONG}, so the event fired from {@link #onWiredTick} has to
+ * be one whose legacy type maps there, or the room index never finds this stack.
  * </p>
  */
 public class WiredTriggerAtTimeLong extends InteractionWiredTrigger implements WiredTickable, WiredTriggerReset {
-    private static final WiredTriggerType type = WiredTriggerType.AT_GIVEN_TIME;
-    private static final int STEP_MS = 500;
+    private static final WiredTriggerType type = WiredTriggerType.AT_GIVEN_TIME_LONG;
+    private static final int STEP_MS = 5000;
     private static final int MIN_DELAY = STEP_MS;
     private static final int LEGACY_FALLBACK_DELAY = 20 * STEP_MS;
 
@@ -111,7 +115,7 @@ public class WiredTriggerAtTimeLong extends InteractionWiredTrigger implements W
         message.appendInt(this.getId());
         message.appendString("");
         message.appendInt(1);
-        message.appendInt(this.executeTime / 500);
+        message.appendInt(this.executeTime / STEP_MS);
         message.appendInt(1);
         message.appendInt(this.getType().code);
 
@@ -163,7 +167,7 @@ public class WiredTriggerAtTimeLong extends InteractionWiredTrigger implements W
 
                 this.hasFired = true;
                 this.accumulatedTime = 0;
-                WiredManager.triggerTimerTick(room, this);
+                WiredManager.triggerTimerTickLong(room, this);
                 return;
             }
 

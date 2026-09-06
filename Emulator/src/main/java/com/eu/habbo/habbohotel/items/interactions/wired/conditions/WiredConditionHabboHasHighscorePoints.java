@@ -37,8 +37,10 @@ public class WiredConditionHabboHasHighscorePoints extends InteractionWiredCondi
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
     private int quantifier = QUANTIFIER_ALL;
     private final List<Integer> boardIds = new ArrayList<>();
-    private IntFunction<List<WiredHighscoreDataEntry>> scores = boardId ->
-            WiredPlatform.gameEnvironment().getItemManager().getHighscoreManager().getEntriesForItemId(boardId);
+    private IntFunction<List<WiredHighscoreDataEntry>> scores = boardId -> WiredPlatform.gameEnvironment()
+            .getItemManager()
+            .getHighscoreManager()
+            .getEntriesForItemId(boardId);
 
     public WiredConditionHabboHasHighscorePoints(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

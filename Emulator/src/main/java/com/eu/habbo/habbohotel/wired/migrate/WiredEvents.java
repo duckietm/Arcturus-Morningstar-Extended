@@ -292,6 +292,18 @@ public final class WiredEvents {
     }
 
     /**
+     * Create an event for the long one-shot timer (AT_GIVEN_TIME_LONG).
+     * @param room the room
+     * @param timerItem the timer furniture
+     * @return the event
+     */
+    public static WiredEvent timerTickLong(Room room, HabboItem timerItem) {
+        return WiredEvent.builder(WiredEvent.Type.TIMER_TICK_LONG, room)
+                .sourceItem(timerItem)
+                .build();
+    }
+
+    /**
      * Create an event for a short periodic timer.
      * @param room the room
      * @param timerItem the timer furniture

@@ -42,7 +42,11 @@ public enum WiredTriggerType {
     // BOT_REACHED_STF - so the client drew the bot-reached dialog for them and asked which bot
     // had arrived. They take no settings. WiredEvent.Type maps TEAM_WINS and TEAM_LOSES here
     // too, so RoomSpecialTypes still finds them; matches() tells the two events apart.
-    TEAM_GAME_RESULT(29);
+    TEAM_GAME_RESULT(29),
+    // The long one-shot timer. It reported AT_GIVEN_TIME, so the client drew the half-second dialog
+    // for a trigger that counts in five-second steps. Needs the matching Nitro WiredTriggerLayoutCode
+    // value and a WiredEvent.Type whose legacy type maps back here, or the room index never finds it.
+    AT_GIVEN_TIME_LONG(30);
 
     public final int code;
 
