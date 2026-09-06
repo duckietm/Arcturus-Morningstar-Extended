@@ -139,6 +139,9 @@ public class WiredExtraVariableWebApi extends InteractionWiredExtra {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        // Reset before reading, so a row the guard rejects leaves a box that exposes nothing
+        // rather than whatever it held before.
+        this.onPickUp();
         this.setExtradata("");
 
         String wiredData = set.getString("wired_data");
@@ -147,7 +150,7 @@ public class WiredExtraVariableWebApi extends InteractionWiredExtra {
         }
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            JsonData data = WiredExtraPayloadGuard.fromJson(wiredData, JsonData.class);
             if (data != null) {
                 this.variableToken = normalizeVariableToken(data.variableToken);
                 this.variableItemId =

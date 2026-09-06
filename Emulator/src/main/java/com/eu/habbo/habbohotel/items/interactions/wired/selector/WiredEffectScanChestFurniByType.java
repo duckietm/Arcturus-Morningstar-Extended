@@ -57,7 +57,9 @@ public class WiredEffectScanChestFurniByType extends InteractionWiredEffect {
         Set<Integer> chestTypes = new HashSet<>();
         for (Integer id : this.chestIds) {
             HabboItem item = room.getHabboItem(id);
-            if (item instanceof InteractionWiredChest chest) {
+            // A chest that does not answer wired keeps its contents to itself, as it does for the
+            // chest effects and Init Transaction; a read-only scan still discloses what is inside.
+            if (item instanceof InteractionWiredChest chest && chest.answersWired()) {
                 chestTypes.addAll(chest.getContents().distinctTypes(ChestStorage.KIND_FURNI));
             }
         }

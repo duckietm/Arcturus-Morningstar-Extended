@@ -38,12 +38,12 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
     private static final int SOURCE_FURNI_PICKED = 4;
     private static final int SOURCE_FURNI_SIGNAL = 5;
 
-    private static boolean isUserGroup(int src) {
-        return src <= SOURCE_USER_CLICKED;
-    }
-
-    private static boolean isFurniGroup(int src) {
-        return src >= SOURCE_FURNI_TRIGGER;
+    /**
+     * The dialog and the saved row both carry the source as a bare int. Anything outside the six
+     * sources falls back to the trigger user: stored as-is it would select nothing, silently.
+     */
+    private static int normalizeSourceType(int value) {
+        return (value >= SOURCE_USER_TRIGGER && value <= SOURCE_FURNI_SIGNAL) ? value : SOURCE_USER_TRIGGER;
     }
 
     private static final int MAX_PICKED_FURNI = 20;
@@ -262,7 +262,7 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
             throw new WiredSaveException("wf_slc_users_neighborhood: intParams must have at least 1 element");
         }
 
-        this.sourceType = params[0];
+        this.sourceType = normalizeSourceType(params[0]);
         this.filterExisting = params.length > 1 && params[1] == 1;
         this.invert = params.length > 2 && params[2] == 1;
         this.targetOffsetX = params.length > 3 ? params[3] : 0;
@@ -364,10 +364,14 @@ public class WiredEffectUsersNeighborhood extends InteractionWiredEffect {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        this.onPickUp();
+
         String wiredData = set.getString("wired_data");
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredSelectorPayloadGuard.fromJson(wiredData, JsonData.class);
-            this.sourceType = data.sourceType;
+            if (data == null) return;
+
+            this.sourceType = normalizeSourceType(data.sourceType);
             this.filterExisting = data.filterExisting;
             this.invert = data.invert;
             this.targetOffsetX = data.targetOffsetX;

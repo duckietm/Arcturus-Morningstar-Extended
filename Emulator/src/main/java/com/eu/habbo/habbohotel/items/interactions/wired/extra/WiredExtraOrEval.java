@@ -57,7 +57,8 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
 
         this.evaluationMode = normalizeEvaluationMode((params.length > 0) ? params[0] : MODE_ALL);
         this.furniSource = normalizeFurniSource((params.length > 1) ? params[1] : WiredSourceUtil.SOURCE_TRIGGER);
-        this.compareValue = normalizeCompareValue((params.length > 2) ? params[2] : this.compareValue);
+        this.compareValue =
+                normalizeCompareValue(this.evaluationMode, (params.length > 2) ? params[2] : this.compareValue);
         this.items.clear();
 
         if (this.furniSource != WiredSourceUtil.SOURCE_SELECTED) {
@@ -134,7 +135,7 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
             if (data != null) {
                 this.evaluationMode = normalizeEvaluationMode(data.evaluationMode);
                 this.furniSource = normalizeFurniSource(data.furniSource);
-                this.compareValue = normalizeCompareValue(data.compareValue);
+                this.compareValue = normalizeCompareValue(this.evaluationMode, data.compareValue);
 
                 if (data.itemIds != null) {
                     for (Integer itemId : data.itemIds) {
@@ -162,7 +163,7 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
             }
 
             if (legacyData.length > 2) {
-                this.compareValue = normalizeCompareValue(Integer.parseInt(legacyData[2]));
+                this.compareValue = normalizeCompareValue(this.evaluationMode, Integer.parseInt(legacyData[2]));
             }
         } catch (NumberFormatException ignored) {
             this.evaluationMode = MODE_ALL;
@@ -229,11 +230,11 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
             case MODE_NONE:
                 return matchedRequirements == 0;
             case MODE_LESS_THAN:
-                return matchedRequirements < normalizeCompareValue(compareValue);
+                return matchedRequirements < normalizeCompareValue(MODE_LESS_THAN, compareValue);
             case MODE_EXACTLY:
-                return matchedRequirements == normalizeCompareValue(compareValue);
+                return matchedRequirements == normalizeCompareValue(MODE_EXACTLY, compareValue);
             case MODE_MORE_THAN:
-                return matchedRequirements > normalizeCompareValue(compareValue);
+                return matchedRequirements > normalizeCompareValue(MODE_MORE_THAN, compareValue);
             case MODE_ALL:
             default:
                 return matchedRequirements >= totalRequirements;
@@ -255,8 +256,11 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
         }
     }
 
-    private static int normalizeCompareValue(int value) {
-        return Math.max(MIN_COMPARE_VALUE, Math.min(MAX_COMPARE_VALUE, value));
+    private static int normalizeCompareValue(int evaluationMode, int value) {
+        // No count is below zero, so "less than 0" could never be true; the floor is 1 there. The
+        // other counting modes keep 0 as a real value: "exactly none" and "more than none".
+        int floor = (evaluationMode == MODE_LESS_THAN) ? 1 : MIN_COMPARE_VALUE;
+        return Math.max(floor, Math.min(MAX_COMPARE_VALUE, value));
     }
 
     private static int normalizeFurniSource(int value) {

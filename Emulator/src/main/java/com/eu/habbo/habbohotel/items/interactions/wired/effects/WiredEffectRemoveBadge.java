@@ -4,6 +4,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredRewardPolicy;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -67,6 +68,12 @@ public class WiredEffectRemoveBadge extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) {
+        // Taking a badge away is the mirror of granting one, and this box deletes the row for
+        // every user the selector resolves; it sits behind the same policy as "give badge".
+        if (!WiredRewardPolicy.canConfigure(gameClient)) {
+            return false;
+        }
+
         String nextBadge =
                 settings.getStringParam() != null ? settings.getStringParam().trim() : "";
         if (nextBadge.isEmpty()) {

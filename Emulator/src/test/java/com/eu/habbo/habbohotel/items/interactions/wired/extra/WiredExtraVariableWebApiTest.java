@@ -1,10 +1,15 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.extra;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.eu.habbo.habbohotel.items.Item;
+import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -52,6 +57,33 @@ class WiredExtraVariableWebApiTest {
         assertNull(WiredExtraVariableWebApi.resolve(null));
         assertNull(WiredExtraVariableWebApi.resolve(""));
         assertNull(WiredExtraVariableWebApi.resolve(WiredExtraVariableWebApi.mintKey()));
+    }
+
+    @Test
+    void aCorruptRowResetsTheBoxInsteadOfFailingTheRoomLoad() throws Exception {
+        WiredExtraVariableWebApi box = new WiredExtraVariableWebApi(1, 1, mock(Item.class), "", 0, 0);
+        box.loadWiredData(
+                row("{\"variableToken\":\"42\",\"variableItemId\":42,\"readKey\":\"R\",\"writeKey\":\"W\","
+                        + "\"writeEnabled\":true}"),
+                null);
+        assertEquals("R", box.getReadKey());
+
+        // A truncated document must not take the whole room down with it, and it must not leave
+        // the previous keys live either: a box that failed to load exposes nothing.
+        assertDoesNotThrow(() -> box.loadWiredData(row("{\"variableToken\":\"42\",\"readKey"), null));
+
+        assertEquals("", box.getVariableToken());
+        assertEquals(0, box.getVariableItemId());
+        assertEquals("", box.getReadKey());
+        assertEquals("", box.getWriteKey());
+        assertFalse(box.isWriteEnabled());
+        assertNull(WiredExtraVariableWebApi.resolve("R"));
+    }
+
+    private static ResultSet row(String wiredData) throws Exception {
+        ResultSet set = mock(ResultSet.class);
+        when(set.getString("wired_data")).thenReturn(wiredData);
+        return set;
     }
 
     @Test

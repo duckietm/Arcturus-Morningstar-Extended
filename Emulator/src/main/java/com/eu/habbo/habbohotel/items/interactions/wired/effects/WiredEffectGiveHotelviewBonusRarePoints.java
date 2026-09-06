@@ -107,7 +107,11 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         if (room == null || this.amount <= 0) return;
-        int pointsType = WiredPlatform.configuration().getInt("hotelview.promotional.points.type");
+        // 5 is the type the hotel ships with in emulator_settings; the same fallback saveData uses
+        // for its own reads, so a missing row degrades to the default instead of failing the stack.
+        int pointsType = WiredPlatform.configuration() == null
+                ? 5
+                : WiredPlatform.configuration().getInt("hotelview.promotional.points.type", 5);
 
         for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
