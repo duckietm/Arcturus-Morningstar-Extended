@@ -17305,7 +17305,7 @@
       "header": 10,
       "symbol": "FORWARD_TO_RANDOM_PROMOTED_ROOM",
       "path": "packages/communication/src/messages/outgoing/navigator/ForwardToARandomPromotedRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17313,7 +17313,7 @@
       "header": 31,
       "symbol": "MODTOOL_PREFERENCES",
       "path": "packages/communication/src/messages/outgoing/moderation/ModToolPreferencesComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17321,7 +17321,7 @@
       "header": 66,
       "symbol": "WELCOME_GIFT_CHANGE_EMAIL",
       "path": "packages/communication/src/messages/outgoing/user/WelcomeGiftChangeEmailComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17329,7 +17329,7 @@
       "header": 90,
       "symbol": "REDEEM_COMMUNITY_GOAL_PRIZE",
       "path": "packages/communication/src/messages/outgoing/quest/RedeemCommunityGoalPrizeMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17337,7 +17337,7 @@
       "header": 143,
       "symbol": "VOTE_FOR_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/VoteForRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17345,7 +17345,7 @@
       "header": 172,
       "symbol": "FORWARD_TO_A_COMPETITION_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/ForwardToACompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17353,7 +17353,7 @@
       "header": 314,
       "symbol": "CONVERT_GLOBAL_ROOM_ID",
       "path": "packages/communication/src/messages/outgoing/navigator/ConvertGlobalRoomIdComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17361,7 +17361,7 @@
       "header": 389,
       "symbol": "GETUSERGAMEACHIEVEMENTSMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/GetUserGameAchievementsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17369,7 +17369,7 @@
       "header": 433,
       "symbol": "COMPETITION_ROOM_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/CompetitionRoomsSearchMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17377,7 +17377,7 @@
       "header": 549,
       "symbol": "PET_SELECTED",
       "path": "packages/communication/src/messages/outgoing/room/pets/PetSelectedMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17385,7 +17385,7 @@
       "header": 596,
       "symbol": "GET_NEXT_TARGETED_OFFER",
       "path": "packages/communication/src/messages/outgoing/catalog/GetNextTargetedOfferComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17393,7 +17393,7 @@
       "header": 603,
       "symbol": "GET_HABBO_BASIC_MEMBERSHIP_EXTEND_OFFER",
       "path": "packages/communication/src/messages/outgoing/catalog/GetHabboBasicMembershipExtendOfferComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17401,7 +17401,7 @@
       "header": 685,
       "symbol": "GO_TO_FLAT",
       "path": "packages/communication/src/messages/outgoing/room/session/GoToFlatMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17409,7 +17409,7 @@
       "header": 742,
       "symbol": "GET_CATALOG_PAGE_EXPIRATION",
       "path": "packages/communication/src/messages/outgoing/catalog/GetCatalogPageExpirationComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17417,7 +17417,7 @@
       "header": 749,
       "symbol": "PET_SUPPLEMENT",
       "path": "packages/communication/src/messages/outgoing/pet/PetSupplementComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17425,7 +17425,7 @@
       "header": 768,
       "symbol": "WIRED_OPEN",
       "path": "packages/communication/src/messages/outgoing/roomevents/OpenMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17433,7 +17433,7 @@
       "header": 790,
       "symbol": "TRY_PHONE_NUMBER",
       "path": "packages/communication/src/messages/outgoing/gifts/TryPhoneNumberMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17441,7 +17441,7 @@
       "header": 793,
       "symbol": "ACTIVATE_QUEST",
       "path": "packages/communication/src/messages/outgoing/quest/ActivateQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17449,7 +17449,7 @@
       "header": 801,
       "symbol": "GET_DIRECT_CLUB_BUY_AVAILABLE",
       "path": "packages/communication/src/messages/outgoing/catalog/GetDirectClubBuyAvailableComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17457,7 +17457,7 @@
       "header": 865,
       "symbol": "FORWARD_TO_RANDOM_COMPETITION_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/ForwardToRandomCompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17465,7 +17465,7 @@
       "header": 872,
       "symbol": "RENTABLE_SPACE_STATUS",
       "path": "packages/communication/src/messages/outgoing/room/furniture/RentableSpaceStatusMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17473,7 +17473,7 @@
       "header": 882,
       "symbol": "APPROVE_ALL_MEMBERSHIP_REQUESTS",
       "path": "packages/communication/src/messages/outgoing/group/ApproveAllMembershipRequestsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17481,7 +17481,7 @@
       "header": 1002,
       "symbol": "MY_FREQUENT_ROOM_HISTORY_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/MyFrequentRoomHistorySearchMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17489,7 +17489,7 @@
       "header": 1053,
       "symbol": "CLIENT_VARIABLES",
       "path": "packages/communication/src/messages/outgoing/handshake/VersionCheckMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17497,7 +17497,7 @@
       "header": 1071,
       "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_FURNI",
       "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutFurniMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17505,7 +17505,7 @@
       "header": 1109,
       "symbol": "INTERSTITIAL_SHOWN",
       "path": "packages/communication/src/messages/outgoing/advertisement/InterstitialShownMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17513,7 +17513,7 @@
       "header": 1145,
       "symbol": "GET_COMMUNITY_GOAL_PROGRESS",
       "path": "packages/communication/src/messages/outgoing/quest/GetCommunityGoalProgressMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17521,7 +17521,7 @@
       "header": 1148,
       "symbol": "FRIEND_REQUEST_QUEST_COMPLETE",
       "path": "packages/communication/src/messages/outgoing/quest/FriendRequestQuestCompleteMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17529,7 +17529,7 @@
       "header": 1160,
       "symbol": "PEER_USERS_CLASSIFICATION",
       "path": "packages/communication/src/messages/outgoing/userclassification/PeerUsersClassificationMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17537,7 +17537,7 @@
       "header": 1190,
       "symbol": "GET_SEASONAL_QUESTS_ONLY",
       "path": "packages/communication/src/messages/outgoing/quest/GetSeasonalQuestsOnlyMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17545,7 +17545,7 @@
       "header": 1229,
       "symbol": "GET_OFFICIAL_ROOMS",
       "path": "packages/communication/src/messages/outgoing/navigator/GetOfficialRoomsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17553,7 +17553,7 @@
       "header": 1232,
       "symbol": "GAME2GETWEEKLYFRIENDSLEADERBOARD",
       "path": "packages/communication/src/messages/outgoing/game/score/Game2GetWeeklyFriendsLeaderboardComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17561,7 +17561,7 @@
       "header": 1265,
       "symbol": "ROOM_SETTINGS_UPDATE_ROOM_CATEGORY_AND_TRADE",
       "path": "packages/communication/src/messages/outgoing/roomsettings/UpdateRoomCategoryAndTradeSettingsComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17569,7 +17569,7 @@
       "header": 1296,
       "symbol": "GET_QUIZ_QUESTIONS",
       "path": "packages/communication/src/messages/outgoing/help/GetQuizQuestionsComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17577,7 +17577,7 @@
       "header": 1334,
       "symbol": "ROOM_COMPETITION_INIT",
       "path": "packages/communication/src/messages/outgoing/competition/RoomCompetitionInitMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17585,7 +17585,7 @@
       "header": 1343,
       "symbol": "GET_CONCURRENT_USERS_GOAL_PROGRESS",
       "path": "packages/communication/src/messages/outgoing/quest/GetConcurrentUsersGoalProgressMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17593,7 +17593,7 @@
       "header": 1347,
       "symbol": "GET_IS_OFFER_GIFTABLE",
       "path": "packages/communication/src/messages/outgoing/catalog/GetIsOfferGiftableComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17601,7 +17601,7 @@
       "header": 1364,
       "symbol": "GETISBADGEREQUESTFULFILLED",
       "path": "packages/communication/src/messages/outgoing/inventory/badges/GetIsBadgeRequestFulfilledComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17609,7 +17609,7 @@
       "header": 1379,
       "symbol": "SET_PHONE_NUMBER_VERIFICATION_STATUS",
       "path": "packages/communication/src/messages/outgoing/gifts/SetPhoneNumberVerificationStatusMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17617,7 +17617,7 @@
       "header": 1419,
       "symbol": "FRIEND_LIST_UPDATE",
       "path": "packages/communication/src/messages/outgoing/friendlist/FriendListUpdateComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17625,7 +17625,7 @@
       "header": 1445,
       "symbol": "GAME2EXITGAMEMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2ExitGameMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17633,7 +17633,7 @@
       "header": 1450,
       "symbol": "FORWARD_TO_A_SUBMITTABLE_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/ForwardToASubmittableRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17641,7 +17641,7 @@
       "header": 1521,
       "symbol": "HARVEST_PET",
       "path": "packages/communication/src/messages/outgoing/room/engine/HarvestPetMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17649,7 +17649,7 @@
       "header": 1598,
       "symbol": "GAME2REQUESTFULLSTATUSUPDATEMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/ingame/Game2RequestFullStatusUpdateMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17657,7 +17657,7 @@
       "header": 1681,
       "symbol": "DEFAULT_SANCTION",
       "path": "packages/communication/src/messages/outgoing/moderation/DefaultSanctionMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17665,7 +17665,7 @@
       "header": 1697,
       "symbol": "START_CAMPAIGN",
       "path": "packages/communication/src/messages/outgoing/quest/StartCampaignMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17673,7 +17673,7 @@
       "header": 1849,
       "symbol": "GET_FAQ_TEXT",
       "path": "packages/communication/src/messages/outgoing/help/GetFaqTextMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17681,7 +17681,7 @@
       "header": 1866,
       "symbol": "MARKETPLACE_BUY_TOKENS",
       "path": "packages/communication/src/messages/outgoing/marketplace/BuyMarketplaceTokensMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17689,7 +17689,7 @@
       "header": 2012,
       "symbol": "MYSTERYBOXWAITINGCANCELEDMESSAGE",
       "path": "packages/communication/src/messages/outgoing/mysterybox/MysteryBoxWaitingCanceledMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17697,7 +17697,7 @@
       "header": 2031,
       "symbol": "SEARCH_FAQS",
       "path": "packages/communication/src/messages/outgoing/help/SearchFaqsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17705,7 +17705,7 @@
       "header": 2077,
       "symbol": "GET_IS_USER_PART_OF_COMPETITION",
       "path": "packages/communication/src/messages/outgoing/competition/GetIsUserPartOfCompetitionMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17713,7 +17713,7 @@
       "header": 2115,
       "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_STRIP_ITEM",
       "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutStripItemMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17721,7 +17721,7 @@
       "header": 2150,
       "symbol": "MARK_CATALOG_NEW_ADDITIONS_PAGE_OPENED",
       "path": "packages/communication/src/messages/outgoing/catalog/MarkCatalogNewAdditionsPageOpenedComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17729,7 +17729,7 @@
       "header": 2167,
       "symbol": "GET_COMMUNITY_GOAL_HALL_OF_FAME",
       "path": "packages/communication/src/messages/outgoing/quest/GetCommunityGoalHallOfFameMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17737,7 +17737,7 @@
       "header": 2249,
       "symbol": "USER_PROFILE_BY_NAME",
       "path": "packages/communication/src/messages/outgoing/user/data/GetExtendedProfileByNameMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17745,7 +17745,7 @@
       "header": 2283,
       "symbol": "ROOM_AD_PURCHASE_INITIATED",
       "path": "packages/communication/src/messages/outgoing/catalog/RoomAdPurchaseInitiatedComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17753,7 +17753,7 @@
       "header": 2285,
       "symbol": "USER_CLASSIFICATION",
       "path": "packages/communication/src/messages/outgoing/userclassification/RoomUsersClassificationMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17761,7 +17761,7 @@
       "header": 2343,
       "symbol": "UNSEEN_RESET_ITEMS",
       "path": "packages/communication/src/messages/outgoing/inventory/unseen/UnseenResetItemsComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17769,7 +17769,7 @@
       "header": 2384,
       "symbol": "LEAVEQUEUEMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/LeaveQueueMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17777,7 +17777,7 @@
       "header": 2397,
       "symbol": "REJECT_QUEST",
       "path": "packages/communication/src/messages/outgoing/quest/RejectQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17785,7 +17785,7 @@
       "header": 2399,
       "symbol": "GETGAMEACHIEVEMENTSMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/GetGameAchievementsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17793,7 +17793,7 @@
       "header": 2412,
       "symbol": "ROOM_AD_EVENT_TAB_CLICKED",
       "path": "packages/communication/src/messages/outgoing/navigator/RoomAdEventTabAdClickedComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17801,7 +17801,7 @@
       "header": 2415,
       "symbol": "GAME2LOADSTAGEREADYMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2LoadStageReadyMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17809,7 +17809,7 @@
       "header": 2436,
       "symbol": "GET_GIFT",
       "path": "packages/communication/src/messages/outgoing/gifts/GetGiftMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17817,7 +17817,7 @@
       "header": 2468,
       "symbol": "UPDATE_ROOM_THUMBNAIL",
       "path": "packages/communication/src/messages/outgoing/navigator/UpdateRoomThumbnailMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17825,7 +17825,7 @@
       "header": 2486,
       "symbol": "GET_DAILY_QUEST",
       "path": "packages/communication/src/messages/outgoing/quest/GetDailyQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17833,7 +17833,7 @@
       "header": 2487,
       "symbol": "GET_TARGETED_OFFER",
       "path": "packages/communication/src/messages/outgoing/catalog/GetTargetedOfferComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17841,7 +17841,7 @@
       "header": 2502,
       "symbol": "GAME2GAMECHATMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2GameChatMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17849,7 +17849,7 @@
       "header": 2518,
       "symbol": "RENTABLE_GET_RENT_OR_BUYOUT_OFFER",
       "path": "packages/communication/src/messages/outgoing/room/furniture/GetRentOrBuyoutOfferMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17857,7 +17857,7 @@
       "header": 2519,
       "symbol": "GET_INTERSTITIAL",
       "path": "packages/communication/src/messages/outgoing/advertisement/GetInterstitialMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17865,7 +17865,7 @@
       "header": 2537,
       "symbol": "MY_RECOMMENDED_ROOMS",
       "path": "packages/communication/src/messages/outgoing/navigator/MyRecommendedRoomsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17873,7 +17873,7 @@
       "header": 2557,
       "symbol": "EMAIL_GET_STATUS",
       "path": "packages/communication/src/messages/outgoing/user/GetEmailStatusComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17881,7 +17881,7 @@
       "header": 2565,
       "symbol": "GAME2GETWEEKLYLEADERBOARD",
       "path": "packages/communication/src/messages/outgoing/game/score/Game2GetWeeklyLeaderboardComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17889,7 +17889,7 @@
       "header": 2595,
       "symbol": "SUBMIT_ROOM_TO_COMPETITION",
       "path": "packages/communication/src/messages/outgoing/competition/SubmitRoomToCompetitionMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17897,7 +17897,7 @@
       "header": 2596,
       "symbol": "CLIENT_PONG",
       "path": "packages/communication/src/messages/outgoing/handshake/PongMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17905,7 +17905,7 @@
       "header": 2638,
       "symbol": "WELCOME_OPEN_GIFT",
       "path": "packages/communication/src/messages/outgoing/room/furniture/OpenWelcomeGiftComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17913,7 +17913,7 @@
       "header": 2668,
       "symbol": "ROOM_AD_EVENT_TAB_VIEWED",
       "path": "packages/communication/src/messages/outgoing/navigator/RoomAdEventTabViewedComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17921,7 +17921,7 @@
       "header": 2688,
       "symbol": "GET_COMMUNITY_GOAL_EARNED_PRIZES",
       "path": "packages/communication/src/messages/outgoing/quest/GetCommunityGoalEarnedPrizesMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17929,7 +17929,7 @@
       "header": 2721,
       "symbol": "VERIFY_CODE",
       "path": "packages/communication/src/messages/outgoing/gifts/VerifyCodeMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17937,7 +17937,7 @@
       "header": 2725,
       "symbol": "CANCEL_ROOM_EVENT",
       "path": "packages/communication/src/messages/outgoing/navigator/CancelEventMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17945,7 +17945,7 @@
       "header": 2735,
       "symbol": "PURCHASE_BASIC_MEMBERSHIP_EXTENSION",
       "path": "packages/communication/src/messages/outgoing/catalog/PurchaseBasicMembershipExtensionComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17953,7 +17953,7 @@
       "header": 2741,
       "symbol": "RESET_PHONE_NUMBER_STATE",
       "path": "packages/communication/src/messages/outgoing/gifts/ResetPhoneNumberStateMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17961,7 +17961,7 @@
       "header": 2750,
       "symbol": "OPEN_QUEST_TRACKER",
       "path": "packages/communication/src/messages/outgoing/quest/OpenQuestTrackerMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17969,7 +17969,7 @@
       "header": 2755,
       "symbol": "CALL_FOR_HELP_FROM_SELFIE",
       "path": "packages/communication/src/messages/outgoing/help/CallForHelpFromSelfieMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17977,7 +17977,7 @@
       "header": 2768,
       "symbol": "UNIT_GIVE_HANDITEM_PET",
       "path": "packages/communication/src/messages/outgoing/room/unit/RoomUnitGiveHandItemPetComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17985,7 +17985,7 @@
       "header": 2809,
       "symbol": "ROOM_AD_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/RoomAdSearchMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -17993,7 +17993,7 @@
       "header": 2864,
       "symbol": "GROUP_UNBLOCK_MEMBER",
       "path": "packages/communication/src/messages/outgoing/user/UnblockGroupMemberMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18001,7 +18001,7 @@
       "header": 2930,
       "symbol": "GUILD_BASE_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/GuildBaseSearchMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18009,7 +18009,7 @@
       "header": 3074,
       "symbol": "MYSTERYBOX_OPEN_TROPHY",
       "path": "packages/communication/src/messages/outgoing/room/furniture/OpenMysteryTrophyMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18017,7 +18017,7 @@
       "header": 3077,
       "symbol": "REQUESTABADGE",
       "path": "packages/communication/src/messages/outgoing/inventory/badges/RequestABadgeComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18025,7 +18025,7 @@
       "header": 3093,
       "symbol": "CHANGE_QUEUE",
       "path": "packages/communication/src/messages/outgoing/room/session/ChangeQueueMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18033,7 +18033,7 @@
       "header": 3133,
       "symbol": "CANCEL_QUEST",
       "path": "packages/communication/src/messages/outgoing/quest/CancelQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18041,7 +18041,7 @@
       "header": 3135,
       "symbol": "GET_CATALOG_PAGE_WITH_EARLIEST_EXP",
       "path": "packages/communication/src/messages/outgoing/catalog/GetCatalogPageWithEarliestExpiryComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18049,7 +18049,7 @@
       "header": 3144,
       "symbol": "RESETRESOLUTIONACHIEVEMENTMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/ResetResolutionAchievementMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18057,7 +18057,7 @@
       "header": 3196,
       "symbol": "GAME2PLAYAGAINMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2PlayAgainMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18065,7 +18065,7 @@
       "header": 3230,
       "symbol": "TRACKING_PERFORMANCE_LOG",
       "path": "packages/communication/src/messages/outgoing/tracking/PerformanceLogMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18073,7 +18073,7 @@
       "header": 3257,
       "symbol": "GET_SEASONAL_CALENDAR_DAILY_OFFER",
       "path": "packages/communication/src/messages/outgoing/catalog/GetSeasonalCalendarDailyOfferComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18081,7 +18081,7 @@
       "header": 3259,
       "symbol": "GAME2CHECKGAMEDIRECTORYSTATUSMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/directory/Game2CheckGameDirectoryStatusMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18089,7 +18089,7 @@
       "header": 3305,
       "symbol": "SET_ROOM_SESSION_TAGS",
       "path": "packages/communication/src/messages/outgoing/navigator/SetRoomSessionTagsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18097,7 +18097,7 @@
       "header": 3314,
       "symbol": "USER_IGNORE_ID",
       "path": "packages/communication/src/messages/outgoing/user/data/IgnoreUserIdComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18105,7 +18105,7 @@
       "header": 3333,
       "symbol": "GET_QUESTS",
       "path": "packages/communication/src/messages/outgoing/quest/GetQuestsMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18113,7 +18113,7 @@
       "header": 3445,
       "symbol": "GET_FAQ_CATEGORY",
       "path": "packages/communication/src/messages/outgoing/help/GetFaqCategoryMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18121,7 +18121,7 @@
       "header": 3483,
       "symbol": "SHOP_TARGETED_OFFER_VIEWED",
       "path": "packages/communication/src/messages/outgoing/catalog/ShopTargetedOfferViewedComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18129,7 +18129,7 @@
       "header": 3493,
       "symbol": "UNSEEN_RESET_CATEGORY",
       "path": "packages/communication/src/messages/outgoing/inventory/unseen/UnseenResetCategoryComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18137,7 +18137,7 @@
       "header": 3498,
       "symbol": "GET_SOUND_MACHINE_PLAYLIST",
       "path": "packages/communication/src/messages/outgoing/sound/GetSoundMachinePlayListMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18145,7 +18145,7 @@
       "header": 3536,
       "symbol": "COMMUNITY_GOAL_VOTE_COMPOSER",
       "path": "packages/communication/src/messages/outgoing/landingview/votes/CommunityGoalVoteMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18153,7 +18153,7 @@
       "header": 3604,
       "symbol": "ACCEPT_QUEST",
       "path": "packages/communication/src/messages/outgoing/quest/AcceptQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18161,7 +18161,7 @@
       "header": 3605,
       "symbol": "DELETE_PENDING_CALLS_FOR_HELP",
       "path": "packages/communication/src/messages/outgoing/help/DeletePendingCallsForHelpMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18169,7 +18169,7 @@
       "header": 3720,
       "symbol": "POST_QUIZ_ANSWERS",
       "path": "packages/communication/src/messages/outgoing/help/PostQuizAnswersComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18177,7 +18177,7 @@
       "header": 3736,
       "symbol": "ROOM_DIRECTORY_ROOM_NETWORK_OPEN_CONNECTION",
       "path": "packages/communication/src/messages/outgoing/roomdirectory/RoomNetworkOpenConnectionMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18185,7 +18185,7 @@
       "header": 3802,
       "symbol": "ACCEPTGAMEINVITE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/AcceptGameInviteMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18193,7 +18193,7 @@
       "header": 3847,
       "symbol": "TRACKING_LAG_WARNING_REPORT",
       "path": "packages/communication/src/messages/outgoing/tracking/LagWarningReportMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18201,7 +18201,7 @@
       "header": 3872,
       "symbol": "GET_CONCURRENT_USERS_REWARD",
       "path": "packages/communication/src/messages/outgoing/quest/GetConcurrentUsersRewardMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18209,7 +18209,7 @@
       "header": 3900,
       "symbol": "GET_FORUM_THREAD",
       "path": "packages/communication/src/messages/outgoing/groupforums/GetThreadMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18217,7 +18217,7 @@
       "header": 3959,
       "symbol": "PHOTO_COMPETITION",
       "path": "packages/communication/src/messages/outgoing/camera/PhotoCompetitionMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18225,7 +18225,7 @@
       "header": 3965,
       "symbol": "EMAIL_CHANGE",
       "path": "packages/communication/src/messages/outgoing/user/ChangeEmailComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18233,7 +18233,7 @@
       "header": 4085,
       "symbol": "MARK_CONSOLE_READ",
       "path": "packages/communication/src/messages/outgoing/friendlist/MarkConsoleReadComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18241,7 +18241,7 @@
       "header": 4087,
       "symbol": "CONSOLE_TYPING",
       "path": "packages/communication/src/messages/outgoing/friendlist/ConsoleTypingComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18249,7 +18249,7 @@
       "header": 6200,
       "symbol": "POLL_VOTE_COUNTER",
       "path": "packages/communication/src/messages/outgoing/poll/VotePollCounterMessageComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "client_to_server",
@@ -18257,7 +18257,7 @@
       "header": 9351,
       "symbol": "SET_BUILD_HEIGHT",
       "path": "packages/communication/src/messages/outgoing/room/furniture/buildheight/SetBuildHeightComposer.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18265,7 +18265,7 @@
       "header": 84,
       "symbol": "NO_SUCH_FLAT",
       "path": "packages/communication/src/messages/parser/roomsettings/NoSuchFlatParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18273,7 +18273,7 @@
       "header": 195,
       "symbol": "DIRECT_SMS_CLUB_BUY",
       "path": "packages/communication/src/messages/parser/catalog/DirectSMSClubBuyAvailableMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18281,7 +18281,7 @@
       "header": 463,
       "symbol": "CAMERA_SNAPSHOT",
       "path": "packages/communication/src/messages/parser/camera/CameraSnapshotMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18289,7 +18289,7 @@
       "header": 600,
       "symbol": "AVAILABILITY_TIME",
       "path": "packages/communication/src/messages/parser/availability/AvailabilityTimeMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18297,7 +18297,7 @@
       "header": 761,
       "symbol": "IS_OFFER_GIFTABLE",
       "path": "packages/communication/src/messages/parser/catalog/IsOfferGiftableMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18305,7 +18305,7 @@
       "header": 872,
       "symbol": "GAME_CENTER_IN_ARENA_QUEUE",
       "path": "packages/communication/src/messages/parser/game/directory/Game2InArenaQueueMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18313,7 +18313,7 @@
       "header": 904,
       "symbol": "GAMEINVITE",
       "path": "packages/communication/src/messages/parser/game/lobby/GameInviteMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18321,7 +18321,7 @@
       "header": 1122,
       "symbol": "SEASONAL_QUESTS",
       "path": "packages/communication/src/messages/parser/quest/SeasonalQuestsParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18329,7 +18329,7 @@
       "header": 1180,
       "symbol": "GROUP_MEMBERSHIP_REQUESTED",
       "path": "packages/communication/src/messages/parser/user/GroupMembershipRequestedMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18337,7 +18337,7 @@
       "header": 1553,
       "symbol": "PET_BREEDING_RESULT",
       "path": "packages/communication/src/messages/parser/room/pet/PetBreedingResultParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18345,7 +18345,7 @@
       "header": 1663,
       "symbol": "HOTEL_MERGE_NAME_CHANGE",
       "path": "packages/communication/src/messages/parser/help/HotelMergeNameChangeParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18353,7 +18353,7 @@
       "header": 1689,
       "symbol": "GAMEACHIEVEMENTS",
       "path": "packages/communication/src/messages/parser/game/lobby/GameAchievementsMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18361,7 +18361,7 @@
       "header": 1730,
       "symbol": "GAME_CENTER_JOINING_FAILED",
       "path": "packages/communication/src/messages/parser/game/directory/Game2JoiningGameFailedMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18369,7 +18369,7 @@
       "header": 1878,
       "symbol": "QUEST_DAILY",
       "path": "packages/communication/src/messages/parser/quest/QuestDailyMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18377,7 +18377,7 @@
       "header": 1927,
       "symbol": "THUMBNAIL_UPDATE_RESULT",
       "path": "packages/communication/src/messages/parser/navigator/RoomThumbnailUpdateResultMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18385,7 +18385,7 @@
       "header": 2142,
       "symbol": "GAME_CENTER_STARTING_GAME_FAILED",
       "path": "packages/communication/src/messages/parser/game/directory/Game2StartingGameFailedMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18393,7 +18393,7 @@
       "header": 2196,
       "symbol": "WEEKLY_GAME2_LEADERBOARD",
       "path": "packages/communication/src/messages/parser/game/score/Game2WeeklyLeaderboardParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18401,7 +18401,7 @@
       "header": 2246,
       "symbol": "GAME_CENTER_DIRECTORY_STATUS",
       "path": "packages/communication/src/messages/parser/game/directory/Game2GameDirectoryStatusMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18409,7 +18409,7 @@
       "header": 2265,
       "symbol": "GAME_CENTER_ACHIEVEMENTS",
       "path": "packages/communication/src/messages/parser/game/lobby/UserGameAchievementsMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18417,7 +18417,7 @@
       "header": 2270,
       "symbol": "WEEKLY_GAME2_FRIENDS_LEADERBOARD",
       "path": "packages/communication/src/messages/parser/game/score/Game2WeeklyLeaderboardParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18425,7 +18425,7 @@
       "header": 2335,
       "symbol": "MODERATOR_ACTION_RESULT",
       "path": "packages/communication/src/messages/parser/moderation/ModeratorActionResultMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18433,7 +18433,7 @@
       "header": 2641,
       "symbol": "WEEKLY_GAME_REWARD",
       "path": "packages/communication/src/messages/parser/game/score/WeeklyGameRewardParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18441,7 +18441,7 @@
       "header": 2668,
       "symbol": "CATALOG_PAGE_EXPIRATION",
       "path": "packages/communication/src/messages/parser/catalog/CatalogPageExpirationParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18449,7 +18449,7 @@
       "header": 2873,
       "symbol": "TRADE_NO_SUCH_ITEM",
       "path": "packages/communication/src/messages/parser/inventory/trading/TradingNoSuchItemParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18457,7 +18457,7 @@
       "header": 2897,
       "symbol": "ROOM_SETTINGS_ERROR",
       "path": "packages/communication/src/messages/parser/roomsettings/RoomSettingsErrorParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18465,7 +18465,7 @@
       "header": 3035,
       "symbol": "JOININGQUEUEFAILED",
       "path": "packages/communication/src/messages/parser/game/lobby/JoiningQueueFailedMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18473,7 +18473,7 @@
       "header": 3097,
       "symbol": "WEEKLY_GAME_REWARD_WINNERS",
       "path": "packages/communication/src/messages/parser/game/score/WeeklyGameRewardWinnersParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18481,7 +18481,7 @@
       "header": 3138,
       "symbol": "GAME_CENTER_USER_LEFT_GAME",
       "path": "packages/communication/src/messages/parser/game/directory/Game2UserLeftGameMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18489,7 +18489,7 @@
       "header": 3191,
       "symbol": "GAME_CENTER_STOP_COUNTER",
       "path": "packages/communication/src/messages/parser/game/directory/Game2StopCounterMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18497,7 +18497,7 @@
       "header": 3319,
       "symbol": "COMMUNITY_GOAL_EARNED_PRIZES",
       "path": "packages/communication/src/messages/parser/quest/CommunityGoalEarnedPrizesMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18505,7 +18505,7 @@
       "header": 3512,
       "symbol": "WEEKLY_COMPETITIVE_LEADERBOARD",
       "path": "packages/communication/src/messages/parser/game/score/Game2WeeklyLeaderboardParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18513,7 +18513,7 @@
       "header": 3560,
       "symbol": "WEEKLY_COMPETITIVE_FRIENDS_LEADERBOARD",
       "path": "packages/communication/src/messages/parser/game/score/Game2WeeklyLeaderboardParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18521,7 +18521,7 @@
       "header": 3684,
       "symbol": "BOT_RECEIVED",
       "path": "packages/communication/src/messages/parser/bots/BotReceivedMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18529,7 +18529,7 @@
       "header": 3841,
       "symbol": "COMPETITION_USER_PART_OF",
       "path": "packages/communication/src/messages/parser/competition/IsUserPartOfCompetitionMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18537,7 +18537,7 @@
       "header": 3954,
       "symbol": "COMPETITION_ROOMS_DATA",
       "path": "packages/communication/src/messages/parser/navigator/CompetitionRoomsDataMessageParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18545,7 +18545,7 @@
       "header": 4086,
       "symbol": "CONSOLE_READ_RECEIPT",
       "path": "packages/communication/src/messages/parser/friendlist/ConsoleReadReceiptParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18553,7 +18553,7 @@
       "header": 4088,
       "symbol": "FRIEND_TYPING",
       "path": "packages/communication/src/messages/parser/friendlist/FriendIsTypingParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18561,7 +18561,7 @@
       "header": 5108,
       "symbol": "WIRED_FURNI_RUNTIME_STATE",
       "path": "packages/communication/src/messages/parser/roomevents/WiredFurniRuntimeStateParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18569,7 +18569,7 @@
       "header": 5109,
       "symbol": "WIRED_FURNI_OPACITY",
       "path": "packages/communication/src/messages/parser/roomevents/WiredFurniOpacityParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18577,7 +18577,7 @@
       "header": 5110,
       "symbol": "WIRED_FURNI_MOVE_STYLE",
       "path": "packages/communication/src/messages/parser/roomevents/WiredFurniMoveStyleParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18585,7 +18585,7 @@
       "header": 5200,
       "symbol": "POLL_START_ROOM",
       "path": "packages/communication/src/messages/parser/poll/RoomPollDataParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18593,7 +18593,7 @@
       "header": 5201,
       "symbol": "POLL_ROOM_RESULT",
       "path": "packages/communication/src/messages/parser/poll/RoomPollResultParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18601,7 +18601,7 @@
       "header": 5210,
       "symbol": "FIREWORK_CHARGE_DATA",
       "path": "packages/communication/src/messages/parser/catalog/FireworkChargeDataParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
       "direction": "server_to_client",
@@ -18609,7 +18609,7 @@
       "header": 9350,
       "symbol": "BUILD_HEIGHT_AVAILABLE",
       "path": "packages/communication/src/messages/parser/room/furniture/BuildHeightAvailableParser.ts",
-      "reason": "Header is registered only by the Nitro Renderer packet registry"
+      "reason": "Header is registered only by the Octane Renderer packet registry"
     }
   ],
   "exemptions": [
@@ -19907,7 +19907,7 @@
         "className": "ClientHelloMessageComposer",
         "path": "packages/communication/src/messages/outgoing/handshake/ClientHelloMessageComposer.ts"
       },
-      "reason": "TypeScript analyzer: Outgoing value `NITRO-${NitroVersion.RENDERER_VERSION.replaceAll(\u0027.\u0027, \u0027-\u0027)}` has no statically resolvable wire type"
+      "reason": "TypeScript analyzer: Outgoing value `NITRO-${OctaneVersion.RENDERER_VERSION.replaceAll(\u0027.\u0027, \u0027-\u0027)}` has no statically resolvable wire type"
     },
     {
       "name": "SNOWWAR_LOAD_STAGE_READY",
