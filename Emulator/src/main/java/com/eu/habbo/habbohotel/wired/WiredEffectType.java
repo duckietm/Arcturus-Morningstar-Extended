@@ -72,9 +72,15 @@ public enum WiredEffectType {
     REMOVE_FURNI(107),
     MOVE_FURNI_AS_GROUP(95),
     REMOTE_SELECTOR(96),
-    // Negative-branch effects that reuse the SHOW_MESSAGE(7) client dialog (text). Distinct enum
-    // constants so WiredEngine.isNegativeConditionEffect runs them only when conditions FAIL.
+    // Negative-branch effect that reuses the SHOW_MESSAGE(7) client dialog (text). A distinct enum
+    // constant so WiredEffectPlanner.isNegativeConditionEffect runs it only when conditions FAIL.
     NEG_SHOW_MESSAGE(7),
+    /**
+     * No longer answered by any box: the negative log reports {@link #EFFECT_MESSAGE} like the positive
+     * log, and WiredEffectPlanner recognises it by class. Kept so plugins that link against it keep
+     * loading and the ordinals of the constants after it stay put.
+     */
+    @Deprecated
     NEG_LOG(7),
     SET_ROLLER_SPEED(88),
     BOT_DANCE(89),

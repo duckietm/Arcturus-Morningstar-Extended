@@ -5249,6 +5249,7 @@ FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#MOVE_USE
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#MUTE_TRIGGER:com.eu.habbo.habbohotel.wired.WiredEffectType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#NEG_CALL_STACKS:com.eu.habbo.habbohotel.wired.WiredEffectType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#NEG_LOG:com.eu.habbo.habbohotel.wired.WiredEffectType
+FIELD-ANNOTATION com.eu.habbo.habbohotel.wired.WiredEffectType#NEG_LOG java.lang.Deprecated[forRemoval=false, since=]
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#NEG_SEND_SIGNAL:com.eu.habbo.habbohotel.wired.WiredEffectType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#NEG_SHOW_MESSAGE:com.eu.habbo.habbohotel.wired.WiredEffectType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredEffectType#OVERRIDE_HEIGHT:com.eu.habbo.habbohotel.wired.WiredEffectType
