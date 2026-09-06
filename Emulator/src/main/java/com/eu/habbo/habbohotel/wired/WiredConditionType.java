@@ -81,7 +81,15 @@ public enum WiredConditionType {
     // variable instead, which is the only level a room actually owns. It takes 61 rather than
     // the first free code: 60 is where the array condition lands, and rather than have the two
     // collide on whichever merges second, this leaves that seat empty.
-    USER_LEVEL(61);
+    USER_LEVEL(61),
+    // Six shapes the hotel sells without a class behind them (2026-09-06 census). Each takes the
+    // first free code; the client draws a dialog per code.
+    USER_RANK(62),
+    FURNI_OPACITY(63),
+    USER_COOLDOWN(64),
+    USER_ONCE(65),
+    USER_DAILY(66),
+    USER_HIGHSCORE_POINTS(67);
 
     public final int code;
 
