@@ -338,13 +338,18 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
 
         int[] params = settings.getIntParams();
         int requestedAntennaSource = params.length > 0 ? params[0] : ANTENNA_PICKED;
+        if (requestedAntennaSource < ANTENNA_PICKED) {
+            requestedAntennaSource = ANTENNA_PICKED;
+        }
         this.furniForward = normalizeSource(params.length > 1 ? params[1] : WiredSourceUtil.SOURCE_TRIGGER);
         this.userForward = normalizeSource(params.length > 2 ? params[2] : WiredSourceUtil.SOURCE_TRIGGER);
         this.signalPerFurni = params.length > 3 && params[3] == 1;
         this.signalPerUser = params.length > 4 && params[4] == 1;
         this.channel = params.length > 5 ? params[5] : 0;
         this.antennaSource = requestedAntennaSource;
-        if (!newItems.isEmpty()) {
+        // "Use the triggering furni" is a deliberate choice; picking antennas alongside it used to
+        // silently turn it into the first picked antenna.
+        if (!newItems.isEmpty() && requestedAntennaSource != ANTENNA_TRIGGER) {
             this.antennaSource = newItems.get(0).getId();
         }
 
@@ -430,7 +435,8 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 }
             }
 
-            if (this.antennaSource <= ANTENNA_TRIGGER && !this.items.isEmpty()) {
+            // The same rule as saveData: a stored "triggering furni" choice survives a reload.
+            if (this.antennaSource < ANTENNA_TRIGGER && !this.items.isEmpty()) {
                 HabboItem first = this.items.iterator().next();
                 if (first != null) this.antennaSource = first.getId();
             }

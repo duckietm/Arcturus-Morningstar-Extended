@@ -40,8 +40,14 @@ public class WiredEffectMakeFastWalk extends InteractionWiredEffect {
 
     @Override
     public void execute(WiredContext ctx) {
+        Room room = ctx.room();
+
         for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             unit.setFastWalk(true);
+
+            if (room != null) {
+                WiredEffectUserMessage.whisper(ctx, room.getHabbo(unit), this.message);
+            }
         }
     }
 

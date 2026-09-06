@@ -51,6 +51,7 @@ public class WiredEffectSit extends InteractionWiredEffect {
             if (unit.isWalking()) unit.stopWalking();
 
             room.makeSit(habbo);
+            WiredEffectUserMessage.whisper(ctx, habbo, this.message);
         }
     }
 

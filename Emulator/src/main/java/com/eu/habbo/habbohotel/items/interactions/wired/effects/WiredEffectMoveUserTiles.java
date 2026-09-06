@@ -164,10 +164,13 @@ public class WiredEffectMoveUserTiles extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString("");
-        message.appendInt(3);
+        // saveData reads the tile count as the fourth int; sending three left the dialog reopening
+        // on one tile whatever had been saved.
+        message.appendInt(4);
         message.appendInt(this.movementDirection);
         message.appendInt(this.rotationDirection);
         message.appendInt(this.userSource);
+        message.appendInt(this.tileCount);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());

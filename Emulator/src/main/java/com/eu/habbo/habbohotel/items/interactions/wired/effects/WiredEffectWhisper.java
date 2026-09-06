@@ -66,7 +66,9 @@ public class WiredEffectWhisper extends InteractionWiredEffect {
         message.appendInt(this.bubbleStyle);
         message.appendInt(this.bubbleWidthOverride);
         message.appendInt(0);
-        message.appendInt(type.code);
+        // Subclasses that answer a different type (give effect, give hand item, alert) advertise
+        // their own dialog; the static field is always the show-message one.
+        message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
 
         if (this.requiresTriggeringUser()) {

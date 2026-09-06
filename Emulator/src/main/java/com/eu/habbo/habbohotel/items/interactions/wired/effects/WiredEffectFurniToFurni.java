@@ -196,6 +196,12 @@ public class WiredEffectFurniToFurni extends InteractionWiredEffect {
             throw new WiredSaveException("Room not found");
         }
 
+        // Picking furni with the dropdown left on "triggering furni" means the picked furni, the
+        // same promotion loadWiredData already makes.
+        if (settings.getFurniIds().length > 0 && this.moveSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.moveSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         List<HabboItem> newMoveItems = new ArrayList<>();
         if (this.moveSource == WiredSourceUtil.SOURCE_SELECTED) {
             for (int itemId : settings.getFurniIds()) {

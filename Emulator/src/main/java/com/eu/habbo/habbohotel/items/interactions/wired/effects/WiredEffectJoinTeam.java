@@ -94,7 +94,9 @@ public class WiredEffectJoinTeam extends InteractionWiredEffect {
         if (wiredData.startsWith("{")) {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
-            this.teamColor = data.team;
+            // Gson hands back null for a team name it does not know, and serializeWiredData then
+            // dereferences it; an unknown team is the default one.
+            this.teamColor = (data.team != null) ? data.team : GameTeamColors.RED;
             this.teamType = this.normalizeTeamType(data.teamType);
             this.userSource = data.userSource;
         } else {

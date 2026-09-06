@@ -71,12 +71,13 @@ public class WiredEffectLeaveTeam extends InteractionWiredEffect {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         String wiredData = set.getString("wired_data");
 
-        if (wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            this.setDelay(data.delay);
+        JsonData data = WiredUtilityPayloadGuard.fromJson(wiredData, JsonData.class);
+        if (data != null) {
+            this.setDelay(WiredUtilityPayloadGuard.delay(data.delay));
             this.userSource = data.userSource;
         } else {
-            this.setDelay(Integer.parseInt(wiredData));
+            // A legacy row is the bare delay; anything else keeps the furni loading with no delay.
+            this.setDelay(WiredUtilityPayloadGuard.parseDelay(wiredData));
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }

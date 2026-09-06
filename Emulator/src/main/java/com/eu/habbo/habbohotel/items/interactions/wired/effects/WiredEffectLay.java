@@ -82,6 +82,7 @@ public class WiredEffectLay extends InteractionWiredEffect {
 
             unit.setStatus(RoomUnitStatus.LAY, 0.5 + "");
             room.sendComposer(new RoomUserStatusComposer(unit).compose());
+            WiredEffectUserMessage.whisper(ctx, habbo, this.message);
         }
     }
 

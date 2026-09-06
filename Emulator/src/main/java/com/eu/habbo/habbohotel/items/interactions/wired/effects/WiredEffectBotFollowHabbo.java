@@ -76,7 +76,10 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
         if (settings.getIntParams().length < 2) throw new WiredSaveException("Mode is invalid");
 
         int mode = settings.getIntParams()[0];
-        this.userSource = settings.getIntParams()[1];
+        // The same normalisation loadWiredData applies, so a save and a reload agree.
+        this.userSource = WiredSourceUtil.isDefaultUserSource(settings.getIntParams()[1])
+                ? settings.getIntParams()[1]
+                : WiredSourceUtil.SOURCE_TRIGGER;
         this.botSource = (settings.getIntParams().length > 2)
                 ? WiredBotSourceUtil.normalizeBotSource(settings.getIntParams()[2])
                 : WiredBotSourceUtil.SOURCE_BOT_NAME;
@@ -109,12 +112,15 @@ public class WiredEffectBotFollowHabbo extends InteractionWiredEffect {
         Room room = ctx.room();
         List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
         if (targets.isEmpty()) return;
-        RoomUnit roomUnit = targets.get(0);
 
-        Habbo habbo = room.getHabbo(roomUnit);
         List<Bot> bots = WiredBotSourceUtil.resolveBots(ctx, room, this.botSource, this.botName);
+        if (bots.isEmpty()) return;
 
-        if (habbo != null && !bots.isEmpty()) {
+        // Every resolved user is handed to the bots; the box used to look at the first one only.
+        for (RoomUnit roomUnit : targets) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo == null) continue;
+
             for (Bot bot : bots) {
                 if (this.mode == 1) {
                     bot.startFollowingHabbo(habbo);
