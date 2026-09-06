@@ -767,7 +767,8 @@ Current context-status note:
 - **Class:** `WiredEffectChangeVariableValue`
 - **Behavior:** changes the value of a variable by applying an operation.
 - **Main settings:** variable selection, operation, reference mode, constant or reference variable, reference source, target source.
-- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift.
+- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift, bit count (110), get/set/clear/toggle bit (115-118), and the bit scans next/previous low/high bit in the inclusive (111-114) and exclusive (119-122) forms.
+- **Bit scans:** a "low" bit is a cleared bit and a "high" bit a set bit; the operand is the starting position (0-31); the result is the position found or -1; the exclusive forms start one position past the operand. Values are 32-bit, so position 31 is the sign bit.
 - **Notes:** one of the most flexible variable effects; textual rendering is separate and handled by extras.
 
 ---
