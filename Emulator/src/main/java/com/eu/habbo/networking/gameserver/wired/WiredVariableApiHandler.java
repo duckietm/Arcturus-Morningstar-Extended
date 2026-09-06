@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.wired.extra.WiredExtraVariableWebApi;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomVariableManager;
+import com.eu.habbo.habbohotel.wired.WiredVariableChangeOrigin;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
@@ -210,7 +211,10 @@ public class WiredVariableApiHandler extends ChannelInboundHandlerAdapter {
 
         // updateVariableValue is the same path a wired box takes, so everything watching the
         // variable - triggers, text output, the variables panel - reacts exactly as it would in room.
-        if (!variables.updateVariableValue(lookup.addon().getVariableItemId(), value)) {
+        boolean accepted = WiredVariableChangeOrigin.call(
+                WiredVariableChangeOrigin.WEB_API,
+                () -> variables.updateVariableValue(lookup.addon().getVariableItemId(), value));
+        if (!accepted) {
             sendEnvelope(ctx, req, HttpResponseStatus.CONFLICT, 1, "value rejected");
             return;
         }

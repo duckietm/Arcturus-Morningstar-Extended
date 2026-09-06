@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.WiredVariableChangeOrigin;
 import java.util.Optional;
 
 /**
@@ -197,6 +198,7 @@ public final class WiredEvent {
     private final boolean variableCreated;
     private final boolean variableDeleted;
     private final VariableChangeKind variableChangeKind;
+    private final int variableChangeOrigin;
     private final WiredContextVariableScope contextVariableScope;
     private final long createdAtMs;
 
@@ -225,6 +227,7 @@ public final class WiredEvent {
         this.variableCreated = builder.variableCreated;
         this.variableDeleted = builder.variableDeleted;
         this.variableChangeKind = builder.variableChangeKind;
+        this.variableChangeOrigin = builder.variableChangeOrigin;
         this.contextVariableScope = builder.contextVariableScope;
         this.createdAtMs = builder.createdAtMs;
     }
@@ -383,6 +386,11 @@ public final class WiredEvent {
         return variableChangeKind;
     }
 
+    /** One of the {@link WiredVariableChangeOrigin} codes; only meaningful for VARIABLE_CHANGED. */
+    public int getVariableChangeOrigin() {
+        return this.variableChangeOrigin;
+    }
+
     public WiredContextVariableScope getContextVariableScope() {
         return contextVariableScope;
     }
@@ -453,6 +461,8 @@ public final class WiredEvent {
         private boolean variableCreated;
         private boolean variableDeleted;
         private VariableChangeKind variableChangeKind = VariableChangeKind.NONE;
+        // Read when the builder is made, on the thread that performed the write.
+        private int variableChangeOrigin = WiredVariableChangeOrigin.current();
         private WiredContextVariableScope contextVariableScope;
         private long createdAtMs = System.currentTimeMillis();
 
@@ -615,6 +625,11 @@ public final class WiredEvent {
 
         public Builder variableChangeKind(VariableChangeKind variableChangeKind) {
             this.variableChangeKind = (variableChangeKind != null) ? variableChangeKind : VariableChangeKind.NONE;
+            return this;
+        }
+
+        public Builder variableChangeOrigin(int variableChangeOrigin) {
+            this.variableChangeOrigin = WiredVariableChangeOrigin.normalize(variableChangeOrigin);
             return this;
         }
 
