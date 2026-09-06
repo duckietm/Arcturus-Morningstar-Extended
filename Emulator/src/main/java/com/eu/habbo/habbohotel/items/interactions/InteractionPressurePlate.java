@@ -75,11 +75,7 @@ public class InteractionPressurePlate extends InteractionDefault {
         if (tileAtItem == null) return;
 
         Set<RoomTile> tiles = room.getLayout()
-                .getTilesAt(
-                        tileAtItem,
-                        this.getBaseItem().getWidth(),
-                        this.getBaseItem().getLength(),
-                        this.getRotation());
+                .getTilesAt(tileAtItem, this);
 
         if (tiles == null) return;
 

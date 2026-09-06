@@ -136,6 +136,11 @@ final class RoomLoadOperations implements RoomLoader.Operations {
     }
 
     @Override
+    public void syncWiredVisibility() {
+        this.room.refreshWiredHidden();
+    }
+
+    @Override
     public void loadWiredData() {
         this.withConnection("Caught exception loading wired data", connection -> {
             synchronized (this.room) {
@@ -230,6 +235,7 @@ final class RoomLoadOperations implements RoomLoader.Operations {
         }
         bot.getRoomUnit().setRoomUnitType(RoomUnitType.BOT);
         bot.getRoomUnit().setDanceType(DanceType.values()[set.getInt("dance")]);
+        bot.getRoomUnit().setCanWalk(set.getBoolean("freeroam"));
         bot.getRoomUnit().setInRoom(true);
         this.room.giveEffect(bot.getRoomUnit(), set.getInt("effect"), Integer.MAX_VALUE);
         this.room.addBot(bot);

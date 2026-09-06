@@ -67,7 +67,7 @@ public final class WiredEngine {
     public static volatile int MAX_RECURSION_DEPTH = 10;
 
     /** Maximum events of same type per room within rate limit window before banning */
-    public static volatile int MAX_EVENTS_PER_WINDOW = 100;
+    public static volatile int MAX_EVENTS_PER_WINDOW = Integer.MAX_VALUE;
 
     /** Time window for counting rapid events (milliseconds) */
     public static volatile long RATE_LIMIT_WINDOW_MS = 10000;
@@ -1043,6 +1043,38 @@ public final class WiredEngine {
         return this.executionGuard.snapshot(roomId);
     }
 
+    private static boolean roomOwnerHasBadge(Room room, String badge) {
+        try {
+            com.eu.habbo.habbohotel.users.Habbo owner =
+                    WiredPlatform.gameEnvironment().getHabboManager().getHabbo(room.getOwnerId());
+            if (owner != null) {
+                return owner.getInventory().getBadgesComponent().hasBadge(badge);
+            }
+            try (java.sql.Connection connection = com.eu.habbo.Emulator.getDatabase().getDataSource().getConnection();
+                    java.sql.PreparedStatement statement = connection.prepareStatement(
+                            "SELECT 1 FROM users_badges WHERE user_id = ? AND badge_code = ? LIMIT 1")) {
+                statement.setInt(1, room.getOwnerId());
+                statement.setString(2, badge);
+                try (java.sql.ResultSet set = statement.executeQuery()) {
+                    return set.next();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Could not check badge {} for room owner {}", badge, room.getOwnerId(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Note a furni that cannot be fed by anything in its room. Not an execution failure, so it does
+     * not go through the guard's counters - it only needs to reach the monitor.
+     */
+    public void noteUnreachable(int roomId, String reason, String sourceLabel, int sourceId) {
+        this.executionGuard
+                .diagnostics(roomId)
+                .recordUnreachable(System.currentTimeMillis(), reason, sourceLabel, sourceId);
+    }
+
     private void handleRateLimit(
             Room room,
             WiredEvent.Type eventType,
@@ -1050,6 +1082,12 @@ public final class WiredEngine {
             WiredExecutionGuard.LimitSource limits,
             boolean banned) {
         int roomId = room.getId();
+        if (banned && roomOwnerHasBadge(room, "UNLIMWIRED")) {
+            // UNLIMWIRED badge: the owner's rooms are never wired-banned; only the rate limit applies.
+            this.executionGuard.clearRoomBan(roomId);
+            LOGGER.info("Wired rate limit hit in room {} ({}) but owner {} holds UNLIMWIRED; ban skipped.", roomId, room.getName(), room.getOwnerName());
+            return;
+        }
         if (banned) {
             long banMinutes = limits.banDurationMs() / 60000;
 

@@ -17,9 +17,10 @@ public class PointsCommand extends Command {
 
             if (habbo != null) {
                 try {
-                    int type = Emulator.getConfig().getInt("seasonal.primary.type");
+                    boolean fixedPuntiCommand = params[0].equalsIgnoreCase("givepoints");
+                    int type = fixedPuntiCommand ? 103 : Emulator.getConfig().getInt("seasonal.primary.type");
 
-                    if (params.length == 4) {
+                    if (!fixedPuntiCommand && params.length == 4) {
                         try {
                             type = Integer.parseInt(params[3]);
                         } catch (Exception e) {

@@ -43,7 +43,10 @@ final class RoomItemMovementService {
 
         RoomLayout layout = this.room.getLayout();
         if (!layout.fitsOnMap(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation)) {
+                tile,
+                item.getBaseItem().getWidth(),
+                item.getBaseItem().getLength(),
+                rotation)) {
             return FurnitureMovementError.INVALID_MOVE;
         }
 
@@ -51,8 +54,7 @@ final class RoomItemMovementService {
             return FurnitureMovementError.NONE;
         }
 
-        Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+        Set<RoomTile> occupiedTiles = layout.getTilesAt(tile, item.getBaseItem(), rotation);
         for (RoomTile t : occupiedTiles) {
             if (t.state == RoomTileState.INVALID) {
                 return FurnitureMovementError.INVALID_MOVE;
@@ -120,13 +122,10 @@ final class RoomItemMovementService {
         boolean magicTile = this.placement.isStackPlacementBypassItem(item);
 
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
 
         Set<RoomTile> oldOccupiedTiles = layout.getTilesAt(
-                layout.getTile(item.getX(), item.getY()),
-                item.getBaseItem().getWidth(),
-                item.getBaseItem().getLength(),
-                item.getRotation());
+                layout.getTile(item.getX(), item.getY()), item);
 
         if (!pluginHelper) {
             FurnitureMovementError fits = this.placement.furnitureFitsAt(tile, item, rotation, checkForUnits);
@@ -233,8 +232,7 @@ final class RoomItemMovementService {
 
         // Preserve your newer "place under" behavior if enabled
         if (Emulator.getConfig().getBoolean("wired.place.under", false)) {
-            Set<RoomTile> newOccupiedTiles = layout.getTilesAt(
-                    tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+            Set<RoomTile> newOccupiedTiles = layout.getTilesAt(tile, item.getBaseItem(), rotation);
 
             for (RoomTile t : newOccupiedTiles) {
                 for (Habbo h : this.room.getHabbosAt(t.x, t.y)) {
@@ -289,13 +287,10 @@ final class RoomItemMovementService {
         boolean magicTile = this.placement.isStackPlacementBypassItem(item);
 
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
 
         Set<RoomTile> oldOccupiedTiles = layout.getTilesAt(
-                layout.getTile(item.getX(), item.getY()),
-                item.getBaseItem().getWidth(),
-                item.getBaseItem().getLength(),
-                item.getRotation());
+                layout.getTile(item.getX(), item.getY()), item);
 
         if (!pluginHelper) {
             FurnitureMovementError fits = furnitureFitsAtWithPhysics(tile, item, rotation, checkForUnits, physics);
@@ -394,8 +389,7 @@ final class RoomItemMovementService {
         }
 
         if (Emulator.getConfig().getBoolean("wired.place.under", false)) {
-            Set<RoomTile> newOccupiedTiles = layout.getTilesAt(
-                    tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+            Set<RoomTile> newOccupiedTiles = layout.getTilesAt(tile, item.getBaseItem(), rotation);
 
             for (RoomTile t : newOccupiedTiles) {
                 for (Habbo h : this.room.getHabbosAt(t.x, t.y)) {
@@ -441,9 +435,9 @@ final class RoomItemMovementService {
 
         // Check if can be placed at new position
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
         Set<RoomTile> newOccupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
 
         HabboItem topItem = this.facade.getTopItemAt(occupiedTiles, null);
 
@@ -491,8 +485,7 @@ final class RoomItemMovementService {
         }
 
         Set<RoomTile> oldOccupiedTiles = layout.getTilesAt(
-                layout.getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(),
-                item.getBaseItem().getLength(), item.getRotation());
+                layout.getTile(item.getX(), item.getY()), item);
 
         int oldRotation = item.getRotation();
 
@@ -528,7 +521,8 @@ final class RoomItemMovementService {
             height = stackHelper.getZ();
         } else if (item instanceof InteractionStackWalkHelper) {
             height = this.placement.resolveStackWalkHelperHeight(item, tile, occupiedTiles);
-        } else if (item == topItem) {
+        } else if (item == topItem && !RoomAutoStackSupport.isEnabled(this.room)) {
+            // legacy behaviour: an item that is still the top item keeps its height
             height = item.getZ();
         } else if (magicTile) {
             if (topItem == null) {
@@ -575,6 +569,7 @@ final class RoomItemMovementService {
             return FurnitureMovementError.CANT_STACK;
         }
 
+        double previousZ = item.getZ();
         item.setX(tile.x);
         item.setY(tile.y);
         item.setZ(height);
@@ -622,6 +617,9 @@ final class RoomItemMovementService {
         occupiedTiles.removeAll(oldOccupiedTiles);
         occupiedTiles.addAll(oldOccupiedTiles);
         this.room.updateTiles(occupiedTiles);
+
+        // Furniture that was resting on this item drops down to the new stack height.
+        RoomAutoStackSupport.settleAbove(this.room, oldOccupiedTiles, previousZ, item);
 
         // Update Habbos at old position
         for (RoomTile t : occupiedTiles) {
@@ -672,10 +670,9 @@ final class RoomItemMovementService {
 
         HabboItem stackHelper = this.placement.findStackHeightHelperAt(tile, item);
 
-        Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+        Set<RoomTile> occupiedTiles = layout.getTilesAt(tile, item.getBaseItem(), rotation);
         Set<RoomTile> newOccupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
 
         HabboItem topItem = this.getTopPhysicsItemAt(occupiedTiles, null, physics);
 
@@ -716,8 +713,7 @@ final class RoomItemMovementService {
         }
 
         Set<RoomTile> oldOccupiedTiles = layout.getTilesAt(
-                layout.getTile(item.getX(), item.getY()), item.getBaseItem().getWidth(),
-                item.getBaseItem().getLength(), item.getRotation());
+                layout.getTile(item.getX(), item.getY()), item);
 
         int oldRotation = item.getRotation();
 
@@ -752,7 +748,8 @@ final class RoomItemMovementService {
             height = stackHelper.getZ();
         } else if (item instanceof InteractionStackWalkHelper) {
             height = this.placement.resolveStackWalkHelperHeight(item, tile, occupiedTiles);
-        } else if (item == topItem) {
+        } else if (item == topItem && !RoomAutoStackSupport.isEnabled(this.room)) {
+            // legacy behaviour: an item that is still the top item keeps its height
             height = item.getZ();
         } else if (magicTile) {
             if (topItem == null) {
@@ -869,7 +866,7 @@ final class RoomItemMovementService {
 
         // Check if can be placed at new position
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
 
         java.util.List<Pair<RoomTile, Set<HabboItem>>> tileFurniList = new java.util.ArrayList<>();
         for (RoomTile t : occupiedTiles) {

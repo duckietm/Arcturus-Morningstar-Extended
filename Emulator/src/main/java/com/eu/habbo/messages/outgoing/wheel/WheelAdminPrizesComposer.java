@@ -1,5 +1,7 @@
 package com.eu.habbo.messages.outgoing.wheel;
 
+import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.wheel.WheelPrize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
@@ -28,7 +30,19 @@ public class WheelAdminPrizesComposer extends MessageComposer {
             this.response.appendInt(prize.pointsType);
             this.response.appendInt(prize.weight);
             this.response.appendString(prize.label == null ? "" : prize.label);
+            this.response.appendInt(prize.spriteId);
+            this.response.appendString(itemName(prize));
         }
         return this.response;
+    }
+
+    private static String itemName(WheelPrize prize) {
+        if (!"item".equals(prize.type) || prize.value == null) return "";
+        try {
+            Item item = Emulator.getGameEnvironment().getItemManager().getItem(Integer.parseInt(prize.value.trim()));
+            return item == null ? "" : (item.getFullName() == null || item.getFullName().isBlank() ? item.getName() : item.getFullName());
+        } catch (NumberFormatException e) {
+            return "";
+        }
     }
 }

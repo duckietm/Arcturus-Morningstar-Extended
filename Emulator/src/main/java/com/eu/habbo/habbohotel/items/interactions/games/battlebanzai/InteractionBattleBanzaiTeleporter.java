@@ -61,7 +61,10 @@ public class InteractionBattleBanzaiTeleporter extends HabboItem {
             roomUnit.removeStatus(RoomUnitStatus.MOVE);
             roomUnit.setGoalLocation(roomUnit.getCurrentLocation());
             roomUnit.setCanWalk(false);
-            Emulator.getThreading().run(new BanzaiRandomTeleport(this, target, roomUnit, room), 500);
+            Emulator.getThreading()
+                    .run(
+                            new BanzaiRandomTeleport(this, target, roomUnit, room),
+                            Emulator.getConfig().getInt("hotel.banzai.teleport.start_delay_ms", 250));
         }
     }
 

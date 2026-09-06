@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.rooms.users;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.commands.BssCommandPreferences;
 import com.eu.habbo.habbohotel.modtool.ScripterManager;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
 import com.eu.habbo.habbohotel.rooms.RoomChatType;
@@ -22,6 +23,11 @@ public class RoomUserWhisperEvent extends MessageHandler {
         if (chatMessage.getMessage().length() <= RoomChatMessage.MAXIMUM_LENGTH) {
             if (!this.client.getHabbo().getHabboStats().allowTalk() || chatMessage.getTargetHabbo() == null)
                 return;
+
+            if (chatMessage.getTargetHabbo() != this.client.getHabbo()
+                    && BssCommandPreferences.isEnabled(
+                            chatMessage.getTargetHabbo().getHabboInfo().getId(),
+                            BssCommandPreferences.Flag.BLOCK_WHISPERS)) return;
 
             if (Emulator.getPluginManager().fireEvent(new UserTalkEvent(this.client.getHabbo(), chatMessage, RoomChatType.WHISPER)).isCancelled()) {
                 return;

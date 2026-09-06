@@ -28,7 +28,7 @@ public class SetStackHelperHeightEvent extends MessageHandler {
                 RoomTile itemTile = room.getLayout().getTile(item.getX(), item.getY());
                 double stackerHeight = this.packet.readInt();
 
-                Set<RoomTile> tiles = room.getLayout().getTilesAt(itemTile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation());
+                Set<RoomTile> tiles = room.getLayout().getTilesAt(itemTile, item);
                 if (stackerHeight == -100) {
                     for (RoomTile tile : tiles) {
                         double stackheight = room.getStackHeight(tile.x, tile.y, false, item) * 100;

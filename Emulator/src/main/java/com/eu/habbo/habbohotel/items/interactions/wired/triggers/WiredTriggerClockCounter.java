@@ -33,7 +33,7 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
     private final Set<HabboItem> items;
     private int minutes = 0;
     private int halfSecondSteps = 0;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredTriggerClockCounter(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -159,7 +159,7 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
         this.items.clear();
         this.minutes = 0;
         this.halfSecondSteps = 0;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
         String wiredData = set.getString("wired_data");
         if (wiredData == null || wiredData.isEmpty()) {
@@ -200,7 +200,7 @@ public class WiredTriggerClockCounter extends InteractionWiredTrigger {
         this.items.clear();
         this.minutes = 0;
         this.halfSecondSteps = 0;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     private void refresh(Room room) {

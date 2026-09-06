@@ -46,6 +46,8 @@ public enum CatalogPageLayouts {
     monkey,
     niko,
     mad_money,
+    /** Recolourable furni: the buyer picks colour 1 / colour 2 before purchasing. */
+    recolorable,
     /** Retained for plugin ABI compatibility; the layout is no longer registered or selectable. */
     @Deprecated
     custom_prefix

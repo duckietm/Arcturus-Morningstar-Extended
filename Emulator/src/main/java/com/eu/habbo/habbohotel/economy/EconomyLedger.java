@@ -75,31 +75,44 @@ public final class EconomyLedger {
     }
 
     public static EconomyMutationResult apply(Connection connection, EconomyOperation operation) throws SQLException {
-        int balanceBefore = lockBalance(connection, operation.userId(), operation.currencyType());
+        long balanceBefore = lockBalance(connection, operation.userId(), operation.currencyType());
         EconomyMutationResult existing = existingResult(connection, operation);
         if (existing != null) return existing;
 
-        int balanceAfter = checkedBalance(balanceBefore, operation.delta());
+        long balanceAfter = checkedBalance(balanceBefore, operation.delta());
         persistBalance(connection, operation.userId(), operation.currencyType(), balanceAfter);
-        EconomyAuditLogger.record(connection, EconomyAuditEntry.from(operation, balanceBefore, balanceAfter));
+        EconomyAuditLogger.record(connection, EconomyAuditEntry.fromLong(operation, balanceBefore, balanceAfter));
         return new EconomyMutationResult(balanceBefore, balanceAfter, true);
     }
 
+    public static long checkedBalance(long balanceBefore, long delta) {
+        final long balanceAfter;
+        try {
+            balanceAfter = Math.addExact(balanceBefore, delta);
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException("economy mutation would produce an invalid balance", exception);
+        }
+        if (balanceBefore < 0 || balanceAfter < 0) {
+            throw new IllegalArgumentException("economy mutation would produce an invalid balance");
+        }
+        return balanceAfter;
+    }
+
     public static int checkedBalance(int balanceBefore, int delta) {
-        long balanceAfter = (long) balanceBefore + delta;
-        if (balanceBefore < 0 || balanceAfter < 0 || balanceAfter > Integer.MAX_VALUE) {
+        long balanceAfter = checkedBalance((long) balanceBefore, (long) delta);
+        if (balanceAfter > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("economy mutation would produce an invalid balance");
         }
         return (int) balanceAfter;
     }
 
-    private static int lockBalance(Connection connection, int userId, int currencyType) throws SQLException {
-        int credits;
+    private static long lockBalance(Connection connection, int userId, int currencyType) throws SQLException {
+        long credits;
         try (PreparedStatement statement = connection.prepareStatement(LOCK_USER)) {
             statement.setInt(1, userId);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) throw new SQLException("Unknown economy user " + userId);
-                credits = result.getInt("credits");
+                credits = result.getLong("credits");
             }
         }
         if (currencyType == CREDITS) return credits;
@@ -126,16 +139,16 @@ public final class EconomyLedger {
                             "Economy operation id reused with different payload: " + operation.operationId());
                 }
                 return new EconomyMutationResult(
-                        result.getInt("balance_before"), result.getInt("balance_after"), false);
+                        result.getLong("balance_before"), result.getLong("balance_after"), false);
             }
         }
     }
 
-    private static void persistBalance(Connection connection, int userId, int currencyType, int balance)
+    private static void persistBalance(Connection connection, int userId, int currencyType, long balance)
             throws SQLException {
         if (currencyType == CREDITS) {
             try (PreparedStatement statement = connection.prepareStatement(UPDATE_CREDITS)) {
-                statement.setInt(1, balance);
+                statement.setLong(1, balance);
                 statement.setInt(2, userId);
                 if (statement.executeUpdate() != 1) throw new SQLException("Unable to update credits for " + userId);
             }
@@ -145,7 +158,7 @@ public final class EconomyLedger {
         try (PreparedStatement statement = connection.prepareStatement(UPSERT_CURRENCY)) {
             statement.setInt(1, userId);
             statement.setInt(2, currencyType);
-            statement.setInt(3, balance);
+            statement.setInt(3, Math.toIntExact(balance));
             statement.executeUpdate();
         }
     }

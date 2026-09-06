@@ -14,28 +14,29 @@ public class LayCommand extends Command {
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
-        if (gameClient.getHabbo().getRoomUnit() == null || !gameClient.getHabbo().getRoomUnit().canForcePosture())
-            return true;
-
-        gameClient.getHabbo().getRoomUnit().cmdLay = true;
-        gameClient.getHabbo().getHabboInfo().getCurrentRoom().updateHabbo(gameClient.getHabbo());
-        gameClient.getHabbo().getRoomUnit().cmdSit = true;
-        gameClient.getHabbo().getRoomUnit().setBodyRotation(RoomUserRotation.values()[gameClient.getHabbo().getRoomUnit().getBodyRotation().getValue() - gameClient.getHabbo().getRoomUnit().getBodyRotation().getValue() % 2]);
-
-        RoomTile tile = gameClient.getHabbo().getRoomUnit().getCurrentLocation();
-        if (tile == null) {
+        // ASTRO_LAY_COMMAND_FIX_V1
+        if (gameClient == null || gameClient.getHabbo() == null) {
             return false;
         }
 
-        for (int i = 0; i < 3; i++) {
-            RoomTile t = gameClient.getHabbo().getHabboInfo().getCurrentRoom().getLayout().getTileInFront(tile, gameClient.getHabbo().getRoomUnit().getBodyRotation().getValue(), i);
-            if (t == null || !t.isWalkable()) {
-                return false;
-            }
+        var habbo = gameClient.getHabbo();
+        var unit = habbo.getRoomUnit();
+        var room = habbo.getHabboInfo().getCurrentRoom();
+
+        if (unit == null || room == null || !unit.canForcePosture()) {
+            return true;
         }
 
-        gameClient.getHabbo().getRoomUnit().setStatus(RoomUnitStatus.LAY, 0.5 + "");
-        gameClient.getHabbo().getHabboInfo().getCurrentRoom().sendComposer(new RoomUserStatusComposer(gameClient.getHabbo().getRoomUnit()).compose());
+        unit.cmdSit = false;
+        unit.cmdStand = false;
+        unit.cmdLay = true;
+
+        int rotation = unit.getBodyRotation().getValue();
+        unit.setBodyRotation(RoomUserRotation.values()[rotation - rotation % 2]);
+        unit.removeStatus(RoomUnitStatus.SIT);
+        unit.setStatus(RoomUnitStatus.LAY, "0.5");
+
+        room.sendComposer(new RoomUserStatusComposer(unit).compose());
         return true;
     }
 }

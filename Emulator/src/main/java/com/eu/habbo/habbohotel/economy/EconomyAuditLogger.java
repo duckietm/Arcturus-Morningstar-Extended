@@ -39,8 +39,8 @@ public final class EconomyAuditLogger {
             statement.setString(5, entry.reason());
             statement.setInt(6, entry.currencyType());
             statement.setInt(7, entry.amount());
-            statement.setInt(8, entry.balanceBefore());
-            statement.setInt(9, entry.balanceAfter());
+            statement.setLong(8, entry.balanceBeforeLong());
+            statement.setLong(9, entry.balanceAfterLong());
             if (entry.itemId() == null) statement.setNull(10, java.sql.Types.INTEGER);
             else statement.setInt(10, entry.itemId());
             statement.setString(11, truncate(entry.context(), 255));

@@ -39,7 +39,7 @@ public class RoomFloorItemsComposer extends MessageComposer {
                         ? ((InteractionMusicDisc) item).getSongId()
                         : (item instanceof InteractionStackWalkHelper ? 2147483001 : 1))
             );
-            item.serializeExtradata(this.response);
+            item.serializeItemData(this.response);
             this.response.appendInt(-1);
             this.response.appendInt(item instanceof InteractionTeleport || item instanceof InteractionSwitch || item instanceof InteractionSwitchRemoteControl || item instanceof InteractionVendingMachine || item instanceof InteractionInformationTerminal || item instanceof InteractionPostIt || item instanceof InteractionPuzzleBox ? 2 : item.isUsable() ? 1 : 0);
             this.response.appendInt(item.getUserId());

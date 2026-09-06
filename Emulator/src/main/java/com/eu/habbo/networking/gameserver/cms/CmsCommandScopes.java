@@ -62,6 +62,8 @@ public final class CmsCommandScopes {
             Map.entry("stalkuser", "social"),
             Map.entry("forwarduser", "social"),
             Map.entry("changeroomowner", "social"),
+            Map.entry("importxabboroomwired", "social"),
+            Map.entry("sethomeroom", "social"),
             // cache reloads
             Map.entry("updatecatalog", "cache"),
             Map.entry("updateitems", "cache"),

@@ -40,7 +40,7 @@ public class WiredEffectMoveFurniAsGroup extends InteractionWiredEffect {
 
     private final List<HabboItem> items = new ArrayList<>();
     private int direction;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectMoveFurniAsGroup(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -108,6 +108,7 @@ public class WiredEffectMoveFurniAsGroup extends InteractionWiredEffect {
         for (HabboItem item : effectiveItems) {
             RoomTile current = room.getLayout().getTile(item.getX(), item.getY());
             if (current == null) continue;
+            if (room.getWiredRuntime().isFurnitureMoving(item)) continue;
 
             RoomTile target = room.getLayout().getTileInFront(current, this.direction, 1);
             if (target == null || !target.getAllowStack()) continue;
@@ -187,7 +188,7 @@ public class WiredEffectMoveFurniAsGroup extends InteractionWiredEffect {
         this.setDelay(0);
         this.items.clear();
         this.direction = 0;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override

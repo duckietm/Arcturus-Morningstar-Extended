@@ -76,6 +76,7 @@ public class RoomUsersComposer extends MessageComposer {
             this.response.appendString(customizationData.prefixEffect);
             this.response.appendString(customizationData.prefixFont);
             this.response.appendString(customizationData.displayOrder);
+            this.response.appendString(customizationData.nameColor);
             this.response.appendString(this.habbo.getHabboInfo().getRoomEntryMethod());
             this.response.appendInt(this.habbo.getHabboInfo().getRoomEntryTeleportId());
             this.response.appendInt(this.habbo.getHabboInfo().getInfostandBorder());
@@ -119,6 +120,7 @@ public class RoomUsersComposer extends MessageComposer {
                     this.response.appendString(customizationData.prefixEffect);
                     this.response.appendString(customizationData.prefixFont);
                     this.response.appendString(customizationData.displayOrder);
+            this.response.appendString(customizationData.nameColor);
                     this.response.appendString(habbo.getHabboInfo().getRoomEntryMethod());
                     this.response.appendInt(habbo.getHabboInfo().getRoomEntryTeleportId());
                     this.response.appendInt(habbo.getHabboInfo().getInfostandBorder());

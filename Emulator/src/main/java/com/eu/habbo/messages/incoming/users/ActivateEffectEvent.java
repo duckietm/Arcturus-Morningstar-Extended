@@ -12,13 +12,14 @@ public class ActivateEffectEvent extends MessageHandler {
         Habbo habbo = this.client.getHabbo();
         if (habbo == null) return;
 
-        if (habbo.getInventory().getEffectsComponent().ownsEffect(effectId)) {
-            habbo.getInventory().getEffectsComponent().activateEffect(effectId);
+        // CUSTOM: staff locks (special_enables) apply to everyone below the rank, owned effects included.
+        int rankId = habbo.getHabboInfo().getRank().getId();
+        if (Emulator.getGameEnvironment().getPermissionsManager().isEffectBlocked(effectId, rankId)) {
             return;
         }
 
-        int rankId = habbo.getHabboInfo().getRank().getId();
-        if (Emulator.getGameEnvironment().getPermissionsManager().isEffectBlocked(effectId, rankId)) {
+        if (habbo.getInventory().getEffectsComponent().ownsEffect(effectId)) {
+            habbo.getInventory().getEffectsComponent().activateEffect(effectId);
             return;
         }
 

@@ -68,7 +68,7 @@ public final class CatalogStudioRuntime {
         CatalogLiveValidationGuard liveValidation = new CatalogLiveValidationGuard(validationData, gson);
         CatalogLiveMutationHook liveHook = change -> {
             if (change.entityType() == com.eu.habbo.habbohotel.catalog.versioning.CatalogEntityType.PAGE) {
-                CatalogAdminCacheSync.refreshPageFlagsFromDb(change.entityId(), change.catalogType());
+                CatalogAdminCacheSync.reloadCatalogPage(change.entityId(), change.catalogType());
             } else {
                 CatalogAdminCacheSync.reloadCatalogItem(change.entityId(), change.catalogType());
             }

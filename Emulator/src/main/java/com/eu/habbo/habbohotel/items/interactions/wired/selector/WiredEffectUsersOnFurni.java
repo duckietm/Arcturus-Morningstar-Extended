@@ -26,7 +26,7 @@ public class WiredEffectUsersOnFurni extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.USERS_ON_FURNI_SELECTOR;
 
     private final Set<HabboItem> items = new LinkedHashSet<>();
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private boolean filterExisting = false;
     private boolean invert = false;
 
@@ -169,7 +169,7 @@ public class WiredEffectUsersOnFurni extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.filterExisting = false;
         this.invert = false;
         this.setDelay(0);
@@ -218,11 +218,7 @@ public class WiredEffectUsersOnFurni extends InteractionWiredEffect {
         }
 
         Set<RoomTile> occupiedTiles = room.getLayout()
-                .getTilesAt(
-                        baseTile,
-                        sourceItem.getBaseItem().getWidth(),
-                        sourceItem.getBaseItem().getLength(),
-                        sourceItem.getRotation());
+                .getTilesAt(baseTile, sourceItem);
         if (occupiedTiles == null) {
             return result;
         }

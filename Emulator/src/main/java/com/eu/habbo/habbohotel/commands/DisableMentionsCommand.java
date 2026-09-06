@@ -5,7 +5,7 @@ import com.eu.habbo.habbohotel.users.Habbo;
 
 public class DisableMentionsCommand extends Command {
     public DisableMentionsCommand() {
-        super("cmd_disablementions", new String[]{"disablementions", "togglementions"});
+        super("cmd_disablementions", new String[]{"disablementions", "togglementions", "menzioni"});
     }
 
     @Override

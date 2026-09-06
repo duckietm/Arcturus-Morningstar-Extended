@@ -7,6 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WalletBalanceMathTest {
     @Test
+    void creditsCanExceedTheSignedIntLimit() {
+        assertEquals(5_000_000_000L, WalletBalanceMath.checkedBalance(4_999_999_999L, 1L));
+    }
+
+    @Test
     void acceptsRepresentableDepositsAndDebits() {
         assertEquals(150, WalletBalanceMath.checkedBalance(100, 50));
         assertEquals(25, WalletBalanceMath.checkedBalance(100, -75));

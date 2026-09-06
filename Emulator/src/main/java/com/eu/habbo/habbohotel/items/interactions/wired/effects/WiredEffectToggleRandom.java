@@ -68,7 +68,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.TOGGLE_RANDOM;
 
     private final Set<HabboItem> items = new LinkedHashSet<>();
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES =
             new ArrayList<Class<? extends HabboItem>>() {
@@ -173,7 +173,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_SELECTED;
 
         int itemsCount = settings.getFurniIds().length;
 
@@ -306,7 +306,7 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 

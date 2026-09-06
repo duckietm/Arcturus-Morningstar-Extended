@@ -37,7 +37,7 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition
     private boolean position;
     private boolean direction;
     private boolean altitude;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionMatchStatePosition(ResultSet set, Item baseItem) throws SQLException {
@@ -356,7 +356,7 @@ public class WiredConditionMatchStatePosition extends InteractionWiredCondition
         this.position = false;
         this.state = false;
         this.altitude = false;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
     }
 

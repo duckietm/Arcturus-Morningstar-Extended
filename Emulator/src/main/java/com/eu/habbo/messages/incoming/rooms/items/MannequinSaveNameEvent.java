@@ -9,7 +9,7 @@ public class MannequinSaveNameEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
-        if (room == null || !room.isOwner(this.client.getHabbo()))
+        if (room == null || !room.hasRights(this.client.getHabbo()))
             return;
 
         int itemId = this.packet.readInt();
@@ -20,7 +20,7 @@ public class MannequinSaveNameEvent extends MessageHandler {
         if (item == null)
             return;
 
-        String[] data = item.getExtradata().split(":");
+        String[] data = item.getExtradata().split(":", 3);
         String name = RoomItemInputGuard.trimToMax(this.packet.readString(), 32);
 
         if (name.length() < 3 || name.length() > 15) {

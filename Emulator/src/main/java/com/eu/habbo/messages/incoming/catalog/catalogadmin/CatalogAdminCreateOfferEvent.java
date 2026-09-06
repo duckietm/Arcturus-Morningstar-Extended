@@ -36,6 +36,9 @@ public class CatalogAdminCreateOfferEvent extends MessageHandler {
         int orderNumber = this.packet.readInt();
         int songId = this.packet.readInt();
         CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
+        CatalogStudioMutationEnvelope envelope = CatalogStudioRequestParser.parseMutationEnvelope(this.packet);
+        Gson gson = new Gson();
+        String operationId = CatalogAdminSmartSaveResponder.operationId(envelope, "createOffer");
 
         CatalogAdminOfferPayload payload = CatalogAdminOfferPayload.validate(
                 pageId,
@@ -54,21 +57,24 @@ public class CatalogAdminCreateOfferEvent extends MessageHandler {
                 songId,
                 pageType);
         if (payload == null) {
-            this.client.sendResponse(new CatalogAdminResultComposer(false, "Invalid offer payload"));
+            this.client.sendResponse(CatalogAdminSmartSaveResponder.failure(
+                    operationId, "createOffer", envelope.draftVersionId(), envelope.expectedRevision(),
+                    "OFFER", catalogTypeName(pageType), 0,
+                    new IllegalArgumentException("Invalid offer payload"), gson));
             return;
         }
 
-        CatalogStudioMutationEnvelope envelope = CatalogStudioRequestParser.parseMutationEnvelope(this.packet);
         for (int itemId : payload.baseItemIds()) {
             if (Emulator.getGameEnvironment().getItemManager().getItem(itemId) == null) {
-                this.client.sendResponse(new CatalogAdminResultComposer(false, "Base item not found: " + itemId));
+                this.client.sendResponse(CatalogAdminSmartSaveResponder.failure(
+                        operationId, "createOffer", envelope.draftVersionId(), envelope.expectedRevision(),
+                        "OFFER", catalogTypeName(pageType), 0,
+                        new IllegalArgumentException("Base item not found: " + itemId), gson));
                 return;
             }
         }
 
         var offerData = CatalogAdminOfferDraftData.from(payload);
-        Gson gson = new Gson();
-        String operationId = CatalogAdminSmartSaveResponder.operationId(envelope, "createOffer");
         var liveMutations = CatalogStudioRuntime.services().liveMutations();
         try {
             var batch = liveMutations.applyBatch(
@@ -105,5 +111,9 @@ public class CatalogAdminCreateOfferEvent extends MessageHandler {
                     exception,
                     gson));
         }
+    }
+
+    private static String catalogTypeName(CatalogPageType pageType) {
+        return pageType == CatalogPageType.BUILDER ? "BUILDER" : "NORMAL";
     }
 }

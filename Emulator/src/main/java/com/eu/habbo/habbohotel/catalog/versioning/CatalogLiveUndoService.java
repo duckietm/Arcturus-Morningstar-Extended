@@ -2,6 +2,9 @@ package com.eu.habbo.habbohotel.catalog.versioning;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +12,7 @@ import javax.sql.DataSource;
 
 /** Reverses one complete live operation while preserving both audit records. */
 public final class CatalogLiveUndoService {
+    private static final Gson GSON = new Gson();
     private final DataSource dataSource;
     private final CatalogVersionRepository versions;
     private final CatalogChangeJournal journal;
@@ -99,8 +103,11 @@ public final class CatalogLiveUndoService {
                 if (group.versionId() != active.version().id()) {
                     throw new CatalogUndoConflictException("The selected change belongs to another catalog version");
                 }
-                if (journal.hasLaterChangesToSameEntities(connection, group)) {
-                    throw new CatalogUndoConflictException("One or more entities were edited after this operation");
+                List<String> conflicts = entitiesChangedSince(active, group.entries());
+                if (!conflicts.isEmpty()) {
+                    throw new CatalogUndoConflictException(
+                            "Modificati dopo questa operazione, annulla prima le modifiche piu' recenti: "
+                                    + String.join(", ", conflicts));
                 }
                 inverse = inverse(group.entries());
                 for (CatalogChangeEntry change : inverse) {
@@ -149,6 +156,36 @@ public final class CatalogLiveUndoService {
         }
         inverse.forEach(hook::afterCommit);
         return revision;
+    }
+
+    /**
+     * Entities whose live state no longer matches what this group left behind ("afterJson", or absence for a
+     * DELETE). Only those block the undo; an entity that was edited later and then undone back matches again.
+     */
+    private static List<String> entitiesChangedSince(CatalogVersionSnapshot active, List<CatalogChangeEntry> entries) {
+        List<String> conflicts = new ArrayList<>();
+        for (CatalogChangeEntry entry : entries) {
+            String current = switch (entry.entityType()) {
+                case PAGE -> active.page(entry.catalogType(), entry.entityId()).map(GSON::toJson).orElse(null);
+                case OFFER -> active.offer(entry.catalogType(), entry.entityId()).map(GSON::toJson).orElse(null);
+            };
+            String expected = entry.operation() == CatalogChangeOperation.DELETE ? null : entry.afterJson();
+            if (!sameJson(current, expected)) {
+                conflicts.add((entry.entityType() == CatalogEntityType.PAGE ? "pagina #" : "offerta #") + entry.entityId());
+            }
+        }
+        return conflicts;
+    }
+
+    private static boolean sameJson(String left, String right) {
+        if (left == null || right == null) return left == null && right == null;
+        try {
+            JsonElement a = JsonParser.parseString(left);
+            JsonElement b = JsonParser.parseString(right);
+            return a.equals(b);
+        } catch (RuntimeException exception) {
+            return left.equals(right);
+        }
     }
 
     private static List<CatalogChangeEntry> inverse(List<CatalogChangeEntry> entries) {

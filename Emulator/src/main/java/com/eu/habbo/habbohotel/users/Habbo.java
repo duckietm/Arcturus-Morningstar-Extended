@@ -10,6 +10,7 @@ import com.eu.habbo.habbohotel.economy.EconomyOperationId;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.messenger.Messenger;
 import com.eu.habbo.habbohotel.pets.Pet;
+import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
@@ -745,8 +746,10 @@ public class Habbo implements Runnable {
         if (target != null && target != this) {
             target.getHabboStats().respectPointsReceived++;
             this.getHabboStats().respectPointsGiven++;
-            this.getHabboStats().respectPointsToGive--;
-            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserRespectComposer(target).compose());
+            if (!this.hasPermission(Permission.ACC_INFINITE_RESPECT)) {
+                this.getHabboStats().respectPointsToGive--;
+            }
+            this.getHabboInfo().getCurrentRoom().sendComposer(new RoomUserRespectComposer(target, this).compose());
             this.getHabboInfo()
                     .getCurrentRoom()
                     .sendComposer(new RoomUserActionComposer(this.getRoomUnit(), RoomUserAction.THUMB_UP).compose());

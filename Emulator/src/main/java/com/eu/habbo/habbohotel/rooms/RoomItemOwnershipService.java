@@ -11,6 +11,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
+import com.eu.habbo.messages.outgoing.inventory.InventoryUpdateItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.UpdateStackHeightComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveWallItemComposer;
@@ -157,7 +158,10 @@ final class RoomItemOwnershipService {
         if (owner != null) {
             owner.getInventory().getItemsComponent().addItem(item);
             owner.getClient().sendResponse(new AddHabboItemComposer(item));
-            owner.getClient().sendResponse(new InventoryRefreshComposer());
+            // The item itself, not an "invalidate and refetch": the full-list request that followed the refresh
+            // is rate-limited to one per 500 ms and was silently dropped when two pick-ups came close together,
+            // which left the unseen counter at 1 with nothing new in the list until the next login.
+            owner.getClient().sendResponse(new InventoryUpdateItemComposer(item));
         }
         Emulator.getThreading().run(item);
     }
@@ -221,14 +225,42 @@ final class RoomItemOwnershipService {
         }
     }
 
+    void pickAllTo(Habbo picker) {
+        if (picker == null || picker.getHabboInfo() == null) {
+            return;
+        }
+
+        Set<HabboItem> items = new HashSet<>();
+        synchronized (this.index.items()) {
+            for (HabboItem item : this.index.items().values()) {
+                if (!(item instanceof InteractionPostIt)) {
+                    items.add(item);
+                }
+            }
+        }
+
+        int pickerId = picker.getHabboInfo().getId();
+        for (HabboItem item : items) {
+            if (BuildersClubRoomSupport.isTrackedItem(item.getId())) {
+                BuildersClubRoomSupport.deleteTrackedItem(item.getId());
+            }
+            item.setUserId(pickerId);
+            this.pickUp(item, picker);
+        }
+
+        BuildersClubRoomSupport.syncRoom(this.room);
+        BuildersClubRoomSupport.sendPlacementStatusForPool(this.room, pickerId);
+    }
+
     private static boolean isDestroyedOnPickup(HabboItem item) {
         return item instanceof InteractionPlant && ((InteractionPlant) item).isDead();
     }
 
     private void addOwnerName(HabboItem item) {
-        if (item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID
-                && BuildersClubRoomSupport.isTrackedItem(item.getId())) {
-            this.index.ownerNames().put(item.getUserId(), BuildersClubRoomSupport.DISPLAY_OWNER_NAME);
+        // Everything placed in a room is presented as the room owner's property.
+        HabboInfo roomOwner = HabboManager.getOfflineHabboInfo(this.room.getOwnerId());
+        if (roomOwner != null) {
+            this.index.ownerNames().put(item.getUserId(), roomOwner.getUsername());
             return;
         }
 

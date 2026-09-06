@@ -60,6 +60,15 @@ public class FurniEditorHelper {
         item.put("clothing_on_walk", set.getString("clothing_on_walk"));
         item.put("multiheight", set.getString("multiheight"));
 
+        // Added by the footprint migration; a database that predates it still reads.
+        try {
+            item.put("tile_shape", set.getString("tile_shape"));
+            item.put("sit_directions", set.getString("sit_directions"));
+        } catch (SQLException e) {
+            item.put("tile_shape", "");
+            item.put("sit_directions", "");
+        }
+
         // description may not exist in all schemas, handle gracefully
         try {
             item.put("description", set.getString("description"));
@@ -96,7 +105,8 @@ public class FurniEditorHelper {
         "allow_gift", "allow_trade", "allow_recycle", "allow_marketplace_sell",
         "allow_inventory_stack", "interaction_type", "interaction_modes_count",
         "vending_ids", "customparams", "effect_id_male", "effect_id_female",
-        "clothing_on_walk", "multiheight", "description"
+        "clothing_on_walk", "multiheight", "description",
+        "tile_shape", "sit_directions"
     );
 
     /**
@@ -127,6 +137,8 @@ public class FurniEditorHelper {
         Map.entry("effectIdFemale", "effect_id_female"),
         Map.entry("clothingOnWalk", "clothing_on_walk"),
         Map.entry("multiheight", "multiheight"),
-        Map.entry("description", "description")
+        Map.entry("description", "description"),
+        Map.entry("tileShape", "tile_shape"),
+        Map.entry("sitDirections", "sit_directions")
     );
 }

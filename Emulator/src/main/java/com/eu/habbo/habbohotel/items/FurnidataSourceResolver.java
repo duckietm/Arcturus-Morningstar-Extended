@@ -150,6 +150,32 @@ public final class FurnidataSourceResolver {
 
         if (!cleanUrl.startsWith("http")) {
             Path local = Paths.get(cleanUrl);
+
+            // Nitro commonly exposes gamedata with a browser-root URL such as
+            // /nitro-assets/FurnitureData.json. That is not a filesystem root:
+            // resolve it below the configured asset directory. Keep genuine,
+            // existing absolute filesystem paths intact for installations that
+            // deliberately point the renderer config at a local file.
+            if (assetBase != null && (!local.isAbsolute() || !Files.exists(local))) {
+                String normalized = cleanUrl.replace('\\', '/');
+                String baseName = assetBase.getFileName() != null
+                        ? assetBase.getFileName().toString()
+                        : "";
+                String relative = normalized;
+                String marker = baseName.isEmpty() ? "" : "/" + baseName + "/";
+                int markerIndex = marker.isEmpty() ? -1 : normalized.indexOf(marker);
+
+                if (markerIndex >= 0) {
+                    relative = normalized.substring(markerIndex + marker.length());
+                } else {
+                    while (relative.startsWith("/")) relative = relative.substring(1);
+                    if (!baseName.isEmpty() && relative.startsWith(baseName + "/")) {
+                        relative = relative.substring(baseName.length() + 1);
+                    }
+                }
+
+                local = assetBase.resolve(relative);
+            }
             return new Source(local, splitMode || Files.isDirectory(local), Status.RESOLVED, "local furnidata.url");
         }
 

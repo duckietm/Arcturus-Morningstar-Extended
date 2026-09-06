@@ -1,5 +1,6 @@
 package com.eu.habbo.messages.incoming.rooms.users;
 
+import com.eu.habbo.habbohotel.commands.BssCommandPreferences;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
@@ -20,6 +21,13 @@ public class ClickUserEvent extends MessageHandler {
         RoomUnit clickingUser = this.client.getHabbo().getRoomUnit();
 
         if (clickingUser == null) {
+            return;
+        }
+
+        if (!BssCommandPreferences.isEnabled(
+                this.client.getHabbo().getHabboInfo().getId(),
+                BssCommandPreferences.Flag.USER_CLICK_ENABLED)) {
+            this.client.sendResponse(new InClientLinkComposer("avatar-info/block-menu"));
             return;
         }
 

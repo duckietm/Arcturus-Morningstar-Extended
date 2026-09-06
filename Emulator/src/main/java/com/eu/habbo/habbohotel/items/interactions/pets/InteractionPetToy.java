@@ -64,7 +64,7 @@ public class InteractionPetToy extends InteractionDefault {
         Pet pet = room.getPet(roomUnit);
 
         if (pet != null && pet.getPetData().haveToyItem(this.getBaseItem())) {
-            if (pet.getEnergy() <= 35) {
+            if (pet.getEnergyPercent() <= 35) {
                 return;
             }
 

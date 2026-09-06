@@ -62,16 +62,25 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
             if (offer.offerId() != change.entityId() || offer.catalogType() != change.catalogType()) {
                 throw new IllegalArgumentException("Offer JSON identity does not match the live change");
             }
-            if (offer.catalogType() == CatalogPageType.BUILDER) upsertBuilderOffer(connection, offer);
-            else upsertNormalOffer(connection, offer);
+            boolean strictInsert = change.operation() == CatalogChangeOperation.CREATE;
+            if (offer.catalogType() == CatalogPageType.BUILDER) upsertBuilderOffer(connection, offer, strictInsert);
+            else upsertNormalOffer(connection, offer, strictInsert);
             return;
         }
         CatalogPageSnapshot page = gson.fromJson(change.afterJson(), CatalogPageSnapshot.class);
         if (page.pageId() != change.entityId() || page.catalogType() != change.catalogType()) {
             throw new IllegalArgumentException("Page JSON identity does not match the live change");
         }
-        if (page.catalogType() == CatalogPageType.BUILDER) upsertBuilderPage(connection, page);
-        else upsertNormalPage(connection, page);
+        boolean strictInsert = change.operation() == CatalogChangeOperation.CREATE;
+        if (page.catalogType() == CatalogPageType.BUILDER) upsertBuilderPage(connection, page, strictInsert);
+        else upsertNormalPage(connection, page, strictInsert);
+    }
+
+    /** CREATE must never touch an existing row: drop the ON DUPLICATE KEY UPDATE tail so a collision throws. */
+    static String insertSql(String upsertSql, boolean strictInsert) {
+        if (!strictInsert) return upsertSql;
+        int index = upsertSql.indexOf(" ON DUPLICATE KEY UPDATE");
+        return index < 0 ? upsertSql : upsertSql.substring(0, index);
     }
 
     private static void delete(Connection connection, CatalogChangeEntry change) throws SQLException {
@@ -88,8 +97,8 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
         }
     }
 
-    private static void upsertNormalPage(Connection connection, CatalogPageSnapshot page) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(UPSERT_NORMAL_PAGE_SQL)) {
+    private static void upsertNormalPage(Connection connection, CatalogPageSnapshot page, boolean strictInsert) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(insertSql(UPSERT_NORMAL_PAGE_SQL, strictInsert))) {
             statement.setInt(1, page.pageId());
             statement.setInt(2, page.parentId());
             statement.setString(3, page.captionSave());
@@ -99,11 +108,14 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
             statement.setInt(7, page.iconImage());
             statement.setInt(8, page.minRank());
             statement.setInt(9, page.orderNum());
-            setEnumFlag(statement, 10, page.visible());
-            setEnumFlag(statement, 11, page.enabled());
-            setEnumFlag(statement, 12, page.clubOnly());
+            // The live catalog schema stores flags as ENUM('0','1'). Binding
+            // them as JDBC booleans makes MariaDB 12 strict mode receive an
+            // invalid enum value and abort the mutation.
+            statement.setString(10, enumFlag(page.visible()));
+            statement.setString(11, enumFlag(page.enabled()));
+            statement.setString(12, page.clubOnly() ? "1" : "0");
             statement.setString(13, page.catalogMode());
-            setEnumFlag(statement, 14, page.vipOnly());
+            statement.setString(14, enumFlag(page.vipOnly()));
             statement.setString(15, page.pageHeadline());
             statement.setString(16, page.pageTeaser());
             statement.setString(17, page.pageSpecial());
@@ -117,8 +129,8 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
         }
     }
 
-    private static void upsertBuilderPage(Connection connection, CatalogPageSnapshot page) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(UPSERT_BUILDER_PAGE_SQL)) {
+    private static void upsertBuilderPage(Connection connection, CatalogPageSnapshot page, boolean strictInsert) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(insertSql(UPSERT_BUILDER_PAGE_SQL, strictInsert))) {
             statement.setInt(1, page.pageId());
             statement.setInt(2, page.parentId());
             statement.setString(3, page.caption());
@@ -126,8 +138,8 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
             statement.setInt(5, page.iconColor());
             statement.setInt(6, page.iconImage());
             statement.setInt(7, page.orderNum());
-            setEnumFlag(statement, 8, page.visible());
-            setEnumFlag(statement, 9, page.enabled());
+            statement.setString(8, enumFlag(page.visible()));
+            statement.setString(9, enumFlag(page.enabled()));
             statement.setString(10, page.pageHeadline());
             statement.setString(11, page.pageTeaser());
             statement.setString(12, page.pageSpecial());
@@ -139,8 +151,8 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
         }
     }
 
-    private static void upsertNormalOffer(Connection connection, CatalogOfferSnapshot offer) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(UPSERT_NORMAL_OFFER_SQL)) {
+    private static void upsertNormalOffer(Connection connection, CatalogOfferSnapshot offer, boolean strictInsert) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(insertSql(UPSERT_NORMAL_OFFER_SQL, strictInsert))) {
             statement.setInt(1, offer.offerId());
             statement.setString(2, offer.itemIds());
             statement.setInt(3, offer.pageId());
@@ -154,18 +166,14 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
             statement.setInt(11, offer.offerIdClient());
             statement.setInt(12, offer.songId());
             statement.setString(13, offer.extradata());
-            setEnumFlag(statement, 14, offer.haveOffer());
-            setEnumFlag(statement, 15, offer.clubOnly());
+            statement.setString(14, enumFlag(offer.haveOffer()));
+            statement.setString(15, enumFlag(offer.clubOnly()));
             if (statement.executeUpdate() == 0) throw new SQLException("Live catalog offer upsert changed no row");
         }
     }
 
-    private static void setEnumFlag(PreparedStatement statement, int index, boolean value) throws SQLException {
-        statement.setString(index, value ? "1" : "0");
-    }
-
-    private static void upsertBuilderOffer(Connection connection, CatalogOfferSnapshot offer) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(UPSERT_BUILDER_OFFER_SQL)) {
+    private static void upsertBuilderOffer(Connection connection, CatalogOfferSnapshot offer, boolean strictInsert) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(insertSql(UPSERT_BUILDER_OFFER_SQL, strictInsert))) {
             statement.setInt(1, offer.offerId());
             statement.setString(2, offer.itemIds());
             statement.setInt(3, offer.pageId());
@@ -174,5 +182,9 @@ public final class JdbcCatalogLiveEntityWriter implements CatalogLiveEntityWrite
             statement.setString(6, offer.extradata());
             if (statement.executeUpdate() == 0) throw new SQLException("Live builder offer upsert changed no row");
         }
+    }
+
+    private static String enumFlag(boolean value) {
+        return value ? "1" : "0";
     }
 }

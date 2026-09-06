@@ -17,13 +17,13 @@ final class CatalogPurchaseTransaction {
             Commit<PreparedPurchase<T>> commit = commit(habbo.getHabboInfo().getId(), operationId, work);
             if (commit.creditMutation() != null) {
                 LedgerWalletMutation.applyCommitted(
-                        habbo, EconomyLedger.CREDITS, commit.creditMutation().balanceAfter());
+                        habbo, EconomyLedger.CREDITS, commit.creditMutation().balanceAfterLong());
             }
             if (commit.pointsMutation() != null) {
                 LedgerWalletMutation.applyCommitted(
                         habbo,
                         commit.value().pointsType(),
-                        commit.pointsMutation().balanceAfter());
+                        commit.pointsMutation().balanceAfterLong());
             }
             return commit.value().value();
         });

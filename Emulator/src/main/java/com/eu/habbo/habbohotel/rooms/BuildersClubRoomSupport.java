@@ -29,6 +29,8 @@ public class BuildersClubRoomSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildersClubRoomSupport.class);
 
     public static final int DEFAULT_TRIAL_FURNI_LIMIT = 50;
+    public static final int UNLIMITED_FURNI_LIMIT = Integer.MAX_VALUE;
+    public static final int UNLIMITED_MEMBERSHIP_SECONDS = Integer.MAX_VALUE;
     // Runtime-only owner marker used to display Builders Club furni as virtual/non-user-owned in-room.
     // The actual DB owner for persistence/FK purposes is tracked separately on the item instance.
     public static final int VIRTUAL_OWNER_ID = 1;
@@ -44,45 +46,19 @@ public class BuildersClubRoomSupport {
     }
 
     public static int getFurniLimit(Habbo habbo) {
-        if (habbo == null) {
-            return DEFAULT_TRIAL_FURNI_LIMIT;
-        }
-
-        return DEFAULT_TRIAL_FURNI_LIMIT + Math.max(0, habbo.getHabboStats().getBuildersClubBonusFurni());
+        return UNLIMITED_FURNI_LIMIT;
     }
 
     public static int getFurniLimit(int userId) {
-        HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
-
-        if (habboInfo == null || habboInfo.getHabboStats() == null) {
-            return DEFAULT_TRIAL_FURNI_LIMIT;
-        }
-
-        return DEFAULT_TRIAL_FURNI_LIMIT + Math.max(0, habboInfo.getHabboStats().getBuildersClubBonusFurni());
+        return UNLIMITED_FURNI_LIMIT;
     }
 
     public static int getMembershipSecondsLeft(int userId) {
-        HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
-
-        if (habboInfo == null || habboInfo.getHabboStats() == null) {
-            return 0;
-        }
-
-        Subscription subscription = habboInfo.getHabboStats().getSubscription(Subscription.BUILDERS_CLUB);
-
-        if (subscription == null) {
-            return 0;
-        }
-
-        return Math.max(0, subscription.getRemaining());
+        return userId > 0 ? UNLIMITED_MEMBERSHIP_SECONDS : 0;
     }
 
     public static boolean hasActiveMembership(int userId) {
-        HabboInfo habboInfo = Emulator.getGameEnvironment().getHabboManager().getHabboInfo(userId);
-
-        return habboInfo != null
-                && habboInfo.getHabboStats() != null
-                && habboInfo.getHabboStats().hasSubscription(Subscription.BUILDERS_CLUB);
+        return userId > 0;
     }
 
     public static int getTrackedFurniCount(int userId) {

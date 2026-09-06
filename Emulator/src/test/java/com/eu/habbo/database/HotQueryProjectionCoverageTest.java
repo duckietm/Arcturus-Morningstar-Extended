@@ -98,6 +98,8 @@ class HotQueryProjectionCoverageTest {
             "builders_club_trial_locked",
             "builders_club_original_state",
             "trade_mode",
+            "pull_enabled",
+            "push_enabled",
             "move_diagonally",
             "allow_underpass",
             "moodlight_data");

@@ -29,24 +29,28 @@ public class CameraPublishToWebEvent extends MessageHandler {
 
         HabboInfo habboInfo = habbo.getHabboInfo();
 
-        int points = habboInfo.getCurrencyAmount(CAMERA_PUBLISH_POINTS_TYPE);
-        if (points < CAMERA_PUBLISH_POINTS) {
-            String currencyName = Emulator.getTexts().getValue("seasonal.name." + CAMERA_PUBLISH_POINTS_TYPE, "currency");
+        int publishPoints = publishPoints();
+        int publishPointsType = publishPointsType();
+        int publishDelay = publishDelay();
+
+        int points = habboInfo.getCurrencyAmount(publishPointsType);
+        if (points < publishPoints) {
+            String currencyName = Emulator.getTexts().getValue("seasonal.name." + publishPointsType, "currency");
             habbo.alert("You don't have enough " + currencyName + "!");
-            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, CAMERA_PUBLISH_POINTS_TYPE));
+            this.client.sendResponse(new NotEnoughPointsTypeComposer(false, true, publishPointsType));
             return;
         }
 
         int photoTimestamp = habboInfo.getPhotoTimestamp();
         String photoJSON = habboInfo.getPhotoJSON();
-        if (photoTimestamp == 0 || photoJSON.isEmpty() || !photoJSON.contains(Integer.toString(photoTimestamp)))
+        if (photoTimestamp == 0 || photoJSON == null || photoJSON.isEmpty() || !photoJSON.contains(Integer.toString(photoTimestamp)))
             return;
 
         int currentTimestamp = Emulator.getIntUnixTimestamp();
         int timeSinceLastPublish = currentTimestamp - habboInfo.getWebPublishTimestamp();
 
-        if (timeSinceLastPublish < CAMERA_PUBLISH_DELAY) {
-            int wait = CAMERA_PUBLISH_DELAY - timeSinceLastPublish;
+        if (timeSinceLastPublish < publishDelay) {
+            int wait = publishDelay - timeSinceLastPublish;
             this.client.sendResponse(new CameraPublishWaitMessageComposer(false, wait, habboInfo.getPhotoURL()));
         } else {
             UserPublishPictureEvent publishPictureEvent = new UserPublishPictureEvent(habbo, habboInfo.getPhotoURL(), currentTimestamp, habboInfo.getPhotoRoomId());
@@ -65,12 +69,28 @@ public class CameraPublishToWebEvent extends MessageHandler {
                     statement.setString(4, publishPictureEvent.URL);
                     statement.execute();
                     habboInfo.setWebPublishTimestamp(currentTimestamp);
-                    habbo.givePoints(CAMERA_PUBLISH_POINTS_TYPE, -CAMERA_PUBLISH_POINTS);
+                    if (publishPoints > 0) habbo.givePoints(publishPointsType, -publishPoints);
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
                 }
             }
             this.client.sendResponse(new CameraPublishWaitMessageComposer(true, 0, ""));
         }
+    }
+
+    /**
+     * Read the publish price from the same camera.* settings that
+     * RequestCameraConfigurationEvent advertises (statics stay as fallbacks).
+     */
+    public static int publishPoints() {
+        return Emulator.getConfig().getInt("camera.price.points.publish", CAMERA_PUBLISH_POINTS);
+    }
+
+    public static int publishPointsType() {
+        return Emulator.getConfig().getInt("camera.price.points.publish.type", CAMERA_PUBLISH_POINTS_TYPE);
+    }
+
+    public static int publishDelay() {
+        return Emulator.getConfig().getInt("camera.publish.delay", CAMERA_PUBLISH_DELAY);
     }
 }

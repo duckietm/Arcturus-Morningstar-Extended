@@ -2,10 +2,8 @@ package com.eu.habbo.messages.rcon;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
-import com.eu.habbo.habbohotel.users.HabboBadge;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboManager;
-import com.eu.habbo.messages.outgoing.users.AddUserBadgeComposer;
 import com.google.gson.Gson;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -43,18 +41,11 @@ public class GiveBadge extends RCONMessage<GiveBadge.GiveBadgeJSON> {
             username = habbo.getHabboInfo().getUsername();
 
             for (String badgeCode : json.badge.split(";")) {
-                if (habbo.getInventory().getBadgesComponent().hasBadge(badgeCode)) {
+                if (!habbo.addBadge(badgeCode, "Badge System")) {
                     this.status = RCONMessage.STATUS_ERROR;
                     this.message += Emulator.getTexts().getValue("commands.error.cmd_badge.already_owned").replace("%user%", username).replace("%badge%", badgeCode) + "\r";
                     continue;
                 }
-
-                HabboBadge badge = new HabboBadge(0, badgeCode, 0, habbo);
-
-                badge.run();
-
-                habbo.getInventory().getBadgesComponent().addBadge(badge);
-                habbo.getClient().sendResponse(new AddUserBadgeComposer(badge));
 
                 this.message = Emulator.getTexts().getValue("commands.succes.cmd_badge.given").replace("%user%", username).replace("%badge%", badgeCode);
             }

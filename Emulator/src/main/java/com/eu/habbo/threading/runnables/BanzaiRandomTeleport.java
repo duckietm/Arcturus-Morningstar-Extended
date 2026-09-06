@@ -21,6 +21,12 @@ public class BanzaiRandomTeleport implements Runnable {
         this.room = room;
     }
 
+    // The teleporter animation is already visible from the source item's state change; keep the
+    // hop itself short so the player is not frozen for over a second per jump.
+    private static int delay(String key, int fallback) {
+        return Math.max(0, Emulator.getConfig().getInt(key, fallback));
+    }
+
     @Override
     public void run() {
         HabboItem topItemNow = this.room.getTopItemAt(this.habbo.getX(), this.habbo.getY());
@@ -40,7 +46,7 @@ public class BanzaiRandomTeleport implements Runnable {
                 this.item.setExtradata("0");
                 this.room.updateItemState(this.item);
             }
-        }, 500);
+        }, delay("hotel.banzai.teleport.source_reset_ms", 250));
 
         if(!this.toItem.getExtradata().equals("1")) {
             this.toItem.setExtradata("1");
@@ -63,12 +69,12 @@ public class BanzaiRandomTeleport implements Runnable {
                 this.toItem.setExtradata("0");
                 this.room.updateItemState(this.toItem);
             }
-        }, 750);
+        }, delay("hotel.banzai.teleport.release_ms", 350));
 
         Emulator.getThreading().run(() -> {
             this.habbo.setRotation(RoomUserRotation.fromValue(Emulator.getRandom().nextInt(8)));
             this.room.teleportRoomUnitToLocation(this.habbo, newLocation.x, newLocation.y, newLocation.getStackHeight());
-        }, 250);
+        }, delay("hotel.banzai.teleport.jump_ms", 100));
 
     }
 }

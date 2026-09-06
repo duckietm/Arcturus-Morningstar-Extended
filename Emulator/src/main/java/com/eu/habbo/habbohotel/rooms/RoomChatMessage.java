@@ -22,6 +22,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     private static final String QUERY =
             "INSERT INTO chatlogs_room (user_from_id, user_to_id, message, timestamp, room_id) VALUES (?, ?, ?, ?, ?)";
 
+    public static final int NO_BUBBLE_WIDTH_OVERRIDE = -1;
+    private static final int WIDEST_BUBBLE_WIDTH = 0, THINNEST_BUBBLE_WIDTH = 2;
     private static final List<String> chatColors = Arrays.asList("@red@", "@cyan@", "@blue@", "@green@", "@purple@");
     public static volatile int MAXIMUM_LENGTH = 100;
     // Configuration. Loaded from database & updated accordingly.
@@ -39,6 +41,8 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
     private Habbo targetHabbo;
     private byte emotion;
     private String RoomChatColour; // Added Chatcolor
+    /** -1 follows the room setting; 0 wide, 1 normal, 2 thin as the room chat settings name them. */
+    private int bubbleWidthOverride = NO_BUBBLE_WIDTH_OVERRIDE;
 
     public RoomChatMessage(MessageHandler message) {
         if (message.packet.getMessageId() == Incoming.RoomUserWhisperEvent) {
@@ -84,6 +88,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         this.bubble = chatMessage.getBubble();
         this.roomUnitId = chatMessage.roomUnitId;
         this.emotion = (byte) chatMessage.getEmotion();
+        this.bubbleWidthOverride = chatMessage.bubbleWidthOverride;
     }
 
     public RoomChatMessage(String message, RoomUnit roomUnit, RoomChatMessageBubbles bubble) {
@@ -219,9 +224,25 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
             message.appendString(customizationData.prefixFont);
             message.appendString(customizationData.nickIcon);
             message.appendString(customizationData.displayOrder);
+            message.appendString(customizationData.nameColor);
+            // Optional tail: an old client stops reading before it, a new one reads -1 as "room setting".
+            message.appendInt(this.bubbleWidthOverride);
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }
+    }
+
+    public int getBubbleWidthOverride() {
+        return this.bubbleWidthOverride;
+    }
+
+    public void setBubbleWidthOverride(int bubbleWidthOverride) {
+        this.bubbleWidthOverride = normalizeBubbleWidthOverride(bubbleWidthOverride);
+    }
+
+    /** Anything that is not one of the three widths means "no override". */
+    public static int normalizeBubbleWidthOverride(int value) {
+        return (value >= WIDEST_BUBBLE_WIDTH && value <= THINNEST_BUBBLE_WIDTH) ? value : NO_BUBBLE_WIDTH_OVERRIDE;
     }
 
     public void filter() {

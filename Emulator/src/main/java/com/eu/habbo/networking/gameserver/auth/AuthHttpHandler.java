@@ -221,7 +221,10 @@ public class AuthHttpHandler extends ChannelInboundHandlerAdapter {
 
         String ip = resolveClientIp(ctx, req);
 
-        if (AuthRateLimiter.isLocked(ip)) {
+        // Exchanging an already-issued SSO ticket is not a password attempt.
+        // Let a valid ticket clear a previous login lock instead of trapping
+        // Nitro in a 429 -> reload -> 429 loop.
+        if (!path.equals(SSO_TOKEN_PATH) && AuthRateLimiter.isLocked(ip)) {
             long secs = AuthRateLimiter.secondsUntilUnlock(ip);
             sendJson(
                     ctx,

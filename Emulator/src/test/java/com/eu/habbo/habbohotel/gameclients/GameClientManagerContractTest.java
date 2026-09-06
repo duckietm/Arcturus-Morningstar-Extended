@@ -14,6 +14,7 @@ class GameClientManagerContractTest {
     void exposesExplicitForcedDisposePath() {
         assertDoesNotThrow(() -> GameClient.class.getDeclaredMethod("dispose", boolean.class));
         assertDoesNotThrow(() -> GameClientManager.class.getDeclaredMethod("forceDisposeClient", GameClient.class));
+        assertDoesNotThrow(() -> GameClientManager.class.getDeclaredMethod("forceDisposeAllClients"));
     }
 
     @Test

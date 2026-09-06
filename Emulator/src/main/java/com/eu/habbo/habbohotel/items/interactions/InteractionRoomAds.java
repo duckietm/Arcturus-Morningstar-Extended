@@ -33,6 +33,10 @@ public class InteractionRoomAds extends InteractionCustomValues {
         {
             this.put("scale", "100");
         }
+
+        {
+            this.put("alpha", "100");
+        }
     };
 
     public InteractionRoomAds(ResultSet set, Item baseItem) throws SQLException {

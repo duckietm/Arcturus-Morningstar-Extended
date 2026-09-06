@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.commands.AvailableCommandsComposer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,20 +17,10 @@ public class RequestRoomLoadEvent extends MessageHandler {
         int roomId = this.packet.readInt();
         String password = this.packet.readString();
 
-        // Optional spawn coordinates from the client (for future reconnection support).
+        // Every entry (including a re-entry after a disconnect) starts at the door: the
+        // optional client spawn coordinates are deliberately ignored.
         int spawnX = -1;
         int spawnY = -1;
-
-        try {
-            int remaining = this.packet.getBuffer().readableBytes();
-            if (remaining >= 8) {
-                spawnX = this.packet.readInt();
-                spawnY = this.packet.readInt();
-            }
-        } catch (Exception e) {
-            spawnX = -1;
-            spawnY = -1;
-        }
 
         // Reset stale loadingRoom if timestamp has expired (indicates failed/stuck load)
         if (this.client.getHabbo().getHabboInfo().getLoadingRoom() != 0
@@ -50,18 +41,6 @@ public class RequestRoomLoadEvent extends MessageHandler {
 
             Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
             if (room != null) {
-                // If re-entering the same room (session resume / reconnect), capture
-                // the user's current position before removal so we can respawn there.
-                if (room.getId() == roomId && spawnX < 0 && spawnY < 0
-                        && this.client.getHabbo().getRoomUnit() != null
-                        && this.client.getHabbo().getRoomUnit().getCurrentLocation() != null) {
-                    RoomTile currentLoc = this.client.getHabbo().getRoomUnit().getCurrentLocation();
-                    spawnX = currentLoc.x;
-                    spawnY = currentLoc.y;
-                    LOGGER.info("[RequestRoomLoadEvent] Re-entering same room {} — preserving position ({}, {})",
-                            roomId, spawnX, spawnY);
-                }
-
                 Emulator.getGameEnvironment().getRoomManager().logExit(this.client.getHabbo());
 
                 room.removeHabbo(this.client.getHabbo(), true);
@@ -95,6 +74,18 @@ public class RequestRoomLoadEvent extends MessageHandler {
                     spawnTile != null ? "(" + spawnTile.x + "," + spawnTile.y + ")" : "door",
                     isReconnect);
             Emulator.getGameEnvironment().getRoomManager().enterRoom(this.client.getHabbo(), roomId, password, false, spawnTile, isReconnect);
+
+            // The initial login command packet can arrive before React mounts
+            // the room chat autocomplete listener. Refresh it once the room UI
+            // exists; getCommandsForRank keeps the result server-authoritative.
+            var commandClient = this.client;
+            Emulator.getThreading().run(() -> {
+                if (commandClient.getHabbo() == null) return;
+
+                commandClient.sendResponse(new AvailableCommandsComposer(
+                        Emulator.getGameEnvironment().getCommandHandler().getCommandsForRank(
+                                commandClient.getHabbo().getHabboInfo().getRank().getId())));
+            }, 750);
         }
     }
 }

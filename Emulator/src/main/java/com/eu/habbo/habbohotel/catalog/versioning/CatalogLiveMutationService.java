@@ -1,8 +1,12 @@
 package com.eu.habbo.habbohotel.catalog.versioning;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.EnumMap;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
+import com.eu.habbo.habbohotel.catalog.CatalogPageType;
+import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -89,8 +93,8 @@ public final class CatalogLiveMutationService {
 
     public CatalogDraftValidationResult validateLive() {
         try (Connection connection = dataSource.getConnection()) {
-            CatalogRuntimeState state = versions.readRuntimeState(connection);
-            CatalogVersionSnapshot active = loadPhysicalLiveForRead(connection, state);
+            CatalogRuntimeState state = versions.lockRuntimeState(connection);
+            CatalogVersionSnapshot active = loadPhysicalLive(connection, state);
             if (validation == null) {
                 return new CatalogDraftValidationResult(
                         active.version().revision(), new CatalogValidationReport(List.of()));
@@ -98,34 +102,6 @@ public final class CatalogLiveMutationService {
             return new CatalogDraftValidationResult(active.version().revision(), validation.report(connection, active));
         } catch (SQLException exception) {
             throw new CatalogVersioningException("Live catalog validation failed", exception);
-        }
-    }
-
-    /**
-     * Reads everything a Manager session needs in a single non-locking pass.
-     *
-     * <p>{@link #loadLive()} followed by {@link #validateLive()} reads the entire catalog twice and locks every row of
-     * it both times. A session open only reads, so it does neither.
-     */
-    public CatalogLiveSession openLiveSession() {
-        try (Connection connection = dataSource.getConnection()) {
-            CatalogRuntimeState state = versions.readRuntimeState(connection);
-            CatalogVersionSnapshot active = loadPhysicalLiveForRead(connection, state);
-            CatalogValidationReport report =
-                    validation == null ? new CatalogValidationReport(List.of()) : validation.report(connection, active);
-            return new CatalogLiveSession(
-                    active, new CatalogDraftValidationResult(active.version().revision(), report));
-        } catch (SQLException exception) {
-            throw new CatalogVersioningException("Live catalog session open failed", exception);
-        }
-    }
-
-    /** Reads the live catalog without locking it, for callers that only inspect it. */
-    public CatalogVersionSnapshot loadLiveForRead() {
-        try (Connection connection = dataSource.getConnection()) {
-            return loadPhysicalLiveForRead(connection, versions.readRuntimeState(connection));
-        } catch (SQLException exception) {
-            throw new CatalogVersioningException("Live catalog load failed", exception);
         }
     }
 
@@ -194,7 +170,7 @@ public final class CatalogLiveMutationService {
             connection.setAutoCommit(false);
             try {
                 CatalogRuntimeState state = versions.lockRuntimeState(connection);
-                CatalogVersionSnapshot active = loadPhysicalLive(connection, state, CatalogMutationScope.of(requests));
+                CatalogVersionSnapshot active = loadPhysicalLive(connection, state);
                 if (active.version().status() != CatalogVersionStatus.PUBLISHED) {
                     throw new IllegalStateException("Live catalog state is not available");
                 }
@@ -213,14 +189,18 @@ public final class CatalogLiveMutationService {
                                 record.versionId(), record.resultRevision(), group, group.entries());
                     }
                 }
-                if (first.expectedRevision() >= 0 && active.version().revision() != first.expectedRevision()) {
-                    throw new CatalogConcurrentModificationException(
-                            active.version().id(), first.expectedRevision());
-                }
+                // Admin mutations are serialized by lockRuntimeState(). The
+                // editor can legitimately still hold the previous revision
+                // after another save or a large batch. Apply against the
+                // locked live revision instead of rejecting the whole edit as
+                // stale; incrementRevision below still guards the transaction.
                 precondition.validate(active);
                 Set<String> entityKeys = new HashSet<>();
+
+                // CATALOG_BULK_OFFERS_V2
+                BatchIdentityAllocator identities = new BatchIdentityAllocator(active);
                 for (CatalogLiveMutationRequest request : requests) {
-                    CatalogChangeEntry change = buildChange(connection, active, request);
+                    CatalogChangeEntry change = buildChange(connection, active, request, identities);
                     String key = change.catalogType() + ":" + change.entityType() + ":" + change.entityId();
                     if (!entityKeys.add(key)) {
                         throw new IllegalArgumentException("A live mutation batch cannot edit the same entity twice");
@@ -273,7 +253,7 @@ public final class CatalogLiveMutationService {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException exception) {
-            throw new CatalogVersioningException("Live catalog mutation failed", exception);
+            throw new CatalogVersioningException(sqlFailureMessage(exception), exception);
         }
         committedChanges.forEach(hook::afterCommit);
         return result;
@@ -425,10 +405,9 @@ public final class CatalogLiveMutationService {
                 if (active.version().status() != CatalogVersionStatus.PUBLISHED) {
                     throw new IllegalStateException("Live catalog state is not available");
                 }
-                if (expectedRevision != null && active.version().revision() != expectedRevision) {
-                    throw new CatalogConcurrentModificationException(
-                            active.version().id(), expectedRevision);
-                }
+                // Use the revision obtained under the database lock. Legacy
+                // one-entity admin actions must not fail merely because their
+                // UI acknowledgement arrived one revision late.
 
                 committedChange = changeFactory.build(connection, active);
                 if (validation != null)
@@ -458,7 +437,7 @@ public final class CatalogLiveMutationService {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException exception) {
-            throw new CatalogVersioningException("Live catalog mutation failed", exception);
+            throw new CatalogVersioningException(sqlFailureMessage(exception), exception);
         }
         hook.afterCommit(committedChange);
         return result;
@@ -469,33 +448,10 @@ public final class CatalogLiveMutationService {
         CatalogChangeEntry build(Connection connection, CatalogVersionSnapshot active) throws SQLException;
     }
 
-    private CatalogVersionSnapshot loadPhysicalLiveForRead(Connection connection, CatalogRuntimeState state)
-            throws SQLException {
-        CatalogVersion version = versions.loadVersion(connection, state.activeVersionId());
-        if (version.status() != CatalogVersionStatus.PUBLISHED) {
-            throw new IllegalStateException("Live catalog state is not available");
-        }
-        return liveSnapshots == null
-                ? versions.loadSnapshot(connection, state.activeVersionId())
-                : liveSnapshots.loadForRead(connection, version);
-    }
-
-    /**
-     * Reads what a batch of mutations can reach, rather than the whole catalog.
-     *
-     * <p>Every page is still read - the rules that judge a page walk the tree around it, and pages
-     * are cheap. Offers are not: a live catalog holds 112,000 of them and a save touches a handful,
-     * so reading and locking all of them cost about 200 ms per edit for nothing.
-     */
-    private CatalogVersionSnapshot loadPhysicalLive(
-            Connection connection, CatalogRuntimeState state, CatalogMutationScope scope) throws SQLException {
-        CatalogVersion version = versions.loadVersion(connection, state.activeVersionId());
-        if (version.status() != CatalogVersionStatus.PUBLISHED) {
-            throw new IllegalStateException("Live catalog state is not available");
-        }
-        return liveSnapshots == null
-                ? versions.loadSnapshot(connection, state.activeVersionId())
-                : liveSnapshots.loadForMutation(connection, version, scope);
+    private static String sqlFailureMessage(SQLException exception) {
+        String detail = exception.getMessage();
+        if (detail == null || detail.isBlank()) detail = "errore SQL senza dettagli";
+        return "Impossibile salvare la modifica del catalogo: " + detail;
     }
 
     private CatalogVersionSnapshot loadPhysicalLive(Connection connection, CatalogRuntimeState state)
@@ -528,11 +484,15 @@ public final class CatalogLiveMutationService {
     }
 
     private CatalogChangeEntry buildChange(
-            Connection connection, CatalogVersionSnapshot active, CatalogLiveMutationRequest request)
+            Connection connection,
+            CatalogVersionSnapshot active,
+            CatalogLiveMutationRequest request,
+            BatchIdentityAllocator identities)
             throws SQLException {
         if (request.operation() == CatalogChangeOperation.CREATE) {
-            return buildCreate(connection, request);
+            return buildCreate(connection, request, identities);
         }
+
         String beforeJson =
                 switch (request.entityType()) {
                     case PAGE ->
@@ -546,6 +506,7 @@ public final class CatalogLiveMutationService {
                                 .orElseThrow(() -> new IllegalArgumentException(
                                         "Live catalog offer not found: " + request.entityId()));
                 };
+
         return new CatalogChangeEntry(
                 0,
                 request.entityType(),
@@ -553,16 +514,23 @@ public final class CatalogLiveMutationService {
                 request.entityId(),
                 request.operation(),
                 beforeJson,
-                request.operation() == CatalogChangeOperation.DELETE ? null : canonicalAfterJson(request));
+                request.operation() == CatalogChangeOperation.DELETE
+                        ? null
+                        : canonicalAfterJson(request, identities));
     }
 
-    private CatalogChangeEntry buildCreate(Connection connection, CatalogLiveMutationRequest request)
+    private CatalogChangeEntry buildCreate(
+            Connection connection,
+            CatalogLiveMutationRequest request,
+            BatchIdentityAllocator identities)
             throws SQLException {
         return switch (request.entityType()) {
             case PAGE -> {
-                int pageId = Math.toIntExact(versions.nextPageId(connection, request.catalogType()));
-                CatalogPageSnapshot page = gson.fromJson(request.afterJson(), CatalogDraftPageData.class)
-                        .withId(request.catalogType(), pageId);
+                int pageId = identities.nextPageId(connection, request.catalogType());
+                CatalogPageSnapshot page =
+                        gson.fromJson(request.afterJson(), CatalogDraftPageData.class)
+                                .withId(request.catalogType(), pageId);
+
                 yield new CatalogChangeEntry(
                         0,
                         CatalogEntityType.PAGE,
@@ -572,10 +540,24 @@ public final class CatalogLiveMutationService {
                         null,
                         gson.toJson(page));
             }
+
             case OFFER -> {
-                int offerId = Math.toIntExact(versions.nextOfferId(connection, request.catalogType()));
-                CatalogOfferSnapshot offer = gson.fromJson(request.afterJson(), CatalogDraftOfferData.class)
-                        .withId(request.catalogType(), offerId);
+                int offerId = identities.nextOfferId(connection, request.catalogType());
+                CatalogDraftOfferData draft =
+                        gson.fromJson(request.afterJson(), CatalogDraftOfferData.class);
+
+                int fixedOfferIdClient =
+                        identities.resolveOfferIdClient(
+                                request.catalogType(),
+                                offerId,
+                                draft.offerIdClient());
+
+                CatalogOfferSnapshot offer =
+                        draft.withId(
+                                request.catalogType(),
+                                offerId,
+                                fixedOfferIdClient);
+
                 yield new CatalogChangeEntry(
                         0,
                         CatalogEntityType.OFFER,
@@ -588,37 +570,49 @@ public final class CatalogLiveMutationService {
         };
     }
 
-    /**
-     * Rewrites the payload as the full snapshot the change journal and the live writer read back.
-     *
-     * <p>The editor sends a draft: {@link CatalogDraftOfferData} and {@link CatalogDraftPageData}
-     * carry the editable fields but no identity, because the request already names the catalog and
-     * the entity. Creation has always rebuilt the snapshot from that draft; updates stored the draft
-     * verbatim, so anything reading the entry back as a snapshot - {@code JdbcCatalogLiveEntityWriter},
-     * {@code CatalogLiveValidationGuard}, and the identity check that used to live here - hit a
-     * payload with a null {@code catalogType} and an offer id of zero.
-     *
-     * <p>A payload that does carry its own identity is still checked against the request rather than
-     * silently overwritten.
-     */
-    private String canonicalAfterJson(CatalogLiveMutationRequest request) {
-        JsonObject payload = JsonParser.parseString(request.afterJson()).getAsJsonObject();
+    private String canonicalAfterJson(
+            CatalogLiveMutationRequest request,
+            BatchIdentityAllocator identities) {
+        JsonObject payload =
+                JsonParser.parseString(request.afterJson()).getAsJsonObject();
+
         validateIdentity(request, payload);
+
         return switch (request.entityType()) {
             case PAGE ->
-                gson.toJson(gson.fromJson(payload, CatalogDraftPageData.class)
-                        .withId(request.catalogType(), request.entityId()));
-            case OFFER ->
-                gson.toJson(gson.fromJson(payload, CatalogDraftOfferData.class)
-                        .withId(request.catalogType(), request.entityId()));
+                gson.toJson(
+                        gson.fromJson(payload, CatalogDraftPageData.class)
+                                .withId(
+                                        request.catalogType(),
+                                        request.entityId()));
+
+            case OFFER -> {
+                CatalogDraftOfferData draft =
+                        gson.fromJson(payload, CatalogDraftOfferData.class);
+
+                int fixedOfferIdClient =
+                        identities.resolveOfferIdClient(
+                                request.catalogType(),
+                                request.entityId(),
+                                draft.offerIdClient());
+
+                yield gson.toJson(
+                        draft.withId(
+                                request.catalogType(),
+                                request.entityId(),
+                                fixedOfferIdClient));
+            }
         };
     }
 
     private void validateIdentity(CatalogLiveMutationRequest request, JsonObject payload) {
         String idField = request.entityType() == CatalogEntityType.PAGE ? "pageId" : "offerId";
-        boolean mismatch = payload.has(idField)
-                && !payload.get(idField).isJsonNull()
-                && payload.get(idField).getAsInt() != request.entityId();
+
+        boolean mismatch =
+                payload.has(idField)
+                        && !payload.get(idField).isJsonNull()
+                        && payload.get(idField).getAsInt() != request.entityId();
+
         if (!mismatch
                 && payload.has("catalogType")
                 && !payload.get("catalogType").isJsonNull()) {
@@ -626,8 +620,202 @@ public final class CatalogLiveMutationService {
                     .name()
                     .equals(payload.get("catalogType").getAsString());
         }
+
         if (mismatch) {
-            throw new IllegalArgumentException("Live catalog payload identity does not match the request");
+            throw new IllegalArgumentException(
+                    "Live catalog payload identity does not match the request");
         }
     }
+
+
+    // CATALOG_BULK_OFFERS_V3
+    private final class BatchIdentityAllocator {
+        private static final int CONFLICT_OWNER = Integer.MIN_VALUE;
+
+        private final Map<CatalogPageType, Integer> nextPageIds =
+                new EnumMap<>(CatalogPageType.class);
+        private final Map<CatalogPageType, Integer> nextOfferIds =
+                new EnumMap<>(CatalogPageType.class);
+        private final Map<CatalogPageType, java.util.Set<Integer>> usedPageIds =
+                new EnumMap<>(CatalogPageType.class);
+        private final Map<CatalogPageType, Integer> nextClientIds =
+                new EnumMap<>(CatalogPageType.class);
+        private final Map<CatalogPageType, Map<Integer, Integer>> owners =
+                new EnumMap<>(CatalogPageType.class);
+
+        BatchIdentityAllocator(CatalogVersionSnapshot active) {
+            for (CatalogPageSnapshot page : active.pages()) {
+                usedPageIds
+                        .computeIfAbsent(page.catalogType(), ignored -> new java.util.HashSet<>())
+                        .add(page.pageId());
+            }
+
+            for (CatalogOfferSnapshot offer : active.offers()) {
+                if (offer.catalogType() != CatalogPageType.NORMAL) continue;
+
+                reserve(
+                        CatalogPageType.NORMAL,
+                        offer.offerId(),
+                        offer.offerId());
+
+                if (offer.offerIdClient() > 0) {
+                    reserve(
+                            CatalogPageType.NORMAL,
+                            offer.offerIdClient(),
+                            offer.offerId());
+                }
+            }
+        }
+
+        int nextPageId(
+                Connection connection,
+                CatalogPageType type)
+                throws SQLException {
+            Integer id = nextPageIds.get(type);
+
+            if (id == null) {
+                id = Math.toIntExact(
+                        versions.nextPageId(connection, type));
+            }
+
+            java.util.Set<Integer> used =
+                    usedPageIds.computeIfAbsent(type, ignored -> new java.util.HashSet<>());
+
+            // Never hand out an id that already names a live page: the writer
+            // addresses rows by id, so a collision would rename/re-parent it.
+            while (!used.add(id)) {
+                id = Math.addExact(id, 1);
+            }
+
+            nextPageIds.put(type, Math.addExact(id, 1));
+            return id;
+        }
+
+        int nextOfferId(
+                Connection connection,
+                CatalogPageType type)
+                throws SQLException {
+            Integer id = nextOfferIds.get(type);
+
+            if (id == null) {
+                id = Math.toIntExact(
+                        versions.nextOfferId(connection, type));
+            }
+
+            if (type == CatalogPageType.NORMAL) {
+                while (!free(type, id)) {
+                    id = Math.addExact(id, 1);
+                }
+
+                // Reserve immediately. This is what prevents duplicate primary
+                // IDs when CREATE x N happens before any row is written.
+                reserve(type, id, id);
+            }
+
+            nextOfferIds.put(type, Math.addExact(id, 1));
+            return id;
+        }
+
+        int resolveOfferIdClient(
+                CatalogPageType type,
+                int primaryId,
+                int requested) {
+            if (type != CatalogPageType.NORMAL) {
+                return -1;
+            }
+
+            if (requested > 0
+                    && availableFor(type, requested, primaryId)) {
+                reserve(type, requested, primaryId);
+                return requested;
+            }
+
+            // Missing / zero / -1 / conflicting offer_id:
+            // prefer the primary catalog_items.id when safe.
+            if (availableFor(type, primaryId, primaryId)) {
+                reserve(type, primaryId, primaryId);
+                return primaryId;
+            }
+
+            Map<Integer, Integer> map =
+                    owners.computeIfAbsent(
+                            type,
+                            ignored -> new HashMap<>());
+
+            int candidate =
+                    nextClientIds.computeIfAbsent(
+                            type,
+                            ignored -> {
+                                int max = 0;
+
+                                for (int value : map.keySet()) {
+                                    if (value > max) max = value;
+                                }
+
+                                if (max == Integer.MAX_VALUE) {
+                                    throw new IllegalStateException(
+                                            "No free positive catalog offer_id remains");
+                                }
+
+                                return max + 1;
+                            });
+
+            while (!availableFor(type, candidate, primaryId)) {
+                if (candidate == Integer.MAX_VALUE) {
+                    throw new IllegalStateException(
+                            "No free positive catalog offer_id remains");
+                }
+                candidate++;
+            }
+
+            reserve(type, candidate, primaryId);
+
+            if (candidate < Integer.MAX_VALUE) {
+                nextClientIds.put(type, candidate + 1);
+            }
+
+            return candidate;
+        }
+
+        private boolean free(
+                CatalogPageType type,
+                int value) {
+            Map<Integer, Integer> map = owners.get(type);
+            return map == null || !map.containsKey(value);
+        }
+
+        private boolean availableFor(
+                CatalogPageType type,
+                int value,
+                int primaryId) {
+            if (value <= 0) return false;
+
+            Map<Integer, Integer> map = owners.get(type);
+            if (map == null) return true;
+
+            Integer owner = map.get(value);
+            return owner == null || owner == primaryId;
+        }
+
+        private void reserve(
+                CatalogPageType type,
+                int value,
+                int primaryId) {
+            if (value <= 0) return;
+
+            Map<Integer, Integer> map =
+                    owners.computeIfAbsent(
+                            type,
+                            ignored -> new HashMap<>());
+
+            map.merge(
+                    value,
+                    primaryId,
+                    (left, right) ->
+                            left.intValue() == right.intValue()
+                                    ? left
+                                    : CONFLICT_OWNER);
+        }
+    }
+
 }

@@ -71,7 +71,7 @@ public class RoomItemManager {
             LOGGER.error("Caught SQL exception", e);
         }
 
-        if (this.itemCount() > Room.MAXIMUM_FURNI) {
+        if (Room.MAXIMUM_FURNI > 0 && this.itemCount() > Room.MAXIMUM_FURNI) {
             LOGGER.error(
                     "Room ID: {} has exceeded the furniture limit ({} > {}).",
                     this.room.getId(),
@@ -254,6 +254,14 @@ public class RoomItemManager {
      * Gets the top item at a position excluding a specific item.
      */
     public HabboItem getTopItemAt(int x, int y, HabboItem exclude) {
+        return this.getTopItemAt(x, y, exclude, null);
+    }
+
+    /**
+     * Gets the top item at a position, excluding a specific item and anything {@code skip} rejects.
+     * The predicate is how the tile maths looks past wired the room is hiding.
+     */
+    public HabboItem getTopItemAt(int x, int y, HabboItem exclude, java.util.function.Predicate<HabboItem> skip) {
         RoomTile tile = this.room.getLayout().getTile((short) x, (short) y);
 
         if (tile == null) {
@@ -267,10 +275,24 @@ public class RoomItemManager {
                 continue;
             }
 
-            if (highestItem != null
-                    && highestItem.getZ() + Item.getCurrentHeight(highestItem)
-                            > item.getZ() + Item.getCurrentHeight(item)) {
+            if (skip != null && skip.test(item)) {
                 continue;
+            }
+
+            if (highestItem != null) {
+                double highestTop = highestItem.getZ() + Item.getCurrentHeight(highestItem);
+                double itemTop = item.getZ() + Item.getCurrentHeight(item);
+
+                if (highestTop > itemTop) {
+                    continue;
+                }
+
+                // Exactly level - two rugs on the same tile, say. This used to fall through to whichever
+                // item the HashSet happened to yield last, so the tile's stack height changed on every
+                // room load. The furni placed later wins, the same rule the client paints them by.
+                if (highestTop == itemTop && highestItem.getId() > item.getId()) {
+                    continue;
+                }
             }
 
             highestItem = item;
@@ -553,6 +575,10 @@ public class RoomItemManager {
      */
     public void ejectAll(Habbo habbo) {
         this.ownership.ejectAll(habbo);
+    }
+
+    public void pickAllTo(Habbo habbo) {
+        this.ownership.pickAllTo(habbo);
     }
 
     // ==================== LOCKED TILES ====================

@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.commands;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
+import com.eu.habbo.messages.outgoing.generic.alerts.StaffAlertWithLinkComposer;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboManager;
@@ -23,6 +24,11 @@ public class BadgeCommand extends Command {
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
+        if (params.length == 2 && params[1].equalsIgnoreCase("list")) {
+            gameClient.sendResponse(new StaffAlertWithLinkComposer(
+                    "Badge library: browse, search, and edit all available badges.", "badge-creator/show").compose());
+            return true;
+        }
         if (params.length == 1) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_badge.forgot_username"), RoomChatMessageBubbles.ALERT);
             return true;

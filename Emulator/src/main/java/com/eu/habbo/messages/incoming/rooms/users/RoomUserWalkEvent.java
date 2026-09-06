@@ -4,6 +4,7 @@ import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.pets.PetTasks;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
+import com.eu.habbo.habbohotel.rooms.RoomTileState;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.rooms.RoomUnitStatus;
 import com.eu.habbo.habbohotel.rooms.BedProfile;
@@ -156,36 +157,47 @@ public class RoomUserWalkEvent extends MessageHandler {
           }
         }
 
-        if (tile.isWalkable() || room.canSitOrLayAt(tile.x, tile.y) || roomUnit.canOverrideTile(tile)) {
-          if (WiredEffectMoveRotateUser.handleWalkWhileActive(room, roomUnit, tile)) {
-            return;
-          }
+        // CLOSEST_REACHABLE_WALK_V1
+        // BLOCKED is allowed as a requested destination only. The pathfinder
+        // still never puts the avatar on a blocked tile.
+        boolean directGoal =
+            tile.isWalkable()
+                || room.canSitOrLayAt(tile.x, tile.y)
+                || roomUnit.canOverrideTile(tile);
+        boolean partialGoal = tile.getState() == RoomTileState.BLOCKED;
 
-          if (roomUnit.getMoveBlockingTask() != null) {
-            try {
-              roomUnit.getMoveBlockingTask().get(2, java.util.concurrent.TimeUnit.SECONDS);
-            } catch (java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException | InterruptedException e) {
-            }
-          }
-
-          boolean needsLocationResync =
-              roomUnit.getCurrentLocation() != null
-                  && (roomUnit.getPreviousLocation() == null
-                  || roomUnit.getPreviousLocation().x != roomUnit.getCurrentLocation().x
-                  || roomUnit.getPreviousLocation().y != roomUnit.getCurrentLocation().y
-                  || Math.abs(roomUnit.getPreviousLocationZ() - roomUnit.getZ()) > 0.01D);
-
-          if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit) || needsLocationResync) {
-            WiredUserMovementHelper.clearStatusComposerSuppression(roomUnit);
-            if (roomUnit.getCurrentLocation() != null) {
-              roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
-              roomUnit.setPreviousLocationZ(roomUnit.getZ());
-            }
-            room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
-          }
-
-          roomUnit.setGoalLocation(tile);
+        if (!directGoal && !partialGoal) {
+          return;
         }
+
+        if (WiredEffectMoveRotateUser.handleWalkWhileActive(room, roomUnit, tile)) {
+          return;
+        }
+
+        if (roomUnit.getMoveBlockingTask() != null) {
+          try {
+            roomUnit.getMoveBlockingTask().get(2, java.util.concurrent.TimeUnit.SECONDS);
+          } catch (java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException | InterruptedException e) {
+          }
+        }
+
+        boolean needsLocationResync =
+            roomUnit.getCurrentLocation() != null
+                && (roomUnit.getPreviousLocation() == null
+                || roomUnit.getPreviousLocation().x != roomUnit.getCurrentLocation().x
+                || roomUnit.getPreviousLocation().y != roomUnit.getCurrentLocation().y
+                || Math.abs(roomUnit.getPreviousLocationZ() - roomUnit.getZ()) > 0.01D);
+
+        if (WiredUserMovementHelper.shouldSuppressStatusComposer(roomUnit) || needsLocationResync) {
+          WiredUserMovementHelper.clearStatusComposerSuppression(roomUnit);
+          if (roomUnit.getCurrentLocation() != null) {
+            roomUnit.setPreviousLocation(roomUnit.getCurrentLocation());
+            roomUnit.setPreviousLocationZ(roomUnit.getZ());
+          }
+          room.sendComposer(new RoomUserStatusComposer(roomUnit).compose());
+        }
+
+        roomUnit.setGoalLocation(tile);
       }
     } catch (Exception e) {
       LOGGER.error("Caught exception", e);

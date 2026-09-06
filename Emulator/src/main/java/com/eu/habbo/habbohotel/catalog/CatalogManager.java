@@ -34,6 +34,7 @@ import com.eu.habbo.habbohotel.catalog.layouts.Pets3Layout;
 import com.eu.habbo.habbohotel.catalog.layouts.PetsLayout;
 import com.eu.habbo.habbohotel.catalog.layouts.RecentPurchasesLayout;
 import com.eu.habbo.habbohotel.catalog.layouts.RecyclerInfoLayout;
+import com.eu.habbo.habbohotel.catalog.layouts.RecolorableLayout;
 import com.eu.habbo.habbohotel.catalog.layouts.RecyclerLayout;
 import com.eu.habbo.habbohotel.catalog.layouts.RecyclerPrizesLayout;
 import com.eu.habbo.habbohotel.catalog.layouts.RoomAdsLayout;
@@ -50,6 +51,7 @@ import com.eu.habbo.habbohotel.guilds.Guild;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.SoundTrack;
+import com.eu.habbo.habbohotel.items.interactions.FurnitureCustomColors;
 import com.eu.habbo.habbohotel.items.interactions.InteractionBadgeDisplay;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGuildFurni;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGuildGate;
@@ -202,6 +204,9 @@ public class CatalogManager {
                             case soundmachine:
                                 this.put(layout.name().toLowerCase(), TraxLayout.class);
                                 break;
+                            case recolorable:
+                                this.put(layout.name().toLowerCase(), RecolorableLayout.class);
+                                break;
                             case default_3x3_color_grouping:
                                 this.put(layout.name().toLowerCase(), ColorGroupingLayout.class);
                                 break;
@@ -296,6 +301,8 @@ public class CatalogManager {
     private final List<Voucher> vouchers;
     public final Int2ObjectMap<int[]> furnitureValues;
     private volatile byte[] rareValuesPayloadCache;
+    private volatile CatalogSearchIndex searchIndex = CatalogSearchIndex.empty();
+    private volatile boolean searchIndexDirty = true;
 
     public CatalogManager() {
         this(true);
@@ -345,6 +352,22 @@ public class CatalogManager {
         this.loadRecycler();
         this.loadGiftWrappers();
         this.loadFurnitureValues();
+        this.rebuildSearchIndex();
+    }
+
+    public synchronized void rebuildSearchIndex() {
+        if (!this.searchIndexDirty) return;
+        this.searchIndex = CatalogSearchIndex.build(this.catalogPages.values());
+        this.searchIndexDirty = false;
+    }
+
+    public void invalidateSearchIndex() {
+        this.searchIndexDirty = true;
+    }
+
+    public List<CatalogSearchIndex.Hit> searchCatalog(String query, int userRank, int maximumResults) {
+        if (this.searchIndexDirty) this.rebuildSearchIndex();
+        return this.searchIndex.search(query, userRank, maximumResults);
     }
 
     private synchronized void loadFurnitureValues() {
@@ -440,6 +463,15 @@ public class CatalogManager {
             this.limitedNumbers.put(
                     set.getKey(),
                     new CatalogLimitedConfiguration(set.getKey(), set.getValue(), totals.get(set.getKey())));
+        }
+
+        // Older builds never recorded sales in catalog_items_limited, so every restart handed the same numbers
+        // out again: mark the numbers of the furniture that exists, renumber duplicates, refresh limited_sells.
+        CatalogLimitedRepair.Result repair = CatalogLimitedRepair.run(this.limitedNumbers);
+        if (repair.changedAnything()) {
+            LOGGER.info(
+                    "LTD repair: {} stale reservations released, {} sold numbers recorded, {} duplicates renumbered",
+                    repair.released(), repair.marked(), repair.renumbered());
         }
     }
 
@@ -1459,7 +1491,8 @@ public class CatalogManager {
                 if (totalPoints > habbo.getHabboInfo().getCurrencyAmount(item.getPointsType())) return;
 
                 if (limitedConfiguration != null) {
-                    OptionalInt limitedNumberReservation = limitedConfiguration.pollNumber();
+                    OptionalInt limitedNumberReservation =
+                            limitedConfiguration.reserveNumber(habbo.getHabboInfo().getId());
                     if (limitedNumberReservation.isEmpty()) {
                         habbo.getClient().sendResponse(new AlertLimitedSoldOutComposer());
                         return;
@@ -1731,8 +1764,7 @@ public class CatalogManager {
                                             .insertHopper(hopper);
 
                                     itemsList.add(hopper);
-                                } else if (baseItem.getInteractionType().getType() == InteractionGuildFurni.class
-                                        || baseItem.getInteractionType().getType() == InteractionGuildGate.class) {
+                                } else if (requiresGuildPurchase(baseItem, extradata)) {
                                     int guildId;
                                     try {
                                         guildId = Integer.parseInt(extradata);
@@ -1843,6 +1875,21 @@ public class CatalogManager {
                                                     .getAchievementManager()
                                                     .getAchievement("MusicCollector"));
                                 } else {
+                                    // Recolourable furni bought from a "recolorable" page carry the two chosen
+                                    // colours in the extra data; they are stored as colours, not as a furni state.
+                                    //
+                                    // The page layout counts as well as the per-item marker. isColorable() reads
+                                    // customparams off the cached Item, so a base item missing the marker - or
+                                    // cached from before it was added - used to fall through here and have the
+                                    // chosen colours written into extra_data as a raw string that nothing reads
+                                    // back, leaving the furni on its defaults. A page selling on the recolorable
+                                    // layout is already saying the same thing, and it is the part that gets
+                                    // configured in the catalog editor.
+                                    String[] purchaseColors =
+                                            (FurnitureCustomColors.isColorable(baseItem) || isRecolorablePage(page))
+                                                    ? FurnitureCustomColors.parsePurchaseColors(extradata)
+                                                    : null;
+
                                     HabboItem habboItem = Emulator.getGameEnvironment()
                                             .getItemManager()
                                             .createItem(
@@ -1853,9 +1900,14 @@ public class CatalogManager {
                                                     baseItem,
                                                     limitedStack,
                                                     limitedNumber,
-                                                    extradata);
+                                                    purchaseColors != null ? "" : extradata);
                                     if (habboItem == null)
                                         throw new IllegalStateException("failed to create catalog item");
+
+                                    if (purchaseColors != null) {
+                                        habboItem.setCustomColors(purchaseColors[0], purchaseColors[1]);
+                                    }
+
                                     createdItems.add(habboItem);
                                     itemsList.add(habboItem);
                                 }
@@ -2057,6 +2109,25 @@ public class CatalogManager {
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Guild gates and classic guild furni need a guild id from the guild catalog page. The recolourable lines
+     * (customparams "colorable") share the guild-furni interaction only for its colour layers: they are bought like
+     * any furni, and so is guild furni bought from a normal page (no numeric guild id) — guild id 0.
+     */
+    /** True for a page selling on the recolorable layout, whose offers are colour pairs by definition. */
+    private static boolean isRecolorablePage(CatalogPage page) {
+        return page != null && "recolorable".equalsIgnoreCase(page.getLayout());
+    }
+
+    static boolean requiresGuildPurchase(Item baseItem, String extraData) {
+        Class<?> type = baseItem.getInteractionType() != null ? baseItem.getInteractionType().getType() : null;
+        if (type == InteractionGuildGate.class) return true;
+        if (type != InteractionGuildFurni.class) return false;
+        String params = baseItem.getCustomParams();
+        if (params != null && params.toLowerCase(java.util.Locale.ROOT).contains("colorable")) return false;
+        return extraData != null && extraData.trim().matches("\\d+");
     }
 
     private boolean isAtomicBotOrPetPurchase(CatalogItem item) {
@@ -2283,18 +2354,42 @@ public class CatalogManager {
             int totalPoints)
             throws SQLException {
         int userId = habbo.getHabboInfo().getId();
+
+        // Filled inside the transaction, applied after it commits. setCustomColors writes through its own
+        // connection, and doing that while this transaction still holds the new row's lock deadlocks the
+        // purchase against itself until the socket times out.
+        Map<HabboItem, String[]> pendingColors = new HashMap<>();
+
         try {
             String operationId = EconomyOperationId.create("catalog:" + userId + ":" + item.getId());
             AtomicFurniturePurchase purchase = CatalogPurchaseTransaction.execute(habbo, operationId, connection -> {
+                // The transaction may be retried; anything recorded by a previous attempt is stale.
+                pendingColors.clear();
                 Set<HabboItem> createdItems = new HashSet<>();
                 Map<InteractionGuildFurni, Guild> guildFurniture = new HashMap<>();
                 boolean includesMusicDisc = false;
                 for (int index = 0; index < amount; index++) {
                     for (Item baseItem : item.getBaseItems()) {
                         String itemExtraData = this.prepareFurnitureExtraData(habbo, baseItem, extraData);
+
+                        // A recolourable furni carries its two chosen colours in the extra data. Decided
+                        // here, above the per-kind branches, because every kind can be recolourable - a
+                        // teleport pair as much as a plain chair - and deciding inside one branch is how
+                        // this was missed twice already. The page layout counts alongside the item's own
+                        // marker: a page selling on the recolorable layout is saying the same thing.
+                        String[] purchaseColors =
+                                (FurnitureCustomColors.isColorable(baseItem)
+                                                || isRecolorablePage(this.getCatalogPage(item.getPageId())))
+                                        ? FurnitureCustomColors.parsePurchaseColors(itemExtraData)
+                                        : null;
+
+                        // Colours are stored as colours, so they must not also sit in extra_data, where they
+                        // would be read back as a furni state.
+                        if (purchaseColors != null) itemExtraData = "";
+
                         for (int count = 0; count < item.getItemAmount(baseItem.getId()); count++) {
-                            if (baseItem.getInteractionType().getType() == InteractionGuildFurni.class
-                                    || baseItem.getInteractionType().getType() == InteractionGuildGate.class) {
+                            Set<HabboItem> beforeThisOne = new HashSet<>(createdItems);
+                            if (requiresGuildPurchase(baseItem, extraData)) {
                                 int guildId;
                                 try {
                                     guildId = Integer.parseInt(extraData);
@@ -2382,12 +2477,22 @@ public class CatalogManager {
                                                 limitedNumber,
                                                 itemExtraData);
                                 if (created == null) throw new SQLException("Unable to create catalog furniture");
+
                                 if (baseItem.getInteractionType().getType() == InteractionHopper.class) {
                                     Emulator.getGameEnvironment()
                                             .getItemManager()
                                             .insertHopper(connection, created);
                                 }
                                 createdItems.add(created);
+                            }
+
+                            // Whichever branch ran, everything it just created is noted for colouring -
+                            // both halves of a teleport pair included. Written after the commit, not here.
+                            if (purchaseColors != null) {
+                                for (HabboItem justCreated : createdItems) {
+                                    if (beforeThisOne.contains(justCreated)) continue;
+                                    pendingColors.put(justCreated, purchaseColors);
+                                }
                             }
                         }
                     }
@@ -2424,6 +2529,11 @@ public class CatalogManager {
                 return new CatalogPurchaseTransaction.PreparedPurchase<>(
                         result, charges.credits(), charges.points(), charges.pointsType());
             });
+
+            // The rows exist and no lock is held any more, so the colours can be written safely.
+            for (Map.Entry<HabboItem, String[]> entry : pendingColors.entrySet()) {
+                entry.getKey().setCustomColors(entry.getValue()[0], entry.getValue()[1]);
+            }
 
             this.publishAtomicFurniturePurchase(habbo, purchase);
             if (limitedConfiguration != null) {

@@ -26,6 +26,7 @@ public class Permission {
     public static String ACC_INFINITE_CREDITS = "acc_infinite_credits";
     public static String ACC_INFINITE_PIXELS = "acc_infinite_pixels";
     public static String ACC_INFINITE_POINTS = "acc_infinite_points";
+    public static final String ACC_INFINITE_RESPECT = "acc_infinite_respect";
     public static String ACC_AMBASSADOR = "acc_ambassador";
     public static String ACC_CHAT_NO_LIMIT = "acc_chat_no_limit";
     public static String ACC_CHAT_NO_FILTER = "acc_chat_no_filter";

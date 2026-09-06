@@ -90,9 +90,61 @@ public class InteractionWater extends InteractionDefault {
 
         Pet pet = room.getPet(roomUnit);
 
-        if (pet == null) return;
+        if (pet != null) {
+            pet.getRoomUnit().removeStatus(RoomUnitStatus.SWIM);
+            return;
+        }
 
-        pet.getRoomUnit().removeStatus(RoomUnitStatus.SWIM);
+        if (roomUnit == null) return;
+
+        // Out of the water, no swim effect. InteractionDefault decides this by comparing effect ids with
+        // whatever furni happens to be on the destination tile, which leaves the effect on in more cases
+        // than it should; for water the question is simply whether the tile still has water on it.
+        RoomTile destination = null;
+
+        if (objects != null && objects.length > 0 && objects[0] instanceof RoomTile) {
+            destination = (RoomTile) objects[0];
+        } else if (room.getLayout() != null) {
+            destination = room.getLayout().getTile(roomUnit.getX(), roomUnit.getY());
+        }
+
+        if (destination != null && isStandingInWater(room, destination)) {
+            return;
+        }
+
+        // Only the effect this water granted: someone who walked in wearing their own keeps it.
+        int granted = roomUnit.getEffectId();
+
+        if (granted > 0
+                && (granted == this.getBaseItem().getEffectM() || granted == this.getBaseItem().getEffectF())) {
+            room.giveEffect(roomUnit, 0, -1);
+        }
+    }
+
+    /**
+     * Whether a unit standing on {@code tile} is in the water rather than on something floating above it.
+     *
+     * <p>The tile having water on it is not the question - a platform, a raft or a jetty all sit on water
+     * and lift whoever stands on them clear of it. What matters is the height the unit ends up at: the
+     * surface of the tile, which is the top of its highest item. That surface being no higher than the
+     * water's own means the unit is in it; a flat overlay such as fog or leaves (stack height 0) therefore
+     * still counts as water, while anything that raises the surface does not.
+     */
+    private static boolean isStandingInWater(Room room, RoomTile tile) {
+        double surface = room.getStackHeight(tile.x, tile.y, false);
+
+        for (HabboItem item : room.getItemsAt(tile)) {
+            if (!(item instanceof InteractionWater water)) continue;
+            if (!water.isInRoom) continue;
+
+            double waterSurface = water.getZ() + Item.getCurrentHeight(water);
+
+            // The tolerance absorbs the 1e-6 the emulator gives a flat furni so that stacking still
+            // advances, which would otherwise put a rug on the water a hair above it.
+            if (surface <= waterSurface + 0.01) return true;
+        }
+
+        return false;
     }
 
     @Override

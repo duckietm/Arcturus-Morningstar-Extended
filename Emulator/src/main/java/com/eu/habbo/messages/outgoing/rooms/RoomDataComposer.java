@@ -115,7 +115,8 @@ public class RoomDataComposer extends MessageComposer {
         this.response.appendInt(this.room.getChatProtection());
         this.response.appendString(HotelDateTimeUtil.getTimezoneId());
         this.response.appendString(String.valueOf(HotelDateTimeUtil.now().toInstant().toEpochMilli()));
-        this.response.appendInt(Room.MAXIMUM_FURNI);
+        // Unlimited rooms advertise a huge cap so the client never shows "room full".
+        this.response.appendInt(Room.MAXIMUM_FURNI > 0 ? Room.MAXIMUM_FURNI : 1_000_000);
 
 
         return this.response;

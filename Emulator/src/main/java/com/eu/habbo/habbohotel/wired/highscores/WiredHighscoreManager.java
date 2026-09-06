@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -30,6 +31,12 @@ public class WiredHighscoreManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredHighscoreManager.class);
 
     private final ConcurrentHashMap<Integer, List<WiredHighscoreDataEntry>> data = new ConcurrentHashMap<>();
+
+    /**
+     * Bumped on every in-memory change (load, add, reset). Highscore furni compare it against the
+     * revision they rendered last, so a board never serializes a stale row list after a write.
+     */
+    private final AtomicLong revision = new AtomicLong();
 
     private static final String locale =
             (System.getProperty("user.language") != null ? System.getProperty("user.language") : "en");
@@ -47,6 +54,7 @@ public class WiredHighscoreManager {
 
         this.data.clear();
         this.loadHighscoreData();
+        this.revision.incrementAndGet();
 
         LOGGER.info(
                 "Highscore Manager -> Loaded! ({} MS, {} items)",
@@ -70,6 +78,7 @@ public class WiredHighscoreManager {
         }
 
         this.data.clear();
+        this.revision.incrementAndGet();
     }
 
     private void loadHighscoreData() {
@@ -101,19 +110,14 @@ public class WiredHighscoreManager {
         this.data
                 .computeIfAbsent(entry.getItemId(), k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(entry);
+        this.revision.incrementAndGet();
 
         Emulator.getThreading().run(() -> {
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
                     PreparedStatement statement = connection.prepareStatement(
                             "INSERT INTO `items_highscore_data` (`item_id`, `user_ids`, `score`, `is_win`, `timestamp`) VALUES (?, ?, ?, ?, ?)")) {
                 statement.setInt(1, entry.getItemId());
-                statement.setString(
-                        2,
-                        String.join(
-                                ",",
-                                entry.getUserIds().stream()
-                                        .map(Object::toString)
-                                        .collect(Collectors.toList())));
+                statement.setString(2, joinUserIds(entry.getUserIds()));
                 statement.setInt(3, entry.getScore());
                 statement.setInt(4, entry.isWin() ? 1 : 0);
                 statement.setInt(5, entry.getTimestamp());
@@ -121,6 +125,63 @@ public class WiredHighscoreManager {
                 statement.execute();
             } catch (SQLException e) {
                 LOGGER.error("Caught SQL exception", e);
+            }
+        });
+    }
+
+    private static final Object LIVE_DB_LOCK = new Object();
+
+    /**
+     * Replaces the live rows of the current round ({@code timestamp >= since}) of one highscore
+     * furni with {@code fresh}, in memory and in {@code items_highscore_data}. The database write
+     * runs delete + insert in a single serialized task whose payload is the in-memory state at
+     * execution time, so rapid successive publishes always converge on the latest standings.
+     */
+    public void replaceLiveEntries(int itemId, int since, List<WiredHighscoreDataEntry> fresh) {
+        List<WiredHighscoreDataEntry> list =
+                this.data.computeIfAbsent(itemId, k -> Collections.synchronizedList(new ArrayList<>()));
+        synchronized (list) {
+            list.removeIf(entry -> entry.getTimestamp() >= since);
+            list.addAll(fresh);
+        }
+        this.revision.incrementAndGet();
+
+        Emulator.getThreading().run(() -> {
+            synchronized (LIVE_DB_LOCK) {
+                List<WiredHighscoreDataEntry> snapshot;
+                synchronized (list) {
+                    snapshot = list.stream()
+                            .filter(entry -> entry.getTimestamp() >= since)
+                            .collect(Collectors.toList());
+                }
+
+                try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+                    try (PreparedStatement delete = connection.prepareStatement(
+                            "DELETE FROM `items_highscore_data` WHERE `item_id` = ? AND `timestamp` >= ?")) {
+                        delete.setInt(1, itemId);
+                        delete.setInt(2, since);
+                        delete.execute();
+                    }
+
+                    if (snapshot.isEmpty()) return;
+
+                    try (PreparedStatement insert = connection.prepareStatement(
+                            "INSERT INTO `items_highscore_data` (`item_id`, `user_ids`, `score`, `is_win`, `timestamp`) VALUES (?, ?, ?, ?, ?)")) {
+                        for (WiredHighscoreDataEntry entry : snapshot) {
+                            insert.setInt(1, entry.getItemId());
+                            insert.setString(2, entry.getUserIds().stream()
+                                    .map(Object::toString)
+                                    .collect(Collectors.joining(",")));
+                            insert.setInt(3, entry.getScore());
+                            insert.setInt(4, entry.isWin() ? 1 : 0);
+                            insert.setInt(5, entry.getTimestamp());
+                            insert.addBatch();
+                        }
+                        insert.executeBatch();
+                    }
+                } catch (SQLException e) {
+                    LOGGER.error("Caught SQL exception", e);
+                }
             }
         });
     }
@@ -171,16 +232,29 @@ public class WiredHighscoreManager {
         }
 
         if (scoreType == WiredHighscoreScoreType.LONGESTTIME) {
-            return highscores.collect(Collectors.groupingBy(h -> h.getUsers().hashCode())).entrySet().stream()
-                    .map(e -> e.getValue().stream()
-                            .max(Comparator.comparingInt(WiredHighscoreRow::getValue))
-                            .orElse(null))
-                    .filter(Objects::nonNull)
-                    .sorted(Comparator.comparingInt(WiredHighscoreRow::getValue).reversed())
-                    .collect(Collectors.toList());
+            return bestPerTeam(highscores, true);
+        }
+
+        // The fastest time is the same shape read the other way round: keep each team's smallest
+        // score and put the smallest first, or the board would crown whoever was slowest.
+        if (scoreType == WiredHighscoreScoreType.FASTESTTIME) {
+            return bestPerTeam(highscores, false);
         }
 
         return null;
+    }
+
+    private static List<WiredHighscoreRow> bestPerTeam(Stream<WiredHighscoreRow> highscores, boolean longest) {
+        Comparator<WiredHighscoreRow> byValue = Comparator.comparingInt(WiredHighscoreRow::getValue);
+
+        return highscores.collect(Collectors.groupingBy(h -> h.getUsers().hashCode())).entrySet().stream()
+                .map(e -> (longest
+                                ? e.getValue().stream().max(byValue)
+                                : e.getValue().stream().min(byValue))
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .sorted(longest ? byValue.reversed() : byValue)
+                .collect(Collectors.toList());
     }
 
     private boolean timeMatchesEntry(WiredHighscoreDataEntry entry, WiredHighscoreClearType timeType) {
@@ -209,8 +283,56 @@ public class WiredHighscoreManager {
         return this.data.get(itemId);
     }
 
+    /**
+     * Replace everything this board holds, in memory and on disk.
+     *
+     * <p>Nothing ever deleted from {@code items_highscore_data}: the table was only read at boot and
+     * appended to, so the reset box emptied the board in memory and every score came back at the next
+     * start. The write is threaded like the insert, and the memory swap happens first so a board that
+     * is read in the same tick already shows the new state.
+     */
     public void setEntriesForItemId(int itemId, List<WiredHighscoreDataEntry> entries) {
-        this.data.put(itemId, Collections.synchronizedList(entries));
+        List<WiredHighscoreDataEntry> stored = Collections.synchronizedList(new ArrayList<>(entries));
+        this.data.put(itemId, stored);
+        this.revision.incrementAndGet();
+
+        Emulator.getThreading().run(() -> {
+            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+                try (PreparedStatement delete =
+                        connection.prepareStatement("DELETE FROM `items_highscore_data` WHERE `item_id` = ?")) {
+                    delete.setInt(1, itemId);
+                    delete.execute();
+                }
+
+                if (stored.isEmpty()) {
+                    return;
+                }
+
+                try (PreparedStatement insert = connection.prepareStatement(
+                        "INSERT INTO `items_highscore_data` (`item_id`, `user_ids`, `score`, `is_win`, `timestamp`) VALUES (?, ?, ?, ?, ?)")) {
+                    for (WiredHighscoreDataEntry entry : stored) {
+                        insert.setInt(1, entry.getItemId());
+                        insert.setString(2, joinUserIds(entry.getUserIds()));
+                        insert.setInt(3, entry.getScore());
+                        insert.setInt(4, entry.isWin() ? 1 : 0);
+                        insert.setInt(5, entry.getTimestamp());
+                        insert.addBatch();
+                    }
+                    insert.executeBatch();
+                }
+            } catch (SQLException e) {
+                LOGGER.error("Caught SQL exception", e);
+            }
+        });
+    }
+
+    /** Current in-memory revision; highscore furni reload their rows when it moved since their last render. */
+    public long getRevision() {
+        return this.revision.get();
+    }
+
+    static String joinUserIds(List<Integer> userIds) {
+        return String.join(",", userIds.stream().map(Object::toString).collect(Collectors.toList()));
     }
 
     private long getTodayStartTimestamp() {

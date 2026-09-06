@@ -27,7 +27,7 @@ public class WiredConditionFurniHaveFurni extends InteractionWiredCondition {
 
     private boolean all;
     private Set<HabboItem> items;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredConditionFurniHaveFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -62,11 +62,7 @@ public class WiredConditionFurniHaveFurni extends InteractionWiredCondition {
                 if (baseTile == null) return false;
                 double minZ = item.getZ() + Item.getCurrentHeight(item);
                 Set<RoomTile> occupiedTiles = room.getLayout()
-                        .getTilesAt(
-                                baseTile,
-                                item.getBaseItem().getWidth(),
-                                item.getBaseItem().getLength(),
-                                item.getRotation());
+                        .getTilesAt(baseTile, item);
                 if (occupiedTiles == null) return false;
                 return occupiedTiles.stream()
                         .anyMatch(tile -> tile != null
@@ -80,11 +76,7 @@ public class WiredConditionFurniHaveFurni extends InteractionWiredCondition {
                 if (baseTile == null) return false;
                 double minZ = item.getZ() + Item.getCurrentHeight(item);
                 Set<RoomTile> occupiedTiles = room.getLayout()
-                        .getTilesAt(
-                                baseTile,
-                                item.getBaseItem().getWidth(),
-                                item.getBaseItem().getLength(),
-                                item.getRotation());
+                        .getTilesAt(baseTile, item);
                 if (occupiedTiles == null) return false;
                 return occupiedTiles.stream()
                         .anyMatch(tile -> tile != null
@@ -169,7 +161,7 @@ public class WiredConditionFurniHaveFurni extends InteractionWiredCondition {
     public void onPickUp() {
         this.items.clear();
         this.all = false;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override

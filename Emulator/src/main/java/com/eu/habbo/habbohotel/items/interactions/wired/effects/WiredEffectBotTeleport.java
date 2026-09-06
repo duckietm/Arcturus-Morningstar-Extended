@@ -35,7 +35,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
 
     private Set<HabboItem> items;
     private String botName = "";
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
 
     public WiredEffectBotTeleport(ResultSet set, Item baseItem) throws SQLException {
@@ -142,7 +142,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         String botName = settings.getStringParam();
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_SELECTED;
         this.botSource = (params.length > 1)
                 ? WiredBotSourceUtil.normalizeBotSource(params[1])
                 : WiredBotSourceUtil.SOURCE_BOT_NAME;
@@ -302,7 +302,7 @@ public class WiredEffectBotTeleport extends InteractionWiredEffect {
     public void onPickUp() {
         this.botName = "";
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
         this.setDelay(0);
     }

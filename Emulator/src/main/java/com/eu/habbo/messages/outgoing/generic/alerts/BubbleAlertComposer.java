@@ -7,6 +7,11 @@ import com.eu.habbo.messages.outgoing.Outgoing;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A notification the client shows as a bubble or a dialog (header 1992): a type plus a parameter map.
+ * Recognised parameters: {@code title}, {@code message}, {@code image}, {@code linkUrl}, {@code linkTitle}
+ * and {@code display} ({@code BUBBLE} or {@code ALERT}).
+ */
 public class BubbleAlertComposer extends MessageComposer {
     private final String errorKey;
     private final Map<String, String> keys;

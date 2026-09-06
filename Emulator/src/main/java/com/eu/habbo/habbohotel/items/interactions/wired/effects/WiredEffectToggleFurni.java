@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionBadgeDisplay;
 import com.eu.habbo.habbohotel.items.interactions.InteractionClothing;
 import com.eu.habbo.habbohotel.items.interactions.InteractionCrackable;
+import com.eu.habbo.habbohotel.items.interactions.InteractionDice;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGift;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGymEquipment;
 import com.eu.habbo.habbohotel.items.interactions.InteractionHopper;
@@ -73,7 +74,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
 
     private final Set<HabboItem> items;
     private int toggleType = TOGGLE_TYPE_NEXT;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     private static final List<Class<? extends HabboItem>> FORBIDDEN_TYPES =
             new ArrayList<Class<? extends HabboItem>>() {
@@ -188,7 +189,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
             this.furniSource = params[1];
         } else {
             this.toggleType = TOGGLE_TYPE_NEXT;
-            this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+            this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_SELECTED;
         }
 
         int itemsCount = settings.getFurniIds().length;
@@ -333,7 +334,7 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     public void onPickUp() {
         this.items.clear();
         this.toggleType = TOGGLE_TYPE_NEXT;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 
@@ -347,6 +348,16 @@ public class WiredEffectToggleFurni extends InteractionWiredEffect {
     }
 
     private void toggleItemState(Room room, Habbo habbo, HabboItem item) throws Exception {
+        // A die has no "next face": wf_act_close_dice (this class) must close it, not re-roll it.
+        if (item instanceof InteractionDice) {
+            if (!"0".equals(item.getExtradata())) {
+                item.setExtradata("0");
+                item.needsUpdate(true);
+                room.updateItemState(item);
+            }
+            return;
+        }
+
         if (item.getBaseItem().getStateCount() <= 1) {
             return;
         }

@@ -7,6 +7,7 @@ import com.eu.habbo.networking.gameserver.auth.AuthHttpHandler;
 import com.eu.habbo.networking.gameserver.auth.NitroSecureApiHandler;
 import com.eu.habbo.networking.gameserver.auth.NitroSecureAssetHandler;
 import com.eu.habbo.networking.gameserver.badges.BadgeHttpHandler;
+import com.eu.habbo.networking.gameserver.chat.ChatVoiceHttpHandler;
 import com.eu.habbo.networking.gameserver.badges.BadgeLeaderboardHttpHandler;
 import com.eu.habbo.networking.gameserver.cms.CmsApiHandler;
 import com.eu.habbo.networking.gameserver.codec.WebSocketCodec;
@@ -27,6 +28,7 @@ import com.eu.habbo.networking.gameserver.handlers.WebSocketHttpCleanupHandler;
 import com.eu.habbo.networking.gameserver.handlers.WebSocketHttpHandler;
 import com.eu.habbo.networking.gameserver.ssl.SSLCertificateLoader;
 import com.eu.habbo.networking.gameserver.stats.EmuStatsHttpHandler;
+import com.eu.habbo.networking.gameserver.wired.WiredVariableApiHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -107,6 +109,12 @@ public class WebSocketChannelInitializer extends ChannelInitializer<SocketChanne
         ch.pipeline().addLast("authHttpHandler", new AuthHttpHandler());
         ch.pipeline().addLast("blockingHttpAdmissionCms", BlockingHttpExecutionGroup.admissionHandler("cmsApiHandler"));
         ch.pipeline().addLast(blockingHttp, "cmsApiHandler", new CmsApiHandler());
+        ch.pipeline()
+                .addLast("blockingHttpAdmissionChatVoice", BlockingHttpExecutionGroup.admissionHandler("chatVoiceHttpHandler"));
+        ch.pipeline().addLast(blockingHttp, "chatVoiceHttpHandler", new ChatVoiceHttpHandler());
+        ch.pipeline()
+                .addLast("blockingHttpAdmissionWired", BlockingHttpExecutionGroup.admissionHandler("wiredApiHandler"));
+        ch.pipeline().addLast(blockingHttp, "wiredApiHandler", new WiredVariableApiHandler());
         ch.pipeline()
                 .addLast("blockingHttpAdmissionBadge", BlockingHttpExecutionGroup.admissionHandler("badgeHttpHandler"));
         ch.pipeline().addLast(blockingHttp, "badgeHttpHandler", new BadgeHttpHandler());

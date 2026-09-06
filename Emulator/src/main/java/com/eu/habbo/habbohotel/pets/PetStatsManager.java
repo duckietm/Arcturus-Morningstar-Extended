@@ -79,11 +79,11 @@ public class PetStatsManager {
      * @return The current PetMood
      */
     public PetMood getCurrentMood() {
-        if (this.pet.getEnergy() < 20) return PetMood.EXHAUSTED;
+        if (this.pet.getEnergyPercent() < 20) return PetMood.EXHAUSTED;
         if (this.pet.getLevelHunger() > 80) return PetMood.STARVING;
         if (this.pet.getLevelThirst() > 80) return PetMood.PARCHED;
         if (this.pet.getHappiness() < 20) return PetMood.DEPRESSED;
-        if (this.pet.getHappiness() > 80 && this.pet.getEnergy() > 60) return PetMood.ECSTATIC;
+        if (this.pet.getHappiness() > 80 && this.pet.getEnergyPercent() > 60) return PetMood.ECSTATIC;
         if (this.pet.getHappiness() > 50) return PetMood.HAPPY;
         return PetMood.NEUTRAL;
     }
@@ -109,7 +109,7 @@ public class PetStatsManager {
      * @return true if energy level is below the tired threshold
      */
     public boolean needsRest() {
-        return this.pet.getEnergy() < this.tiredThreshold;
+        return this.pet.getEnergyPercent() < this.tiredThreshold;
     }
     
     /**

@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.outgoing.rooms.items.FloorItemUpdateComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.ItemStateComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.WallItemUpdateComposer;
+import java.util.List;
 
 final class RoomItemOperations {
 
@@ -27,11 +28,7 @@ final class RoomItemOperations {
             this.room.sendComposer(new FloorItemUpdateComposer(item).compose());
             this.room.updateTiles(this.room
                     .getLayout()
-                    .getTilesAt(
-                            this.room.currentLayout().getTile(item.getX(), item.getY()),
-                            item.getBaseItem().getWidth(),
-                            item.getBaseItem().getLength(),
-                            item.getRotation()));
+                    .getTilesAt(this.room.currentLayout().getTile(item.getX(), item.getY()), item));
 
             if (RoomAreaHideSupport.isControllerItem(item)) {
                 RoomAreaHideSupport.sendState(this.room, item);
@@ -40,6 +37,8 @@ final class RoomItemOperations {
         } else if (item.getBaseItem().getType() == FurnitureType.WALL) {
             this.room.sendComposer(new WallItemUpdateComposer(item).compose());
         }
+
+        this.persistDirtyItem(item);
     }
 
     void updateItemState(HabboItem item) {
@@ -60,16 +59,13 @@ final class RoomItemOperations {
 
         if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
             if (this.room.currentLayout() == null) {
+                this.persistDirtyItem(item);
                 return;
             }
 
             this.room.updateTiles(this.room
                     .getLayout()
-                    .getTilesAt(
-                            this.room.currentLayout().getTile(item.getX(), item.getY()),
-                            item.getBaseItem().getWidth(),
-                            item.getBaseItem().getLength(),
-                            item.getRotation()));
+                    .getTilesAt(this.room.currentLayout().getTile(item.getX(), item.getY()), item));
 
             if (item instanceof InteractionMultiHeight multiHeight) {
                 multiHeight.updateUnitsOnItem(this.room);
@@ -87,6 +83,14 @@ final class RoomItemOperations {
 
         if (item.getBaseItem().getType() == FurnitureType.FLOOR) {
             this.room.onFurnitureTopologyChanged();
+        }
+
+        this.persistDirtyItem(item);
+    }
+
+    private void persistDirtyItem(HabboItem item) {
+        if (item.needsUpdate()) {
+            this.room.savePendingItems(List.of(item));
         }
     }
 }

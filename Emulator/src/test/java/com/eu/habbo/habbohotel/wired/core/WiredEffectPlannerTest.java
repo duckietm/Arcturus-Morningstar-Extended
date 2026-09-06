@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectNegativeLog;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.api.IWiredCondition;
 import com.eu.habbo.habbohotel.wired.api.IWiredEffect;
@@ -20,7 +21,7 @@ class WiredEffectPlannerTest {
         WiredEffectPlanner planner = new WiredEffectPlanner();
         IWiredEffect regular = new TestEffect(0, false, false, false);
         IWiredEffect selector = new TestEffect(0, false, true, false);
-        InteractionWiredEffect negative = interactionEffect(WiredEffectType.NEG_LOG);
+        InteractionWiredEffect negative = interactionEffect(WiredEffectType.NEG_SHOW_MESSAGE);
         InteractionWiredEffect positive = interactionEffect(WiredEffectType.SHOW_MESSAGE);
         IWiredCondition condition = context -> true;
         WiredStack withCondition =
@@ -31,6 +32,21 @@ class WiredEffectPlannerTest {
         assertEquals(List.of(regular, positive), planner.executableEffects(withCondition, true));
         assertEquals(List.of(negative), planner.executableEffects(withCondition, false));
         assertEquals(List.of(), planner.executableEffects(withoutCondition, false));
+    }
+
+    @Test
+    void negativeLogIsNegativeByClassNotByCode() {
+        // The negative log answers EFFECT_MESSAGE like the positive log does: the type code picks the
+        // client dialog, so it cannot also say which branch of the stack the effect belongs to.
+        WiredEffectPlanner planner = new WiredEffectPlanner();
+        WiredEffectNegativeLog negativeLog = mock(WiredEffectNegativeLog.class);
+        when(negativeLog.getType()).thenReturn(WiredEffectType.EFFECT_MESSAGE);
+        InteractionWiredEffect positiveLog = interactionEffect(WiredEffectType.EFFECT_MESSAGE);
+        IWiredCondition condition = context -> true;
+        WiredStack stack = new WiredStack(null, null, List.of(condition), List.of(negativeLog, positiveLog));
+
+        assertEquals(List.of(positiveLog), planner.executableEffects(stack, true));
+        assertEquals(List.of(negativeLog), planner.executableEffects(stack, false));
     }
 
     @Test

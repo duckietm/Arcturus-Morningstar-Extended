@@ -379,7 +379,7 @@ public class MarketPlace {
                                                         LedgerWalletMutation.applyCommitted(
                                                                 client.getHabbo(),
                                                                 charge.currencyType(),
-                                                                mutation.balanceAfter());
+                                                                mutation.balanceAfterLong());
                                                     }
                                                     return mutation;
                                                 });
@@ -510,8 +510,8 @@ public class MarketPlace {
             }
         }
 
-        int currentBalance = MARKETPLACE_CURRENCY == 0
-                ? client.getHabbo().getHabboInfo().getCredits()
+        long currentBalance = MARKETPLACE_CURRENCY == 0
+                ? client.getHabbo().getHabboInfo().getCreditsLong()
                 : client.getHabbo().getHabboInfo().getCurrencyAmount(MARKETPLACE_CURRENCY);
         if (claimable > Integer.MAX_VALUE) {
             LOGGER.warn(

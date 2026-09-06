@@ -584,22 +584,32 @@ public class RoomUnit {
     this.room = room;
   }
 
+  // CLOSEST_REACHABLE_ROOMUNIT_V1
   public void findPath() {
     if (!canFindPath()) {
+      this.path = new ConcurrentLinkedDeque<>();
       return;
     }
 
     Deque<RoomTile> newPath = this.room.getLayout().getPathfinder()
             .findPath(this.currentLocation, this.goalLocation, this.goalLocation, this);
-    if (newPath != null && !newPath.isEmpty()) {
-      this.path = new ConcurrentLinkedDeque<>(newPath);
-    }
+
+    // Always replace the previous path. Otherwise an unreachable new click can
+    // leave the avatar following a stale path from the previous click.
+    this.path = (newPath == null)
+            ? new ConcurrentLinkedDeque<>()
+            : new ConcurrentLinkedDeque<>(newPath);
   }
 
   private boolean canFindPath() {
-    return this.room != null && this.room.getLayout() != null && this.goalLocation != null && (
-            this.goalLocation.isWalkable() || this.room.canSitOrLayAt(this.goalLocation.x,
-                    this.goalLocation.y) || this.canOverrideTile(this.goalLocation));
+    return this.room != null
+            && this.room.getLayout() != null
+            && this.currentLocation != null
+            && this.goalLocation != null
+            && (this.goalLocation.getState() == RoomTileState.BLOCKED
+                || this.goalLocation.isWalkable()
+                || this.room.canSitOrLayAt(this.goalLocation.x, this.goalLocation.y)
+                || this.canOverrideTile(this.goalLocation));
   }
 
   public boolean isAtGoal() {
@@ -680,7 +690,7 @@ public class RoomUnit {
   }
 
   public void setHandItem(int handItem) {
-    this.handItem = handItem;
+    this.handItem = AvatarHandItemSupport.normalize(handItem);
     this.handItemTimestamp = System.currentTimeMillis();
   }
 
@@ -693,8 +703,8 @@ public class RoomUnit {
   }
 
   public void setEffectId(int effectId, int endTimestamp) {
-    this.effectId = effectId;
-    this.effectEndTimestamp = endTimestamp;
+    this.effectId = AvatarEffectSupport.normalize(effectId);
+    this.effectEndTimestamp = this.effectId == 0 ? 0 : endTimestamp;
   }
 
   public int getEffectEndTimestamp() {

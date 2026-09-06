@@ -30,7 +30,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.FURNI_HAVE_HABBO;
     protected Set<HabboItem> items;
     protected boolean all;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredConditionFurniHaveHabbo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -47,7 +47,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
     public void onPickUp() {
         this.items.clear();
         this.all = false;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override
@@ -215,11 +215,7 @@ public class WiredConditionFurniHaveHabbo extends InteractionWiredCondition {
         if (baseTile == null) return false;
 
         Set<RoomTile> occupiedTiles = room.getLayout()
-                .getTilesAt(
-                        baseTile,
-                        item.getBaseItem().getWidth(),
-                        item.getBaseItem().getLength(),
-                        item.getRotation());
+                .getTilesAt(baseTile, item);
         return occupiedTiles != null
                 && (habbos.stream()
                                 .anyMatch(character -> character.getRoomUnit() != null

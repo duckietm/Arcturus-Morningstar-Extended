@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.achievements.AchievementManager;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.gameclients.GameClientFlushBatch;
 import com.eu.habbo.habbohotel.items.ICycleable;
+import com.eu.habbo.habbohotel.items.FurniFootprint;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.pets.Pet;
 import com.eu.habbo.habbohotel.users.DanceType;
@@ -69,6 +70,7 @@ public class RoomCycleManager {
 
             if (!this.room.getCurrentHabbos().isEmpty()) {
                 this.advanceIdleUnload(false);
+                com.eu.habbo.habbohotel.commands.DebugViewCollisionsCommand.tick(this.room);
 
                 Set<RoomUnit> updatedUnit = new HashSet<>();
                 ArrayList<Habbo> toKick = new ArrayList<>();
@@ -420,7 +422,17 @@ public class RoomCycleManager {
                     this.room.dance(unit, DanceType.NONE);
                     unit.setStatus(RoomUnitStatus.SIT, (Item.getCurrentHeight(topItem) * 1.0D) + "");
                     unit.setZ(topItem.getZ());
-                    unit.setRotation(RoomUserRotation.values()[topItem.getRotation()]);
+
+                    // A seat shaped in the furni editor can give each of its tiles its own direction - the
+                    // two arms of an L-shaped sofa do not face the same way. Without one, the furni's own
+                    // rotation is used, as it always has been.
+                    int tileDirection = topItem.getBaseItem().getFootprint().sitDirectionAt(
+                            topItem.getRotation(),
+                            unit.getX() - topItem.getX(),
+                            unit.getY() - topItem.getY());
+
+                    unit.setRotation(RoomUserRotation.values()[
+                            tileDirection == FurniFootprint.NO_DIRECTION ? topItem.getRotation() : tileDirection]);
                     unit.sitUpdate = false;
                     return true;
                 }
@@ -438,7 +450,7 @@ public class RoomCycleManager {
             } else {
                 if (!unit.hasStatus(RoomUnitStatus.LAY)) {
                     BedProfile bedProfile = new BedProfile(topItem);
-                    double layHeight = Item.getCurrentHeight(topItem) * 1.0D + bedProfile.getLayZOffset();
+                    double layHeight = bedProfile.getLayHeight(Item.getCurrentHeight(topItem));
                     LOGGER.debug(
                             "[BedProfile] item={} stackHeight={} isFlat={} isDouble={} X={} Y={} Z={}",
                             topItem.getBaseItem().getName(),

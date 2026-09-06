@@ -44,6 +44,8 @@ import com.eu.habbo.messages.outgoing.users.UserClothesComposer;
 import com.eu.habbo.messages.outgoing.users.UserClubComposer;
 import com.eu.habbo.messages.outgoing.users.UserHomeRoomComposer;
 import com.eu.habbo.messages.outgoing.users.UserPermissionsComposer;
+import com.eu.habbo.messages.outgoing.gamedata.ClientRenderSettingsComposer;
+import com.eu.habbo.messages.incoming.rooms.ClientRenderSettingsSaveEvent;
 import com.eu.habbo.plugin.events.users.UserLoginEvent;
 import com.eu.habbo.resilience.RuntimeResilienceController;
 import com.eu.habbo.resilience.RuntimeResilienceRuntime;
@@ -304,6 +306,8 @@ public class SecureLoginEvent extends MessageHandler {
                 messages.add(new UserClothesComposer(this.client.getHabbo()).compose());
                 messages.add(new NewUserIdentityComposer(habbo).compose());
                 messages.add(new UserPermissionsComposer(this.client.getHabbo()).compose());
+                // CUSTOM: hotel-wide renderer settings chosen by the staff (":render" panel)
+                messages.add(new ClientRenderSettingsComposer(Emulator.getConfig().getValue(ClientRenderSettingsSaveEvent.CONFIG_KEY, "{}")).compose());
                 messages.add(new AvailableCommandsComposer(Emulator.getGameEnvironment()
                                 .getCommandHandler()
                                 .getCommandsForRank(this.client

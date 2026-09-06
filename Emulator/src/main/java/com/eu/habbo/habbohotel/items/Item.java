@@ -6,10 +6,12 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Item implements ISerialize {
+    private int assetStates;
 
     private int id;
     private int spriteId;
@@ -35,6 +37,7 @@ public class Item implements ISerialize {
     private double[] multiHeights;
     private String customParams;
     private String clothingOnWalk;
+    private FurniFootprint footprint;
 
     private ItemInteraction interactionType;
     private int rotations;
@@ -44,9 +47,7 @@ public class Item implements ISerialize {
     }
 
     public static boolean isPet(Item item) {
-        return item != null
-                && item.getName() != null
-                && item.getName().toLowerCase().startsWith("a0 pet");
+        return item != null && item.getName() != null && item.getName().toLowerCase().startsWith("a0 pet");
     }
 
     public static boolean isBot(Item item) {
@@ -62,8 +63,7 @@ public class Item implements ISerialize {
             }
 
             try {
-                int index = Integer.parseInt(item.getExtradata())
-                        % (item.getBaseItem().getMultiHeights().length);
+                int index = Integer.parseInt(item.getExtradata()) % (item.getBaseItem().getMultiHeights().length);
                 return item.getBaseItem().getMultiHeights()[(item.getExtradata().isEmpty() ? 0 : index)];
             } catch (NumberFormatException e) {
 
@@ -100,30 +100,32 @@ public class Item implements ISerialize {
         this.allowInventoryStack = set.getBoolean("allow_inventory_stack");
 
         String interactionTypeName = set.getString("interaction_type");
-        if (interactionTypeName == null) {
-            interactionTypeName = "default";
-        }
-
-        this.interactionType =
-                Emulator.getGameEnvironment().getItemManager().getItemInteraction(interactionTypeName.toLowerCase());
-
-        if ((this.interactionType != null)
-                && "default".equalsIgnoreCase(this.interactionType.getName())
-                && (this.fullName != null)
-                && this.fullName.toLowerCase().startsWith("wf_")) {
-            ItemInteraction fallbackInteraction =
-                    Emulator.getGameEnvironment().getItemManager().getItemInteraction(this.fullName.toLowerCase());
-
-            if ((fallbackInteraction != null) && !"default".equalsIgnoreCase(fallbackInteraction.getName())) {
-                this.interactionType = fallbackInteraction;
-            }
-        }
+        this.interactionType = Emulator.getGameEnvironment()
+                .getItemManager()
+                .resolveItemInteraction(interactionTypeName, this.name, this.fullName);
 
         this.stateCount = set.getShort("interaction_modes_count");
+        int assetStatesValue = 0;
+        try {
+            assetStatesValue = set.getInt("asset_states"); // states the .nitro asset really has (furni audit)
+        } catch (SQLException ignored) {
+        }
+        this.assetStates = assetStatesValue;
         this.effectM = set.getShort("effect_id_male");
         this.effectF = set.getShort("effect_id_female");
         this.customParams = set.getString("customparams");
         this.clothingOnWalk = set.getString("clothing_on_walk");
+
+        // Read the way asset_states is: a database that has not run the footprint migration still loads,
+        // and every furni simply keeps the plain width x length rectangle.
+        String tileShape = "";
+        String sitDirections = "";
+        try {
+            tileShape = set.getString("tile_shape");
+            sitDirections = set.getString("sit_directions");
+        } catch (SQLException ignored) {
+        }
+        this.footprint = FurniFootprint.parse(this.width, this.length, tileShape, sitDirections);
 
         int[] vendingIds = ItemDataGuard.parsePositiveIntList(set.getString("vending_ids"));
         if (vendingIds.length > 0) {
@@ -135,8 +137,7 @@ public class Item implements ISerialize {
             this.vendingItems = new IntArrayList();
         }
 
-        // if(this.interactionType.getType() == InteractionMultiHeight.class ||
-        // this.interactionType.getType().isAssignableFrom(InteractionMultiHeight.class))
+        //if(this.interactionType.getType() == InteractionMultiHeight.class || this.interactionType.getType().isAssignableFrom(InteractionMultiHeight.class))
         {
             this.multiHeights = ItemDataGuard.parseHeights(set.getString("multiheight"));
         }
@@ -145,8 +146,8 @@ public class Item implements ISerialize {
 
         try {
             this.rotations = set.getInt("rotations");
-        } catch (SQLException ignored) {
         }
+        catch (SQLException ignored) { }
     }
 
     public int getId() {
@@ -181,6 +182,19 @@ public class Item implements ISerialize {
 
     public FurnitureType getType() {
         return this.type;
+    }
+
+    /**
+     * The tiles this furni occupies and the direction each seat faces. Always non-null: a furni that has
+     * never been through the aligner gets the plain {@code width x length} rectangle, which behaves exactly
+     * as the engine always has.
+     */
+    public FurniFootprint getFootprint() {
+        if (this.footprint == null) {
+            this.footprint = FurniFootprint.rectangle(this.width, this.length);
+        }
+
+        return this.footprint;
     }
 
     public int getWidth() {
@@ -231,6 +245,11 @@ public class Item implements ISerialize {
         return this.allowInventoryStack;
     }
 
+    /** Number of states the furni asset defines (0 = unknown, use getStateCount()). */
+    public int getAssetStates() {
+        return this.assetStates;
+    }
+
     public int getStateCount() {
         return this.stateCount;
     }
@@ -267,9 +286,7 @@ public class Item implements ISerialize {
         return customParams;
     }
 
-    public String getClothingOnWalk() {
-        return clothingOnWalk;
-    }
+    public String getClothingOnWalk() { return clothingOnWalk; }
 
     public int getRotations() {
         return rotations;
@@ -285,9 +302,7 @@ public class Item implements ISerialize {
             message.appendInt(this.spriteId);
 
             String itemName = ItemDataGuard.safeString(this.getName());
-            if (itemName.contains("wallpaper_single")
-                    || itemName.contains("floor_single")
-                    || itemName.contains("landscape_single")) {
+            if (itemName.contains("wallpaper_single") || itemName.contains("floor_single") || itemName.contains("landscape_single")) {
                 String[] nameParts = itemName.split("_");
                 message.appendString(nameParts.length > 2 ? nameParts[2] : "");
             } else if (type == FurnitureType.ROBOT) {

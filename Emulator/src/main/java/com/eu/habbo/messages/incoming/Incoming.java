@@ -458,6 +458,8 @@ public class Incoming {
 
     // CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
+    public static final int SetFurnitureStateEvent = 10093; // build tool: exact furni state
+    public static final int SetRoomPaintEvent = 10094; // :modificastanza room paint editor
     public static final int ClickUserEvent = 10020;
     public static final int WiredMonitorRequestEvent = 10021;
     public static final int WiredRoomSettingsRequestEvent = 10022;
@@ -483,6 +485,12 @@ public class Incoming {
     public static final int FurniEditorUpdateFurnidataEvent = 10046;
     public static final int FurniEditorRevertFurnidataEvent = 10048;
     public static final int FurniEditorImportTextEvent = 10049;
+    public static final int FurniEditorCrackableEvent = 10085; // CUSTOM: furni editor, read items_crackable config
+    public static final int FurniEditorCrackableSaveEvent = 10086; // CUSTOM: furni editor, save/remove items_crackable config
+    public static final int OnlineUsersRequestEvent = 10089; // CUSTOM: refresh of the online users window
+    public static final int ExternalTextUpdateEvent = 10091; // CUSTOM: staff sets an external text
+    public static final int EffectPolicyEvent = 10092; // CUSTOM: effects window lists / staff sets effect locks
+    public static final int BanzaiSpeedEvent = 10095; // CUSTOM: staff reads / sets the banzai teleport timings
 
     // Catalog Admin
     public static final int CatalogAdminSavePageEvent = 10050;
@@ -515,8 +523,14 @@ public class Incoming {
     public static final int CatalogStudioExportEvent = 10078;
     public static final int CatalogStudioDocumentDryRunEvent = 10079;
     public static final int CatalogStudioDocumentApplyEvent = 10080;
+    public static final int CatalogStudioAutoFixEvent = 10087; // CUSTOM: server-side catalog auto-fix
     public static final int CatalogProductMetadataEvent = 10081;
     public static final int CatalogRuntimeConfigurationEvent = 10082;
+    public static final int CatalogAdminBulkOffersEvent = 10083; // CATALOG_BULK_OFFERS_V2
+    public static final int CatalogAdminGiftConfigSaveEvent = 10097; // CUSTOM: catalog editor gift wrapping settings
+    public static final int ChatBubbleConfigSaveEvent = 10098; // CUSTOM: bubble picker edits a chat_bubbles row
+    public static final int ModToolCloneFinderEvent = 10099; // CUSTOM: mod tools clone finder (accounts sharing IP / machine id)
+    public static final int ClientRenderSettingsSaveEvent = 10102; // CUSTOM: staff panel saves hotel-wide renderer settings
 
     // Custom Prefixes
     public static final int RequestUserPrefixesEvent = 7011;
@@ -528,6 +542,7 @@ public class Incoming {
     public static final int SetActiveNickIconEvent = 7017;
     public static final int PurchaseCatalogPrefixEvent = 7018;
     public static final int SetDisplayOrderEvent = 7019;
+    public static final int SetNameColorEvent = 7020; // CUSTOM
 
     // YouTube Room Broadcast
     public static final int YouTubeRoomPlayEvent = 8001;
@@ -567,12 +582,18 @@ public class Incoming {
     public static final int WheelBuySpinEvent = 9303;
     public static final int WheelAdminGetPrizesEvent = 9304;
     public static final int WheelAdminSavePrizesEvent = 9305;
-    public static final int SoundboardPlayEvent = 9306;
-    public static final int SoundboardSetEnabledEvent = 9307;
+    public static final int WheelAdminClearWinsEvent = 9306; // CUSTOM: wipe latest winners
+    public static final int WheelAdminSaveConfigEvent = 9307; // CUSTOM: free spins / spin cost
+    public static final int InvseeTakeItemEvent = 9346; // CUSTOM: staff confiscates one item
+    public static final int InvseeRequestEvent = 9347; // CUSTOM: staff opens/refreshes target inventory
+    public static final int InvseeGiveItemEvent = 9348; // CUSTOM: staff drops one of their own items into the target's hand
+    public static final int SoundboardPlayEvent = 9398;
+    public static final int SoundboardSetEnabledEvent = 9399;
     public static final int RequestEarningsCenterEvent = 9308;
     public static final int ClaimEarningsRewardEvent = 9309;
     public static final int ClaimAllEarningsRewardsEvent = 9310;
     public static final int PressKeybindEvent = 9311;
+    public static final int RequestAvailableCommandsEvent = 9312;
     public static final int TraxEditorRequestSongsEvent = 9330;
     public static final int TraxEditorBuySongEvent = 9331;
     public static final int TraxEditorSaveSongEvent = 9332;

@@ -37,15 +37,24 @@ final class CatalogPurchasePageResolver {
     }
 
     CatalogPage resolve(CatalogPurchaseCommand command, Predicate<CatalogPage> canAccess) {
+        CatalogItem canonicalItem = this.catalog.findItem(command.itemId());
         CatalogPage page;
+
         if (command.pageId() == -12345678 || command.pageId() == -1) {
-            CatalogItem searchedItem = this.catalog.findItem(command.itemId());
-            if (searchedItem == null || searchedItem.getOfferId() <= 0) {
+            if (canonicalItem == null) {
                 return null;
             }
-            page = this.catalog.findPage(searchedItem.getPageId());
+            page = this.catalog.findPage(canonicalItem.getPageId());
         } else {
             page = this.catalog.findPage(command.pageId());
+
+            // An infostand can retain a page id while its canonical offer is
+            // being resolved. Never reject a real catalog item merely because
+            // that stale page does not contain it: purchase from its actual,
+            // access-checked page instead.
+            if (canonicalItem != null && (page == null || page.getCatalogItem(command.itemId()) == null)) {
+                page = this.catalog.findPage(canonicalItem.getPageId());
+            }
         }
 
         if (page == null

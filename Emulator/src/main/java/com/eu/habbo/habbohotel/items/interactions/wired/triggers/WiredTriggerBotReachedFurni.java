@@ -35,7 +35,7 @@ public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
 
     private final Set<HabboItem> items;
     private String botName = "";
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int botSource = BOT_SOURCE_NAME;
 
     public WiredTriggerBotReachedFurni(ResultSet set, Item baseItem) throws SQLException {
@@ -225,7 +225,7 @@ public class WiredTriggerBotReachedFurni extends InteractionWiredTrigger {
     public void onPickUp() {
         this.items.clear();
         this.botName = "";
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.botSource = BOT_SOURCE_NAME;
     }
 

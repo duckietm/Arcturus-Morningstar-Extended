@@ -24,6 +24,14 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Pet water bowl (items_base.interaction_type = pet_drink).
+ *
+ * <p>Water level convention, taken from the furni bundles (waterbowl, water_bowl1, waterbowl_basic): the water layer
+ * has one frame per state and the frame grows with the state, so <b>state 0 is an empty bowl and the last state is a
+ * full one</b>. A user double-click fills the bowl (last state), every drink lowers it by one state, and pets only
+ * drink while the level is above 0.
+ */
 public class InteractionPetDrink extends InteractionDefault {
     private static final Logger LOGGER = LoggerFactory.getLogger(InteractionPetDrink.class);
 
@@ -33,6 +41,23 @@ public class InteractionPetDrink extends InteractionDefault {
 
     public InteractionPetDrink(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
+    }
+
+    /** Current water level (0 = empty). Malformed extradata counts as empty. */
+    public int getWaterLevel() {
+        String extradata = this.getExtradata();
+        if (extradata == null || extradata.isBlank()) return 0;
+
+        try {
+            return Math.max(0, Integer.parseInt(extradata.trim()));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /** True while there is water left for a pet to drink. */
+    public boolean hasWater() {
+        return this.getWaterLevel() > 0;
     }
 
     @Override
@@ -63,16 +88,19 @@ public class InteractionPetDrink extends InteractionDefault {
             if (closestTile != null
                     && !closestTile.equals(client.getHabbo().getRoomUnit().getCurrentLocation())) {
                 List<Runnable> onSuccess = new ArrayList<>();
-                onSuccess.add(() -> {
-                    this.change(room, this.getBaseItem().getStateCount() - 1);
-                });
+                onSuccess.add(() -> this.fill(room));
 
                 client.getHabbo().getRoomUnit().setGoalLocation(closestTile);
                 Emulator.getThreading()
                         .run(new RoomUnitWalkToLocation(
                                 client.getHabbo().getRoomUnit(), closestTile, room, onSuccess, new ArrayList<>()));
             }
+
+            return;
         }
+
+        // Adjacent already: fill the bowl right away (InteractionDefault would only cycle the sprite state).
+        this.fill(room);
     }
 
     @Override
@@ -81,16 +109,8 @@ public class InteractionPetDrink extends InteractionDefault {
 
         if (this.getExtradata() == null || this.getExtradata().isEmpty()) this.setExtradata("0");
 
-        // Check if there's water left (state 0 = full, higher = less water)
-        int currentState = 0;
-        try {
-            currentState = Integer.parseInt(this.getExtradata());
-        } catch (NumberFormatException e) {
-            currentState = 0;
-        }
-
-        // If water bowl is empty (state >= max states), don't allow drinking
-        if (currentState >= this.getBaseItem().getStateCount() - 1) {
+        // Empty bowl: nothing to drink until someone refills it.
+        if (!this.hasWater()) {
             return;
         }
 
@@ -110,16 +130,14 @@ public class InteractionPetDrink extends InteractionDefault {
                             pet.getRoomUnit().getCurrentLocation().getStackHeight() + "");
             pet.packetUpdate = true;
 
-            // Say drinking vocal
             pet.say(pet.getPetData().randomVocal(PetVocalsType.DRINKING));
 
-            // Faster drinking - 500ms instead of 1000ms
             Emulator.getThreading()
                     .run(
                             () -> {
                                 pet.addThirst(-75);
-                                // Increase state to show less water (+1, not -1)
-                                this.change(room, 1);
+                                // One drink lowers the water level by one state.
+                                this.change(room, -1);
                                 pet.getRoomUnit().clearStatus();
                                 Emulator.getThreading()
                                         .run(new PetClearPosture(pet, RoomUnitStatus.EAT, null, true), 0);
@@ -139,27 +157,17 @@ public class InteractionPetDrink extends InteractionDefault {
         return false;
     }
 
+    /** Fills the bowl to its last (full) state. */
+    private void fill(Room room) {
+        this.change(room, this.getBaseItem().getStateCount() - 1 - this.getWaterLevel());
+    }
+
     private void change(Room room, int amount) {
-        int state = 0;
+        int state = this.getWaterLevel() + amount;
+        int maxState = Math.max(0, this.getBaseItem().getStateCount() - 1);
 
-        if (this.getExtradata() == null || this.getExtradata().isEmpty()) {
-            this.setExtradata("0");
-        }
-
-        try {
-            state = Integer.parseInt(this.getExtradata());
-        } catch (Exception e) {
-            LOGGER.error("Caught exception", e);
-        }
-
-        state += amount;
-        if (state > this.getBaseItem().getStateCount() - 1) {
-            state = this.getBaseItem().getStateCount() - 1;
-        }
-
-        if (state < 0) {
-            state = 0;
-        }
+        if (state > maxState) state = maxState;
+        if (state < 0) state = 0;
 
         this.setExtradata(state + "");
         this.needsUpdate(true);

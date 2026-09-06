@@ -278,6 +278,41 @@ public class PermissionsManager {
         return this.enables.containsKey(effectId) && this.enables.get(effectId) > rank;
     }
 
+    /** CUSTOM: copy of the effect locks (effect id -> minimum rank) for the effects window. */
+    public Int2IntMap getEffectRestrictions() {
+        synchronized (this.enables) {
+            return new Int2IntOpenHashMap(this.enables);
+        }
+    }
+
+    /** CUSTOM: staff locks an effect (minimum rank > 0) or unlocks it (0); persisted in special_enables and applied live. */
+    public boolean setEffectMinRank(int effectId, int minRank) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+            if (minRank <= 0) {
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM special_enables WHERE effect_id = ?")) {
+                    statement.setInt(1, effectId);
+                    statement.execute();
+                }
+            } else {
+                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO special_enables (effect_id, min_rank) VALUES (?, ?) ON DUPLICATE KEY UPDATE min_rank = VALUES(min_rank)")) {
+                    statement.setInt(1, effectId);
+                    statement.setInt(2, minRank);
+                    statement.execute();
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+            return false;
+        }
+
+        synchronized (this.enables) {
+            if (minRank <= 0) this.enables.remove(effectId);
+            else this.enables.put(effectId, minRank);
+        }
+
+        return true;
+    }
+
 
     public boolean hasPermission(Habbo habbo, String permission) {
         return this.hasPermission(habbo, permission, false);

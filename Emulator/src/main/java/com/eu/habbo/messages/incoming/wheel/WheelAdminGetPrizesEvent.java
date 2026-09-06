@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.wheel;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.messages.incoming.MessageHandler;
+import com.eu.habbo.messages.outgoing.wheel.WheelAdminConfigComposer;
 import com.eu.habbo.messages.outgoing.wheel.WheelAdminPrizesComposer;
 
 public class WheelAdminGetPrizesEvent extends MessageHandler {
@@ -20,5 +21,6 @@ public class WheelAdminGetPrizesEvent extends MessageHandler {
 
         this.client.sendResponse(new WheelAdminPrizesComposer(
                 Emulator.getGameEnvironment().getWheelManager().getPrizes()));
+        this.client.sendResponse(new WheelAdminConfigComposer(Emulator.getGameEnvironment().getWheelManager()));
     }
 }

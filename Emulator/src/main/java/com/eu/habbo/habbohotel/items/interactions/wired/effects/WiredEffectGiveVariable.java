@@ -37,7 +37,7 @@ public class WiredEffectGiveVariable extends InteractionWiredEffect {
     private boolean overrideExisting = false;
     private int initialValue = 0;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private final Set<HabboItem> selectedFurni;
 
     public WiredEffectGiveVariable(ResultSet set, Item baseItem) throws SQLException {
@@ -355,7 +355,7 @@ public class WiredEffectGiveVariable extends InteractionWiredEffect {
         this.overrideExisting = false;
         this.initialValue = 0;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.selectedFurni.clear();
         this.setDelay(0);
     }

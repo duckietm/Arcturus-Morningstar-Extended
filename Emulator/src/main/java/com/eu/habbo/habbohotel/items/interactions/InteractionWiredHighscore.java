@@ -3,12 +3,15 @@ package com.eu.habbo.habbohotel.items.interactions;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
+import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameUpCounter;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreClearType;
+import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreManager;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreRow;
 import com.eu.habbo.habbohotel.wired.highscores.WiredHighscoreScoreType;
 import com.eu.habbo.messages.ServerMessage;
@@ -25,6 +28,9 @@ public class InteractionWiredHighscore extends HabboItem {
     public WiredHighscoreClearType clearType;
 
     private List<WiredHighscoreRow> data;
+
+    /** {@link WiredHighscoreManager#getRevision()} the current {@link #data} was built from. */
+    private long loadedRevision = -1L;
 
     public InteractionWiredHighscore(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -100,12 +106,16 @@ public class InteractionWiredHighscore extends HabboItem {
         }
 
         if (client != null && !(objects.length >= 2 && objects[1] instanceof WiredEffectType)) {
-            WiredManager.triggerFurniStateChanged(room, client.getHabbo().getRoomUnit(), this);
+            // dispatched by ToggleFloorItemEvent: WiredManager.triggerFurniStateChanged(room, client.getHabbo().getRoomUnit(), this);
         }
     }
 
     @Override
     public void serializeExtradata(ServerMessage serverMessage) {
+        // Rows are written to the manager first (Game.onEnd / reset effects); re-read them here
+        // whenever that happened since the last render so every update packet carries fresh data.
+        this.reloadIfStale();
+
         serverMessage.appendInt(6);
         serverMessage.appendString(this.getExtradata());
         serverMessage.appendInt(this.scoreType.type);
@@ -140,7 +150,42 @@ public class InteractionWiredHighscore extends HabboItem {
     @Override
     public void onPlace(Room room) {
         this.reloadData();
+        this.warnIfNoGameCanEnd(room);
         super.onPlace(room);
+    }
+
+    /**
+     * A board is only ever written by {@link com.eu.habbo.habbohotel.games.Game#onEnd()}, which is
+     * reached through a game timer. Placed in a room without one it stays empty forever and says
+     * nothing about why, which is indistinguishable from a broken board.
+     */
+    private void warnIfNoGameCanEnd(Room room) {
+        if (canEndAGame(room)) {
+            return;
+        }
+
+        WiredManager.noteUnreachable(
+                room.getId(),
+                "A highscore board only fills when a game ends, and this room has no game timer",
+                this.getBaseItem().getName(),
+                this.getId());
+    }
+
+    /**
+     * Whether anything in the room could bring a game to an end. A room with no timer and no
+     * up-counter can never reach Game.onEnd(), which is the only writer a board has.
+     */
+    static boolean canEndAGame(Room room) {
+        if (room == null || room.getRoomSpecialTypes() == null) {
+            return false;
+        }
+
+        return !room.getRoomSpecialTypes()
+                        .getItemsOfType(InteractionGameTimer.class)
+                        .isEmpty()
+                || !room.getRoomSpecialTypes()
+                        .getItemsOfType(InteractionGameUpCounter.class)
+                        .isEmpty();
     }
 
     @Override
@@ -148,12 +193,35 @@ public class InteractionWiredHighscore extends HabboItem {
         if (this.data != null) {
             this.data.clear();
         }
+        this.loadedRevision = -1L;
     }
 
     public void reloadData() {
-        this.data = Emulator.getGameEnvironment()
-                .getItemManager()
-                .getHighscoreManager()
-                .getHighscoreRowsForItem(this.getId(), this.clearType, this.scoreType);
+        WiredHighscoreManager manager = highscoreManager();
+        if (manager == null) {
+            return;
+        }
+
+        this.data = manager.getHighscoreRowsForItem(this.getId(), this.clearType, this.scoreType);
+        this.loadedRevision = manager.getRevision();
+    }
+
+    private void reloadIfStale() {
+        WiredHighscoreManager manager = highscoreManager();
+        if (manager != null && this.loadedRevision != manager.getRevision()) {
+            this.reloadData();
+        }
+    }
+
+    private static WiredHighscoreManager highscoreManager() {
+        try {
+            if (Emulator.getGameEnvironment() == null || Emulator.getGameEnvironment().getItemManager() == null) {
+                return null;
+            }
+
+            return Emulator.getGameEnvironment().getItemManager().getHighscoreManager();
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 }

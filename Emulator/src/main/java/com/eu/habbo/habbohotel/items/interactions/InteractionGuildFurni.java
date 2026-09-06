@@ -11,13 +11,22 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Guild-customised furni: the renderer tints the layers tagged COLOR1 / COLOR2 with the two colours it receives.
+ *
+ * <p>Besides the classic guild colours this fork supports free custom colours for the recolourable lines
+ * ({@code items_base.customparams} = "colorable"). That storage now lives on {@link com.eu.habbo.habbohotel.users.HabboItem}
+ * so tintable furni with another interaction (gates, rollers, teleports, ...) get colours too  see
+ * {@link FurnitureCustomColors}. Custom colours win over the guild's own colours whenever they are set.
+ */
 public class InteractionGuildFurni extends InteractionDefault {
-    private int guildId;
     private static final Set<String> ROTATION_8_ITEMS = new HashSet<String>() {
         {
             this.add("gld_wall_tall");
         }
     };
+
+    private int guildId;
 
     public InteractionGuildFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -31,18 +40,31 @@ public class InteractionGuildFurni extends InteractionDefault {
 
     @Override
     public int getMaximumRotations() {
-        if (ROTATION_8_ITEMS.stream()
-                .anyMatch(x -> x.equalsIgnoreCase(this.getBaseItem().getName()))) {
+        if (ROTATION_8_ITEMS.stream().anyMatch(x -> x.equalsIgnoreCase(this.getBaseItem().getName()))) {
             return 8;
         }
         return this.getBaseItem().getRotations();
+    }
+
+    /** Guild furni writes the colour block itself below, so the generic path must not duplicate it. */
+    @Override
+    protected boolean writesOwnCustomColors() {
+        return true;
     }
 
     @Override
     public void serializeExtradata(ServerMessage serverMessage) {
         Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(this.guildId);
 
-        if (guild != null) {
+        if (this.hasCustomColors()) {
+            serverMessage.appendInt(2 + (this.isLimited() ? 256 : 0));
+            serverMessage.appendInt(5);
+            serverMessage.appendString(this.getExtradata());
+            serverMessage.appendString(guild != null ? guild.getId() + "" : "0");
+            serverMessage.appendString(guild != null ? guild.getBadge() : "");
+            serverMessage.appendString(this.getCustomColorOne());
+            serverMessage.appendString(this.getCustomColorTwo());
+        } else if (guild != null) {
             serverMessage.appendInt(2 + (this.isLimited() ? 256 : 0));
             serverMessage.appendInt(5);
             serverMessage.appendString(this.getExtradata());

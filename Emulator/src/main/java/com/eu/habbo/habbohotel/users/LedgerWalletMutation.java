@@ -35,12 +35,12 @@ public final class LedgerWalletMutation {
         List<EconomyMutationResult> results = EconomyLedger.executeBatch(operations);
         for (int index = 0; index < operations.size(); index++) {
             EconomyOperation operation = operations.get(index);
-            applyCommitted(habbo, operation.currencyType(), results.get(index).balanceAfter());
+            applyCommitted(habbo, operation.currencyType(), results.get(index).balanceAfterLong());
         }
         return results;
     }
 
-    public static void applyCommitted(Habbo habbo, int currencyType, int balance) {
+    public static void applyCommitted(Habbo habbo, int currencyType, long balance) {
         if (habbo == null) {
             throw new IllegalArgumentException("habbo must not be null");
         }
@@ -49,7 +49,7 @@ public final class LedgerWalletMutation {
                 habbo.getHabboInfo().applyPersistedCredits(balance);
                 return;
             }
-            habbo.getHabboInfo().applyPersistedCurrencyAmount(currencyType, balance);
+            habbo.getHabboInfo().applyPersistedCurrencyAmount(currencyType, Math.toIntExact(balance));
         }
     }
 

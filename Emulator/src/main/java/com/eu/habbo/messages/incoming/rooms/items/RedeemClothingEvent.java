@@ -21,6 +21,11 @@ import org.slf4j.LoggerFactory;
 public class RedeemClothingEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedeemClothingEvent.class);
 
+    // Official Habbo consumes the clothing furniture on redemption; this hotel keeps it as a
+    // display piece, so only the wardrobe grant happens unless the owner opts back in.
+    private static final boolean KEEP_FURNITURE =
+            Emulator.getConfig().getBoolean("hotel.clothing.redeem.keep_furniture", true);
+
     @Override
     public void handle() throws Exception {
         int itemId = this.packet.readInt();
@@ -50,40 +55,42 @@ public class RedeemClothingEvent extends MessageHandler {
                                 return;
                             }
 
-                            item.setRoomId(0);
-                            RoomTile tile = this.client
-                                    .getHabbo()
-                                    .getHabboInfo()
-                                    .getCurrentRoom()
-                                    .getLayout()
-                                    .getTile(item.getX(), item.getY());
-                            if (tile == null) {
-                                return;
-                            }
+                            if (!KEEP_FURNITURE) {
+                                item.setRoomId(0);
+                                RoomTile tile = this.client
+                                        .getHabbo()
+                                        .getHabboInfo()
+                                        .getCurrentRoom()
+                                        .getLayout()
+                                        .getTile(item.getX(), item.getY());
+                                if (tile == null) {
+                                    return;
+                                }
 
-                            this.client
-                                    .getHabbo()
-                                    .getHabboInfo()
-                                    .getCurrentRoom()
-                                    .removeHabboItem(item);
-                            this.client
-                                    .getHabbo()
-                                    .getHabboInfo()
-                                    .getCurrentRoom()
-                                    .updateTile(tile);
-                            this.client
-                                    .getHabbo()
-                                    .getHabboInfo()
-                                    .getCurrentRoom()
-                                    .sendComposer(
-                                            new UpdateStackHeightComposer(tile.x, tile.y, tile.z, tile.relativeHeight())
-                                                    .compose());
-                            this.client
-                                    .getHabbo()
-                                    .getHabboInfo()
-                                    .getCurrentRoom()
-                                    .sendComposer(new RemoveFloorItemComposer(item, true).compose());
-                            Emulator.getThreading().runPersistence(new QueryDeleteHabboItem(item.getId()));
+                                this.client
+                                        .getHabbo()
+                                        .getHabboInfo()
+                                        .getCurrentRoom()
+                                        .removeHabboItem(item);
+                                this.client
+                                        .getHabbo()
+                                        .getHabboInfo()
+                                        .getCurrentRoom()
+                                        .updateTile(tile);
+                                this.client
+                                        .getHabbo()
+                                        .getHabboInfo()
+                                        .getCurrentRoom()
+                                        .sendComposer(
+                                                new UpdateStackHeightComposer(tile.x, tile.y, tile.z, tile.relativeHeight())
+                                                        .compose());
+                                this.client
+                                        .getHabbo()
+                                        .getHabboInfo()
+                                        .getCurrentRoom()
+                                        .sendComposer(new RemoveFloorItemComposer(item, true).compose());
+                                Emulator.getThreading().runPersistence(new QueryDeleteHabboItem(item.getId()));
+                            }
 
                             this.client
                                     .getHabbo()

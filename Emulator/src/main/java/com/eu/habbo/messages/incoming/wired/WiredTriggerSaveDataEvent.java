@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
@@ -20,6 +21,13 @@ public class WiredTriggerSaveDataEvent extends MessageHandler {
         if (room != null) {
             if (room.canModifyWired(this.client.getHabbo())) {
                 InteractionWiredTrigger trigger = room.getRoomSpecialTypes().getTrigger(itemId);
+
+                if (trigger == null) {
+                    HabboItem roomItem = room.getHabboItem(itemId);
+                    if (roomItem instanceof InteractionWiredTrigger wiredTrigger) {
+                        trigger = wiredTrigger;
+                    }
+                }
 
                 if (trigger != null) {
                     WiredSettings settings;

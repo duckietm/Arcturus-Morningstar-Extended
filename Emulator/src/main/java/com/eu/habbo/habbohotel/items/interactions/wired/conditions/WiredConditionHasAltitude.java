@@ -34,7 +34,7 @@ public class WiredConditionHasAltitude extends InteractionWiredCondition {
     private final Set<HabboItem> items;
     private int comparison = COMPARISON_EQUAL;
     private double altitude = 0.0D;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionHasAltitude(ResultSet set, Item baseItem) throws SQLException {
@@ -91,7 +91,7 @@ public class WiredConditionHasAltitude extends InteractionWiredCondition {
         this.items.clear();
         this.comparison = COMPARISON_EQUAL;
         this.altitude = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
 
         String wiredData = set.getString("wired_data");
@@ -137,7 +137,7 @@ public class WiredConditionHasAltitude extends InteractionWiredCondition {
         this.items.clear();
         this.comparison = COMPARISON_EQUAL;
         this.altitude = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
     }
 

@@ -25,7 +25,7 @@ public class ActionPlay extends PetAction {
         LOGGER.info("[ActionPlay] apply() called for pet: {}", pet.getName());
         
         // Check if pet has enough energy to play
-        if (pet.getEnergy() < 25) {
+        if (pet.getEnergyPercent() < 25) {
             LOGGER.info("[ActionPlay] Pet too tired, energy: {}", pet.getEnergy());
             pet.say(pet.getPetData().randomVocal(PetVocalsType.TIRED));
             return false;

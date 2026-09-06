@@ -21,7 +21,7 @@ public class ItemsDataUpdateComposer extends MessageComposer {
 
         for (HabboItem item : this.items) {
             this.response.appendInt(item.getId());
-            item.serializeExtradata(this.response);
+            item.serializeItemData(this.response);
         }
 
         return this.response;

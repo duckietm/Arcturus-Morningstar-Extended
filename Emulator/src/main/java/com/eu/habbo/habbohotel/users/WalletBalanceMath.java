@@ -1,7 +1,8 @@
 package com.eu.habbo.habbohotel.users;
 
 /**
- * Checked arithmetic for balances persisted in signed INT columns.
+ * Checked arithmetic for wallet balances. Credits use signed BIGINT storage;
+ * activity-point currencies retain their legacy signed INT storage.
  */
 public final class WalletBalanceMath {
     private WalletBalanceMath() {
@@ -20,7 +21,31 @@ public final class WalletBalanceMath {
         return (int) updated;
     }
 
+    public static long checkedBalance(long currentBalance, long delta) {
+        if (currentBalance < 0) {
+            throw new IllegalArgumentException("current balance must not be negative");
+        }
+
+        final long updated;
+        try {
+            updated = Math.addExact(currentBalance, delta);
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException("wallet update exceeds the supported balance range", exception);
+        }
+        if (updated < 0) {
+            throw new IllegalArgumentException("wallet update exceeds the supported balance range");
+        }
+        return updated;
+    }
+
     public static int requireValidBalance(int balance) {
+        if (balance < 0) {
+            throw new IllegalArgumentException("balance must not be negative");
+        }
+        return balance;
+    }
+
+    public static long requireValidBalance(long balance) {
         if (balance < 0) {
             throw new IllegalArgumentException("balance must not be negative");
         }
@@ -45,5 +70,16 @@ public final class WalletBalanceMath {
             return Integer.MAX_VALUE;
         }
         return (int) updated;
+    }
+
+
+    public static long clampedBalance(long currentBalance, long delta) {
+        long normalized = Math.max(0L, currentBalance);
+        try {
+            long updated = Math.addExact(normalized, delta);
+            return Math.max(0L, updated);
+        } catch (ArithmeticException exception) {
+            return delta < 0 ? 0L : Long.MAX_VALUE;
+        }
     }
 }

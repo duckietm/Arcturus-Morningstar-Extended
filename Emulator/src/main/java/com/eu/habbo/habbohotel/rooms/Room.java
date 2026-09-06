@@ -98,8 +98,10 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
             | WIRED_ACCESS_GROUP_ADMINS;
     public static final int WIRED_ACCESS_ALLOWED_MODIFY_MASK =
             WIRED_ACCESS_USERS_WITH_RIGHTS | WIRED_ACCESS_GROUP_MEMBERS | WIRED_ACCESS_GROUP_ADMINS;
-    public static final int WIRED_ACCESS_DEFAULT_INSPECT_MASK = 0;
-    public static final int WIRED_ACCESS_DEFAULT_MODIFY_MASK = 0;
+    // Default for a room that never saved its own wired access: whoever holds rights in the room may open AND edit
+    // the wired boxes (the owner always can). A room that saved a mask keeps exactly what it saved.
+    public static final int WIRED_ACCESS_DEFAULT_MODIFY_MASK = WIRED_ACCESS_USERS_WITH_RIGHTS;
+    public static final int WIRED_ACCESS_DEFAULT_INSPECT_MASK = WIRED_ACCESS_USERS_WITH_RIGHTS;
 
     static {
         for (int i = 1; i <= 3; i++) {
@@ -183,6 +185,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     private int banOption;
     private int pollId;
     private int tradeMode;
+    private boolean pullEnabled;
+    private boolean pushEnabled;
     private boolean moveDiagonally;
     private boolean allowUnderpass;
     private boolean muteAllPets;
@@ -193,6 +197,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     private int idleAutokickTimeoutSeconds;
     private boolean jukeboxActive;
     private boolean hideWired;
+    private volatile boolean wiredHidden;
     private boolean buildersClubTrialLocked;
     private RoomState buildersClubOriginalState;
     private volatile boolean needsUpdate;
@@ -337,6 +342,8 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
         RoomSnapshot snapshot = RoomSnapshot.complete(initial, set);
         this.tradeMode = snapshot.postBanLoad().tradeMode();
+        this.pullEnabled = snapshot.postBanLoad().pullEnabled();
+        this.pushEnabled = snapshot.postBanLoad().pushEnabled();
         this.moveDiagonally = snapshot.postBanLoad().moveDiagonally();
         this.allowUnderpass = snapshot.postBanLoad().allowUnderpass();
         this.muteAllPets = snapshot.postBanLoad().muteAllPets();
@@ -669,7 +676,17 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public void pickUpItem(HabboItem item, Habbo picker) {
+        java.util.Set<RoomTile> footprint = null;
+        double previousZ = item != null ? item.getZ() : 0.0D;
+        if (item != null && this.getLayout() != null && item.getBaseItem() != null) {
+            RoomTile base = this.getLayout().getTile(item.getX(), item.getY());
+            if (base != null) {
+                footprint = this.getLayout().getTilesAt(base, item);
+            }
+        }
         this.itemManager.pickUpItem(item, picker);
+        // Furniture that was stacked on the picked-up item drops to the new stack height.
+        if (footprint != null) RoomAutoStackSupport.settleAbove(this, footprint, previousZ, item);
     }
 
     public void updateHabbosAt(Rectangle rectangle) {
@@ -761,6 +778,11 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
                 } catch (Exception e) {
                     LOGGER.error("Caught exception", e);
                 }
+
+                // Persist dirty furniture continuously instead of waiting for room
+                // disposal. A forced emulator restart cannot execute disposal and
+                // previously lost every state that was still only held in memory.
+                this.itemManager.saveAllPendingItems();
             }
 
             this.save();
@@ -1023,6 +1045,24 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         this.tradeMode = tradeMode;
     }
 
+    public boolean isPullEnabled() {
+        return this.pullEnabled;
+    }
+
+    public void setPullEnabled(boolean pullEnabled) {
+        this.pullEnabled = pullEnabled;
+        this.needsUpdate = true;
+    }
+
+    public boolean isPushEnabled() {
+        return this.pushEnabled;
+    }
+
+    public void setPushEnabled(boolean pushEnabled) {
+        this.pushEnabled = pushEnabled;
+        this.needsUpdate = true;
+    }
+
     public boolean moveDiagonally() {
         return this.moveDiagonally;
     }
@@ -1283,7 +1323,7 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
     }
 
     public String[] filterAnything() {
-        return new String[] {this.getOwnerName(), this.getGuildName(), this.getDescription(), this.getPromotionDesc()};
+        return new String[] {this.getName(), this.getOwnerName(), this.getTags(), this.getGuildName(), this.getDescription(), this.getPromotionDesc()};
     }
 
     public long getCycleTimestamp() {
@@ -1963,6 +2003,14 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
         this.itemManager.ejectAll(habbo);
     }
 
+    /**
+     * Picks every removable room item up into the inventory of the Habbo who
+     * executed the command, regardless of the item's former owner.
+     */
+    public void pickAllTo(Habbo habbo) {
+        this.itemManager.pickAllTo(habbo);
+    }
+
     public void refreshGuild(Guild guild) {
         this.guildService.refresh(guild);
     }
@@ -2042,6 +2090,25 @@ public class Room implements Comparable<Room>, ISerialize, Runnable {
 
     void updateHideWiredState(boolean hideWired) {
         this.hideWired = hideWired;
+    }
+
+    /**
+     * Whether wired is invisible right now: the room's own :hidewired flag, or a conf_hidewired
+     * controller switched on. Hidden wired is transparent to the tile maths too, so a hidden box
+     * neither blocks its tile nor lifts whoever walks over it. Cached, because the tile maths asks
+     * once per tile and resolving the controller walks every floor item.
+     */
+    public boolean isWiredHidden() {
+        return this.wiredHidden;
+    }
+
+    void setWiredHiddenFlag(boolean wiredHidden) {
+        this.wiredHidden = wiredHidden;
+    }
+
+    /** Brings wired visuals and tile collision back in line with whatever hides wired here. */
+    public void refreshWiredHidden() {
+        this.wiredVisibility.refresh();
     }
 
     public FurnitureMovementError canPlaceFurnitureAt(HabboItem item, Habbo habbo, RoomTile tile, int rotation) {

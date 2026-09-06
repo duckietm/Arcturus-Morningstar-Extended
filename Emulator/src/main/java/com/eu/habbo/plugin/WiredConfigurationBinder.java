@@ -3,6 +3,7 @@ package com.eu.habbo.plugin;
 import com.eu.habbo.core.ConfigurationManager;
 import com.eu.habbo.core.config.ConfigurationBinder;
 import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendSignal;
+import com.eu.habbo.habbohotel.wired.WiredHandler;
 import com.eu.habbo.habbohotel.wired.core.WiredEngine;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 
@@ -15,8 +16,11 @@ final class WiredConfigurationBinder extends ConfigurationBinder {
     void bind() {
         this.apply(
                 "hotel.wired.furni.selection.count",
-                () -> WiredManager.MAXIMUM_FURNI_SELECTION =
-                        this.configuration.getInt("hotel.wired.furni.selection.count"));
+                () -> {
+                    int selectionCount = this.configuration.getInt("hotel.wired.furni.selection.count", 50);
+                    WiredManager.MAXIMUM_FURNI_SELECTION = selectionCount;
+                    WiredHandler.MAXIMUM_FURNI_SELECTION = selectionCount;
+                });
         this.apply(
                 "wired.effect.teleport.delay",
                 () -> WiredManager.TELEPORT_DELAY = this.configuration.getInt("wired.effect.teleport.delay", 500));

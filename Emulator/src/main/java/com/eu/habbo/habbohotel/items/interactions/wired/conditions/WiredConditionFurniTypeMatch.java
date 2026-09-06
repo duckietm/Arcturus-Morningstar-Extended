@@ -32,7 +32,7 @@ public class WiredConditionFurniTypeMatch extends InteractionWiredCondition {
 
     protected Set<HabboItem> items = new LinkedHashSet<>();
     protected Set<HabboItem> secondaryItems = new LinkedHashSet<>();
-    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     protected int compareFurniSource = WiredSourceUtil.SOURCE_TRIGGER;
     protected int quantifier = QUANTIFIER_ALL;
 
@@ -49,7 +49,7 @@ public class WiredConditionFurniTypeMatch extends InteractionWiredCondition {
     public void onPickUp() {
         this.items.clear();
         this.secondaryItems.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.compareFurniSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.quantifier = QUANTIFIER_ALL;
     }

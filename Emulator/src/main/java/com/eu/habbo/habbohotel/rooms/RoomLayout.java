@@ -1,6 +1,8 @@
 package com.eu.habbo.habbohotel.rooms;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.items.FurniFootprint;
+import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.rooms.pathfinding.Pathfinder;
 import com.eu.habbo.habbohotel.rooms.pathfinding.impl.PathfinderImpl;
 import java.awt.Rectangle;
@@ -426,6 +428,34 @@ public class RoomLayout {
         return availableTiles;
     }
 
+    /**
+     * Whether a furni fits, honouring the footprint's anchor.
+     *
+     * The width x length overload below walks a rectangle from the placement tile outwards, which
+     * is wrong for a shape anchored off its own tile: it checked tiles the furni does not use and
+     * missed the ones it does, so an anchored furni could not be turned anywhere near a wall. A
+     * custom footprint is therefore checked against the tiles it really occupies.
+     */
+    public boolean fitsOnMap(RoomTile tile, Item baseItem, int rotation) {
+        if (tile == null || baseItem == null) {
+            return true;
+        }
+
+        if (!baseItem.getFootprint().isCustom()) {
+            return this.fitsOnMap(tile, baseItem.getWidth(), baseItem.getLength(), rotation);
+        }
+
+        for (int[] offset : baseItem.getFootprint().offsetsFor(rotation)) {
+            RoomTile occupied = this.getTile((short) (tile.x + offset[0]), (short) (tile.y + offset[1]));
+
+            if (occupied == null || occupied.getState() == RoomTileState.INVALID) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public boolean fitsOnMap(RoomTile tile, int width, int length, int rotation) {
         if (tile != null) {
             if (rotation == 0 || rotation == 4) {
@@ -457,6 +487,48 @@ public class RoomLayout {
         }
 
         return true;
+    }
+
+    /**
+     * The tiles {@code item} occupies, standing on {@code tile} at its current rotation.
+     *
+     * <p>Prefer this over the width/length overload wherever the question is "which tiles is this furni on":
+     * it honours a custom footprint, so an L-shaped sofa blocks and seats an L rather than the rectangle
+     * that encloses it.
+     */
+    public Set<RoomTile> getTilesAt(RoomTile tile, com.eu.habbo.habbohotel.users.HabboItem item) {
+        if (item == null) return new HashSet<>(0);
+
+        return this.getTilesAt(tile, item.getBaseItem(), item.getRotation());
+    }
+
+    /** As above, for a rotation the furni has not been turned to yet - placement and movement previews. */
+    public Set<RoomTile> getTilesAt(RoomTile tile, Item baseItem, int rotation) {
+        if (baseItem == null) return new HashSet<>(0);
+
+        FurniFootprint footprint = baseItem.getFootprint();
+
+        if (!footprint.isCustom()) {
+            return this.getTilesAt(tile, baseItem.getWidth(), baseItem.getLength(), rotation);
+        }
+
+        Set<RoomTile> pointList = new HashSet<>();
+
+        if (tile == null) return pointList;
+
+        // Odd rotations have always collapsed to the anchor tile; a custom shape does not change that.
+        if (rotation % 2 != 0) {
+            RoomTile anchor = this.getTile(tile.x, tile.y);
+            if (anchor != null) pointList.add(anchor);
+            return pointList;
+        }
+
+        for (int[] offset : footprint.offsetsFor(rotation)) {
+            RoomTile occupied = this.getTile((short) (tile.x + offset[0]), (short) (tile.y + offset[1]));
+            if (occupied != null) pointList.add(occupied);
+        }
+
+        return pointList;
     }
 
     public Set<RoomTile> getTilesAt(RoomTile tile, int width, int length, int rotation) {

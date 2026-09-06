@@ -29,7 +29,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     public static final WiredEffectType type = WiredEffectType.CALL_STACKS;
 
     protected Set<HabboItem> items;
-    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectTriggerStacks(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -94,7 +94,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_SELECTED;
 
         int itemsCount = settings.getFurniIds().length;
 
@@ -219,7 +219,7 @@ public class WiredEffectTriggerStacks extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 

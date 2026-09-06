@@ -41,7 +41,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
     private final Set<HabboItem> items = new LinkedHashSet<>(WiredManager.MAXIMUM_FURNI_SELECTION / 2);
     private int direction;
     private int rotation;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     // Use thread-safe set for cooldowns since execute() can be called from async threads
     private final Set<HabboItem> itemCooldowns = ConcurrentHashMap.newKeySet();
     // Pre-selected directions from simulation (itemId -> direction)
@@ -107,6 +107,9 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
             }
 
             boolean slideAnimation = item.getRotation() == newRotation;
+            if (slideAnimation && room.getWiredRuntime().isFurnitureMoving(item)) {
+                continue;
+            }
 
             FurnitureMovementError furniMoveTest =
                     WiredMoveCarryHelper.getMovementError(room, this, item, newLocation, newRotation, ctx);
@@ -272,7 +275,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         this.direction = 0;
         this.rotation = 0;
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 
@@ -328,7 +331,7 @@ public class WiredEffectMoveRotateFurni extends InteractionWiredEffect implement
         this.furniSource = settings.getIntParams()[2];
 
         int count = settings.getFurniIds().length;
-        if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count", 5)) return false;
+        if (count > Emulator.getConfig().getInt("hotel.wired.furni.selection.count", 50)) return false;
 
         if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
             this.furniSource = WiredSourceUtil.SOURCE_SELECTED;

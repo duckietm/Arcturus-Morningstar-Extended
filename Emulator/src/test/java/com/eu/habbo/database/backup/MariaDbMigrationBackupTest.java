@@ -58,7 +58,9 @@ class MariaDbMigrationBackupTest {
         String command = String.join(" ", commands.getFirst());
         assertFalse(command.contains("very-secret-password"));
         assertTrue(commands.getFirst().get(1).startsWith("--defaults-extra-file="));
-        assertTrue(command.contains("--lock-all-tables"));
+        assertTrue(command.contains("--single-transaction"));
+        assertTrue(command.contains("--skip-lock-tables"));
+        assertFalse(command.contains("--lock-all-tables"));
         assertTrue(command.contains("--routines"));
         assertTrue(command.contains("--events"));
         assertTrue(command.contains("--triggers"));

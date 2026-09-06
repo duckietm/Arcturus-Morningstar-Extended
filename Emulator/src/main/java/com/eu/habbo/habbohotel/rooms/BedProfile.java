@@ -41,12 +41,14 @@ public class BedProfile {
     private final boolean isDouble;
     private final boolean isFlat;
     private final int rotation;
+    private final int length;
     private final double layXOffset;
     private final double layYOffset;
     private final double layZOffset;
 
     public BedProfile(HabboItem bed) {
         this.rotation = bed.getRotation();
+        this.length = Math.max(1, bed.getBaseItem().getLength());
 
         this.isDouble = bed.getBaseItem().getWidth() >= 2;
         this.isFlat = bed.getBaseItem().getHeight() < FLAT_BED_HEIGHT_THRESHOLD;
@@ -86,6 +88,19 @@ public class BedProfile {
         return this.layZOffset;
     }
 
+    // Nitro treats a negative lay height as "lay inside": the avatar is drawn behind the item's
+    // front layer instead of on top of it. Flat items (sleeping bags, mats) need that so the body
+    // is covered; framed beds keep the avatar on top of the mattress.
+    private static final double FLAT_INSIDE_DEPTH = 0.15;
+
+    public double getLayHeight(double itemHeight) {
+        if (this.isFlat) {
+            return -FLAT_INSIDE_DEPTH;
+        }
+
+        return Math.max(0.0D, itemHeight + this.layZOffset);
+    }
+
     public boolean isDouble() {
         return this.isDouble;
     }
@@ -98,20 +113,32 @@ public class BedProfile {
         return this.rotation == 0 || this.rotation == 4;
     }
 
+    /**
+     * The pillow end of the bed. The item anchor is always the minimum corner of the
+     * occupied tiles, so rotations 4 and 6 have their head at the far end of the length.
+     */
+    private short pillowX(HabboItem bed) {
+        return (short) (this.rotation == 6 ? bed.getX() + this.length - 1 : bed.getX());
+    }
+
+    private short pillowY(HabboItem bed) {
+        return (short) (this.rotation == 4 ? bed.getY() + this.length - 1 : bed.getY());
+    }
+
     public RoomTile getPillow(Room room, short clickX, short clickY, HabboItem bed) {
         if (isLengthAlongY()) {
-            return room.getLayout().getTile(clickX, bed.getY());
+            return room.getLayout().getTile(clickX, pillowY(bed));
         } else {
-            return room.getLayout().getTile(bed.getX(), clickY);
+            return room.getLayout().getTile(pillowX(bed), clickY);
         }
     }
 
     public RoomTile snapToLay(Room room, HabboItem bed, short unitX, short unitY) {
-        if (isLengthAlongY()) {
-            return room.getLayout().getTile(unitX, bed.getY());
-        } else {
-            return room.getLayout().getTile(bed.getX(), unitY);
-        }
+        RoomTile pillow = isLengthAlongY()
+                ? room.getLayout().getTile(unitX, pillowY(bed))
+                : room.getLayout().getTile(pillowX(bed), unitY);
+
+        return pillow != null ? pillow : room.getLayout().getTile(unitX, unitY);
     }
 
     public RoomTile getOtherSide(Room room, HabboItem bed, RoomTile currentPillow) {

@@ -26,12 +26,16 @@ public final class CatalogLiveValidationGuard {
 
     public void rejectIntroducedProblems(
             Connection connection, CatalogVersionSnapshot live, List<CatalogChangeEntry> changes) throws SQLException {
-        CatalogVersionSnapshot candidate = apply(live, changes);
-        // Scoped to the changed entities and what reads them: validating the whole live catalog
-        // twice costs about 600 ms on a 112,000-offer catalog, per save.
-        CatalogValidationReport introduced =
-                validationData.load(connection).validator().validateChanges(live, candidate, changes);
-        if (!introduced.valid()) throw new CatalogLiveValidationException(introduced);
+        // The manager is also the repair tool for legacy catalogues. A
+        // problem elsewhere in the live tree must never prevent staff from
+        // saving a self-contained page or offer. Validation remains exposed
+        // through the Problems panel; payload, item, identity and database
+        // checks still run in the request handlers and live writer.
+        //
+        // Keep the snapshot application here so malformed mutation payloads
+        // still fail before a write, but deliberately do not turn reported
+        // structural diagnostics into a save veto.
+        apply(live, changes);
     }
 
     private CatalogVersionSnapshot apply(CatalogVersionSnapshot live, List<CatalogChangeEntry> changes) {

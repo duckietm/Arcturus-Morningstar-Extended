@@ -35,7 +35,7 @@ public class WiredEffectRemoveVariable extends InteractionWiredEffect {
     private int variableItemId = 0;
     private int targetType = TARGET_USER;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private final Set<HabboItem> selectedFurni;
 
     public WiredEffectRemoveVariable(ResultSet set, Item baseItem) throws SQLException {
@@ -319,7 +319,7 @@ public class WiredEffectRemoveVariable extends InteractionWiredEffect {
         this.variableItemId = 0;
         this.targetType = TARGET_USER;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.selectedFurni.clear();
         this.setDelay(0);
     }

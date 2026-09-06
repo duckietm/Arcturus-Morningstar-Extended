@@ -55,7 +55,7 @@ public class ButlerBot extends Bot {
                 for (String key : keys) {
                     if (key != null && !key.trim().isEmpty()) {
                         try {
-                            Pattern pattern = Pattern.compile("\\b" + Pattern.quote(key.toLowerCase()) + "\\b");
+                            Pattern pattern = Pattern.compile("\\b" + Pattern.quote(foldKey(key)) + "\\b");
                             serveItemsCompiled.put(pattern, set.getInt("item"));
                         } catch (Exception e) {
                             LOGGER.error("Failed to compile butler bot keyword pattern: {}", key, e);
@@ -66,6 +66,11 @@ public class ButlerBot extends Bot {
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         }
+    }
+
+    /** Lower-case, accent-stripped, so "caffè" and "caffe" are the same key. */
+    private static String foldKey(String key) {
+        return java.text.Normalizer.normalize(key.trim().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
     }
 
     public static void dispose() {
@@ -84,10 +89,10 @@ public class ButlerBot extends Bot {
         if (distanceBetweenBotAndHabbo <= Emulator.getConfig().getInt("hotel.bot.butler.commanddistance")) {
 
             if (message.getUnfilteredMessage() != null) {
-                String unfilteredLower = message.getUnfilteredMessage().toLowerCase();
+                String unfilteredLower = java.text.Normalizer.normalize(message.getUnfilteredMessage().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
                 for (Map.Entry<Pattern, Integer> entry : serveItemsCompiled.entrySet()) {
                     Pattern pattern = entry.getKey();
-                    if (pattern.matcher(unfilteredLower).matches()) {
+                    if (pattern.matcher(unfilteredLower).find()) {
                         int itemId = entry.getValue();
                         String keyword = pattern.pattern().replace("\\b", "").replace("\\Q", "").replace("\\E", "");
 

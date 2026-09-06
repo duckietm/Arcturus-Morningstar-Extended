@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.friends;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.commands.BssCommandPreferences;
 import com.eu.habbo.habbohotel.messenger.Message;
 import com.eu.habbo.habbohotel.messenger.MessengerBuddy;
 import com.eu.habbo.habbohotel.messenger.history.MessengerHistoryServices;
@@ -26,9 +27,16 @@ public final class SendMessengerMessageEvent extends MessageHandler {
         try {
             if (!client.getHabbo().getHabboStats().allowTalk()) throw new IllegalStateException("muted");
             if (!FriendInputGuard.isValidMessageTarget(conversationId, recipientId)) throw new IllegalArgumentException("invalid message target");
+            if (conversationId > 0
+                    && !BssCommandPreferences.isEnabled(senderId, BssCommandPreferences.Flag.GROUP_CHAT_ENABLED)) {
+                throw new SecurityException("group chat disabled");
+            }
             if (conversationId <= 0) {
                 MessengerBuddy buddy = client.getHabbo().getMessenger().getFriend(recipientId);
                 if (buddy == null) throw new SecurityException("not friends");
+                if (BssCommandPreferences.isEnabled(recipientId, BssCommandPreferences.Flag.DO_NOT_DISTURB)) {
+                    throw new SecurityException("recipient dnd");
+                }
             }
             MessengerHistoryService history = MessengerHistoryServices.create();
             MessengerStoredMessage stored = history.sendMessage(conversationId, senderId, recipientId, type, message, metadata);
@@ -41,6 +49,9 @@ public final class SendMessengerMessageEvent extends MessageHandler {
             } else {
                 for (int memberId : history.listActiveMemberIds(conversationId, senderId)) {
                     if (memberId == senderId) continue;
+                    if (BssCommandPreferences.isEnabled(memberId, BssCommandPreferences.Flag.DO_NOT_DISTURB)
+                            || !BssCommandPreferences.isEnabled(
+                                    memberId, BssCommandPreferences.Flag.GROUP_CHAT_ENABLED)) continue;
                     Habbo member = Emulator.getGameEnvironment().getHabboManager().getHabbo(memberId);
                     if (member != null && member.getClient() != null) member.getClient().sendResponse(new MessengerMessageComposer(stored));
                 }

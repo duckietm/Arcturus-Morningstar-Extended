@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
     protected final List<HabboItem> items = new ArrayList<>();
-    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectUserFurniBase(ResultSet set, Item baseItem) throws SQLException {
@@ -222,7 +222,7 @@ public abstract class WiredEffectUserFurniBase extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.setDelay(0);
     }

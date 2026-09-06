@@ -274,7 +274,7 @@ public class RoomTrade {
         return Emulator.getPluginManager().fireEvent(event).isCancelled() ? 0 : Math.max(0, event.credits);
     }
 
-    private static void applyCommittedCreditBalance(Habbo habbo, Integer committedBalance) {
+    private static void applyCommittedCreditBalance(Habbo habbo, Long committedBalance) {
         if (committedBalance == null) return;
         LedgerWalletMutation.applyCommitted(
                 habbo, com.eu.habbo.habbohotel.economy.EconomyLedger.CREDITS, committedBalance);
@@ -389,7 +389,8 @@ public class RoomTrade {
     }
 
     private static void checkedRecipientBalance(RoomTradeUser recipient, int incomingCredits) {
-        checkedAddCreditValue(recipient.getHabbo().getHabboInfo().getCredits(), incomingCredits);
+        com.eu.habbo.habbohotel.users.WalletBalanceMath.checkedBalance(
+                recipient.getHabbo().getHabboInfo().getCreditsLong(), incomingCredits);
     }
 
     public static int getCreditsByItem(HabboItem item) {

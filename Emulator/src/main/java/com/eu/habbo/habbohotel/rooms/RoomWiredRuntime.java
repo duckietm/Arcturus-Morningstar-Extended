@@ -4,11 +4,15 @@ import com.eu.habbo.habbohotel.items.interactions.wired.chest.WiredTradingManage
 import com.eu.habbo.habbohotel.users.HabboItem;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Room-owned WIRED runtime state. */
 public final class RoomWiredRuntime {
     private final AtomicLong cacheGeneration = new AtomicLong();
+    /** Item id -> wall-clock millis until which the client is still playing that item's slide. */
+    private final Map<Integer, Long> animatingUntil = new ConcurrentHashMap<>();
     private final WiredGravityService gravity;
     private final WiredOpacityService opacity;
     private final WiredTradingManager trading;
@@ -41,7 +45,33 @@ public final class RoomWiredRuntime {
     }
 
     public void markFurnitureMoving(HabboItem item, int durationMs) {
+        if (item != null) {
+            this.animatingUntil.merge(
+                    item.getId(), System.currentTimeMillis() + Math.max(1, durationMs), Math::max);
+        }
         this.gravity.markMoving(item, durationMs);
+    }
+
+    /**
+     * Whether a wired slide sent for this item is still playing on clients. A move issued before that
+     * slide ends makes the client restart the animation from wherever it got to, so a repeater faster
+     * than the animation time turned every step into a stutter. The gravity service only tracks items
+     * it manages, so this is kept for every item; the step-style move effects skip an item while this
+     * is true and pick it up on the next trigger.
+     */
+    public boolean isFurnitureMoving(HabboItem item) {
+        if (item == null) {
+            return false;
+        }
+        Long until = this.animatingUntil.get(item.getId());
+        if (until == null) {
+            return false;
+        }
+        if (until > System.currentTimeMillis()) {
+            return true;
+        }
+        this.animatingUntil.remove(item.getId(), until);
+        return false;
     }
 
     void onFurnitureTopologyChanged() {
@@ -50,6 +80,9 @@ public final class RoomWiredRuntime {
     }
 
     void forgetGravity(HabboItem item) {
+        if (item != null) {
+            this.animatingUntil.remove(item.getId());
+        }
         this.gravity.forget(item);
     }
 
@@ -104,6 +137,7 @@ public final class RoomWiredRuntime {
     }
 
     void dispose() {
+        this.animatingUntil.clear();
         this.gravity.dispose();
         this.opacity.dispose();
         // Every open negotiation is holding somebody's furniture out of their inventory. Letting the

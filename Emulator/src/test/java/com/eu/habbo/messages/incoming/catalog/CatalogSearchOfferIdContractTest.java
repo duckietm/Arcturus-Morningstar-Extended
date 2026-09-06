@@ -13,17 +13,17 @@ class CatalogSearchOfferIdContractTest {
     }
 
     @Test
-    void catalogItemsExposeStableSearchOfferIdWhenDatabaseOfferIdIsMissing() throws Exception {
+    void catalogItemsUseTheUniqueSerializedCatalogItemIdForSearch() throws Exception {
         String source = source("src/main/java/com/eu/habbo/habbohotel/catalog/CatalogItem.java");
 
         int method = source.indexOf("public int getSearchOfferId()");
-        int rawGuard = source.indexOf("this.offerId > 0", method);
-        int fallback = source.indexOf("return haveOffer(this) ? this.id : -1", rawGuard);
+        int canonicalId = source.indexOf("return this.id", method);
 
         assertTrue(method > -1, "CatalogItem should expose a search-safe offer id");
-        assertTrue(rawGuard > method, "CatalogItem should preserve valid positive database offer ids");
-        assertTrue(fallback > rawGuard,
-                "CatalogItem should fall back to catalog item id when offer_id is missing but the item can be offered");
+        assertTrue(canonicalId > method,
+                "Catalog search must use the unique id Nitro receives instead of the non-unique legacy offer_id");
+        assertTrue(!source.substring(method, canonicalId).contains("this.offerId"),
+                "Legacy offer_id must not select a different product during lazy search activation");
     }
 
     @Test

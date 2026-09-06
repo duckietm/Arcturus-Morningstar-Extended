@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AboutCommand extends Command {
     public AboutCommand() {
-        super(null, new String[] {"about", "info", "online", "server"});
+        super(null, new String[] {"about", "info", "server", "stats", "informazioni"});
     }
 
     public static final String NITRO_INFO_SENTINEL = "[NITRO_INFO_V1]";

@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class InteractionDice extends HabboItem {
+    private volatile long rolledAt;
     public InteractionDice(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
         super(id, userId, item, extradata, limitedStack, limitedSells);
     }
@@ -89,6 +90,16 @@ public class InteractionDice extends HabboItem {
 
     @Override
     public boolean isUsable() {
+        return true;
+    }
+
+    public void markRolled() {
+        this.rolledAt = System.currentTimeMillis();
+    }
+
+    public boolean canCloseManually() {
+        // The roll animation window is already protected by the "-1" state check in
+        // CloseDiceEvent; a corner click after the face is shown must close immediately.
         return true;
     }
 }

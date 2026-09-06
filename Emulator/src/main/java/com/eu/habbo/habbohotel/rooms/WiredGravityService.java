@@ -281,8 +281,7 @@ final class WiredGravityService {
                 continue;
             }
             Set<WiredGravityPlanner.TilePosition> footprint = new LinkedHashSet<>();
-            for (RoomTile tile : layout.getTilesAt(
-                    origin, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation())) {
+            for (RoomTile tile : layout.getTilesAt(origin, item)) {
                 if (tile == null || tile.state == RoomTileState.INVALID) {
                     footprint.clear();
                     break;
@@ -312,8 +311,7 @@ final class WiredGravityService {
 
         List<RiderSnapshot> riders = new ArrayList<>();
         Set<Integer> seen = new HashSet<>();
-        for (RoomTile tile : layout.getTilesAt(
-                origin, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), item.getRotation())) {
+        for (RoomTile tile : layout.getTilesAt(origin, item)) {
             for (RoomUnit unit : room.getRoomUnits(tile)) {
                 if (unit != null
                         && unit.isInRoom()

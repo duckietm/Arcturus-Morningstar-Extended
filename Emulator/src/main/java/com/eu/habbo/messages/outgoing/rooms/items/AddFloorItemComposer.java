@@ -26,7 +26,7 @@ public class AddFloorItemComposer extends MessageComposer {
                     ? ((InteractionMusicDisc) this.item).getSongId()
                     : (this.item instanceof InteractionStackWalkHelper ? 2147483001 : 1))
         );
-        this.item.serializeExtradata(this.response);
+        this.item.serializeItemData(this.response);
         this.response.appendInt(-1);
         this.response.appendInt(this.item instanceof InteractionTeleport || this.item instanceof InteractionSwitch || this.item instanceof InteractionSwitchRemoteControl || this.item instanceof InteractionVendingMachine || this.item instanceof InteractionInformationTerminal || this.item instanceof InteractionPostIt|| this.item instanceof InteractionPuzzleBox ? 2 : this.item.isUsable() ? 1 : 0);
         this.response.appendInt(this.item.getUserId());

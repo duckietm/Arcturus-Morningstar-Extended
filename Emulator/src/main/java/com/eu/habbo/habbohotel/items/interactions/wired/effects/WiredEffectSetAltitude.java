@@ -37,7 +37,7 @@ public class WiredEffectSetAltitude extends InteractionWiredEffect {
     private final List<HabboItem> items = new ArrayList<>();
     private int operator = OPERATOR_SET;
     private double altitude = 0.0D;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectSetAltitude(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -121,7 +121,7 @@ public class WiredEffectSetAltitude extends InteractionWiredEffect {
 
         this.operator = OPERATOR_SET;
         this.altitude = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 
@@ -130,7 +130,7 @@ public class WiredEffectSetAltitude extends InteractionWiredEffect {
         this.items.clear();
         this.operator = OPERATOR_SET;
         this.altitude = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 

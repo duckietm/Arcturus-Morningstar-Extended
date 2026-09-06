@@ -7,12 +7,14 @@ import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.incoming.MessageHandler;
 
 public class MannequinSaveLookEvent extends MessageHandler {
+    private static final String[] CLOTHING_PART_TYPES = {"ch", "cc", "lg", "sh", "wa", "ca"};
+
     @Override
     public void handle() throws Exception {
         Habbo habbo = this.client.getHabbo();
         Room room = habbo.getHabboInfo().getCurrentRoom();
 
-        if (room == null || !room.isOwner(habbo))
+        if (room == null || !room.hasRights(habbo))
             return;
 
         int itemId = this.packet.readInt();
@@ -23,13 +25,12 @@ public class MannequinSaveLookEvent extends MessageHandler {
         if (item == null)
             return;
 
-        String[] data = item.getExtradata().split(":");
-        // Extract only clothing parts, excluding head/face features (hr, hd, he, ea, ha, fa)
+        String[] data = item.getExtradata().split(":", 3);
 
         StringBuilder look = new StringBuilder();
 
         for (String s : habbo.getHabboInfo().getLook().split("\\.")) {
-            if (!s.contains("hr") && !s.contains("hd") && !s.contains("he") && !s.contains("ea") && !s.contains("ha") && !s.contains("fa")) {
+            if (isClothingPart(s)) {
                 look.append(s).append(".");
             }
         }
@@ -47,5 +48,12 @@ public class MannequinSaveLookEvent extends MessageHandler {
         item.needsUpdate(true);
         Emulator.getThreading().run(item);
         room.updateItem(item);
+    }
+
+    private static boolean isClothingPart(String figurePart) {
+        for (String type : CLOTHING_PART_TYPES) {
+            if (figurePart.startsWith(type + "-")) return true;
+        }
+        return false;
     }
 }

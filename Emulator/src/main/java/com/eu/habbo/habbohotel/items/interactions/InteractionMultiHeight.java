@@ -83,11 +83,7 @@ public class InteractionMultiHeight extends HabboItem {
 
     public void updateUnitsOnItem(Room room) {
         Set<RoomTile> occupiedTiles = room.getLayout()
-                .getTilesAt(
-                        room.getLayout().getTile(this.getX(), this.getY()),
-                        this.getBaseItem().getWidth(),
-                        this.getBaseItem().getLength(),
-                        this.getRotation());
+                .getTilesAt(room.getLayout().getTile(this.getX(), this.getY()), this);
 
         for (RoomTile tile : occupiedTiles) {
             Collection<RoomUnit> unitsOnItem =

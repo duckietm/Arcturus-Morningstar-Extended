@@ -42,7 +42,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
     private boolean direction = false;
     private boolean position = false;
     private boolean altitude = false;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectMatchFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -237,7 +237,7 @@ public class WiredEffectMatchFurni extends InteractionWiredEffect implements Int
         this.direction = false;
         this.position = false;
         this.altitude = false;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 

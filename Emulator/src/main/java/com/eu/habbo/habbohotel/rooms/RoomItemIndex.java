@@ -1,5 +1,6 @@
 package com.eu.habbo.habbohotel.rooms;
 
+import com.eu.habbo.habbohotel.items.FurniFootprint;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.interactions.InteractionPostIt;
 import com.eu.habbo.habbohotel.users.HabboItem;
@@ -12,7 +13,11 @@ import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -132,10 +137,23 @@ final class RoomItemIndex {
                     length = Math.max(item.getBaseItem().getWidth(), 1);
                 }
 
-                if (tile.x < item.getX()
-                        || tile.x > item.getX() + width - 1
-                        || tile.y < item.getY()
-                        || tile.y > item.getY() + length - 1) {
+                // A shape can be anchored off its furni's tile - the artwork of plenty of custom furni
+                // spills up and left of where they are placed - so the rectangle to test against starts at
+                // the anchor, not at the item.
+                FurniFootprint footprint = item.getBaseItem().getFootprint();
+                int[] anchor = footprint.anchor(item.getRotation());
+
+                if (tile.x < item.getX() + anchor[0]
+                        || tile.x > item.getX() + anchor[0] + width - 1
+                        || tile.y < item.getY() + anchor[1]
+                        || tile.y > item.getY() + anchor[1] + length - 1) {
+                    continue;
+                }
+
+                // Inside the bounding rectangle, but a furni shaped in the editor does not fill it.
+                if (footprint.isCustom()
+                        && item.getRotation() % 2 == 0
+                        && !footprint.isOccupied(item.getRotation(), tile.x - item.getX(), tile.y - item.getY())) {
                     continue;
                 }
 
@@ -152,16 +170,24 @@ final class RoomItemIndex {
         return result;
     }
 
+    /**
+     * Ordered by item id, which is the order the furni were placed in.
+     *
+     * The client breaks a depth tie between two overlapping furni by the order it received them in, so a
+     * HashSet here painted the same room differently on every load - a rug over a floor sticker one time
+     * and under it the next. Placement order is both stable and the order a builder expects.
+     */
     private Set<HabboItem> itemsOfType(FurnitureType type) {
-        Set<HabboItem> result = new HashSet<>();
+        List<HabboItem> matches = new ArrayList<>();
         synchronized (this.items) {
             for (HabboItem item : this.items.values()) {
                 if (item.getBaseItem().getType() == type) {
-                    result.add(item);
+                    matches.add(item);
                 }
             }
         }
-        return result;
+        matches.sort(Comparator.comparingInt(HabboItem::getId));
+        return new LinkedHashSet<>(matches);
     }
 
     void clear() {

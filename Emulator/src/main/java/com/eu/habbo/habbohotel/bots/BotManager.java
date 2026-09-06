@@ -49,6 +49,7 @@ public class BotManager {
         addBotDefinition("bartender", ButlerBot.class);
         addBotDefinition("visitor_log", VisitorBot.class);
         addBotDefinition(FrankBot.BOT_TYPE, FrankBot.class);
+        addBotDefinition(GuardianBot.BOT_TYPE, GuardianBot.class);
 
         this.reload();
 
@@ -107,7 +108,7 @@ public class BotManager {
 
         Bot bot = null;
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO bots (user_id, room_id, name, motto, figure, gender, type) VALUES (?, 0, ?, ?, ?, ?, ?)",
+                "INSERT INTO bots (user_id, room_id, name, motto, figure, gender, type, freeroam) VALUES (?, 0, ?, ?, ?, ?, ?, '1')",
                 Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, ownerId);
             statement.setString(2, data.get("name"));
@@ -274,7 +275,10 @@ public class BotManager {
 
             if (botClazz != null)
                 return botClazz.getDeclaredConstructor(ResultSet.class).newInstance(set);
-            else LOGGER.error("Unknown Bot Type: {}", type);
+
+            // an unknown type (catalog item without a class) still yields a working generic bot
+            LOGGER.warn("Unknown Bot Type: {} - falling back to generic", type);
+            return new Bot(set);
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         } catch (Exception e) {

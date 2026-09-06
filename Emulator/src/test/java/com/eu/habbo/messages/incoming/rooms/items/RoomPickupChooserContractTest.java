@@ -34,4 +34,13 @@ class RoomPickupChooserContractTest {
         assertTrue(source.contains("item instanceof InteractionPostIt"));
         assertTrue(source.contains("continue;"));
     }
+
+    @Test
+    void rightsOnlyPickupTransfersItemsToTheRoomOwner() throws Exception {
+        String source = source();
+
+        assertTrue(source.contains("boolean keepsIt"));
+        assertTrue(source.contains("item.setUserId(room.getOwnerId())"));
+        assertTrue(source.contains("room.ejectUserItem(item)"));
+    }
 }

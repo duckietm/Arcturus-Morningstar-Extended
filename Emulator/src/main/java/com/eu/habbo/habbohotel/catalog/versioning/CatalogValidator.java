@@ -367,7 +367,7 @@ public final class CatalogValidator {
                         "Unsupported points currency: " + offer.pointsType());
             }
             int sold = liveLimitedSells.getOrDefault(offer.offerId(), 0);
-            if (offer.limitedStack() < sold) {
+            if (offer.limitedStack() != 0 && offer.limitedStack() < sold) {
                 add(
                         issues,
                         "OFFER_LIMITED_STACK_BELOW_SALES",

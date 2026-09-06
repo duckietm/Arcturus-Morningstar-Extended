@@ -507,6 +507,12 @@ public class PetManager {
         return this.petData.values();
     }
 
+    /** Number of breeds (pet_breeds rows) defined for a pet type; 0 when none. */
+    public int getRaceCount(int type) {
+        Set<PetRace> races = this.petRaces.get(type);
+        return races == null ? 0 : races.size();
+    }
+
     private static String getFallbackPetName(int type) {
         switch (type) {
             case 0:

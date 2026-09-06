@@ -22,6 +22,7 @@ public class CloseDiceEvent extends MessageHandler {
 
         if (item != null) {
             if (item instanceof InteractionDice) {
+                if (!((InteractionDice) item).canCloseManually()) return;
                 if (RoomLayout.tilesAdjecent(room.getLayout().getTile(item.getX(), item.getY()), this.client.getHabbo().getRoomUnit().getCurrentLocation())) {
                     if (!item.getExtradata().equals("-1")) {
                         item.setExtradata("0");

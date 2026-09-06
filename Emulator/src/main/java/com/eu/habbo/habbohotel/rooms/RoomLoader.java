@@ -70,6 +70,10 @@ final class RoomLoader {
                         exception);
             }
 
+            // Before the heightmap is built: a room that loads with wired already hidden must not
+            // bake the hidden boxes into its tiles.
+            this.operations.syncWiredVisibility();
+
             CompletableFuture<Void> heightmap =
                     run(this.operations::loadHeightmap, executor);
             CompletableFuture<Void> wired =
@@ -173,6 +177,8 @@ final class RoomLoader {
         void loadPets();
 
         void loadHeightmap();
+
+        void syncWiredVisibility();
 
         void loadWiredData();
 

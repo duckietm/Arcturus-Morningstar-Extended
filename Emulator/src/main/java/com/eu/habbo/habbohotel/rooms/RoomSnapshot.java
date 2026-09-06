@@ -59,6 +59,8 @@ record RoomSnapshot(
                 initial,
                 new PostBanLoad(
                         set.getInt("trade_mode"),
+                        set.getBoolean("pull_enabled"),
+                        set.getBoolean("push_enabled"),
                         set.getString("move_diagonally").equals("1"),
                         set.getString("allow_underpass").equals("1"),
                         set.getBoolean("mute_all_pets"),
@@ -142,6 +144,8 @@ record RoomSnapshot(
 
     record PostBanLoad(
             int tradeMode,
+            boolean pullEnabled,
+            boolean pushEnabled,
             boolean moveDiagonally,
             boolean allowUnderpass,
             boolean muteAllPets,

@@ -500,8 +500,8 @@ Current context-status note:
 
 - **Class:** `WiredEffectWhisper`
 - **Behavior:** sends the configured message text.
-- **Main settings:** message text, effect delay.
-- **Notes:** text length is limited by wired message config.
+- **Main settings:** message text, user source, visibility, chat bubble style, bubble width, effect delay.
+- **Notes:** text length is limited by wired message config. The fourth int is the bubble width override: `-1` keeps the room setting, `0`/`1`/`2` force wide/normal/thin; it travels as an optional trailing int on the chat packet, so older clients ignore it.
 
 ### `wf_act_teleport_to`
 
@@ -612,7 +612,7 @@ Current context-status note:
 
 - **Class:** `WiredEffectBotTalk`
 - **Behavior:** makes a bot say configured text.
-- **Main settings:** bot source, message text.
+- **Main settings:** talk/shout mode, bot source, bubble width (third int, `-1` = room setting), message text.
 - **Notes:** subject to wired/bot text size limits.
 
 ### `wf_act_bot_give_handitem`
@@ -640,7 +640,7 @@ Current context-status note:
 
 - **Class:** `WiredEffectBotTalkToHabbo`
 - **Behavior:** makes a bot talk toward an avatar/target.
-- **Main settings:** bot source, avatar target, text.
+- **Main settings:** talk/whisper mode, user source, bot source, bubble width (fourth int, `-1` = room setting), text.
 - **Notes:** dialogue-oriented bot effect.
 
 ### `wf_act_give_respect`
@@ -767,7 +767,8 @@ Current context-status note:
 - **Class:** `WiredEffectChangeVariableValue`
 - **Behavior:** changes the value of a variable by applying an operation.
 - **Main settings:** variable selection, operation, reference mode, constant or reference variable, reference source, target source.
-- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift.
+- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift, bit count (110), get/set/clear/toggle bit (115-118), and the bit scans next/previous low/high bit in the inclusive (111-114) and exclusive (119-122) forms.
+- **Bit scans:** a "low" bit is a cleared bit and a "high" bit a set bit; the operand is the starting position (0-31); the result is the position found or -1; the exclusive forms start one position past the operand. Values are 32-bit, so position 31 is the sign bit.
 - **Notes:** one of the most flexible variable effects; textual rendering is separate and handled by extras.
 
 ---

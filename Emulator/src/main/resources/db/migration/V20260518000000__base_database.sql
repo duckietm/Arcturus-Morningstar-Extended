@@ -14847,7 +14847,7 @@ INSERT INTO `emulator_settings` (`key`, `value`, `comment`) VALUES
 	('callback.post.statistics', '1', 'Enable the POST callback used to report statistics to external services.'),
 	('camera.enabled', '1', 'Enable the in-room camera feature.'),
 	('camera.extradata', '{"t":%timestamp%, "u":"%id%", "s":%room_id%, "w":"%url%"}', 'Extradata template written into camera photo items when they are created.'),
-	('camera.item_id', '45970', 'Base item ID used by the generated camera photo furniture.'),
+	('camera.item_id', '45410', 'Base item ID used by the generated camera photo furniture.'),
 	('camera.price.credits', '2', 'Credit price charged when taking a camera photo.'),
 	('camera.price.points', '0', 'Amount of activity points charged when taking a camera photo.'),
 	('camera.price.points.publish', '10', 'Amount of activity points charged when publishing a camera photo.'),

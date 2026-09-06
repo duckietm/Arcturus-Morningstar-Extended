@@ -35,7 +35,7 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
     public static volatile int MAXIMUM_FLOORPLAN_SIZE = 64 * 64;
 
     private static final int SAVE_COOLDOWN_SECONDS = 3;
-    private static final int MAX_AUTO_PICKUP_ITEMS = 500;
+    private static final int MAX_AUTO_PICKUP_ITEMS = 5000;
     private static final Pattern ALLOWED_MAP_CHARS = Pattern.compile("[a-zA-Z0-9\r]+");
 
     @Override
@@ -45,18 +45,20 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
 
     @Override
     public void handle() throws Exception {
-        if (!this.client.getHabbo().hasPermission(Permission.ACC_FLOORPLAN_EDITOR)) {
-            this.client.sendResponse(
-                    new GenericAlertComposer(Emulator.getTexts().getValue("floorplan.permission")));
-            return;
-        }
-
         Room room = this.client.getHabbo().getHabboInfo().getCurrentRoom();
 
         if (room == null) return;
 
-        if (!(room.getOwnerId() == this.client.getHabbo().getHabboInfo().getId()
-                || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER))) {
+        int habboId = this.client.getHabbo().getHabboInfo().getId();
+        boolean isRoomOwner = room.getOwnerId() == habboId;
+        boolean hasFloorplanPermission =
+                this.client.getHabbo().hasPermission(Permission.ACC_FLOORPLAN_EDITOR);
+
+        // The actual room owner can always edit/save their own floorplan.
+        // Staff with ACC_FLOORPLAN_EDITOR can edit/save floorplans in any room.
+        if (!isRoomOwner && !hasFloorplanPermission) {
+            this.client.sendResponse(
+                    new GenericAlertComposer(Emulator.getTexts().getValue("floorplan.permission")));
             return;
         }
 
@@ -70,13 +72,32 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
         StringJoiner errors = new StringJoiner("<br />");
         String map = this.packet.readString();
 
-        if (map == null || map.length() > MAXIMUM_FLOORPLAN_SIZE) {
+        if (map == null || map.isEmpty()) {
             LOGGER.warn(
-                    "Floorplan save rejected (oversize): user={} room={} mapLen={}",
+                    "Floorplan save rejected (empty map): user={} room={}",
                     this.client.getHabbo().getHabboInfo().getId(),
-                    room.getId(),
-                    map == null ? 0 : map.length());
+                    room.getId());
             return;
+        }
+
+        /*
+         * Normalize imported floorplans.
+         *
+         * Nitro normally sends rows separated by CR (\r), but copied/exported
+         * maps may contain Windows CRLF, Unix LF, or spaces instead of newlines.
+         */
+        map = map
+                .replace("\r\n", "\r")
+                .replace('\n', '\r')
+                .replace("X", "x");
+
+        /*
+         * If the imported text contains no real line separators but contains
+         * spaces, treat runs of spaces as row separators. This supports exports
+         * copied through browsers/chat/editors that flatten newlines to spaces.
+         */
+        if (map.indexOf('\r') < 0 && map.indexOf(' ') >= 0) {
+            map = map.trim().replaceAll(" +", "\r");
         }
 
         if (!ALLOWED_MAP_CHARS.matcher(map).matches()) {
@@ -87,24 +108,52 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
             return;
         }
 
-        map = map.replace("X", "x");
-
         String[] mapRows = map.split("\r");
 
         if (mapRows.length == 0 || mapRows.length > MAXIMUM_FLOORPLAN_WIDTH_LENGTH) {
+            LOGGER.warn(
+                    "Floorplan save rejected (invalid row count): user={} room={} rows={}",
+                    this.client.getHabbo().getHabboInfo().getId(),
+                    room.getId(),
+                    mapRows.length);
             return;
         }
 
         int firstRowSize = mapRows[0].length();
 
         if (firstRowSize == 0 || firstRowSize > MAXIMUM_FLOORPLAN_WIDTH_LENGTH) {
+            LOGGER.warn(
+                    "Floorplan save rejected (invalid width): user={} room={} width={}",
+                    this.client.getHabbo().getHabboInfo().getId(),
+                    room.getId(),
+                    firstRowSize);
             return;
         }
 
+        int cellCount = 0;
+
         for (String row : mapRows) {
             if (row.length() != firstRowSize) {
+                LOGGER.warn(
+                        "Floorplan save rejected (non-rectangular map): user={} room={} expectedWidth={} actualWidth={}",
+                        this.client.getHabbo().getHabboInfo().getId(),
+                        room.getId(),
+                        firstRowSize,
+                        row.length());
                 return;
             }
+
+            cellCount += row.length();
+        }
+
+        if (cellCount > MAXIMUM_FLOORPLAN_SIZE) {
+            LOGGER.warn(
+                    "Floorplan save rejected (too many cells): user={} room={} cells={} max={}",
+                    this.client.getHabbo().getHabboInfo().getId(),
+                    room.getId(),
+                    cellCount,
+                    MAXIMUM_FLOORPLAN_SIZE);
+            return;
         }
 
         if (Emulator.getConfig().getBoolean("hotel.room.floorplan.check.enabled")) {
@@ -154,6 +203,12 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
             return;
         }
 
+        // The map currently in use, row by row, so unchanged tiles can be skipped below.
+        String previousMap = room.getLayout() != null && room.getLayout().getHeightmap() != null
+                ? room.getLayout().getHeightmap()
+                : "";
+        String[] previousRows = previousMap.replace("\r\n", "\r").replace('\n', '\r').split("\r");
+
         Set<RoomTile> locked_tileList = room.getLockedTiles();
         Set<RoomTile> new_tileList = new HashSet<>();
         Set<HabboItem> itemsToPickup = new HashSet<>();
@@ -165,6 +220,15 @@ public class FloorPlanEditorSaveEvent extends MessageHandler {
 
                 RoomTile tile = room.getLayout().getTile((short) x, (short) y);
                 new_tileList.add(tile);
+
+                // A tile that keeps exactly the same character cannot block the save: the furniture already
+                // standing there (even on a void tile of an imported room) is not affected by this change. Only
+                // tiles that really change height or become void are checked below.
+                char previous = (y < previousRows.length && x < previousRows[y].length())
+                        ? Character.toLowerCase(previousRows[y].charAt(x))
+                        : 'x';
+                if (previous == Character.toLowerCase(mapRows[y].charAt(x))) continue;
+
                 String square = String.valueOf(mapRows[y].charAt(x));
                 short height;
 

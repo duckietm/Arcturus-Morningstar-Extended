@@ -125,6 +125,24 @@ public final class JdbcCatalogVersionRepository implements CatalogVersionReposit
                 nextId = resultSet.getLong(1);
             }
         }
+        // The sequence only counts studio-made rows. Pages and offers inserted by other writers
+        // (CMS furni installer, SQL imports, plain auto-increment) leave it behind, and the live
+        // writer addresses rows by explicit id: a stale sequence used to overwrite an existing
+        // page (renaming it and re-parenting it) instead of creating a new one.
+        String table = liveTable(entityType, catalogType);
+        try (PreparedStatement statement = connection.prepareStatement("SELECT IFNULL(MAX(id), 0) FROM " + table);
+                ResultSet resultSet = statement.executeQuery()) {
+            if (resultSet.next()) nextId = Math.max(nextId, resultSet.getLong(1) + 1);
+        }
+        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM " + table + " WHERE id = ? LIMIT 1")) {
+            while (true) {
+                statement.setLong(1, nextId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) break;
+                }
+                nextId++;
+            }
+        }
         try (PreparedStatement statement = connection.prepareStatement(UPDATE_NEXT_ID_SQL)) {
             statement.setLong(1, nextId + 1);
             statement.setString(2, entityType.name());
@@ -132,5 +150,13 @@ public final class JdbcCatalogVersionRepository implements CatalogVersionReposit
             if (statement.executeUpdate() != 1) throw new SQLException("Catalog ID sequence update failed");
         }
         return nextId;
+    }
+
+    static String liveTable(CatalogEntityType entityType, CatalogPageType catalogType) {
+        boolean builder = catalogType == CatalogPageType.BUILDER;
+        return switch (entityType) {
+            case PAGE -> builder ? "catalog_pages_bc" : "catalog_pages";
+            case OFFER -> builder ? "catalog_items_bc" : "catalog_items";
+        };
     }
 }

@@ -76,6 +76,10 @@ public class FurniEditorUpdatePayload {
             case "vending_ids", "clothing_on_walk" -> boundedString(primitive, 0, 255);
             case "customparams" -> boundedString(primitive, 0, 256);
             case "multiheight" -> boundedString(primitive, 0, 50);
+            // Shape strings are checked for real in FurniEditorUpdateEvent, where the width and length being
+            // saved alongside them are known; here they only have to fit the column.
+            // Four rotation slots of up to 12x12 rows plus anchors: 160 only ever fitted the base one.
+            case "tile_shape", "sit_directions" -> boundedString(primitive, 0, 1024);
             case "effect_id_male", "effect_id_female", "sprite_id" -> boundedInt(primitive, 0, Integer.MAX_VALUE);
             case "description" -> boundedString(primitive, 0, 500);
             default -> null;
@@ -92,7 +96,7 @@ public class FurniEditorUpdatePayload {
     private static String itemType(JsonPrimitive primitive) {
         String value = boundedString(primitive, 1, 3);
         if (value == null) return null;
-        return value.matches("[a-z]+") ? value : null;
+        return ("s".equals(value) || "i".equals(value)) ? value : null;
     }
 
     private static Integer boundedInt(JsonPrimitive primitive, int min, int max) {

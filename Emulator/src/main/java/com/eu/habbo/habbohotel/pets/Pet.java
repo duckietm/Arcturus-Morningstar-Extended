@@ -8,6 +8,7 @@ import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetToy;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionPetTree;
 import com.eu.habbo.habbohotel.rooms.*;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
@@ -155,6 +156,21 @@ public class Pet implements ISerialize, Runnable {
 
         if (this.energy < 0)
             this.energy = 0;
+    }
+
+    /**
+     * Energy as a percentage of what this pet can hold, 0-100.
+     *
+     * <p>Raw energy runs to {@code PetManager.maxEnergy(level)} = 100 * level, so a levelled pet's energy is
+     * on a completely different scale from the behaviour thresholds, which are all written as if energy
+     * stopped at 100. Comparing the percentage keeps every one of those constants meaning what it says.
+     */
+    public int getEnergyPercent() {
+        int max = PetManager.maxEnergy(this.level);
+
+        if (max <= 0) return 0;
+
+        return (int) Math.round((this.energy * 100.0D) / max);
     }
 
 
@@ -356,25 +372,25 @@ public class Pet implements ISerialize, Runnable {
 
             if (!this.muted) {
                 if (this.chatTimeout <= time) {
-                    if (this.energy <= 30) {
+                    if (this.getEnergyPercent() <= 30) {
                         this.say(this.petData.randomVocal(PetVocalsType.TIRED));
-                        if (this.energy <= 10)
+                        if (this.getEnergyPercent() <= 10)
                             this.findNest();
                     } else if (this.happiness > 85) {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_HAPPY));
                     } else if (this.happiness < 15) {
                         this.say(this.petData.randomVocal(PetVocalsType.GENERIC_SAD));
                         // When bored and has energy, try to find a toy to play with
-                        if (this.energy > 40 && this.task == null) {
+                        if (this.getEnergyPercent() > 40 && this.task == null) {
                             this.findToy();
                         }
-                    } else if (this.happiness < 40 && this.energy > 50 && this.task == null && Emulator.getRandom().nextInt(100) < 30) {
+                    } else if (this.happiness < 40 && this.getEnergyPercent() > 50 && this.task == null && Emulator.getRandom().nextInt(100) < 30) {
                         // 30% chance to seek toy when moderately bored
                         this.findToy();
-                    } else if (this.levelHunger > 50) {
+                    } else if (this.levelHunger > 50 && this.hasFoodAvailable()) {
                         this.say(this.petData.randomVocal(PetVocalsType.HUNGRY));
                         this.eat();
-                    } else if (this.levelThirst > 50) {
+                    } else if (this.levelThirst > 50 && this.hasDrinkAvailable()) {
                         this.say(this.petData.randomVocal(PetVocalsType.THIRSTY));
                         this.drink();
                     }
@@ -516,7 +532,9 @@ public class Pet implements ISerialize, Runnable {
 
     public void updateGesture(int time) {
         this.gestureTickTimeout = time;
-        if (this.energy < 30) {
+        // Below a third of its own maximum. This is what sends a pet to rest, and resting is the only thing
+        // that brings hunger and thirst back down, so it has to trigger for a levelled pet too.
+        if (this.getEnergyPercent() < 30) {
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.TIRED.getKey());
             this.findNest();
         } else if (this.happiness == 100) {
@@ -527,10 +545,10 @@ public class Pet implements ISerialize, Runnable {
         } else if (this.happiness <= 5) {
             this.randomSadAction();
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.SAD.getKey());
-        } else if (this.levelHunger > 80) {
+        } else if (this.levelHunger > 80 && this.hasFoodAvailable()) {
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.HUNGRY.getKey());
             this.eat();
-        } else if (this.levelThirst > 80) {
+        } else if (this.levelThirst > 80 && this.hasDrinkAvailable()) {
             this.roomUnit.setStatus(RoomUnitStatus.GESTURE, PetGestures.THIRSTY.getKey());
             this.drink();
         } else if (this.idleCommandTicks > 240) {
@@ -600,6 +618,18 @@ public class Pet implements ISerialize, Runnable {
     /**
      * Makes the pet walk to a drink item and drink from it.
      */
+    /** True when the room has a drink item this pet accepts. */
+    public boolean hasDrinkAvailable() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) return false;
+        return this.petData.randomDrinkItem(this.room.getRoomSpecialTypes().getPetDrinks()) != null;
+    }
+
+    /** True when the room has a food item this pet accepts. */
+    public boolean hasFoodAvailable() {
+        if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) return false;
+        return this.petData.randomFoodItem(this.room.getRoomSpecialTypes().getPetFoods()) != null;
+    }
+
     public void drink() {
         if (this.room == null || this.room.getRoomSpecialTypes() == null || this.petData == null) {
             return;
@@ -783,8 +813,12 @@ public class Pet implements ISerialize, Runnable {
         this.needsUpdate = true;
 
         if (habbo != null) {
-            habbo.getHabboStats().petRespectPointsToGive--;
+            if (!habbo.hasPermission(Permission.ACC_INFINITE_RESPECT)) {
+                habbo.getHabboStats().petRespectPointsToGive--;
+            }
             habbo.getHabboInfo().getCurrentRoom().sendComposer(new RoomPetRespectComposer(this).compose());
+            this.say("*" + this.getName() + " ha ricevuto un grattino da "
+                    + habbo.getHabboInfo().getUsername());
 
             AchievementManager.progressAchievement(habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("PetRespectGiver"));
         }
@@ -792,6 +826,11 @@ public class Pet implements ISerialize, Runnable {
         AchievementManager.progressAchievement(Emulator.getGameEnvironment().getHabboManager().getHabbo(this.userId), Emulator.getGameEnvironment().getAchievementManager().getAchievement("PetRespectReceiver"));
     }
 
+
+    /** Only for transient pets that are never saved (e.g. a morphed user's infostand). */
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getId() {
         return this.id;

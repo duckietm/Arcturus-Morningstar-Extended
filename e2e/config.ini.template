@@ -38,3 +38,4 @@ e2e.enabled=true
 session.reconnect.grace.seconds=30
 client.release.allowed=NITRO-3-6-0
 habbo.console.style=plain
+hotel.wired.furni.selection.count=50

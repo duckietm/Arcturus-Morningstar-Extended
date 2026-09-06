@@ -520,6 +520,18 @@ final class AccountChangeEndpoints {
             ok.addProperty("message", "Username updated. Please log in again with your new name.");
             ok.addProperty("username", newUsername);
             ok.addProperty("relogin", true);
+
+            // The version bump above invalidated every access token, including the
+            // one this request authenticated with. Hand the renaming device a fresh
+            // token (like change-password does) so it does not strand itself with an
+            // unexpired-but-revoked token that blocks the token-gated HTTP features.
+            try {
+                AccessTokenService.Issued reissued = AccessTokenService.issue(conn, userId);
+                ok.addProperty("accessToken", reissued.token);
+                ok.addProperty("accessTokenExpiresAt", reissued.expiresAt);
+            } catch (SQLException reissueError) {
+                LOGGER.warn("[auth/change-username] could not reissue access token for user id={}; client must log in again", userId, reissueError);
+            }
             sendJson(ctx, req, HttpResponseStatus.OK, ok);
         } catch (Exception e) {
             LOGGER.error("[auth/change-username] failed for user id=" + userId, e);

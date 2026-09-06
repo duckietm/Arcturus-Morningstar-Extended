@@ -130,7 +130,7 @@ public class Outgoing {
     public static final int TradeCompleteComposer = 2369; // PRODUCTION-201611291003-338511768
     public static final int NewsWidgetsComposer = 286; // PRODUCTION-201611291003-338511768
     public static final int WiredEffectDataComposer = 1434; // PRODUCTION-201611291003-338511768
-    public static final int BubbleAlertComposer = 1992; // PRODUCTION-201611291003-338511768
+    public static final int BubbleAlertComposer = 1992; // PRODUCTION-201611291003-338511768 - Nitro notification dialog
     public static final int ReloadRecyclerComposer = 3433; // PRODUCTION-201611291003-338511768
     public static final int MoodLightDataComposer = 2710; // PRODUCTION-201611291003-338511768
     public static final int WiredRewardAlertComposer = 178; // PRODUCTION-201611291003-338511768
@@ -614,6 +614,7 @@ public class Outgoing {
     public static final int FurniEditorResultComposer = 10044;
     public static final int FurnitureDataReloadComposer = 10047; // CUSTOM
     public static final int FurniEditorImportTextResultComposer = 10049; // CUSTOM
+    public static final int FurniEditorCrackableComposer = 10085; // CUSTOM
 
     // Catalog Admin
     public static final int CatalogAdminResultComposer = 10059;
@@ -626,6 +627,14 @@ public class Outgoing {
     public static final int CatalogStudioDocumentResultComposer = 10078;
     public static final int CatalogProductMetadataComposer = 10081;
     public static final int CatalogRuntimeConfigurationComposer = 10082;
+    public static final int OnlineUsersComposer = 10088; // CUSTOM: searchable online users window
+    public static final int ExternalTextUpdatedComposer = 10091; // CUSTOM: live external text change
+    public static final int BanzaiSpeedsComposer = 10092; // CUSTOM: hotel-wide banzai teleport timings
+    public static final int EffectPoliciesComposer = 10084; // CUSTOM: effect locks (special_enables) for the effects window
+    public static final int FurniCollisionOverlayComposer = 10096; // CUSTOM: :debugviewcollisions floor overlay
+    public static final int ModToolCloneFinderComposer = 10100; // CUSTOM: mod tools clone finder result
+    public static final int ClientRenderSettingsComposer = 10101; // CUSTOM: hotel-wide renderer settings (login + broadcast)
+    public static final int PetMorphListComposer = 10090; // CUSTOM
 
     // Custom Prefixes
     public static final int UserPrefixesComposer = 7001;
@@ -654,12 +663,14 @@ public class Outgoing {
     public static final int WheelResultComposer = 9402;
     public static final int WheelRecentWinsComposer = 9403;
     public static final int WheelAdminPrizesComposer = 9404;
-    public static final int SoundboardSettingsComposer = 9405;
+    public static final int WheelAdminConfigComposer = 9405; // CUSTOM
+    public static final int SoundboardSettingsComposer = 9443;
     public static final int SoundboardPlayComposer = 9406;
     public static final int EarningsCenterComposer = 9407;
     public static final int EarningsClaimResultComposer = 9408;
     public static final int HotelViewLandingComposer = 9409;
     public static final int RoomUserHabbiconComposer = 9410;
+    public static final int InvseeInventoryComposer = 9411; // CUSTOM: staff inventory inspection
     public static final int TraxEditorSongsComposer = 9430;
     public static final int TraxEditorErrorComposer = 9431;
     public static final int SoundboardPlayDeniedComposer = 9440;

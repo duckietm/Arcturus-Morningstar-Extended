@@ -7,6 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -129,6 +133,12 @@ public final class FurniEditorRepository {
             where.append(" AND type = ?");
             parameters.add(request.type());
         }
+        if (request.spriteIds() != null && !request.spriteIds().isEmpty()) {
+            where.append(" AND sprite_id IN (");
+            for (int index = 0; index < request.spriteIds().size(); index++) where.append(index == 0 ? "?" : ",?");
+            where.append(')');
+            parameters.addAll(request.spriteIds());
+        }
         if (!request.query().isEmpty() && !request.furnidataClassnames().isEmpty()) {
             where.append(" OR (LOWER(item_name) IN (");
             for (int index = 0; index < request.furnidataClassnames().size(); index++) {
@@ -196,7 +206,15 @@ public final class FurniEditorRepository {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             int next = bind(statement, values);
             statement.setInt(next, itemId);
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() > 0) return true;
+        }
+        // Drivers configured for affected-rows semantics report 0 for a no-op update.
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM items_base WHERE id = ?")) {
+            statement.setInt(1, itemId);
+            try (ResultSet set = statement.executeQuery()) {
+                return set.next();
+            }
         }
     }
 
@@ -305,6 +323,17 @@ public final class FurniEditorRepository {
         item.put("effect_id_female", set.getInt("effect_id_female"));
         item.put("clothing_on_walk", set.getString("clothing_on_walk"));
         item.put("multiheight", set.getString("multiheight"));
+
+        // Added by the footprint migration, and guarded the same way as description so a database that
+        // predates it still opens. Null is mapped to "" because the composer casts this straight to String.
+        try {
+            item.put("tile_shape", value(set.getString("tile_shape")));
+            item.put("sit_directions", value(set.getString("sit_directions")));
+        } catch (SQLException exception) {
+            item.put("tile_shape", "");
+            item.put("sit_directions", "");
+        }
+
         try {
             item.put("description", set.getString("description"));
         } catch (SQLException exception) {
@@ -337,6 +366,181 @@ public final class FurniEditorRepository {
         return value == null ? "" : value;
     }
 
+    // ---- crackable (items_crackable) -------------------------------------------------------------------------
+
+    public record CrackablePrize(int itemId, String itemName, String publicName, int spriteId, String type, int chance) {}
+
+    public record Crackable(
+            int itemId,
+            int count,
+            String achievementTick,
+            String achievementCracked,
+            int requiredEffect,
+            int subscriptionDuration,
+            String subscriptionType,
+            List<CrackablePrize> prizes) {}
+
+    /** The items_crackable row of a base item with its prize list resolved against items_base; null when absent. */
+    public Crackable findCrackable(int itemId) throws SQLException {
+        int count;
+        String achievementTick;
+        String achievementCracked;
+        int requiredEffect;
+        int subscriptionDuration;
+        String subscriptionType;
+        String prizeList;
+
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement =
+                        connection.prepareStatement("SELECT * FROM items_crackable WHERE item_id = ?")) {
+            statement.setInt(1, itemId);
+            try (ResultSet set = statement.executeQuery()) {
+                if (!set.next()) return null;
+
+                count = set.getInt("count");
+                achievementTick = set.getString("achievement_tick");
+                achievementCracked = set.getString("achievement_cracked");
+                requiredEffect = set.getInt("required_effect");
+                subscriptionDuration = set.getInt("subscription_duration");
+                subscriptionType = set.getString("subscription_type");
+                prizeList = set.getString("prizes");
+            }
+        }
+
+        // Same parsing rules as CrackableReward: "itemId:chance;itemId" with a default chance of 100.
+        Map<Integer, Integer> weights = new LinkedHashMap<>();
+        if (prizeList != null) {
+            for (String raw : prizeList.split(";")) {
+                String prize = raw.trim();
+                if (prize.isEmpty()) continue;
+
+                try {
+                    String[] parts = prize.split(":", -1);
+                    int prizeId = Integer.parseInt(parts[0].trim());
+                    int chance = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 100;
+                    if (prizeId > 0 && chance > 0) weights.merge(prizeId, chance, Integer::sum);
+                } catch (NumberFormatException ignored) {
+                    // malformed entries are skipped, exactly like the emulator does at load time
+                }
+            }
+        }
+
+        Map<Integer, CrackablePrize> resolved = new LinkedHashMap<>();
+        if (!weights.isEmpty()) {
+            StringBuilder placeholders = new StringBuilder();
+            for (int i = 0; i < weights.size(); i++) placeholders.append(i == 0 ? "?" : ",?");
+
+            try (Connection connection = this.dataSource.getConnection();
+                    PreparedStatement statement = connection.prepareStatement(
+                            "SELECT id, item_name, public_name, sprite_id, type FROM items_base WHERE id IN ("
+                                    + placeholders + ")")) {
+                int index = 1;
+                for (Integer prizeId : weights.keySet()) statement.setInt(index++, prizeId);
+
+                try (ResultSet set = statement.executeQuery()) {
+                    while (set.next()) {
+                        int prizeId = set.getInt("id");
+                        resolved.put(
+                                prizeId,
+                                new CrackablePrize(
+                                        prizeId,
+                                        set.getString("item_name"),
+                                        set.getString("public_name"),
+                                        set.getInt("sprite_id"),
+                                        set.getString("type"),
+                                        weights.get(prizeId)));
+                    }
+                }
+            }
+        }
+
+        List<CrackablePrize> prizes = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> weight : weights.entrySet()) {
+            CrackablePrize prize = resolved.get(weight.getKey());
+            prizes.add(prize != null
+                    ? prize
+                    : new CrackablePrize(weight.getKey(), "", "(non esiste in items_base)", 0, "s", weight.getValue()));
+        }
+
+        return new Crackable(
+                itemId,
+                count,
+                achievementTick,
+                achievementCracked,
+                requiredEffect,
+                subscriptionDuration,
+                subscriptionType,
+                prizes);
+    }
+
+    /** The subset of the given items_base ids that exist. */
+    public Set<Integer> findExistingItemIds(Collection<Integer> ids) throws SQLException {
+        Set<Integer> existing = new HashSet<>();
+        if (ids == null || ids.isEmpty()) return existing;
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) placeholders.append(i == 0 ? "?" : ",?");
+
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT id FROM items_base WHERE id IN (" + placeholders + ")")) {
+            int index = 1;
+            for (Integer id : ids) statement.setInt(index++, id);
+
+            try (ResultSet set = statement.executeQuery()) {
+                while (set.next()) existing.add(set.getInt("id"));
+            }
+        }
+
+        return existing;
+    }
+
+    public void upsertCrackable(
+            int itemId,
+            String itemName,
+            int count,
+            String prizes,
+            String achievementTick,
+            String achievementCracked,
+            int requiredEffect,
+            Integer subscriptionDuration,
+            String subscriptionType)
+            throws SQLException {
+        String sql = "INSERT INTO items_crackable (item_id, item_name, count, prizes, achievement_tick,"
+                + " achievement_cracked, required_effect, subscription_duration, subscription_type)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                + " ON DUPLICATE KEY UPDATE item_name = VALUES(item_name), count = VALUES(count),"
+                + " prizes = VALUES(prizes), achievement_tick = VALUES(achievement_tick),"
+                + " achievement_cracked = VALUES(achievement_cracked), required_effect = VALUES(required_effect),"
+                + " subscription_duration = VALUES(subscription_duration), subscription_type = VALUES(subscription_type)";
+
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, itemId);
+            statement.setString(2, itemName);
+            statement.setInt(3, count);
+            statement.setString(4, prizes);
+            statement.setString(5, achievementTick);
+            statement.setString(6, achievementCracked);
+            statement.setInt(7, requiredEffect);
+            if (subscriptionDuration == null) statement.setNull(8, java.sql.Types.INTEGER);
+            else statement.setInt(8, subscriptionDuration);
+            if (subscriptionType == null) statement.setNull(9, java.sql.Types.VARCHAR);
+            else statement.setString(9, subscriptionType);
+            statement.execute();
+        }
+    }
+
+    public boolean deleteCrackable(int itemId) throws SQLException {
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement =
+                        connection.prepareStatement("DELETE FROM items_crackable WHERE item_id = ?")) {
+            statement.setInt(1, itemId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+
     public record Detail(Map<String, Object> item, int usageCount, List<Map<String, Object>> catalogItems) {}
 
     public record DeleteResult(DeleteStatus status, int referenceCount) {}
@@ -355,7 +559,20 @@ public final class FurniEditorRepository {
             String sortDirection,
             int pageSize,
             int offset,
-            List<String> furnidataClassnames) {}
+            List<String> furnidataClassnames,
+            List<Integer> spriteIds) {
+        /** Compatibility constructor: no sprite restriction. */
+        public SearchRequest(
+                String query,
+                String type,
+                String sortField,
+                String sortDirection,
+                int pageSize,
+                int offset,
+                List<String> furnidataClassnames) {
+            this(query, type, sortField, sortDirection, pageSize, offset, furnidataClassnames, List.of());
+        }
+    }
 
     public record SearchPage(List<Map<String, Object>> items, int total) {}
 

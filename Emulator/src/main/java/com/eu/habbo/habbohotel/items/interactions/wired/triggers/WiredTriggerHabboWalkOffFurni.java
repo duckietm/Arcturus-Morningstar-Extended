@@ -27,7 +27,7 @@ public class WiredTriggerHabboWalkOffFurni extends InteractionWiredTrigger {
     public static final WiredTriggerType type = WiredTriggerType.WALKS_OFF_FURNI;
 
     private final Set<HabboItem> items;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredTriggerHabboWalkOffFurni(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -65,7 +65,7 @@ public class WiredTriggerHabboWalkOffFurni extends InteractionWiredTrigger {
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         String wiredData = set.getString("wired_data");
 
         if (wiredData.startsWith("{")) {
@@ -107,7 +107,7 @@ public class WiredTriggerHabboWalkOffFurni extends InteractionWiredTrigger {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override

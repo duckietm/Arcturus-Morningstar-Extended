@@ -32,7 +32,7 @@ public class ActionSpeak extends PetAction {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.HUNGRY));
         else if (pet.getLevelThirst() > 65)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.THIRSTY));
-        else if (pet.getEnergy() < 25)
+        else if (pet.getEnergyPercent() < 25)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.TIRED));
         else if (pet.getTask() == PetTasks.NEST || pet.getTask() == PetTasks.DOWN)
             pet.say(pet.getPetData().randomVocal(PetVocalsType.SLEEPING));

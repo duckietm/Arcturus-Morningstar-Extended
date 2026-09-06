@@ -26,7 +26,7 @@ public class FloorItemUpdateComposer extends MessageComposer {
                     ? ((InteractionMusicDisc) this.item).getSongId()
                     : (this.item instanceof InteractionStackWalkHelper ? 2147483001 : 0))
         );
-        this.item.serializeExtradata(this.response);
+        this.item.serializeItemData(this.response);
         this.response.appendInt(-1);
         this.response.appendInt(0);
         this.response.appendInt(this.item.getUserId());

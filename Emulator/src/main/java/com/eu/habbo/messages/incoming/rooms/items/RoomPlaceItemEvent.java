@@ -1,5 +1,6 @@
 package com.eu.habbo.messages.incoming.rooms.items;
 
+import com.eu.habbo.habbohotel.commands.BssPlacementPreferences;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.interactions.InteractionBackgroundToner;
 import com.eu.habbo.habbohotel.items.interactions.InteractionBuildArea;
@@ -91,6 +92,16 @@ public class RoomPlaceItemEvent extends MessageHandler {
             Integer rotation = RoomItemInputGuard.parseInt(values[3]);
 
             if (x == null || y == null || rotation == null) return;
+
+            rotation = BssPlacementPreferences.resolveRotation(
+                    this.client.getHabbo().getHabboInfo().getId(), rotation);
+
+            // restore the rotation the furni had when it was picked up (items.rot is kept on pickup);
+            // the client always sends the furnidata default here, :forcerot still wins
+            if (!BssPlacementPreferences.hasForcedRotation(this.client.getHabbo().getHabboInfo().getId())
+                    && item.getRotation() != 0) {
+                rotation = item.getRotation();
+            }
 
             RoomTile tile = room.getLayout().getTile(x, y);
 

@@ -6,6 +6,8 @@ import com.eu.habbo.habbohotel.users.Habbo;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.Normalizer;
+import java.util.Locale;
 
 public class PetCommand implements Comparable<PetCommand> {
 
@@ -44,9 +46,40 @@ public class PetCommand implements Comparable<PetCommand> {
         return this.level - o.level;
     }
 
+    public boolean matches(String commandText) {
+        String normalized = normalize(commandText);
+        if (normalized.isEmpty()) return false;
+        if (normalize(this.key).equals(normalized)) return true;
+
+        // Nitro displays the official localized pet-command label but pet_commands_data
+        // stores the English wire label. Accept every localized label configured in
+        // emulator_texts as "pet.command.<id>" (";"-separated synonyms) as well.
+        for (String alias : Emulator.getTexts().getValue("pet.command." + this.id, "").split("[;|]")) {
+            if (!alias.isBlank() && normalize(alias).equals(normalized)) return true;
+        }
+
+        return this.id == 36 && (normalized.equals("sputa fuoco") || normalized.equals("soffia fuoco"));
+    }
+
+    private static String normalize(String value) {
+        if (value == null) return "";
+
+        return Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .trim()
+                .replaceAll("\\s+", " ")
+                .toLowerCase(Locale.ROOT);
+    }
+
     public void handle(Pet pet, Habbo habbo, String[] data) {
+        // Hotel policy: an owned pet always obeys its owner. Keep the normal
+        // energy, happiness, cooldown and random-obedience simulation for
+        // other users, but never make the owner repeat a valid command.
+        boolean isOwner = habbo != null
+                && habbo.getHabboInfo().getId() == pet.getUserId();
+
         // Check command cooldown to prevent spam (global cooldown for ALL commands)
-        if (!pet.canExecuteCommand(this.id)) {
+        if (!isOwner && !pet.canExecuteCommand(this.id)) {
             // Pet ignores spammed commands - maybe give a tired/annoyed response occasionally
             if (pet.getSameCommandCount() > Emulator.getConfig().getInt("pet.command.max_same_spam", 3)) {
                 if (Emulator.getRandom().nextInt(3) == 0) {
@@ -55,30 +88,30 @@ public class PetCommand implements Comparable<PetCommand> {
             }
             return;
         }
-        
+
         // Check if pet has enough energy to perform the command
         int minEnergy = Emulator.getConfig().getInt("pet.command.min_energy", 15);
-        if (pet.getEnergy() < minEnergy || pet.getEnergy() < this.energyCost) {
+        if (!isOwner && (pet.getEnergy() < minEnergy || pet.getEnergy() < this.energyCost)) {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.TIRED));
             pet.recordCommandExecution(this.id);
             return;
         }
-        
+
         // Check if pet is too unhappy to obey
         int minHappiness = Emulator.getConfig().getInt("pet.command.min_happiness", 10);
-        if (pet.getHappiness() < minHappiness) {
+        if (!isOwner && pet.getHappiness() < minHappiness) {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.GENERIC_SAD));
             pet.recordCommandExecution(this.id);
             return;
         }
-        
+
         // Improved obedience formula - configurable base chance with level scaling
         int levelDifference = pet.getLevel() - this.level;
         int baseChance = Emulator.getConfig().getInt("pet.command.base_obey_chance", 70); // 70% base
         int levelBonus = Math.max(0, levelDifference * 5); // +5% per level above requirement
         int obeyChance = Math.min(95, baseChance + levelBonus); // Cap at 95%
 
-        if (Emulator.getRandom().nextInt(100) >= obeyChance) {
+        if (!isOwner && Emulator.getRandom().nextInt(100) >= obeyChance) {
             pet.say(pet.getPetData().randomVocal(PetVocalsType.DISOBEY));
             // Don't record execution on random disobey — player can retry immediately
             return;
@@ -105,8 +138,8 @@ public class PetCommand implements Comparable<PetCommand> {
 
                 pet.getRoomUnit().setStatus(RoomUnitStatus.GESTURE, this.action.gestureToSet);
 
-                pet.addEnergy(-this.energyCost);
-                pet.addHappiness(-this.happinessCost);
+                pet.addEnergy(-Math.min(this.energyCost, pet.getEnergy()));
+                pet.addHappiness(-Math.min(this.happinessCost, pet.getHappiness()));
                 pet.addExperience(this.xp);
                 
                 // Mark pet for status update so clients see the animation

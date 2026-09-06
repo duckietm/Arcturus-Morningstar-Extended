@@ -91,6 +91,27 @@ class RoomItemOperationBehaviorTest {
         assertEquals(List.of(Outgoing.ItemStateComposer, Outgoing.HanditemBlockStateComposer), room.messageHeaders());
     }
 
+    @Test
+    void dirtyFurnitureStateIsPersistedAsPartOfTheVisibleUpdate() throws Exception {
+        RecordingRoom room = roomWithLayout();
+        HabboItem item = item("default", null);
+        when(item.needsUpdate()).thenReturn(true);
+
+        room.updateItemState(item);
+
+        assertEquals(List.of(item), room.persistedItems());
+    }
+
+    @Test
+    void transientFurnitureStateIsNotPersisted() throws Exception {
+        RecordingRoom room = roomWithLayout();
+        HabboItem item = item("default", null);
+
+        room.updateItemState(item);
+
+        assertEquals(List.of(), room.persistedItems());
+    }
+
     private static RecordingRoom roomWithLayout() throws Exception {
         RecordingRoom room = new RecordingRoom();
         RoomLayout layout = mock(RoomLayout.class);
@@ -123,6 +144,7 @@ class RoomItemOperationBehaviorTest {
 
     private static final class RecordingRoom extends Room {
         private final List<ServerMessage> messages = new ArrayList<>();
+        private final List<HabboItem> persistedItems = new ArrayList<>();
         private Set<HabboItem> floorItems = Set.of();
 
         private RecordingRoom() {
@@ -147,8 +169,17 @@ class RoomItemOperationBehaviorTest {
             this.messages.add(message);
         }
 
+        @Override
+        void savePendingItems(List<HabboItem> items) {
+            this.persistedItems.addAll(items);
+        }
+
         private List<Integer> messageHeaders() {
             return this.messages.stream().map(ServerMessage::getHeader).toList();
+        }
+
+        private List<HabboItem> persistedItems() {
+            return List.copyOf(this.persistedItems);
         }
     }
 }

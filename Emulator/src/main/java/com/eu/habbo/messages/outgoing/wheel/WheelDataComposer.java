@@ -41,6 +41,15 @@ public class WheelDataComposer extends MessageComposer {
             this.response.appendString(prize.label == null ? "" : prize.label);
         }
 
+        // seconds until the daily free spins come back (0 = unknown)
+        this.response.appendInt(secondsUntilReset());
+
         return this.response;
+    }
+
+    private static int secondsUntilReset() {
+        int now = com.eu.habbo.Emulator.getIntUnixTimestamp();
+        int day = 86400;
+        return day - (now % day);
     }
 }

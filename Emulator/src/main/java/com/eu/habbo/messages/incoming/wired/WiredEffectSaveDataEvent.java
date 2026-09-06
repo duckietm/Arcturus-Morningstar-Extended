@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredExtra;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.generic.alerts.UpdateFailedComposer;
@@ -23,6 +24,18 @@ public class WiredEffectSaveDataEvent extends MessageHandler {
             if (room.canModifyWired(this.client.getHabbo())) {
                 InteractionWiredEffect effect = room.getRoomSpecialTypes().getEffect(itemId);
                 InteractionWiredExtra extra = room.getRoomSpecialTypes().getExtra(itemId);
+
+                // A freshly placed item can exist in the authoritative room index before a stale
+                // special-type cache is observed by this packet worker. Resolve the actual room
+                // item as a fallback; inventory items are intentionally never accepted here.
+                if (effect == null && extra == null) {
+                    HabboItem roomItem = room.getHabboItem(itemId);
+                    if (roomItem instanceof InteractionWiredEffect wiredEffect) {
+                        effect = wiredEffect;
+                    } else if (roomItem instanceof InteractionWiredExtra wiredExtra) {
+                        extra = wiredExtra;
+                    }
+                }
 
                 try {
                     if (effect == null && extra == null)

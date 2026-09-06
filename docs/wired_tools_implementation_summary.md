@@ -48,7 +48,7 @@ Current active work is mainly in:
 - `Monitor`
 - `Inspection`
 
-`Chests` and `Settings` are currently placeholder/future-facing areas.
+`Chests` and `Settings` are now implemented too. `Chests` (`WiredChestsTabView.tsx`) shows the room-wide wired chest transaction log with a per-chest filter, lock/unlock controls for the room's chests, and a detail window for a single transaction. `Settings` (`WiredToolsSettingsTabView.tsx`) edits the room's wired inspect/modify permission masks and saves them through `WiredRoomSettingsSaveComposer`.
 
 ### 3.2 Inspection
 
@@ -261,7 +261,7 @@ Current known limitations:
 
 - `Permanent furni vars` uses a fixed UI denominator (`60`)
 - `@wired_timer` is still client-side time since room entry
-- `Chests` and `Settings` are not fully implemented yet
+- `Chests` and `Settings` are implemented and served by the emulator (`WiredChestRoomLogsEvent` 9328, `WiredChestLockEvent` 9329, `WiredChestTransactionDetailsEvent` 9334, `WiredRoomSettingsRequestEvent` 10022, `WiredRoomSettingsSaveEvent` 10023). The chest log is read-only and gated on room rights; locking every chest in the room, rather than only your own, is reserved for the room owner or `ACC_ANYROOMOWNER`
 - legacy wired configuration keys are still present for database compatibility, but runtime execution now goes only through the new engine
 
 Good future tasks:
@@ -269,7 +269,7 @@ Good future tasks:
 - make `Permanent furni vars` fully server-driven
 - add export/copy actions for monitor history
 - add more detailed filtering/search in history
-- document chest/settings once implemented
+- document the chest transaction log filter codes and the wired permission mask bits in `docs/wired_tools_reference.md`
 - optionally remove the compatibility keys entirely once old database defaults are no longer needed
 
 ---

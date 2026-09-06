@@ -36,7 +36,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
     private int comparison = COMPARISON_EQUAL;
     private int minutes = 0;
     private int halfSecondSteps = 0;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionCounterTimeMatches(ResultSet set, Item baseItem) throws SQLException {
@@ -160,7 +160,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.comparison = COMPARISON_EQUAL;
         this.minutes = 0;
         this.halfSecondSteps = 0;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
     }
 
@@ -237,7 +237,7 @@ public class WiredConditionCounterTimeMatches extends InteractionWiredCondition 
         this.comparison = COMPARISON_EQUAL;
         this.minutes = 0;
         this.halfSecondSteps = 0;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
     }
 

@@ -49,4 +49,12 @@ class RoomUserSignGuardContractTest {
         assertTrue(guard > -1, "Sign id range guard must exist");
         assertTrue(vote > guard, "Vote counters must only receive signs after the range guard");
     }
+
+    @Test
+    void allNitroSignsAreAccepted() throws Exception {
+        String source = source();
+
+        assertTrue(source.contains("MAX_SIGN_ID = 17"),
+                "Nitro exposes sign IDs 0 through 17");
+    }
 }

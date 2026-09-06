@@ -8,18 +8,19 @@ import com.eu.habbo.habbohotel.users.Habbo;
 
 public class RoomEffectCommand extends Command {
     public RoomEffectCommand() {
-        super("cmd_roomeffect", Emulator.getTexts().getValue("commands.keys.cmd_roomeffect").split(";"));
+        super(null, Emulator.getTexts().getValue("commands.keys.cmd_roomeffect").split(";"));
     }
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
-        if (params.length < 2) {
+        int effectArgumentIndex = params.length >= 3 && params[0].equalsIgnoreCase("eff") && params[1].equalsIgnoreCase("room") ? 2 : 1;
+        if (params.length <= effectArgumentIndex) {
             gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_roomeffect.no_effect"), RoomChatMessageBubbles.ALERT);
             return true;
         }
 
         try {
-            int effectId = Integer.parseInt(params[1]);
+            int effectId = Integer.parseInt(params[effectArgumentIndex]);
 
             if (effectId >= 0) {
                 Room room = gameClient.getHabbo().getHabboInfo().getCurrentRoom();

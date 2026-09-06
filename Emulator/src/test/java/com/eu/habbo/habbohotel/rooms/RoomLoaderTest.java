@@ -161,6 +161,11 @@ class RoomLoaderTest {
         }
 
         @Override
+        public void syncWiredVisibility() {
+            this.calls.add("wired-visibility");
+        }
+
+        @Override
         public void loadWiredData() {
             this.calls.add("wired");
         }

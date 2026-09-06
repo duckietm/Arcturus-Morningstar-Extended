@@ -34,12 +34,12 @@ public class WiredConditionFurniInRange extends InteractionWiredCondition {
     private static final int QUANTIFIER_ALL = 0;
     private static final int QUANTIFIER_ANY = 1;
 
-    public static final WiredConditionType type = WiredConditionType.HAS_ALTITUDE;
+    public static final WiredConditionType type = WiredConditionType.FURNI_RANGE;
 
     private final HashSet<HabboItem> items;
     private int comparison = COMPARISON_EQUAL;
     private double radius = 0.0D;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int quantifier = QUANTIFIER_ALL;
 
     public WiredConditionFurniInRange(ResultSet set, Item baseItem) throws SQLException {
@@ -111,7 +111,7 @@ public class WiredConditionFurniInRange extends InteractionWiredCondition {
         this.items.clear();
         this.comparison = COMPARISON_EQUAL;
         this.radius = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
 
         String wiredData = set.getString("wired_data");
@@ -157,7 +157,7 @@ public class WiredConditionFurniInRange extends InteractionWiredCondition {
         this.items.clear();
         this.comparison = COMPARISON_EQUAL;
         this.radius = 0.0D;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
     }
 
@@ -227,6 +227,19 @@ public class WiredConditionFurniInRange extends InteractionWiredCondition {
         return true;
     }
 
+    /**
+     * The dialog offers three operators against the radius, and until now every one of them behaved
+     * as "within". They now mean what they say, with {@code equals} keeping the historical inclusive
+     * reading so a box saved before this change evaluates exactly as it did.
+     */
+    private boolean matchesRadius(double distance) {
+        return switch (this.comparison) {
+            case COMPARISON_LESS -> distance < this.radius;
+            case COMPARISON_GREATER -> distance > this.radius;
+            default -> distance <= this.radius;
+        };
+    }
+
     private boolean isInsideRange(RoomTile origin, RoomLayout layout, HabboItem item) {
         if (item == null) {
             return false;
@@ -237,7 +250,7 @@ public class WiredConditionFurniInRange extends InteractionWiredCondition {
             return false;
         }
 
-        return origin.distance(tile) <= this.radius;
+        return this.matchesRadius(origin.distance(tile));
     }
 
     private void refresh(Room room) {

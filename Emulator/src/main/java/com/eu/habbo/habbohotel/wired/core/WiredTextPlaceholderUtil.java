@@ -1,5 +1,6 @@
 package com.eu.habbo.habbohotel.wired.core;
 
+import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.games.Game;
 import com.eu.habbo.habbohotel.games.GamePlayer;
@@ -35,20 +36,24 @@ public final class WiredTextPlaceholderUtil {
             return text;
         }
 
+        // This hotel-wide value is intentionally available without an Extra
+        // on the WIRED tile. All other placeholders still retain their
+        // existing Extra-based requirements below.
+        String resolvedText = text.replace("%online_count%", String.valueOf(
+                Emulator.getGameEnvironment().getHabboManager().getOnlineCount()));
+
         Room room = ctx.room();
         HabboItem triggerItem = ctx.triggerItem();
 
         if (room == null || triggerItem == null || room.getRoomSpecialTypes() == null) {
-            return text;
+            return resolvedText;
         }
 
         Collection<InteractionWiredExtra> extras =
                 room.getRoomSpecialTypes().getExtras(triggerItem.getX(), triggerItem.getY());
         if (extras == null || extras.isEmpty()) {
-            return text;
+            return resolvedText;
         }
-
-        String resolvedText = text;
 
         int replacementCount = 0;
 

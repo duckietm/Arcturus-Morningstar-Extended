@@ -33,7 +33,7 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
 
     private final Set<HabboItem> items;
     private int evaluationMode = MODE_ALL;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int compareValue = 1;
 
     public WiredExtraOrEval(ResultSet set, Item baseItem) throws SQLException {
@@ -166,7 +166,7 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
             }
         } catch (NumberFormatException ignored) {
             this.evaluationMode = MODE_ALL;
-            this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
             this.compareValue = 1;
         }
     }
@@ -175,7 +175,7 @@ public class WiredExtraOrEval extends InteractionWiredExtra {
     public void onPickUp() {
         this.items.clear();
         this.evaluationMode = MODE_ALL;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.compareValue = 1;
     }
 

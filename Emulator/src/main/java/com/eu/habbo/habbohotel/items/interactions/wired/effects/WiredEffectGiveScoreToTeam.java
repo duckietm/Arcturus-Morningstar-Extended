@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.games.Game;
 import com.eu.habbo.habbohotel.games.GameState;
 import com.eu.habbo.habbohotel.games.GameTeam;
 import com.eu.habbo.habbohotel.games.GameTeamColors;
+import com.eu.habbo.habbohotel.games.wired.WiredGame;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
@@ -41,12 +42,26 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         for (Game game : room.getGames()) {
-            if (game != null && game.state.equals(GameState.RUNNING)) {
-                GameTeam team = game.getTeam(this.teamColor);
+            if (game == null) continue;
 
-                if (team != null) {
-                    team.addTeamScore(this.getAppliedAmount(team));
-                }
+            WiredGame wiredGame = game instanceof WiredGame ? (WiredGame) game : null;
+            if (wiredGame != null) {
+                // Scoring outside a round opens a new one (timer-less rooms), before the points land.
+                wiredGame.ensureRoundOpen();
+            }
+
+            // getState() (not the raw field) so every game type, WiredGame included, is judged
+            // by the same running/paused/idle state the timers maintain.
+            if (!GameState.RUNNING.equals(game.getState())) continue;
+
+            GameTeam team = game.getTeam(this.teamColor);
+            if (team == null) continue;
+
+            team.addTeamScore(this.getAppliedAmount(team));
+
+            if (wiredGame != null) {
+                wiredGame.refreshScoreboards(this.teamColor);
+                wiredGame.publishLiveHighscores();
             }
         }
     }

@@ -84,7 +84,7 @@ public final class CatalogSqlImportService {
             else applyOffer(offers, statement);
         }
         CatalogVersionSnapshot target = new CatalogVersionSnapshot(current.version(), pages, offers);
-        validateReferences(target);
+        validateReferences(current, target);
         var changes = CatalogChangeSetSupport.diff(current, target, gson);
         return new CatalogImportDryRun(
                 CatalogChangeSource.SQL,
@@ -214,11 +214,18 @@ public final class CatalogSqlImportService {
         return -1;
     }
 
-    private static void validateReferences(CatalogVersionSnapshot snapshot) {
-        for (CatalogOfferSnapshot offer : snapshot.offers()) {
-            if (snapshot.page(offer.catalogType(), offer.pageId()).isEmpty()) {
-                throw new IllegalArgumentException("Offer references a missing page: " + offer.pageId());
+    private static void validateReferences(CatalogVersionSnapshot current, CatalogVersionSnapshot target) {
+        for (CatalogOfferSnapshot offer : target.offers()) {
+            if (target.page(offer.catalogType(), offer.pageId()).isPresent()) continue;
+            // A reference that was already broken before this document and that the document did not touch is a
+            // pre-existing catalog problem (auto-fix removes it), not a fault of this import.
+            CatalogOfferSnapshot before = current.offer(offer.catalogType(), offer.offerId()).orElse(null);
+            if (before != null
+                    && before.equals(offer)
+                    && current.page(offer.catalogType(), offer.pageId()).isEmpty()) {
+                continue;
             }
+            throw new IllegalArgumentException("Offer references a missing page: " + offer.pageId());
         }
     }
 

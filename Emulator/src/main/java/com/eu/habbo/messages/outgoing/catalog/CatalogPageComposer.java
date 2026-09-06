@@ -21,18 +21,24 @@ public class CatalogPageComposer extends MessageComposer {
     private final Habbo habbo;
     private final int offerId;
     private final String mode;
+    private final int responsePageId;
 
     public CatalogPageComposer(CatalogPage page, Habbo habbo, int offerId, String mode) {
+        this(page, habbo, offerId, mode, page.getId());
+    }
+
+    public CatalogPageComposer(CatalogPage page, Habbo habbo, int offerId, String mode, int responsePageId) {
         this.page = page;
         this.habbo = habbo;
         this.offerId = offerId;
         this.mode = mode;
+        this.responsePageId = responsePageId;
     }
 
     @Override
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.CatalogPageComposer);
-        this.response.appendInt(this.page.getId());
+        this.response.appendInt(this.responsePageId);
         this.response.appendString(this.mode);
         this.page.serialize(this.response);
 

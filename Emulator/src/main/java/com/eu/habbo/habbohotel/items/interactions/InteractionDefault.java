@@ -171,11 +171,18 @@ public class InteractionDefault extends HabboItem {
                         HabboItem topItem =
                                 room.getTopItemAt(goalTile.x, goalTile.y, (objects[0] != objects[1]) ? this : null);
 
-                        if (topItem != null
-                                && (topItem.getBaseItem().getEffectM()
-                                                == this.getBaseItem().getEffectM()
-                                        || topItem.getBaseItem().getEffectF()
-                                                == this.getBaseItem().getEffectF())) {
+                        // Keep the effect only when the tile being stepped onto grants the SAME one -
+                        // walking between two pool tiles. Without the > 0 guards two furni that both grant
+                        // nothing compare equal, and the effect is kept with nothing granting it.
+                        boolean destinationGrantsSameEffect = topItem != null
+                                && ((this.getBaseItem().getEffectM() > 0
+                                                && topItem.getBaseItem().getEffectM()
+                                                        == this.getBaseItem().getEffectM())
+                                        || (this.getBaseItem().getEffectF() > 0
+                                                && topItem.getBaseItem().getEffectF()
+                                                        == this.getBaseItem().getEffectF()));
+
+                        if (destinationGrantsSameEffect) {
                             return;
                         }
 

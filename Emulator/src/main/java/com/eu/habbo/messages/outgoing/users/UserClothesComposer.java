@@ -7,7 +7,10 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class UserClothesComposer extends MessageComposer {
     private static class ClothEntry {
@@ -28,20 +31,20 @@ public class UserClothesComposer extends MessageComposer {
         Map<Integer, ClothItem> clothing =
                 Emulator.getGameEnvironment().getCatalogManager().getClothingSnapshot();
 
-        for (int value : habbo.getInventory().getWardrobeComponent().getClothing()) {
-            ClothItem item = clothing.get(value);
-
+        // This hotel exposes its complete clothing library as a wardrobe feature,
+        // not as individually redeemed inventory.  Send every catalog clothing
+        // set to every user while preserving stable ordering and de-duplicating
+        // figure-set ids shared by multiple catalog entries.
+        Set<Integer> seenSetIds = new HashSet<>();
+        for (ClothItem item : new TreeMap<>(clothing).values()) {
             if (item != null) {
-                for (Integer j : item.setId) {
-                    this.idList.add(j);
+                for (Integer setId : item.setId) {
+                    if (setId != null && seenSetIds.add(setId)) {
+                        this.idList.add(setId);
+                    }
                 }
 
                 this.nameList.add(item.name);
-            }
-        }
-
-        for (ClothItem item : clothing.values()) {
-            if (item != null) {
                 this.clothEntries.add(new ClothEntry(item.name, item.setId));
             }
         }

@@ -20,6 +20,7 @@ import com.eu.habbo.messages.incoming.catalog.BuildersClubQueryFurniCountEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogBuyClubDiscountEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogBuyItemAsGiftEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogBuyItemEvent;
+import com.eu.habbo.messages.incoming.games.BanzaiSpeedEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogProductMetadataEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogRequestClubDiscountEvent;
 import com.eu.habbo.messages.incoming.catalog.CatalogRuntimeConfigurationEvent;
@@ -39,6 +40,10 @@ import com.eu.habbo.messages.incoming.catalog.RequestGiftConfigurationEvent;
 import com.eu.habbo.messages.incoming.catalog.RequestMarketplaceConfigEvent;
 import com.eu.habbo.messages.incoming.catalog.RequestPetBreedsEvent;
 import com.eu.habbo.messages.incoming.catalog.TargetOfferStateEvent;
+import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminBulkOffersEvent;
+import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminGiftConfigSaveEvent;
+import com.eu.habbo.messages.incoming.rooms.ChatBubbleConfigSaveEvent;
+import com.eu.habbo.messages.incoming.rooms.ClientRenderSettingsSaveEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminCreateOfferEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminCreatePageEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminDeleteOfferEvent;
@@ -55,6 +60,7 @@ import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminSavePageI
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminSavePageImagesEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminSetPageEnabledEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminSetPageVisibleEvent;
+import com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioAutoFixEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioDocumentApplyEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioDocumentDryRunEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioExportEvent;
@@ -110,6 +116,11 @@ import com.eu.habbo.messages.incoming.friends.SearchUserEvent;
 import com.eu.habbo.messages.incoming.friends.SendMessengerMessageEvent;
 import com.eu.habbo.messages.incoming.friends.StalkFriendEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorBySpriteEvent;
+import com.eu.habbo.messages.incoming.furnieditor.FurniEditorCrackableEvent;
+import com.eu.habbo.messages.incoming.furnieditor.FurniEditorCrackableSaveEvent;
+import com.eu.habbo.messages.incoming.users.OnlineUsersRequestEvent;
+import com.eu.habbo.messages.incoming.gamedata.ExternalTextUpdateEvent;
+import com.eu.habbo.messages.incoming.users.EffectPolicyEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorDeleteEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorDetailEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorImportTextEvent;
@@ -214,6 +225,7 @@ import com.eu.habbo.messages.incoming.inventory.prefixes.SetDisplayOrderEvent;
 import com.eu.habbo.messages.incoming.mentions.DeleteMentionEvent;
 import com.eu.habbo.messages.incoming.mentions.MarkMentionsReadEvent;
 import com.eu.habbo.messages.incoming.mentions.RequestMentionsEvent;
+import com.eu.habbo.messages.incoming.commands.RequestAvailableCommandsEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolAlertEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolChangeRoomSettingsEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolCloseTicketEvent;
@@ -341,6 +353,8 @@ import com.eu.habbo.messages.incoming.rooms.items.TriggerColorWheelEvent;
 import com.eu.habbo.messages.incoming.rooms.items.TriggerDiceEvent;
 import com.eu.habbo.messages.incoming.rooms.items.TriggerOneWayGateEvent;
 import com.eu.habbo.messages.incoming.rooms.items.UpdateFurniturePositionEvent;
+import com.eu.habbo.messages.incoming.rooms.items.SetFurnitureStateEvent;
+import com.eu.habbo.messages.incoming.rooms.SetRoomPaintEvent;
 import com.eu.habbo.messages.incoming.rooms.items.UseRandomStateItemEvent;
 import com.eu.habbo.messages.incoming.rooms.items.WiredChestLockEvent;
 import com.eu.habbo.messages.incoming.rooms.items.WiredChestRoomLogsEvent;
@@ -692,6 +706,7 @@ public class PacketManager {
         this.registerHandler(Incoming.CatalogRuntimeConfigurationEvent, CatalogRuntimeConfigurationEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemAsGiftEvent, CatalogBuyItemAsGiftEvent.class);
         this.registerHandler(Incoming.CatalogBuyItemEvent, CatalogBuyItemEvent.class);
+        this.registerHandler(Incoming.BanzaiSpeedEvent, BanzaiSpeedEvent.class);
         this.registerHandler(Incoming.RedeemVoucherEvent, RedeemVoucherEvent.class);
         this.registerHandler(Incoming.ReloadRecyclerEvent, ReloadRecyclerEvent.class);
         this.registerHandler(Incoming.RecycleEvent, RecycleEvent.class);
@@ -726,6 +741,11 @@ public class PacketManager {
         this.registerHandler(Incoming.FurniEditorUpdateFurnidataEvent, FurniEditorUpdateFurnidataEvent.class);
         this.registerHandler(Incoming.FurniEditorRevertFurnidataEvent, FurniEditorRevertFurnidataEvent.class);
         this.registerHandler(Incoming.FurniEditorImportTextEvent, FurniEditorImportTextEvent.class);
+        this.registerHandler(Incoming.FurniEditorCrackableEvent, FurniEditorCrackableEvent.class);
+        this.registerHandler(Incoming.FurniEditorCrackableSaveEvent, FurniEditorCrackableSaveEvent.class);
+        this.registerHandler(Incoming.OnlineUsersRequestEvent, OnlineUsersRequestEvent.class);
+        this.registerHandler(Incoming.ExternalTextUpdateEvent, ExternalTextUpdateEvent.class);
+        this.registerHandler(Incoming.EffectPolicyEvent, EffectPolicyEvent.class);
 
         // Catalog Admin
         this.registerHandler(Incoming.CatalogAdminSavePageEvent, CatalogAdminSavePageEvent.class);
@@ -733,6 +753,10 @@ public class PacketManager {
         this.registerHandler(Incoming.CatalogAdminDeletePageEvent, CatalogAdminDeletePageEvent.class);
         this.registerHandler(Incoming.CatalogAdminSaveOfferEvent, CatalogAdminSaveOfferEvent.class);
         this.registerHandler(Incoming.CatalogAdminCreateOfferEvent, CatalogAdminCreateOfferEvent.class);
+        this.registerHandler(Incoming.CatalogAdminBulkOffersEvent, CatalogAdminBulkOffersEvent.class); // CATALOG_BULK_OFFERS_V2
+        this.registerHandler(Incoming.CatalogAdminGiftConfigSaveEvent, CatalogAdminGiftConfigSaveEvent.class); // CUSTOM: gift wrapping settings
+        this.registerHandler(Incoming.ChatBubbleConfigSaveEvent, ChatBubbleConfigSaveEvent.class); // CUSTOM: bubble picker editor
+        this.registerHandler(Incoming.ClientRenderSettingsSaveEvent, ClientRenderSettingsSaveEvent.class); // CUSTOM: hotel-wide renderer settings
         this.registerHandler(Incoming.CatalogAdminDeleteOfferEvent, CatalogAdminDeleteOfferEvent.class);
         this.registerHandler(Incoming.CatalogAdminMoveOfferEvent, CatalogAdminMoveOfferEvent.class);
         this.registerHandler(Incoming.CatalogAdminMovePageEvent, CatalogAdminMovePageEvent.class);
@@ -748,6 +772,7 @@ public class PacketManager {
         this.registerHandler(Incoming.CatalogStudioLoadHistoryEvent, CatalogStudioLoadHistoryEvent.class);
         this.registerHandler(Incoming.CatalogStudioUndoEvent, CatalogStudioUndoEvent.class);
         this.registerHandler(Incoming.CatalogStudioValidateEvent, CatalogStudioValidateEvent.class);
+        this.registerHandler(Incoming.CatalogStudioAutoFixEvent, CatalogStudioAutoFixEvent.class);
         this.registerHandler(Incoming.CatalogStudioExportEvent, CatalogStudioExportEvent.class);
         this.registerHandler(Incoming.CatalogStudioDocumentDryRunEvent, CatalogStudioDocumentDryRunEvent.class);
         this.registerHandler(Incoming.CatalogStudioDocumentApplyEvent, CatalogStudioDocumentApplyEvent.class);
@@ -889,6 +914,7 @@ public class PacketManager {
         this.registerHandler(Incoming.PurchasePrefixEvent, PurchasePrefixEvent.class);
         this.registerHandler(Incoming.PurchaseCatalogPrefixEvent, PurchaseCatalogPrefixEvent.class);
         this.registerHandler(Incoming.SetDisplayOrderEvent, SetDisplayOrderEvent.class);
+        this.registerHandler(Incoming.SetNameColorEvent, com.eu.habbo.messages.incoming.inventory.prefixes.SetNameColorEvent.class);
 
         // Nick Icons
         this.registerHandler(Incoming.RequestUserNickIconsEvent, RequestUserNickIconsEvent.class);
@@ -897,6 +923,7 @@ public class PacketManager {
     }
 
     void registerRooms() throws Exception {
+        this.registerHandler(Incoming.RequestAvailableCommandsEvent, RequestAvailableCommandsEvent.class);
         this.registerHandler(Incoming.RequestMentionsEvent, RequestMentionsEvent.class);
         this.registerHandler(Incoming.MarkMentionsReadEvent, MarkMentionsReadEvent.class);
         this.registerHandler(Incoming.DeleteMentionEvent, DeleteMentionEvent.class);
@@ -1019,6 +1046,8 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomUnFavoriteEvent, RoomUnFavoriteEvent.class);
         this.registerHandler(Incoming.UseRandomStateItemEvent, UseRandomStateItemEvent.class);
         this.registerHandler(Incoming.UpdateFurniturePositionEvent, UpdateFurniturePositionEvent.class);
+        this.registerHandler(Incoming.SetFurnitureStateEvent, SetFurnitureStateEvent.class);
+        this.registerHandler(Incoming.SetRoomPaintEvent, SetRoomPaintEvent.class);
     }
 
     void registerPolls() throws Exception {
@@ -1378,7 +1407,25 @@ public class PacketManager {
         this.registerHandler(
                 Incoming.WheelAdminSavePrizesEvent,
                 com.eu.habbo.messages.incoming.wheel.WheelAdminSavePrizesEvent.class);
+        this.registerHandler(
+                Incoming.WheelAdminClearWinsEvent,
+                com.eu.habbo.messages.incoming.wheel.WheelAdminClearWinsEvent.class);
+        this.registerHandler(
+                Incoming.WheelAdminSaveConfigEvent,
+                com.eu.habbo.messages.incoming.wheel.WheelAdminSaveConfigEvent.class);
 
+        this.registerHandler(
+                Incoming.InvseeRequestEvent,
+                com.eu.habbo.messages.incoming.invsee.InvseeRequestEvent.class);
+        this.registerHandler(
+                Incoming.InvseeTakeItemEvent,
+                com.eu.habbo.messages.incoming.invsee.InvseeTakeItemEvent.class);
+        this.registerHandler(
+                Incoming.InvseeGiveItemEvent,
+                com.eu.habbo.messages.incoming.invsee.InvseeGiveItemEvent.class);
+        this.registerHandler(
+                Incoming.ModToolCloneFinderEvent,
+                com.eu.habbo.messages.incoming.modtool.ModToolCloneFinderEvent.class);
         this.registerHandler(
                 Incoming.SoundboardPlayEvent, com.eu.habbo.messages.incoming.soundboard.SoundboardPlayEvent.class);
         this.registerHandler(

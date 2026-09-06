@@ -25,7 +25,7 @@
     "catalog_pages": ["caption", "caption_save", "catalog_mode", "club_only", "enabled", "icon_color", "icon_image", "id", "includes", "min_rank", "order_num", "page_headline", "page_layout", "page_special", "page_teaser", "page_text1", "page_text2", "page_text_details", "page_text_teaser", "parent_id", "room_id", "vip_only", "visible"],
     "catalog_pages_bc": ["caption", "enabled", "icon_color", "icon_image", "id", "order_num", "page_headline", "page_layout", "page_special", "page_teaser", "page_text1", "page_text2", "page_text_details", "page_text_teaser", "parent_id", "visible"],
     "catalog_target_offers": ["catalog_item", "credits", "description", "end_timestamp", "icon", "id", "image", "offer_code", "points", "points_type", "purchase_limit", "title", "vars"],
-    "chat_bubbles": ["name", "overridable", "permission", "triggers_talking_furniture", "type"],
+    "chat_bubbles": ["available_from", "duration_weeks", "enabled", "min_rank", "name", "overridable", "permission", "triggers_talking_furniture", "type"],
     "chatlogs_private": ["id", "message", "timestamp", "user_from_id", "user_to_id"],
     "chatlogs_room": ["id", "message", "room_id", "timestamp", "user_from_id", "user_to_id"],
     "commandlogs": ["command", "id", "params", "succes", "timestamp", "user_id"],

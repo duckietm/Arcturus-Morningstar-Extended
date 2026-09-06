@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.navigation.*;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomCategory;
+import com.eu.habbo.habbohotel.rooms.RoomState;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSearchResultsComposer;
 import org.slf4j.Logger;
@@ -31,11 +32,12 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
         if (view.equals("query")) view = "hotel_view";
         if (view.equals("groups")) view = "hotel_view";
 
-        NavigatorFilter filter = Emulator.getGameEnvironment().getNavigatorManager().filters.get(view);
+        NavigatorManager navigatorManager = Emulator.getGameEnvironment().getNavigatorManager();
+        NavigatorFilter filter = navigatorManager.filters.get(view);
         RoomCategory category = Emulator.getGameEnvironment().getRoomManager().getCategoryBySafeCaption(view);
 
         if (filter == null) {
-            List<Room> rooms = Emulator.getGameEnvironment().getNavigatorManager().getRoomsForCategory(view, this.client.getHabbo());
+            List<Room> rooms = navigatorManager.getRoomsForCategory(view, this.client.getHabbo());
 
             if (rooms != null) {
                 List<SearchResultList> resultLists = new ArrayList<>();
@@ -45,31 +47,21 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
             }
         }
 
+        // "<prefix>:<text>" — the prefix is matched case-insensitively and both halves trimmed,
+        // so "Roomname: tribute" behaves like "roomname:tribute".
         String filterField = "anything";
-        String part = query;
-        NavigatorFilterField field = Emulator.getGameEnvironment().getNavigatorManager().filterSettings.get(filterField);
-        if (filter != null) {
-            if (query.contains(":")) {
-                String[] parts = query.split(":", 2);
-
-                if (parts.length > 1) {
-                    filterField = parts[0];
-                    part = parts[1];
-                } else {
-                    filterField = parts[0].replace(":", "");
-                    if (!Emulator.getGameEnvironment().getNavigatorManager().filterSettings.containsKey(filterField)) {
-                        filterField = "anything";
-                    }
-                    part = "";
-                }
-            }
-
-            if (Emulator.getGameEnvironment().getNavigatorManager().filterSettings.get(filterField) != null) {
-                field = Emulator.getGameEnvironment().getNavigatorManager().filterSettings.get(filterField);
+        String part = query.trim();
+        if (query.contains(":")) {
+            String[] parts = query.split(":", 2);
+            String prefix = parts[0].trim().toLowerCase(Locale.ROOT);
+            if (navigatorManager.filterSettings.containsKey(prefix)) {
+                filterField = prefix;
+                part = parts.length > 1 ? parts[1].trim() : "";
             }
         }
+        NavigatorFilterField field = navigatorManager.filterSettings.get(filterField);
 
-        if (field == null || query.isEmpty()) {
+        if (field == null || part.isEmpty()) {
             if (filter == null)
                 return;
 
@@ -84,90 +76,73 @@ public class RequestNewNavigatorRoomsEvent extends MessageHandler {
             return;
         }
 
-        if (filter == null) {
-            filter = Emulator.getGameEnvironment().getNavigatorManager().filters.get("hotel_view");
-        }
-
-        if (category == null) {
-            category = Emulator.getGameEnvironment().getRoomManager().getCategoryBySafeCaption("hotel_view");
-        }
-
-        if (filter == null)
-            return;
+        NavigatorFilter hotelFilter = navigatorManager.filters.get("hotel_view");
+        if (filter == null) filter = hotelFilter;
+        if (filter == null) return;
 
         try {
-            List<SearchResultList> resultLists2 = filter.getResult(this.client.getHabbo(), field, part, category != null ? category.getId() : -1);
-            List<SearchResultList> resultLists = new ArrayList<>();
-            for(SearchResultList searchResultList : resultLists2) {
-                List<Room> rooms = new ArrayList<>();
-                rooms.addAll(searchResultList.rooms);
-                resultLists.add(new SearchResultList(searchResultList.order, searchResultList.code, searchResultList.query, searchResultList.action, searchResultList.mode, searchResultList.hidden, rooms, searchResultList.filter, searchResultList.showInvisible, searchResultList.displayOrder, searchResultList.categoryOrder));
-            }
-            if ("group".equals(filterField)) {
-                final String needle = part.toLowerCase();
-                for (SearchResultList list : resultLists) {
-                    list.rooms.removeIf(room -> !room.belongsToGuild()
-                            || (!needle.isEmpty() && !room.getGuildName().toLowerCase().contains(needle)));
+            Map<Integer, Room> found = new LinkedHashMap<>();
+
+            // 1) Global, database-backed search over every room (all categories), whatever tab
+            //    the user is on — the tab only decides which extra in-memory lists are merged in.
+            if (hotelFilter != null) {
+                for (SearchResultList list : hotelFilter.getResult(this.client.getHabbo(), field, part, -1)) {
+                    for (Room room : list.rooms) found.put(room.getId(), room);
                 }
             }
-            filter.filter(field.field, part, resultLists);
-            resultLists = toQueryResults(resultLists);
+
+            // 2) The current tab's own lists (my rooms, favourites, ads, publics …) filtered in memory,
+            //    so rooms the SQL search cannot reach (own invisible rooms, guild filter) still show up.
+            if (filter != hotelFilter) {
+                List<SearchResultList> viewLists = new ArrayList<>();
+                for (SearchResultList original : filter.getResult(this.client.getHabbo())) {
+                    viewLists.add(new SearchResultList(original.order, original.code, original.query, original.action, original.mode, original.hidden, new ArrayList<>(original.rooms), original.filter, original.showInvisible, original.displayOrder, original.categoryOrder));
+                }
+                if ("group".equals(filterField)) {
+                    final String needle = part.toLowerCase(Locale.ROOT);
+                    for (SearchResultList list : viewLists) {
+                        list.rooms.removeIf(room -> !room.belongsToGuild()
+                                || (!needle.isEmpty() && !safeLower(room.getGuildName()).contains(needle)));
+                    }
+                }
+                filter.filter(field.field, part, viewLists);
+                for (SearchResultList list : viewLists) {
+                    for (Room room : list.rooms) found.putIfAbsent(room.getId(), room);
+                }
+            }
+
+            SearchResultList wrapper = new SearchResultList(0, "query", "", SearchAction.NONE, ListMode.LIST, DisplayMode.VISIBLE, new ArrayList<>(found.values()), true, true, DisplayOrder.ACTIVITY, -1);
+            List<SearchResultList> resultLists = toQueryResults(Collections.singletonList(wrapper));
             this.client.sendResponse(new NewNavigatorSearchResultsComposer(view, query, resultLists));
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }
     }
 
+    private static String safeLower(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Collapses every list into the single "query" block. Invisible rooms are dropped unless the
+     * searcher is staff or owns them (own hidden rooms must stay findable from "my world").
+     */
     private ArrayList<SearchResultList> toQueryResults(List<SearchResultList> resultLists) {
         ArrayList<SearchResultList> nList = new ArrayList<>();
-        Map<Integer, Room> searchRooms = new HashMap<>();
+        Map<Integer, Room> searchRooms = new LinkedHashMap<>();
+        boolean staff = this.client.getHabbo().hasPermission(Permission.ACC_ENTERANYROOM) || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER);
+        int userId = this.client.getHabbo().getHabboInfo().getId();
 
         for (SearchResultList li : resultLists) {
             for (Room room : li.rooms) {
+                if (room == null) continue;
+                if (!staff && room.getState() == RoomState.INVISIBLE && room.getOwnerId() != userId) continue;
                 searchRooms.put(room.getId(), room);
             }
         }
 
-        SearchResultList list = new SearchResultList(0, "query", "", SearchAction.NONE, ListMode.LIST, DisplayMode.VISIBLE, new ArrayList<Room>(searchRooms.values()), true, this.client.getHabbo().hasPermission(Permission.ACC_ENTERANYROOM) || this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER), DisplayOrder.ACTIVITY, -1);
+        SearchResultList list = new SearchResultList(0, "query", "", SearchAction.NONE, ListMode.LIST, DisplayMode.VISIBLE, new ArrayList<Room>(searchRooms.values()), true, true, DisplayOrder.ACTIVITY, -1);
         nList.add(list);
         return nList;
-    }
-
-    @SuppressWarnings("unused")
-    private void filter(List<SearchResultList> resultLists, NavigatorFilter filter, String part) {
-        List<SearchResultList> toRemove = new ArrayList<>();
-        Map<Integer, HashMap<Integer, Room>> filteredRooms = new HashMap<>();
-
-        for (NavigatorFilterField field : Emulator.getGameEnvironment().getNavigatorManager().filterSettings.values()) {
-            for (SearchResultList result : resultLists) {
-                if (result.filter) {
-                    List<Room> rooms = new ArrayList<>(result.rooms.subList(0, result.rooms.size()));
-                    filter.filterRooms(field.field, part, rooms);
-
-                    if (!filteredRooms.containsKey(result.order)) {
-                        filteredRooms.put(result.order, new HashMap<>());
-                    }
-
-                    for (Room room : rooms) {
-                        filteredRooms.get(result.order).put(room.getId(), room);
-                    }
-                }
-            }
-        }
-
-        for (Map.Entry<Integer, HashMap<Integer, Room>> set : filteredRooms.entrySet()) {
-            for (SearchResultList resultList : resultLists) {
-                if (resultList.filter) {
-                    resultList.rooms.clear();
-                    resultList.rooms.addAll(set.getValue().values());
-
-                    if (resultList.rooms.isEmpty()) {
-                        toRemove.add(resultList);
-                    }
-                }
-            }
-        }
-
-        resultLists.removeAll(toRemove);
     }
 }

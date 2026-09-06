@@ -85,7 +85,12 @@ final class CatalogPurchaseApplicationService {
                         candidate -> CatalogPageAccessPolicy.canAccess(
                                 candidate,
                                 this.client.getHabbo().getHabboInfo().getRank().getId(),
-                                this.client.getHabbo().getHabboStats().hasActiveClub()));
+                                 this.client.getHabbo().getHabboStats().hasActiveClub()));
+
+        if (page == null) {
+            this.client.sendResponse(new AlertPurchaseUnavailableComposer(AlertPurchaseUnavailableComposer.ILLEGAL));
+            return;
+        }
 
         if (pageId != -12345678 && pageId != -1) {
             if (page instanceof RoomBundleLayout) {

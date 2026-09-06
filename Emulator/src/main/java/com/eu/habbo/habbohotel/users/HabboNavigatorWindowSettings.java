@@ -49,7 +49,7 @@ public class HabboNavigatorWindowSettings {
     public void insertDisplayMode(String category, ListMode listMode, DisplayMode displayMode) {
         if (!this.displayModes.containsKey(category)) {
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
-                 PreparedStatement statement = connection.prepareStatement("INSERT INTO users_navigator_settings (user_id, caption, list_type, display) VALUES (?, ?, ?, ?)")) {
+                 PreparedStatement statement = connection.prepareStatement("INSERT INTO users_navigator_settings (user_id, caption, list_type, display) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE list_type = VALUES(list_type), display = VALUES(display)")) {
                 statement.setInt(1, this.userId);
                 statement.setString(2, category);
                 statement.setString(3, listMode.name().toLowerCase());

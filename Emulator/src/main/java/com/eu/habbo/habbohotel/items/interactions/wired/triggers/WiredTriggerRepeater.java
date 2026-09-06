@@ -132,12 +132,15 @@ public class WiredTriggerRepeater extends InteractionWiredTrigger implements Wir
 
     @Override
     public void onWiredTick(Room room, long tickCount, int tickIntervalMs) {
-        // Calculate elapsed time based on global tick count
-        // All repeaters with the same interval fire on the exact same tick
+        // Global tick count, so every repeater with the same period fires on the same tick.
         long elapsedMs = tickCount * tickIntervalMs;
+        long previousElapsedMs = elapsedMs - tickIntervalMs;
+        long period = Math.max(1, this.repeatTime);
 
-        // Fire when elapsed time is a multiple of repeatTime
-        if (elapsedMs % this.repeatTime == 0) {
+        // Fire once each time a period boundary is crossed. The old exact-multiple test only worked
+        // when the tick interval divided the period; with any other interval the boundary was
+        // stepped over and the trigger never fired, or fired at the wrong rate.
+        if (elapsedMs / period != previousElapsedMs / period) {
             long currentTime = System.currentTimeMillis();
             if (this.getRoomId() != 0
                     && room.isLoaded()

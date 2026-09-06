@@ -42,7 +42,29 @@ public abstract class InteractionCustomValues extends HabboItem {
         super(id, userId, item, extradata, limitedStack, limitedSells);
 
         this.values.putAll(defaultValues);
+        this.loadRuntimeExtraData(extradata);
     }
+
+    /**
+     * Runtime-created custom-value items (notably ads_bg / InteractionRoomAds)
+     * must parse the catalog extradata immediately. The DB constructor already
+     * parses items.extra_data; previously this constructor ignored `extradata`,
+     * so imageUrl stayed empty until a later reload.
+     *
+     * Split on the FIRST '=' only because URLs can contain '=' in query strings.
+     */
+    private void loadRuntimeExtraData(String extraData) {
+        if (extraData == null || extraData.isBlank()) return;
+
+        for (String entry : extraData.split(";")) {
+            int separator = entry.indexOf('=');
+
+            if (separator > 0) {
+                this.values.put(entry.substring(0, separator), entry.substring(separator + 1));
+            }
+        }
+    }
+
 
     @Override
     public boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects) {

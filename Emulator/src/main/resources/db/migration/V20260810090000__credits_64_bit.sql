@@ -1,0 +1,6 @@
+ALTER TABLE users
+    MODIFY COLUMN credits BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE logs_economy
+    MODIFY COLUMN balance_before BIGINT NOT NULL,
+    MODIFY COLUMN balance_after BIGINT NOT NULL;

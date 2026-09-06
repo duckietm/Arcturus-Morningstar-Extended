@@ -46,7 +46,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
     private final ConcurrentHashMap<Integer, WiredChangeDirectionSetting> runtimeItems = new ConcurrentHashMap<>();
     private RoomUserRotation startRotation = RoomUserRotation.NORTH;
     private int blockedAction = 0;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private boolean blockOnUserCollision = false;
 
     public WiredEffectChangeFurniDirection(ResultSet set, Item baseItem) throws SQLException {
@@ -265,7 +265,7 @@ public class WiredEffectChangeFurniDirection extends InteractionWiredEffect {
         this.runtimeItems.clear();
         this.blockedAction = 0;
         this.startRotation = RoomUserRotation.NORTH;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.blockOnUserCollision = false;
     }
 

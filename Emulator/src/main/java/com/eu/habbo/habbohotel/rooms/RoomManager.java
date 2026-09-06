@@ -107,7 +107,8 @@ public class RoomManager {
                    who_can_mute, who_can_kick, who_can_ban, poll_id, guild_id,
                    roller_speed, override_model, model, promoted, jukebox_active,
                    hidewired, builders_club_trial_locked,
-                   builders_club_original_state, trade_mode, move_diagonally,
+                   builders_club_original_state, trade_mode, pull_enabled,
+                   push_enabled, move_diagonally,
                    allow_underpass, mute_all_pets, leave_on_door_tile,
                    idle_sleep_enabled, idle_sleep_timeout_seconds,
                    idle_autokick_enabled, idle_autokick_timeout_seconds,
@@ -131,7 +132,8 @@ public class RoomManager {
                    who_can_mute, who_can_kick, who_can_ban, poll_id, guild_id,
                    roller_speed, override_model, model, promoted, jukebox_active,
                    hidewired, builders_club_trial_locked,
-                   builders_club_original_state, trade_mode, move_diagonally,
+                   builders_club_original_state, trade_mode, pull_enabled,
+                   push_enabled, move_diagonally,
                    allow_underpass, mute_all_pets, leave_on_door_tile,
                    idle_sleep_enabled, idle_sleep_timeout_seconds,
                    idle_autokick_enabled, idle_autokick_timeout_seconds,
@@ -282,10 +284,10 @@ public class RoomManager {
     public Map<Integer, List<Room>> findRooms(
             NavigatorFilterField filterField, String value, int category, boolean showInvisible) {
         Map<Integer, List<Room>> rooms = new HashMap<>();
+        int limit = Math.max(1, NavigatorManager.MAXIMUM_RESULTS_PER_PAGE);
         String query = filterField.databaseQuery + " AND rooms.state NOT LIKE " + (showInvisible ? "''" : "'invisible'")
-                + (category >= 0 ? "AND rooms.category = '" + category + "'" : "")
-                + "  ORDER BY rooms.users, rooms.id DESC LIMIT " + (page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE)
-                + "" + ((page * NavigatorManager.MAXIMUM_RESULTS_PER_PAGE) + NavigatorManager.MAXIMUM_RESULTS_PER_PAGE);
+                + (category >= 0 ? " AND rooms.category = '" + category + "'" : "")
+                + " ORDER BY rooms.users DESC, rooms.id DESC LIMIT " + (page * limit) + ", " + limit;
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(

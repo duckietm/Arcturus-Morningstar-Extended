@@ -136,11 +136,11 @@ public final class CatalogPaymentService {
     private static void applyCommittedBalances(Habbo habbo, int pointsType, WalletCommit commit) {
         if (commit.creditMutation() != null) {
             LedgerWalletMutation.applyCommitted(
-                    habbo, EconomyLedger.CREDITS, commit.creditMutation().balanceAfter());
+                    habbo, EconomyLedger.CREDITS, commit.creditMutation().balanceAfterLong());
         }
         if (commit.pointsMutation() != null) {
             LedgerWalletMutation.applyCommitted(
-                    habbo, pointsType, commit.pointsMutation().balanceAfter());
+                    habbo, pointsType, commit.pointsMutation().balanceAfterLong());
         }
     }
 

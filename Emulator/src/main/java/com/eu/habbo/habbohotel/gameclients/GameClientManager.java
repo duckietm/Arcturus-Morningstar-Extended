@@ -60,6 +60,17 @@ public class GameClientManager {
         this.disposeClient(client.getChannel(), false);
     }
 
+    /**
+     * Fully disconnect every client without creating reconnect ghosts. This is
+     * the shutdown-only path: a process restart cannot resume an in-memory
+     * Habbo, so parking it would only leave a paused-effect room unit behind.
+     */
+    public void forceDisposeAllClients() {
+        for (GameClient client : new ArrayList<>(this.clients.values())) {
+            this.forceDisposeClient(client);
+        }
+    }
+
     private void disposeClient(Channel channel) {
         this.disposeClient(channel, true);
     }

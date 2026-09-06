@@ -52,10 +52,12 @@ public class CameraRoomThumbnailEvent extends MessageHandler {
         HabboStats habboStats = habbo.getHabboStats();
         int timestamp = Emulator.getIntUnixTimestamp();
 
+        int renderDelay = Emulator.getConfig().getInt("camera.render.delay", CAMERA_RENDER_DELAY);
+
         if (habboStats.cache.containsKey("camera_render_cooldown")) {
             int cameraTimestamp = (Integer) habboStats.cache.get("camera_render_cooldown");
-            if (timestamp - cameraTimestamp < CAMERA_RENDER_DELAY) {
-                String alertMessage = Emulator.getTexts().getValue("camera.wait").replace("%seconds%", Integer.toString(CAMERA_RENDER_DELAY - (timestamp - cameraTimestamp)));
+            if (timestamp - cameraTimestamp < renderDelay) {
+                String alertMessage = Emulator.getTexts().getValue("camera.wait").replace("%seconds%", Integer.toString(renderDelay - (timestamp - cameraTimestamp)));
                 habbo.alert(alertMessage);
                 return;
             }

@@ -17,7 +17,9 @@ public class AdvertisingSaveEvent extends MessageHandler {
         if (room == null)
             return;
 
-        if (!room.hasRights(this.client.getHabbo()))
+        // Holders of the EVENT badge may tweak room backgrounds/ads in any room.
+        boolean eventStaff = this.client.getHabbo().getInventory().getBadgesComponent().hasBadge("EVENT");
+        if (!room.hasRights(this.client.getHabbo()) && !eventStaff)
             return;
 
         int itemId = this.packet.readInt();
@@ -28,7 +30,7 @@ public class AdvertisingSaveEvent extends MessageHandler {
         if (item == null)
             return;
 
-        if (item instanceof InteractionRoomAds && !this.client.getHabbo().hasPermission("acc_ads_background")) {
+        if (item instanceof InteractionRoomAds && !eventStaff && !this.client.getHabbo().hasPermission("acc_ads_background")) {
             this.client.getHabbo().alert(Emulator.getTexts().getValue("hotel.error.roomads.nopermission"));
             return;
         }
@@ -44,10 +46,6 @@ public class AdvertisingSaveEvent extends MessageHandler {
 
                 if (key.isEmpty())
                     continue;
-
-                if (!Emulator.getConfig().getBoolean("camera.use.https")) {
-                    value = value.replace("https://", "http://");
-                }
 
                 ((InteractionCustomValues) item).values.put(key, value);
             }

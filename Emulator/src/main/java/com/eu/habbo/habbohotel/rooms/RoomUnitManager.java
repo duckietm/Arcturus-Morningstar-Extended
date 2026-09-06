@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.rooms;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.commands.BssCommandPreferences;
 import com.eu.habbo.habbohotel.bots.Bot;
 import com.eu.habbo.habbohotel.bots.VisitorBot;
 import com.eu.habbo.habbohotel.items.Item;
@@ -187,6 +188,9 @@ public class RoomUnitManager {
             }
         }
 
+        // :tc only holds for the room it was used in.
+        BssCommandPreferences.resetRoomScoped(habbo.getHabboInfo().getId());
+
         if (habbo.getRoomUnit() != null && habbo.getRoomUnit().getCurrentLocation() != null) {
             habbo.getRoomUnit().getCurrentLocation().removeUnit(habbo.getRoomUnit());
         }
@@ -370,7 +374,7 @@ public class RoomUnitManager {
                 habbo.getRoomUnit().setZ(topItem.getZ());
                 habbo.getRoomUnit().setPreviousLocationZ(topItem.getZ());
                 habbo.getRoomUnit().setRotation(RoomUserRotation.fromValue(topItem.getRotation() % 4));
-                double layHeight = Item.getCurrentHeight(topItem) + bedProfile.getLayZOffset();
+                double layHeight = bedProfile.getLayHeight(Item.getCurrentHeight(topItem));
                 habbo.getRoomUnit()
                         .setStatus(
                                 RoomUnitStatus.LAY,
@@ -706,6 +710,16 @@ public class RoomUnitManager {
             this.currentPets.put(pet.getId(), pet);
             this.index.incrementUnitId();
 
+            // persist the placement right away, so a hard emulator kill cannot lose the room
+            com.eu.habbo.Emulator.getThreading().run(() -> {
+                try {
+                    if (pet.getRoom() == null) return;
+                    pet.needsUpdate = true;
+                    pet.run();
+                } catch (Exception ignored) {
+                }
+            }, 750);
+
             Habbo habbo = this.getHabbo(pet.getUserId());
             if (habbo != null) {
                 this.room
@@ -1014,10 +1028,11 @@ public class RoomUnitManager {
     }
 
     public void giveHandItem(RoomUnit roomUnit, int handItem) {
-        roomUnit.setHandItem(handItem);
+        int supportedHandItem = AvatarHandItemSupport.normalize(handItem);
+        roomUnit.setHandItem(supportedHandItem);
         this.room.sendComposer(new RoomUserHandItemComposer(roomUnit).compose());
 
-        if (handItem > 0) {
+        if (supportedHandItem > 0) {
             com.eu.habbo.habbohotel.wired.core.WiredManager.triggerUserGetsHandItem(this.room, roomUnit);
         }
     }
@@ -1092,6 +1107,8 @@ public class RoomUnitManager {
                 z = tile.z;
             }
 
+            // teleport: drop the walk status and any pending path so the client snaps instead of gliding
+            roomUnit.removeStatus(RoomUnitStatus.MOVE);
             roomUnit.setLocation(tile);
             roomUnit.setGoalLocation(tile);
             roomUnit.setZ(z);
@@ -1116,6 +1133,11 @@ public class RoomUnitManager {
         }
 
         synchronized (this.currentBots) {
+            for (Bot bot : this.currentBots.values()) {
+                if (bot instanceof com.eu.habbo.habbohotel.bots.GuardianBot) {
+                    ((com.eu.habbo.habbohotel.bots.GuardianBot) bot).onUserEnter(habbo);
+                }
+            }
             if (habbo.getHabboInfo().getId() != this.room.getOwnerId()) {
                 return;
             }

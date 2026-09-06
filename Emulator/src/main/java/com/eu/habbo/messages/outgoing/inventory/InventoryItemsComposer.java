@@ -35,7 +35,7 @@ public class InventoryItemsComposer extends MessageComposer {
             this.response.appendInt(this.items.size());
 
             for (HabboItem habboItem : this.items.values()) {
-                this.serializeItem(habboItem);
+                serializeInventoryItem(this.response, habboItem);
             }
             return this.response;
         } catch (Exception e) {
@@ -45,62 +45,64 @@ public class InventoryItemsComposer extends MessageComposer {
         return null;
     }
 
-    private void serializeItem(HabboItem habboItem) {
-        this.response.appendInt(habboItem.getGiftAdjustedId());
-        this.response.appendString(habboItem.getBaseItem().getType().code);
-        this.response.appendInt(habboItem.getId());
-        this.response.appendInt(habboItem.getBaseItem().getSpriteId());
+    /**
+     * One inventory item, in the layout the client's FurnitureListItemParser reads. Shared with
+     * InventoryUpdateItemComposer (the single-item "add or update" the client applies without refetching): the two
+     * used to be written separately and drifted, so a furni pushed one way could differ from the same furni listed.
+     */
+    static void serializeInventoryItem(ServerMessage response, HabboItem habboItem) {
+        response.appendInt(habboItem.getGiftAdjustedId());
+        response.appendString(habboItem.getBaseItem().getType().code);
+        response.appendInt(habboItem.getId());
+        response.appendInt(habboItem.getBaseItem().getSpriteId());
 
-        if (habboItem.getBaseItem().getName().equals("floor") || habboItem.getBaseItem().getName().equals("landscape") || habboItem.getBaseItem().getName().equals("song_disk") || habboItem.getBaseItem().getName().equals("wallpaper") || habboItem.getBaseItem().getName().equals("poster")) {
-            switch (habboItem.getBaseItem().getName()) {
+        String name = habboItem.getBaseItem().getName();
+
+        if (name.equals("floor") || name.equals("landscape") || name.equals("song_disk") || name.equals("wallpaper") || name.equals("poster")) {
+            switch (name) {
                 case "landscape":
-                    this.response.appendInt(4);
+                    response.appendInt(4);
                     break;
                 case "floor":
-                    this.response.appendInt(3);
+                    response.appendInt(3);
                     break;
                 case "wallpaper":
-                    this.response.appendInt(2);
+                    response.appendInt(2);
                     break;
                 case "poster":
-                    this.response.appendInt(6);
+                    response.appendInt(6);
                     break;
                 case "song_disk":
-                    this.response.appendInt(8);
+                    response.appendInt(8);
                     break;
             }
-            this.addExtraDataToResponse(habboItem);
+            response.appendInt(0);
+            response.appendString(habboItem.getExtradata());
         } else {
-            if (habboItem.getBaseItem().getName().equals("gnome_box"))
-                this.response.appendInt(13);
+            if (name.equals("gnome_box"))
+                response.appendInt(13);
             else
-                this.response.appendInt(habboItem instanceof InteractionGift ? ((((InteractionGift) habboItem).getColorId() * 1000) + ((InteractionGift) habboItem).getRibbonId()) : 1);
+                response.appendInt(habboItem instanceof InteractionGift ? ((((InteractionGift) habboItem).getColorId() * 1000) + ((InteractionGift) habboItem).getRibbonId()) : 1);
 
-            habboItem.serializeExtradata(this.response);
+            habboItem.serializeExtradata(response);
         }
-        this.response.appendBoolean(habboItem.getBaseItem().allowRecyle());
-        this.response.appendBoolean(habboItem.getBaseItem().allowTrade());
-        this.response.appendBoolean(!habboItem.isLimited() && habboItem.getBaseItem().allowInventoryStack());
-        this.response.appendBoolean(habboItem.getBaseItem().allowMarketplace());
-        this.response.appendInt(-1);
-        this.response.appendBoolean(true);
-        this.response.appendInt(-1);
-
+        response.appendBoolean(habboItem.getBaseItem().allowRecyle());
+        response.appendBoolean(habboItem.getBaseItem().allowTrade());
+        response.appendBoolean(!habboItem.isLimited() && habboItem.getBaseItem().allowInventoryStack());
+        response.appendBoolean(habboItem.getBaseItem().allowMarketplace());
+        response.appendInt(-1);
+        response.appendBoolean(true);
+        response.appendInt(-1);
 
         if (habboItem.getBaseItem().getType() == FurnitureType.FLOOR) {
-            this.response.appendString("");
-            if(habboItem.getBaseItem().getName().equals("song_disk")) {
+            response.appendString("");
+            if (name.equals("song_disk")) {
                 List<String> extraDataAsList = Arrays.asList(habboItem.getExtradata().split("\n"));
-                this.response.appendInt(Integer.valueOf(extraDataAsList.get(extraDataAsList.size() - 1)));
+                response.appendInt(Integer.valueOf(extraDataAsList.get(extraDataAsList.size() - 1)));
                 return;
             }
-            this.response.appendInt(habboItem instanceof InteractionGift ? ((((InteractionGift) habboItem).getColorId() * 1000) + ((InteractionGift) habboItem).getRibbonId()) : 1);
+            response.appendInt(habboItem instanceof InteractionGift ? ((((InteractionGift) habboItem).getColorId() * 1000) + ((InteractionGift) habboItem).getRibbonId()) : 1);
         }
-    }
-
-    public void addExtraDataToResponse(HabboItem habboItem) {
-        this.response.appendInt(0);
-        this.response.appendString(habboItem.getExtradata());
     }
 
     public int getFragmentNumber() {

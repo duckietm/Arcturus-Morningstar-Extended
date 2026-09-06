@@ -16,7 +16,10 @@ public class MassPointsCommand extends Command {
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
         int type = Emulator.getConfig().getInt("seasonal.primary.type");
         String amountString;
-        if (params.length == 3) {
+        if (params.length == 2 && params[0].equalsIgnoreCase("massdiamond")) {
+            type = 5;
+            amountString = params[1];
+        } else if (params.length == 3) {
             amountString = params[1];
             try {
                 type = Integer.parseInt(params[2]);

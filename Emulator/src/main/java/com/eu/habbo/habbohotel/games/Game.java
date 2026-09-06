@@ -32,7 +32,7 @@ public abstract class Game implements Runnable {
     private final boolean countsAchievements;
     public boolean isRunning;
     public GameState state = GameState.IDLE;
-    private int startTime;
+    protected int startTime;
     private int endTime;
 
     public Game(
@@ -133,6 +133,16 @@ public abstract class Game implements Runnable {
         }
     }
 
+    /** Highscore furni in the room; RoomSpecialTypes does not index them reliably. */
+    protected java.util.List<HabboItem> highscoreItemsInRoom() {
+        java.util.List<HabboItem> items = new java.util.ArrayList<>();
+        if (this.room == null) return items;
+        for (HabboItem item : this.room.getFloorItems()) {
+            if (item instanceof InteractionWiredHighscore) items.add(item);
+        }
+        return items;
+    }
+
     public void onEnd() {
         this.endTime = Emulator.getIntUnixTimestamp();
 
@@ -152,6 +162,10 @@ public abstract class Game implements Runnable {
         GameTeam winningTeam = null;
         if (totalPointsGained > 0) {
             for (GameTeam team : this.teams.values()) {
+                // A team nobody is in cannot win (wired team scores can target empty teams);
+                // an empty winner would suppress every highscore row of this round.
+                if (team.getMembers().isEmpty()) continue;
+
                 if (winningTeam == null || team.getTotalScore() > winningTeam.getTotalScore()) {
                     winningTeam = team;
                 }
@@ -173,7 +187,7 @@ public abstract class Game implements Runnable {
             }
 
             if (winningTeam.getMembers().size() > 0) {
-                for (HabboItem item : this.room.getRoomSpecialTypes().getItemsOfType(InteractionWiredHighscore.class)) {
+                for (HabboItem item : highscoreItemsInRoom()) {
                     Emulator.getGameEnvironment()
                             .getItemManager()
                             .getHighscoreManager()
@@ -198,7 +212,7 @@ public abstract class Game implements Runnable {
 
                 if (team.getMembers().size() > 0 && team.getTotalScore() > 0) {
                     for (HabboItem item :
-                            this.room.getRoomSpecialTypes().getItemsOfType(InteractionWiredHighscore.class)) {
+                            highscoreItemsInRoom()) {
                         Emulator.getGameEnvironment()
                                 .getItemManager()
                                 .getHighscoreManager()
@@ -217,7 +231,7 @@ public abstract class Game implements Runnable {
             }
         }
 
-        for (HabboItem item : this.room.getRoomSpecialTypes().getItemsOfType(InteractionWiredHighscore.class)) {
+        for (HabboItem item : highscoreItemsInRoom()) {
             ((InteractionWiredHighscore) item).reloadData();
             this.room.updateItem(item);
         }

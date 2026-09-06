@@ -42,7 +42,7 @@ public class WiredConditionHasVariable extends InteractionWiredCondition {
     protected final Set<HabboItem> selectedItems = new LinkedHashSet<>();
     protected int targetType = TARGET_USER;
     protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
-    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     protected int quantifier = QUANTIFIER_ALL;
     protected String variableToken = "";
     protected int variableItemId = 0;
@@ -248,7 +248,7 @@ public class WiredConditionHasVariable extends InteractionWiredCondition {
     public void onPickUp() {
         this.targetType = TARGET_USER;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.quantifier = QUANTIFIER_ALL;
         this.selectedItems.clear();
         this.setVariableToken("");

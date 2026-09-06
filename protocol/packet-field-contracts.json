@@ -9498,22 +9498,6 @@
       ]
     },
     {
-      "name": "CATALOG_STUDIO_OPEN_SESSION",
-      "direction": "client_to_server",
-      "header": 10067,
-      "java": {
-        "symbol": "CatalogStudioOpenSessionEvent",
-        "className": "CatalogStudioOpenSessionEvent",
-        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/catalogadmin/studio/CatalogStudioOpenSessionEvent.java"
-      },
-      "typescript": {
-        "symbol": "CATALOG_STUDIO_OPEN_SESSION",
-        "className": "CatalogStudioOpenSessionComposer",
-        "path": "packages/communication/src/messages/outgoing/catalog/studio/CatalogStudioOpenSessionComposer.ts"
-      },
-      "fields": []
-    },
-    {
       "name": "CATALOG_PRODUCT_METADATA",
       "direction": "client_to_server",
       "header": 10081,
@@ -14079,6 +14063,11 @@
           "kind": "scalar",
           "type": "int",
           "name": ""
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "giverUsername"
         }
       ]
     },
@@ -15682,6 +15671,11 @@
           "kind": "scalar",
           "type": "string",
           "name": ""
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "nameColor"
         },
         {
           "kind": "scalar",
@@ -18979,7 +18973,7 @@
         "className": "RoomUnitChatWhisperComposer",
         "path": "packages/communication/src/messages/outgoing/room/unit/chat/RoomUnitChatWhisperComposer.ts"
       },
-      "reason": "Java analyzer: Packet fields delegated to external constructor RoomChatMessage inside handle; TypeScript analyzer: Outgoing value recipientName + \u0027 \u0027 + message has no statically resolvable wire type"
+      "reason": "Java analyzer: Packet fields delegated to external constructor RoomChatMessage inside handle; TypeScript analyzer: Outgoing value recipientName + ' ' + message has no statically resolvable wire type"
     },
     {
       "name": "RELEASE_ISSUES",
@@ -19907,7 +19901,7 @@
         "className": "ClientHelloMessageComposer",
         "path": "packages/communication/src/messages/outgoing/handshake/ClientHelloMessageComposer.ts"
       },
-      "reason": "TypeScript analyzer: Outgoing value `NITRO-${OctaneVersion.RENDERER_VERSION.replaceAll(\u0027.\u0027, \u0027-\u0027)}` has no statically resolvable wire type"
+      "reason": "TypeScript analyzer: Outgoing value `NITRO-${OctaneVersion.RENDERER_VERSION.replaceAll('.', '-')}` has no statically resolvable wire type"
     },
     {
       "name": "SNOWWAR_LOAD_STAGE_READY",
@@ -20006,6 +20000,22 @@
       "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside handle; TypeScript analyzer: Outgoing composer message array cannot be resolved statically"
     },
     {
+      "name": "SET_NAME_COLOR",
+      "direction": "client_to_server",
+      "header": 7020,
+      "java": {
+        "symbol": "SetNameColorEvent",
+        "className": "SetNameColorEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/inventory/prefixes/SetNameColorEvent.java"
+      },
+      "typescript": {
+        "symbol": "SET_NAME_COLOR",
+        "className": "SetNameColorComposer",
+        "path": "packages/communication/src/messages/outgoing/inventory/prefixes/SetNameColorComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
       "name": "YOUTUBE_ROOM_PLAY",
       "direction": "client_to_server",
       "header": 8001,
@@ -20086,6 +20096,22 @@
       "reason": "TypeScript analyzer: Outgoing value enabled ? 1 : 0 has no statically resolvable wire type"
     },
     {
+      "name": "WIRED_TRADE_OFFER_ITEMS",
+      "direction": "client_to_server",
+      "header": 9335,
+      "java": {
+        "symbol": "WiredTradeOfferItemsEvent",
+        "className": "WiredTradeOfferItemsEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/WiredTradeOfferItemsEvent.java"
+      },
+      "typescript": {
+        "symbol": "WIRED_TRADE_OFFER_ITEMS",
+        "className": "WiredTradeOfferItemsComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/chest/WiredTradeOfferItemsComposer.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
       "name": "SOUNDBOARD_SAVE_VOLUME",
       "direction": "client_to_server",
       "header": 9341,
@@ -20116,6 +20142,86 @@
         "path": "packages/communication/src/messages/outgoing/soundboard/SoundboardCatalogReorderComposer.ts"
       },
       "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside handle; TypeScript analyzer: Outgoing value orderedIds.length has no statically resolvable wire type"
+    },
+    {
+      "name": "INVSEE_TAKE",
+      "direction": "client_to_server",
+      "header": 9346,
+      "java": {
+        "symbol": "InvseeTakeItemEvent",
+        "className": "InvseeTakeItemEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/invsee/InvseeTakeItemEvent.java"
+      },
+      "typescript": {
+        "symbol": "INVSEE_TAKE",
+        "className": "InvseeTakeComposer",
+        "path": "packages/communication/src/messages/outgoing/invsee/InvseeTakeComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "INVSEE_REQUEST",
+      "direction": "client_to_server",
+      "header": 9347,
+      "java": {
+        "symbol": "InvseeRequestEvent",
+        "className": "InvseeRequestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/invsee/InvseeRequestEvent.java"
+      },
+      "typescript": {
+        "symbol": "INVSEE_REQUEST",
+        "className": "InvseeRequestComposer",
+        "path": "packages/communication/src/messages/outgoing/invsee/InvseeRequestComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "INVSEE_GIVE",
+      "direction": "client_to_server",
+      "header": 9348,
+      "java": {
+        "symbol": "InvseeGiveItemEvent",
+        "className": "InvseeGiveItemEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/invsee/InvseeGiveItemEvent.java"
+      },
+      "typescript": {
+        "symbol": "INVSEE_GIVE",
+        "className": "InvseeGiveComposer",
+        "path": "packages/communication/src/messages/outgoing/invsee/InvseeGiveComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "SOUNDBOARD_PLAY",
+      "direction": "client_to_server",
+      "header": 9398,
+      "java": {
+        "symbol": "SoundboardPlayEvent",
+        "className": "SoundboardPlayEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/soundboard/SoundboardPlayEvent.java"
+      },
+      "typescript": {
+        "symbol": "SOUNDBOARD_PLAY",
+        "className": "SoundboardPlayComposer",
+        "path": "packages/communication/src/messages/outgoing/soundboard/SoundboardPlayComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "SOUNDBOARD_SET_ENABLED",
+      "direction": "client_to_server",
+      "header": 9399,
+      "java": {
+        "symbol": "SoundboardSetEnabledEvent",
+        "className": "SoundboardSetEnabledEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/soundboard/SoundboardSetEnabledEvent.java"
+      },
+      "typescript": {
+        "symbol": "SOUNDBOARD_SET_ENABLED",
+        "className": "SoundboardSetEnabledComposer",
+        "path": "packages/communication/src/messages/outgoing/soundboard/SoundboardSetEnabledComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
     },
     {
       "name": "HOTEL_VIEW_LANDING_SAVE",
@@ -20390,6 +20496,22 @@
       "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside handle; TypeScript analyzer: Outgoing message array _data is mutated with push"
     },
     {
+      "name": "CATALOG_STUDIO_OPEN_SESSION",
+      "direction": "client_to_server",
+      "header": 10067,
+      "java": {
+        "symbol": "CatalogStudioOpenSessionEvent",
+        "className": "CatalogStudioOpenSessionEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/catalogadmin/studio/CatalogStudioOpenSessionEvent.java"
+      },
+      "typescript": {
+        "symbol": "CATALOG_STUDIO_OPEN_SESSION",
+        "className": "CatalogStudioOpenSessionComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/studio/CatalogStudioOpenSessionComposer.ts"
+      },
+      "reason": "Trailing int knownRevision is optional: CatalogStudioOpenSessionEvent reads it only when present so clients without the catalog studio revision handshake still open a session; Java analyzer: data-dependent read in handle"
+    },
+    {
       "name": "CATALOG_STUDIO_LOAD_HISTORY",
       "direction": "client_to_server",
       "header": 10071,
@@ -20484,6 +20606,230 @@
         "path": "packages/communication/src/messages/outgoing/catalog/studio/CatalogStudioDocumentApplyComposer.ts"
       },
       "reason": "Java analyzer: Packet fields delegated to external reader parseDocument inside handle; TypeScript analyzer: Outgoing value format has no statically resolvable wire type"
+    },
+    {
+      "name": "CATALOG_ADMIN_BULK_OFFERS",
+      "direction": "client_to_server",
+      "header": 10083,
+      "java": {
+        "symbol": "CatalogAdminBulkOffersEvent",
+        "className": "CatalogAdminBulkOffersEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/catalogadmin/CatalogAdminBulkOffersEvent.java"
+      },
+      "typescript": {
+        "symbol": "CATALOG_ADMIN_BULK_OFFERS",
+        "className": "CatalogAdminBulkOffersComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/CatalogAdminBulkOffersComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "FURNI_EDITOR_CRACKABLE_GET",
+      "direction": "client_to_server",
+      "header": 10085,
+      "java": {
+        "symbol": "FurniEditorCrackableEvent",
+        "className": "FurniEditorCrackableEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/furnieditor/FurniEditorCrackableEvent.java"
+      },
+      "typescript": {
+        "symbol": "FURNI_EDITOR_CRACKABLE_GET",
+        "className": "FurniEditorCrackableGetComposer",
+        "path": "packages/communication/src/messages/outgoing/furnieditor/FurniEditorCrackableGetComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "FURNI_EDITOR_CRACKABLE_SAVE",
+      "direction": "client_to_server",
+      "header": 10086,
+      "java": {
+        "symbol": "FurniEditorCrackableSaveEvent",
+        "className": "FurniEditorCrackableSaveEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/furnieditor/FurniEditorCrackableSaveEvent.java"
+      },
+      "typescript": {
+        "symbol": "FURNI_EDITOR_CRACKABLE_SAVE",
+        "className": "FurniEditorCrackableSaveComposer",
+        "path": "packages/communication/src/messages/outgoing/furnieditor/FurniEditorCrackableSaveComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "CATALOG_STUDIO_AUTO_FIX",
+      "direction": "client_to_server",
+      "header": 10087,
+      "java": {
+        "symbol": "CatalogStudioAutoFixEvent",
+        "className": "CatalogStudioAutoFixEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/catalogadmin/studio/CatalogStudioAutoFixEvent.java"
+      },
+      "typescript": {
+        "symbol": "CATALOG_STUDIO_AUTO_FIX",
+        "className": "CatalogStudioAutoFixComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/studio/CatalogStudioAutoFixComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "ONLINE_USERS_REQUEST",
+      "direction": "client_to_server",
+      "header": 10089,
+      "java": {
+        "symbol": "OnlineUsersRequestEvent",
+        "className": "OnlineUsersRequestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/OnlineUsersRequestEvent.java"
+      },
+      "typescript": {
+        "symbol": "ONLINE_USERS_REQUEST",
+        "className": "OnlineUsersRequestComposer",
+        "path": "packages/communication/src/messages/outgoing/online/OnlineUsersRequestComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "EXTERNAL_TEXT_UPDATE",
+      "direction": "client_to_server",
+      "header": 10091,
+      "java": {
+        "symbol": "ExternalTextUpdateEvent",
+        "className": "ExternalTextUpdateEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/gamedata/ExternalTextUpdateEvent.java"
+      },
+      "typescript": {
+        "symbol": "EXTERNAL_TEXT_UPDATE",
+        "className": "ExternalTextUpdateComposer",
+        "path": "packages/communication/src/messages/outgoing/texts/ExternalTextUpdateComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "EFFECT_POLICY",
+      "direction": "client_to_server",
+      "header": 10092,
+      "java": {
+        "symbol": "EffectPolicyEvent",
+        "className": "EffectPolicyEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/EffectPolicyEvent.java"
+      },
+      "typescript": {
+        "symbol": "EFFECT_POLICY",
+        "className": "EffectPolicyComposer",
+        "path": "packages/communication/src/messages/outgoing/effectpolicy/EffectPolicyComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "FURNITURE_STATE_SET",
+      "direction": "client_to_server",
+      "header": 10093,
+      "java": {
+        "symbol": "SetFurnitureStateEvent",
+        "className": "SetFurnitureStateEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/SetFurnitureStateEvent.java"
+      },
+      "typescript": {
+        "symbol": "FURNITURE_STATE_SET",
+        "className": "SetFurnitureStateComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/floor/SetFurnitureStateComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "ROOM_PAINT_SET",
+      "direction": "client_to_server",
+      "header": 10094,
+      "java": {
+        "symbol": "SetRoomPaintEvent",
+        "className": "SetRoomPaintEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/SetRoomPaintEvent.java"
+      },
+      "typescript": {
+        "symbol": "ROOM_PAINT_SET",
+        "className": "SetRoomPaintComposer",
+        "path": "packages/communication/src/messages/outgoing/room/SetRoomPaintComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "BANZAI_SPEED",
+      "direction": "client_to_server",
+      "header": 10095,
+      "java": {
+        "symbol": "BanzaiSpeedEvent",
+        "className": "BanzaiSpeedEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/games/BanzaiSpeedEvent.java"
+      },
+      "typescript": {
+        "symbol": "BANZAI_SPEED",
+        "className": "BanzaiSpeedComposer",
+        "path": "packages/communication/src/messages/outgoing/banzai/BanzaiSpeedComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "CATALOG_ADMIN_GIFT_CONFIG_SAVE",
+      "direction": "client_to_server",
+      "header": 10097,
+      "java": {
+        "symbol": "CatalogAdminGiftConfigSaveEvent",
+        "className": "CatalogAdminGiftConfigSaveEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/catalogadmin/CatalogAdminGiftConfigSaveEvent.java"
+      },
+      "typescript": {
+        "symbol": "CATALOG_ADMIN_GIFT_CONFIG_SAVE",
+        "className": "CatalogAdminGiftConfigSaveComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/CatalogAdminGiftConfigSaveComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "CHAT_BUBBLE_CONFIG_SAVE",
+      "direction": "client_to_server",
+      "header": 10098,
+      "java": {
+        "symbol": "ChatBubbleConfigSaveEvent",
+        "className": "ChatBubbleConfigSaveEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/ChatBubbleConfigSaveEvent.java"
+      },
+      "typescript": {
+        "symbol": "CHAT_BUBBLE_CONFIG_SAVE",
+        "className": "ChatBubbleConfigSaveComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/ChatBubbleConfigSaveComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "MOD_TOOL_CLONE_FINDER",
+      "direction": "client_to_server",
+      "header": 10099,
+      "java": {
+        "symbol": "ModToolCloneFinderEvent",
+        "className": "ModToolCloneFinderEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/modtool/ModToolCloneFinderEvent.java"
+      },
+      "typescript": {
+        "symbol": "MOD_TOOL_CLONE_FINDER",
+        "className": "ModToolCloneFinderRequestComposer",
+        "path": "packages/communication/src/messages/outgoing/clonefinder/ModToolCloneFinderRequestComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "CLIENT_RENDER_SETTINGS_SAVE",
+      "direction": "client_to_server",
+      "header": 10102,
+      "java": {
+        "symbol": "ClientRenderSettingsSaveEvent",
+        "className": "ClientRenderSettingsSaveEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/ClientRenderSettingsSaveEvent.java"
+      },
+      "typescript": {
+        "symbol": "CLIENT_RENDER_SETTINGS_SAVE",
+        "className": "ClientRenderSettingsSaveComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/ClientRenderSettingsSaveComposer.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
     },
     {
       "name": "JUKEBOX_SONG_DISKS",
@@ -23958,22 +24304,6 @@
       "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
     },
     {
-      "name": "WIRED_TRADE_OFFER_ITEMS",
-      "direction": "client_to_server",
-      "header": 9335,
-      "java": {
-        "symbol": "WiredTradeOfferItemsEvent",
-        "className": "WiredTradeOfferItemsEvent",
-        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/WiredTradeOfferItemsEvent.java"
-      },
-      "typescript": {
-        "symbol": "WIRED_TRADE_OFFER_ITEMS",
-        "className": "WiredTradeOfferItemsComposer",
-        "path": "packages/communication/src/messages/outgoing/room/furniture/chest/WiredTradeOfferItemsComposer.ts"
-      },
-      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
-    },
-    {
       "name": "WIRED_TRADE_OPEN",
       "direction": "server_to_client",
       "header": 9331,
@@ -24150,6 +24480,22 @@
       "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
     },
     {
+      "name": "INVSEE_INVENTORY",
+      "direction": "server_to_client",
+      "header": 9411,
+      "java": {
+        "symbol": "InvseeInventoryComposer",
+        "className": "InvseeInventoryComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/invsee/InvseeInventoryComposer.java"
+      },
+      "typescript": {
+        "symbol": "INVSEE_INVENTORY",
+        "className": "InvseeInventoryEvent",
+        "path": "packages/communication/src/messages/incoming/invsee/InvseeInventoryEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
       "name": "TRAX_EDITOR_SONGS",
       "direction": "server_to_client",
       "header": 9430,
@@ -24180,6 +24526,22 @@
         "path": "packages/communication/src/messages/parser/soundboard/SoundboardCatalogParser.ts"
       },
       "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "SOUNDBOARD_SETTINGS",
+      "direction": "server_to_client",
+      "header": 9443,
+      "java": {
+        "symbol": "SoundboardSettingsComposer",
+        "className": "SoundboardSettingsComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/soundboard/SoundboardSettingsComposer.java"
+      },
+      "typescript": {
+        "symbol": "SOUNDBOARD_SETTINGS",
+        "className": "SoundboardSettingsEvent",
+        "path": "packages/communication/src/messages/incoming/soundboard/SoundboardSettingsEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
     },
     {
       "name": "FURNI_EDITOR_SEARCH_RESULT",
@@ -24356,6 +24718,150 @@
         "path": "packages/communication/src/messages/parser/catalog/metadata/CatalogProductMetadataMessageParser.ts"
       },
       "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "EFFECT_POLICIES",
+      "direction": "server_to_client",
+      "header": 10084,
+      "java": {
+        "symbol": "EffectPoliciesComposer",
+        "className": "EffectPoliciesComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/users/EffectPoliciesComposer.java"
+      },
+      "typescript": {
+        "symbol": "EFFECT_POLICIES",
+        "className": "EffectPoliciesEvent",
+        "path": "packages/communication/src/messages/incoming/effectpolicy/EffectPoliciesEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "FURNI_EDITOR_CRACKABLE",
+      "direction": "server_to_client",
+      "header": 10085,
+      "java": {
+        "symbol": "FurniEditorCrackableComposer",
+        "className": "FurniEditorCrackableComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/furnieditor/FurniEditorCrackableComposer.java"
+      },
+      "typescript": {
+        "symbol": "FURNI_EDITOR_CRACKABLE",
+        "className": "FurniEditorCrackableEvent",
+        "path": "packages/communication/src/messages/incoming/furnieditor/FurniEditorCrackableEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "ONLINE_USERS",
+      "direction": "server_to_client",
+      "header": 10088,
+      "java": {
+        "symbol": "OnlineUsersComposer",
+        "className": "OnlineUsersComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/users/OnlineUsersComposer.java"
+      },
+      "typescript": {
+        "symbol": "ONLINE_USERS",
+        "className": "OnlineUsersEvent",
+        "path": "packages/communication/src/messages/incoming/online/OnlineUsersEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "PET_MORPH_LIST",
+      "direction": "server_to_client",
+      "header": 10090,
+      "java": {
+        "symbol": "PetMorphListComposer",
+        "className": "PetMorphListComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/pets/PetMorphListComposer.java"
+      },
+      "typescript": {
+        "symbol": "PET_MORPH_LIST",
+        "className": "PetMorphListEvent",
+        "path": "packages/communication/src/messages/incoming/room/pet/PetMorphListEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "EXTERNAL_TEXT_UPDATED",
+      "direction": "server_to_client",
+      "header": 10091,
+      "java": {
+        "symbol": "ExternalTextUpdatedComposer",
+        "className": "ExternalTextUpdatedComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/gamedata/ExternalTextUpdatedComposer.java"
+      },
+      "typescript": {
+        "symbol": "EXTERNAL_TEXT_UPDATED",
+        "className": "ExternalTextUpdatedEvent",
+        "path": "packages/communication/src/messages/incoming/texts/ExternalTextUpdatedEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "BANZAI_SPEEDS",
+      "direction": "server_to_client",
+      "header": 10092,
+      "java": {
+        "symbol": "BanzaiSpeedsComposer",
+        "className": "BanzaiSpeedsComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/games/BanzaiSpeedsComposer.java"
+      },
+      "typescript": {
+        "symbol": "BANZAI_SPEEDS",
+        "className": "BanzaiSpeedsEvent",
+        "path": "packages/communication/src/messages/incoming/banzai/BanzaiSpeedsEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "FURNI_COLLISION_OVERLAY",
+      "direction": "server_to_client",
+      "header": 10096,
+      "java": {
+        "symbol": "FurniCollisionOverlayComposer",
+        "className": "FurniCollisionOverlayComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/items/FurniCollisionOverlayComposer.java"
+      },
+      "typescript": {
+        "symbol": "FURNI_COLLISION_OVERLAY",
+        "className": "FurniCollisionOverlayEvent",
+        "path": "packages/communication/src/messages/incoming/collisions/FurniCollisionOverlayEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "MOD_TOOL_CLONE_FINDER",
+      "direction": "server_to_client",
+      "header": 10100,
+      "java": {
+        "symbol": "ModToolCloneFinderComposer",
+        "className": "ModToolCloneFinderComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/modtool/ModToolCloneFinderComposer.java"
+      },
+      "typescript": {
+        "symbol": "MOD_TOOL_CLONE_FINDER",
+        "className": "ModToolCloneFinderEvent",
+        "path": "packages/communication/src/messages/incoming/clonefinder/ModToolCloneFinderEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
+    },
+    {
+      "name": "CLIENT_RENDER_SETTINGS",
+      "direction": "server_to_client",
+      "header": 10101,
+      "java": {
+        "symbol": "ClientRenderSettingsComposer",
+        "className": "ClientRenderSettingsComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/gamedata/ClientRenderSettingsComposer.java"
+      },
+      "typescript": {
+        "symbol": "CLIENT_RENDER_SETTINGS",
+        "className": "ClientRenderSettingsEvent",
+        "path": "packages/communication/src/messages/incoming/texts/ClientRenderSettingsEvent.ts"
+      },
+      "reason": "Astro Hotel custom packet: its wire schema is owned by the hotel and has not been authored as a shared contract"
     }
   ]
 }

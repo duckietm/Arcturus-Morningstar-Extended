@@ -39,6 +39,7 @@ public class RandomDiceNumber implements Runnable {
         this.room.updateItem(this.item);
 
         if (this.item instanceof InteractionDice) {
+            ((InteractionDice) this.item).markRolled();
             WiredManager.triggerDiceRolled(this.room, this.item);
         }
 

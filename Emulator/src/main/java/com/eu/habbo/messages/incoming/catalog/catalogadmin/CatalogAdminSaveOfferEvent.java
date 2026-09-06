@@ -38,9 +38,15 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
         int orderNumber = this.packet.readInt();
         int songId = this.packet.readInt();
         CatalogPageType pageType = CatalogPageType.fromString(this.packet.readString());
+        CatalogStudioMutationEnvelope envelope = CatalogStudioRequestParser.parseMutationEnvelope(this.packet);
+        Gson gson = new Gson();
+        String operationId = CatalogAdminSmartSaveResponder.operationId(envelope, "saveOffer");
 
         if (offerId <= 0) {
-            this.client.sendResponse(new CatalogAdminResultComposer(false, "Invalid offer id"));
+            this.client.sendResponse(CatalogAdminSmartSaveResponder.failure(
+                    operationId, "saveOffer", envelope.draftVersionId(), envelope.expectedRevision(),
+                    "OFFER", catalogTypeName(pageType), offerId,
+                    new IllegalArgumentException("Invalid offer id"), gson));
             return;
         }
 
@@ -61,21 +67,24 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
                 songId,
                 pageType);
         if (payload == null) {
-            this.client.sendResponse(new CatalogAdminResultComposer(false, "Invalid offer payload"));
+            this.client.sendResponse(CatalogAdminSmartSaveResponder.failure(
+                    operationId, "saveOffer", envelope.draftVersionId(), envelope.expectedRevision(),
+                    "OFFER", catalogTypeName(pageType), offerId,
+                    new IllegalArgumentException("Invalid offer payload"), gson));
             return;
         }
 
-        CatalogStudioMutationEnvelope envelope = CatalogStudioRequestParser.parseMutationEnvelope(this.packet);
         for (int itemId : payload.baseItemIds()) {
             if (Emulator.getGameEnvironment().getItemManager().getItem(itemId) == null) {
-                this.client.sendResponse(new CatalogAdminResultComposer(false, "Base item not found: " + itemId));
+                this.client.sendResponse(CatalogAdminSmartSaveResponder.failure(
+                        operationId, "saveOffer", envelope.draftVersionId(), envelope.expectedRevision(),
+                        "OFFER", catalogTypeName(pageType), offerId,
+                        new IllegalArgumentException("Base item not found: " + itemId), gson));
                 return;
             }
         }
 
         var offerData = CatalogAdminOfferDraftData.from(payload);
-        Gson gson = new Gson();
-        String operationId = CatalogAdminSmartSaveResponder.operationId(envelope, "saveOffer");
         var liveMutations = CatalogStudioRuntime.services().liveMutations();
         try {
             var batch = liveMutations.applyBatch(
@@ -96,8 +105,8 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
                         if (existingItem == null) {
                             throw new IllegalArgumentException("Offer not found: " + offerId);
                         }
-                        if (payload.limitedStack < existingItem.limitedStack()) {
-                            throw new IllegalArgumentException("Limited stack cannot be reduced");
+                        if (payload.limitedStack != 0 && payload.limitedStack < existingItem.limitedStack()) {
+                            throw new IllegalArgumentException("Limited stack cannot be reduced unless LTD is removed with 0");
                         }
                     });
             var result = CatalogAdminLiveRequest.smartSaveResult(
@@ -120,5 +129,9 @@ public class CatalogAdminSaveOfferEvent extends MessageHandler {
                     exception,
                     gson));
         }
+    }
+
+    private static String catalogTypeName(CatalogPageType pageType) {
+        return pageType == CatalogPageType.BUILDER ? "BUILDER" : "NORMAL";
     }
 }

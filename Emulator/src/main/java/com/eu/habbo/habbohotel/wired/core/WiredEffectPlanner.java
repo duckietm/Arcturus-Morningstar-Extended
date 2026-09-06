@@ -1,6 +1,7 @@
 package com.eu.habbo.habbohotel.wired.core;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
+import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectNegativeLog;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.api.IWiredEffect;
 import com.eu.habbo.habbohotel.wired.api.WiredStack;
@@ -100,11 +101,16 @@ final class WiredEffectPlanner {
             return false;
         }
 
+        // The negative log shares its type with the positive log (the type code only picks the client
+        // dialog), so the class is the only thing that says which branch it belongs to.
+        if (interactionEffect instanceof WiredEffectNegativeLog) {
+            return true;
+        }
+
         WiredEffectType effectType = interactionEffect.getType();
         return effectType == WiredEffectType.NEG_CALL_STACKS
                 || effectType == WiredEffectType.NEG_SEND_SIGNAL
-                || effectType == WiredEffectType.NEG_SHOW_MESSAGE
-                || effectType == WiredEffectType.NEG_LOG;
+                || effectType == WiredEffectType.NEG_SHOW_MESSAGE;
     }
 
     record SelectorPlan(List<IWiredEffect> immediate, List<IWiredEffect> deferred) {

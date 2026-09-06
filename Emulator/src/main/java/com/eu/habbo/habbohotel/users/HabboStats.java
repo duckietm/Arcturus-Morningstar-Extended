@@ -653,7 +653,7 @@ public class HabboStats implements Runnable {
     }
 
     public int getClubExpireTimestamp() {
-        return getSubscriptionExpireTimestamp(Subscription.HABBO_CLUB);
+        return Integer.MAX_VALUE;
     }
 
     public void setClubExpireTimestamp(int clubExpireTimestamp) {
@@ -670,7 +670,10 @@ public class HabboStats implements Runnable {
     }
 
     public boolean hasActiveClub() {
-        return hasSubscription(Subscription.HABBO_CLUB);
+        // This hotel runs permanent HC for every account. Keeping this as the
+        // single server-side entitlement boundary makes catalogue access,
+        // clothing validation, perks and room interactions agree.
+        return true;
     }
 
     public int getPastTimeAsClub() {
@@ -680,7 +683,7 @@ public class HabboStats implements Runnable {
                 pastTimeAsHC += subs.getDuration() - (Math.max(subs.getRemaining(), 0));
             }
         }
-        return pastTimeAsHC;
+        return Math.max(pastTimeAsHC, 86400);
     }
 
     public int getTimeTillNextClubGift() {

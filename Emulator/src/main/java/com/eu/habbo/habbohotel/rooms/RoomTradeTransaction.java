@@ -51,14 +51,14 @@ final class RoomTradeTransaction {
                         userOne.getHabboInfo().getId(),
                         userTwoItems,
                         logTrades);
-                Integer userOneBalance = creditUser(
+                Long userOneBalance = creditUser(
                         connection,
                         operationId,
                         userOne.getHabboInfo().getId(),
                         creditsForUserOne,
                         userTwo.getHabboInfo().getId(),
                         tradeId);
-                Integer userTwoBalance = creditUser(
+                Long userTwoBalance = creditUser(
                         connection,
                         operationId,
                         userTwo.getHabboInfo().getId(),
@@ -136,7 +136,7 @@ final class RoomTradeTransaction {
         }
     }
 
-    private static Integer creditUser(
+    private static Long creditUser(
             Connection connection, String operationId, int userId, int credits, int actorId, int tradeId)
             throws SQLException {
         if (credits <= 0) return null;
@@ -152,8 +152,8 @@ final class RoomTradeTransaction {
                         credits,
                         null,
                         "tradeId=" + tradeId));
-        return mutation.balanceAfter();
+        return mutation.balanceAfterLong();
     }
 
-    record CommitResult(Integer userOneCreditBalance, Integer userTwoCreditBalance) {}
+    record CommitResult(Long userOneCreditBalance, Long userTwoCreditBalance) {}
 }

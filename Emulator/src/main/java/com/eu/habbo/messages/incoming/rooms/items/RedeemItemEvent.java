@@ -37,12 +37,17 @@ public class RedeemItemEvent extends MessageHandler {
                         Emulator.getPluginManager().isRegistered(FurnitureRedeemedEvent.class, true);
                 FurnitureRedeemedEvent furniRedeemEvent =
                         new FurnitureRedeemedEvent(item, this.client.getHabbo(), 0, FurnitureRedeemedEvent.CREDITS);
+                CustomRedeem customRedeem = parseCustomRedeem(item.getBaseItem().getCustomParams());
 
                 if (item.getBaseItem().getName().startsWith("CF_")
                         || item.getBaseItem().getName().startsWith("CFC_")
                         || item.getBaseItem().getName().startsWith("DF_")
-                        || item.getBaseItem().getName().startsWith("PF_")) {
-                    if ((item.getBaseItem().getName().startsWith("CF_")
+                        || item.getBaseItem().getName().startsWith("PF_")
+                        || customRedeem != null) {
+                    if (customRedeem != null) {
+                        furniRedeemEvent = new FurnitureRedeemedEvent(
+                                item, this.client.getHabbo(), customRedeem.amount(), customRedeem.currencyType());
+                    } else if ((item.getBaseItem().getName().startsWith("CF_")
                                     || item.getBaseItem().getName().startsWith("CFC_"))
                             && !item.getBaseItem().getName().contains("_diamond_")) {
                         int credits;
@@ -143,7 +148,7 @@ public class RedeemItemEvent extends MessageHandler {
                                     LedgerWalletMutation.applyCommitted(
                                             this.client.getHabbo(),
                                             currencyGrant.currencyType(),
-                                            mutation.balanceAfter());
+                                            mutation.balanceAfterLong());
                                 }
                                 return mutation;
                             });
@@ -193,4 +198,26 @@ public class RedeemItemEvent extends MessageHandler {
     }
 
     private record PreparedCurrencyGrant(int currencyType, int amount) {}
+
+    private static CustomRedeem parseCustomRedeem(String customParams) {
+        if (customParams == null || customParams.isBlank()) return null;
+
+        for (String token : customParams.split("[;,]")) {
+            String value = token.trim();
+            if (!value.regionMatches(true, 0, "redeem=", 0, 7)) continue;
+
+            String[] parts = value.substring(7).split(":", -1);
+            if (parts.length != 2) return null;
+            try {
+                int currencyType = Integer.parseInt(parts[0]);
+                int amount = Integer.parseInt(parts[1]);
+                return amount > 0 ? new CustomRedeem(currencyType, amount) : null;
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private record CustomRedeem(int currencyType, int amount) {}
 }

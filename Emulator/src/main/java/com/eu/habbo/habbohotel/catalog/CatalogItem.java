@@ -167,11 +167,13 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
     }
 
     public int getSearchOfferId() {
-        if (this.offerId > 0) {
-            return this.offerId;
-        }
-
-        return haveOffer(this) ? this.id : -1;
+        // `catalog_items.offer_id` is legacy furnidata metadata and is not
+        // guaranteed to be unique (the stock catalogue alone reuses 10500
+        // for dozens of unrelated products).  The database row id is the
+        // canonical offer id serialized to Nitro, is unique, and is also the
+        // id purchase packets use.  Using it for lazy search lookups keeps a
+        // FurnitureData entry tied to the exact catalogue product it previews.
+        return this.id;
     }
 
     public boolean isLimited() {

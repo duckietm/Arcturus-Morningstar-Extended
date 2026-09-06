@@ -46,7 +46,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
     private Set<HabboItem> items;
 
     private Map<Integer, RoomUserRotation> lastDirections;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectMoveFurniTowards(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -226,6 +226,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
 
             RoomTile oldLocation = room.getLayout().getTile(item.getX(), item.getY());
             if (oldLocation == null) continue;
+            if (room.getWiredRuntime().isFurnitureMoving(item)) continue;
 
             RoomTile newTile = room.getLayout().getTileInFront(oldLocation, moveDirection.getValue());
 
@@ -368,7 +369,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.setDelay(0);
     }
 
@@ -414,7 +415,7 @@ public class WiredEffectMoveFurniTowards extends InteractionWiredEffect {
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) throws WiredSaveException {
         int[] params = settings.getIntParams();
-        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = (params.length > 0) ? params[0] : WiredSourceUtil.SOURCE_SELECTED;
 
         int itemsCount = settings.getFurniIds().length;
 

@@ -33,7 +33,7 @@ public class FurniEditorUpdateFurnidataEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(FurniEditorUpdateFurnidataEvent.class);
 
     /** Rate-limit: min milliseconds between successive calls per admin user id. */
-    private static final long RATE_LIMIT_MS = 1_000L;
+    private static final long RATE_LIMIT_MS = 150L;
 
     /** Per-admin last-call timestamp map. */
     private static final Map<Integer, Long> LAST_CALL = new ConcurrentHashMap<>();
@@ -114,7 +114,12 @@ public class FurniEditorUpdateFurnidataEvent extends MessageHandler {
         try {
             FurnidataWriter writer = new FurnidataWriter(
                     provider.getSource(), provider.isSourceDirectory(), provider.getMaxBytes(), 3 /* backupKeep */);
-            written = writer.write(classname, safeName, safeDesc);
+            // The client names a furni by its sprite id and a classname can appear more than once in the
+            // furnidata with different ids (e.g. invisibile1Wal): edit the entry the client actually shows.
+            Item spriteItem = Emulator.getGameEnvironment().getItemManager().getItem(itemId);
+            written = spriteItem != null && spriteItem.getSpriteId() > 0
+                    && writer.writeById(spriteItem.getSpriteId(), safeName, safeDesc);
+            if (!written) written = writer.write(classname, safeName, safeDesc);
             if (!written) {
                 // Upsert: no furnidata entry for this classname yet → create a
                 // complete one seeded from items_base (id = sprite id).
@@ -138,10 +143,19 @@ public class FurniEditorUpdateFurnidataEvent extends MessageHandler {
                         writer.write(classname, safeName, safeDesc);
                         written = true;
                         break;
-                    case ID_COLLISION:
-                        this.client.sendResponse(
-                                new FurniEditorResultComposer(false, "Sprite id already used by another classname"));
-                        return;
+                    case ID_COLLISION: {
+                        // The renderer resolves this sprite id to the colliding entry, so that entry
+                        // is the name the client shows for this furni: edit it instead of refusing.
+                        String owner = writer.classnameForId(item.getSpriteId());
+                        if (owner == null || !writer.write(owner, safeName, safeDesc)) {
+                            this.client.sendResponse(new FurniEditorResultComposer(
+                                    false, "Sprite id already used by another classname"));
+                            return;
+                        }
+                        classname = owner;
+                        written = true;
+                        break;
+                    }
                     default:
                         this.client.sendResponse(
                                 new FurniEditorResultComposer(false, "Failed to create furnidata entry"));

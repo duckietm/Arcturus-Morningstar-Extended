@@ -24,7 +24,7 @@ public class ClearRentedSpace implements Runnable {
     public void run() {
         Set<HabboItem> items = new HashSet<>();
 
-        for (RoomTile t : this.room.getLayout().getTilesAt(this.room.getLayout().getTile(this.item.getX(), this.item.getY()), this.item.getBaseItem().getWidth(), this.item.getBaseItem().getLength(), this.item.getRotation())) {
+        for (RoomTile t : this.room.getLayout().getTilesAt(this.room.getLayout().getTile(this.item.getX(), this.item.getY()), this.item)) {
             for (HabboItem i : this.room.getItemsAt(t)) {
                 if (i.getUserId() == this.item.getRenterId()) {
                     items.add(i);

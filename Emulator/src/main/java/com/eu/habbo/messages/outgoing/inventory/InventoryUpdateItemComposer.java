@@ -13,53 +13,15 @@ public class InventoryUpdateItemComposer extends MessageComposer {
         this.habboItem = item;
     }
 
+    /**
+     * FurniListAddOrUpdate (104): the client adds or refreshes this one item in place, no full list round trip.
+     * Same layout as an InventoryItemsComposer entry - it used to be hand-written here with a category that
+     * doubled up for wallpapers and an extradata path that ignored every interaction's own serializer.
+     */
     @Override
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.InventoryItemUpdateComposer);
-        this.response.appendInt(this.habboItem.getGiftAdjustedId());
-        this.response.appendString(this.habboItem.getBaseItem().getType().code);
-        this.response.appendInt(this.habboItem.getId());
-        this.response.appendInt(this.habboItem.getBaseItem().getSpriteId());
-
-        switch (this.habboItem.getBaseItem().getName()) {
-            case "landscape":
-                this.response.appendInt(4);
-                break;
-            case "floor":
-                this.response.appendInt(3);
-                break;
-            case "wallpaper":
-                this.response.appendInt(2);
-                break;
-            case "poster":
-                this.response.appendInt(6);
-                break;
-        }
-
-        if (this.habboItem.isLimited()) {
-            this.response.appendInt(1);
-            this.response.appendInt(256);
-            this.response.appendString(this.habboItem.getExtradata());
-            this.response.appendInt(this.habboItem.getLimitedSells());
-            this.response.appendInt(this.habboItem.getLimitedStack());
-        } else {
-            this.response.appendInt(1);
-            this.response.appendInt(0);
-            this.response.appendString(this.habboItem.getExtradata());
-        }
-        this.response.appendBoolean(this.habboItem.getBaseItem().allowRecyle());
-        this.response.appendBoolean(this.habboItem.getBaseItem().allowTrade());
-        this.response.appendBoolean(!this.habboItem.isLimited() && this.habboItem.getBaseItem().allowInventoryStack());
-        this.response.appendBoolean(this.habboItem.getBaseItem().allowMarketplace());
-        this.response.appendInt(-1);
-        this.response.appendBoolean(false);
-        this.response.appendInt(-1);
-
-        if (this.habboItem.getBaseItem().getType() == FurnitureType.FLOOR) {
-            this.response.appendString(""); //slotId
-            this.response.appendInt(0);
-        }
-        this.response.appendInt(100);
+        InventoryItemsComposer.serializeInventoryItem(this.response, this.habboItem);
         return this.response;
     }
 

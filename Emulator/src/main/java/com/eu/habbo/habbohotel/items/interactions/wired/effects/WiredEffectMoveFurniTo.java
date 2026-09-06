@@ -35,7 +35,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
     private int direction;
     private int spacing = 1;
     private Map<Integer, Integer> indexOffset = new LinkedHashMap<>();
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredEffectMoveFurniTo(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -104,8 +104,12 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
 
         if (effectiveItems.isEmpty()) return;
 
-        Object[] stuff = ctx.legacySettings();
-        if (stuff != null && stuff.length > 0) {
+        // The engine builds every context with a null legacy array, and this is the only effect
+        // that reads it: the box could be bought, placed and configured, and then did nothing at
+        // all, for every trigger, in every room, with nothing reporting it. The furni it moves is
+        // the one the event carried -- what the dialog calls the triggering furni.
+        Object[] stuff = triggeringFurni(ctx);
+        if (stuff.length > 0) {
             for (Object object : stuff) {
                 if (object instanceof HabboItem) {
                     HabboItem targetItem =
@@ -137,6 +141,9 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
                             if (oldLocation == null) {
                                 continue;
                             }
+                            if (room.getWiredRuntime().isFurnitureMoving(movingItem)) {
+                                continue;
+                            }
 
                             FurnitureMovementError movementError = WiredMoveCarryHelper.moveFurni(
                                     room, this, movingItem, tile, movingItem.getRotation(), null, false, ctx);
@@ -159,13 +166,26 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         return false;
     }
 
+    /**
+     * The furni this effect moves. The legacy array the old handler filled is never populated by the
+     * current engine, so fall back to the item the event carried.
+     */
+    static Object[] triggeringFurni(WiredContext ctx) {
+        Object[] legacy = ctx.legacySettings();
+        if (legacy != null && legacy.length > 0) {
+            return legacy;
+        }
+
+        return ctx.event().getSourceItem().map(item -> new Object[] {item}).orElseGet(() -> new Object[0]);
+    }
+
     @Override
     public boolean simulate(WiredContext ctx, WiredSimulation simulation) {
         Room room = ctx.room();
         if (room == null || room.getLayout() == null) return true;
 
-        Object[] stuff = ctx.legacySettings();
-        if (stuff == null || stuff.length == 0) return true;
+        Object[] stuff = triggeringFurni(ctx);
+        if (stuff.length == 0) return true;
 
         List<HabboItem> effectiveItems = WiredSourceUtil.resolveItems(ctx, this.furniSource, this.items);
         for (Object object : stuff) {
@@ -314,7 +334,7 @@ public class WiredEffectMoveFurniTo extends InteractionWiredEffect {
         this.direction = 0;
         this.spacing = 0;
         this.indexOffset.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override

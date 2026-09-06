@@ -22,6 +22,8 @@ import com.eu.habbo.threading.runnables.YouAreAPirate;
 import com.eu.habbo.util.pathfinding.Rotation;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2LongMap;
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import java.awt.Rectangle;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,6 +51,11 @@ public class RoomChatManager {
     // Muted Habbos: userId -> unmute timestamp
     private final Int2IntMap mutedHabbos;
 
+    // Talking furni animation state is persistent, so it cannot also be used as a
+    // cooldown flag: a restart while the state is "1" would leave the furni mute
+    // forever. Keep the cooldown in memory and always restore the visual state.
+    private final Int2LongMap talkingFurnitureCooldowns;
+
     // Flood protection settings
     private final int muteTime;
 
@@ -74,6 +81,7 @@ public class RoomChatManager {
         this.room = room;
         this.wordFilterWords = new HashSet<>(0);
         this.mutedHabbos = mutedHabbos;
+        this.talkingFurnitureCooldowns = new Int2LongOpenHashMap();
         this.muteTime = muteTime;
     }
 
@@ -680,15 +688,20 @@ public class RoomChatManager {
             Set<HabboItem> items = this.room.getRoomSpecialTypes().getItemsOfType(InteractionTalkingFurniture.class);
 
             for (HabboItem item : items) {
-                if (item.getExtradata().equals("1")) {
+                long now = System.currentTimeMillis();
+                if (this.talkingFurnitureCooldowns.getOrDefault(item.getId(), 0L) > now) {
                     continue;
                 }
+                String talkingFurnitureKey = item.getBaseItem().getName();
+                int talkingRange = Emulator.getConfig().getInt(
+                        talkingFurnitureKey + ".message.range",
+                        Emulator.getConfig().getInt("furniture.talking.range"));
                 if (this.room
                                 .getLayout()
                                 .getTile(item.getX(), item.getY())
                                 .distance(habbo.getRoomUnit().getCurrentLocation())
-                        <= Emulator.getConfig().getInt("furniture.talking.range")) {
-                    int count = Emulator.getConfig().getInt(item.getBaseItem().getName() + ".message.count", 0);
+                        <= talkingRange) {
+                    int count = Emulator.getConfig().getInt(talkingFurnitureKey + ".message.count", 0);
 
                     if (count > 0) {
                         int randomValue = Emulator.getRandom().nextInt(count + 1);
@@ -696,19 +709,19 @@ public class RoomChatManager {
                         RoomChatMessage itemMessage = new RoomChatMessage(
                                 Emulator.getTexts()
                                         .getValue(
-                                                item.getBaseItem().getName() + ".message." + randomValue,
-                                                item.getBaseItem().getName() + ".message." + randomValue
+                                                talkingFurnitureKey + ".message." + randomValue,
+                                                talkingFurnitureKey + ".message." + randomValue
                                                         + " not found!"),
                                 habbo,
                                 RoomChatMessageBubbles.getBubble(Emulator.getConfig()
                                         .getInt(
-                                                item.getBaseItem().getName() + ".message.bubble",
+                                                talkingFurnitureKey + ".message.bubble",
                                                 RoomChatMessageBubbles.PARROT.getType())));
 
                         this.room.sendComposer(new RoomUserTalkComposer(itemMessage).compose());
 
                         try {
-                            item.onClick(habbo.getClient(), this.room, new Object[0]);
+                            this.talkingFurnitureCooldowns.put(item.getId(), now + 2000L);
                             item.setExtradata("1");
                             this.room.updateItemState(item);
 
@@ -717,6 +730,7 @@ public class RoomChatManager {
                                             () -> {
                                                 item.setExtradata("0");
                                                 this.room.updateItemState(item);
+                                                this.talkingFurnitureCooldowns.remove(item.getId());
                                             },
                                             2000);
 

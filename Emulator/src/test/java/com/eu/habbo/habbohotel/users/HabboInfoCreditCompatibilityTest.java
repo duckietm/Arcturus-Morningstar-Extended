@@ -57,6 +57,17 @@ class HabboInfoCreditCompatibilityTest {
         assertEquals(0, info.saveCount);
     }
 
+    @Test
+    void creditsSupportBalancesAboveTheSignedIntLimit() {
+        RecordingHabboInfo info = new RecordingHabboInfo(100);
+
+        info.setCredits(5_000_000_000L);
+
+        assertEquals(5_000_000_000L, info.getCreditsLong());
+        assertEquals(Integer.MAX_VALUE, info.getCredits());
+        assertEquals(1, info.saveCount);
+    }
+
     private static final class RecordingHabboInfo extends HabboInfo {
         private int saveCount;
 

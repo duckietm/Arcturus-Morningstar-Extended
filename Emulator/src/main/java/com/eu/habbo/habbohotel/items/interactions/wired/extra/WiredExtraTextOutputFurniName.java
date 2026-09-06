@@ -35,7 +35,7 @@ public class WiredExtraTextOutputFurniName extends InteractionWiredExtra {
     private String placeholderName = DEFAULT_PLACEHOLDER_NAME;
     private int placeholderType = TYPE_SINGLE;
     private String delimiter = DEFAULT_DELIMITER;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
 
     public WiredExtraTextOutputFurniName(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -166,7 +166,7 @@ public class WiredExtraTextOutputFurniName extends InteractionWiredExtra {
         this.placeholderName = DEFAULT_PLACEHOLDER_NAME;
         this.placeholderType = TYPE_SINGLE;
         this.delimiter = DEFAULT_DELIMITER;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
     }
 
     @Override

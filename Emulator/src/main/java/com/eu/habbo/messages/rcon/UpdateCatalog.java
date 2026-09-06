@@ -14,6 +14,7 @@ public class UpdateCatalog extends RCONMessage<UpdateCatalog.JSONUpdateCatalog> 
     @Override
     public void handle(Gson gson, JSONUpdateCatalog json) {
         Emulator.getGameEnvironment().getCatalogManager().initialize();
+        com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioOpenSessionEvent.invalidateSnapshotCache();
         Emulator.getGameServer().getGameClientManager().sendBroadcastResponse(new CatalogUpdatedComposer());
         Emulator.getGameServer().getGameClientManager().sendBroadcastResponse(new CatalogModeComposer(0));
         Emulator.getGameServer().getGameClientManager().sendBroadcastResponse(new DiscountComposer());

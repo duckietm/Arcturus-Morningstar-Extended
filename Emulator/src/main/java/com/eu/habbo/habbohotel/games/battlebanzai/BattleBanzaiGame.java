@@ -40,19 +40,25 @@ public class BattleBanzaiGame extends Game {
      * Maximum number of pending flood-fill tasks allowed in the queue.
      * This prevents memory exhaustion from rapid tile locking via wireds.
      */
-    private static final int MAX_PENDING_FILL_TASKS = Emulator.getConfig().getInt("hotel.banzai.fill.max_queue", 50);
+    /** Read on use, not at class load, so the banzai panel can change it without a restart. */
+    private static int maxPendingFillTasks() {
+        return Emulator.getConfig().getInt("hotel.banzai.fill.max_queue", 50);
+    }
     
     /**
      * Minimum interval in milliseconds between flood-fill calculations for the same game.
      * This prevents abuse via rapid wired triggering.
      */
-    private static final int FLOOD_FILL_COOLDOWN_MS = Emulator.getConfig().getInt("hotel.banzai.fill.cooldown_ms", 100);
+    /** Read on use, not at class load, so the banzai panel can change it without a restart. */
+    private static int floodFillCooldownMs() {
+        return Emulator.getConfig().getInt("hotel.banzai.fill.cooldown_ms", 100);
+    }
 
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(
             Emulator.getConfig().getInt("hotel.banzai.fill.threads", 2),
             Emulator.getConfig().getInt("hotel.banzai.fill.threads", 2),
             60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(MAX_PENDING_FILL_TASKS),
+            new LinkedBlockingQueue<>(maxPendingFillTasks()),
             new ThreadPoolExecutor.DiscardOldestPolicy() // Drop oldest task when queue is full
     );
     
@@ -286,13 +292,13 @@ public class BattleBanzaiGame extends Game {
 
             // Rate limit flood-fill calculations to prevent memory exhaustion from rapid wired triggering
             long now = System.currentTimeMillis();
-            if (now - this.lastFloodFillTime < FLOOD_FILL_COOLDOWN_MS) {
+            if (now - this.lastFloodFillTime < floodFillCooldownMs()) {
                 return;
             }
             this.lastFloodFillTime = now;
 
             // Check if executor queue is getting too full (additional safety check)
-            if (executor.getQueue().size() >= MAX_PENDING_FILL_TASKS - 5) {
+            if (executor.getQueue().size() >= maxPendingFillTasks() - 5) {
                 LOGGER.warn("Battle Banzai flood-fill queue is nearly full, skipping calculation to prevent memory issues");
                 return;
             }

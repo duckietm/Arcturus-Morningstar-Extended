@@ -20,8 +20,10 @@ public class UserCustomizationData {
     public final String prefixIcon;
     public final String prefixEffect;
     public final String prefixFont;
+    /** "#RRGGBB" username colour or "" for the default. Always serialized right after displayOrder. */
+    public final String nameColor;
 
-    private UserCustomizationData(String nickIcon, String displayOrder, String prefixText, String prefixColor, String prefixIcon, String prefixEffect, String prefixFont) {
+    private UserCustomizationData(String nickIcon, String displayOrder, String prefixText, String prefixColor, String prefixIcon, String prefixEffect, String prefixFont, String nameColor) {
         this.nickIcon = nickIcon != null ? nickIcon : "";
         this.displayOrder = UserVisualSettingsComponent.sanitizeDisplayOrder(displayOrder);
         this.prefixText = prefixText != null ? prefixText : "";
@@ -29,6 +31,7 @@ public class UserCustomizationData {
         this.prefixIcon = prefixIcon != null ? prefixIcon : "";
         this.prefixEffect = prefixEffect != null ? prefixEffect : "";
         this.prefixFont = prefixFont != null ? prefixFont : "";
+        this.nameColor = UserVisualSettingsComponent.sanitizeNameColor(nameColor);
     }
 
     public static UserCustomizationData fromHabbo(Habbo habbo) {
@@ -43,6 +46,7 @@ public class UserCustomizationData {
         String prefixIcon = "";
         String prefixEffect = "";
         String prefixFont = "";
+        String nameColor = "";
 
         if (habbo.getInventory() != null) {
             if (habbo.getInventory().getNickIconsComponent() != null) {
@@ -67,10 +71,11 @@ public class UserCustomizationData {
 
             if (habbo.getInventory().getUserVisualSettingsComponent() != null) {
                 displayOrder = habbo.getInventory().getUserVisualSettingsComponent().getDisplayOrder();
+                nameColor = habbo.getInventory().getUserVisualSettingsComponent().getNameColor();
             }
         }
 
-        return new UserCustomizationData(nickIcon, displayOrder, prefixText, prefixColor, prefixIcon, prefixEffect, prefixFont);
+        return new UserCustomizationData(nickIcon, displayOrder, prefixText, prefixColor, prefixIcon, prefixEffect, prefixFont, nameColor);
     }
 
     public static UserCustomizationData fromUserId(int userId) {
@@ -81,6 +86,7 @@ public class UserCustomizationData {
         String prefixEffect = "";
         String prefixFont = "";
         String displayOrder = UserVisualSettingsComponent.loadDisplayOrder(userId);
+        String nameColor = UserVisualSettingsComponent.loadNameColor(userId);
 
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
             try (PreparedStatement nickStatement = connection.prepareStatement(
@@ -112,10 +118,10 @@ public class UserCustomizationData {
             LOGGER.error("Caught SQL exception while loading user customization data", e);
         }
 
-        return new UserCustomizationData(nickIcon, displayOrder, prefixText, prefixColor, prefixIcon, prefixEffect, prefixFont);
+        return new UserCustomizationData(nickIcon, displayOrder, prefixText, prefixColor, prefixIcon, prefixEffect, prefixFont, nameColor);
     }
 
     public static UserCustomizationData empty() {
-        return new UserCustomizationData("", UserVisualSettingsComponent.DEFAULT_DISPLAY_ORDER, "", "", "", "", "");
+        return new UserCustomizationData("", UserVisualSettingsComponent.DEFAULT_DISPLAY_ORDER, "", "", "", "", "", "");
     }
 }

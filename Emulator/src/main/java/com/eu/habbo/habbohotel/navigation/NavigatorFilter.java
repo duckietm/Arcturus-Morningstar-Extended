@@ -48,40 +48,34 @@ public abstract class NavigatorFilter {
         }
 
         List<Room> toRemove = new ArrayList<>();
-        try {
-            method.setAccessible(true);
+        method.setAccessible(true);
+        NavigatorFilterComparator comparator = Emulator.getGameEnvironment().getNavigatorManager().comperatorForField(method);
+        if (comparator == null) comparator = NavigatorFilterComparator.CONTAINS;
 
-            for (Room room : result) {
+        for (Room room : result) {
+            try {
                 Object o = method.invoke(room);
-                if (o.getClass() == value.getClass()) {
-                    if (o instanceof String) {
-                        NavigatorFilterComparator comparator = Emulator.getGameEnvironment().getNavigatorManager().comperatorForField(method);
-
-                        if (comparator != null) {
-                            if (!this.applies(comparator, (String) o, (String) value)) {
-                                toRemove.add(room);
-                            }
-                        } else {
-                            toRemove.add(room);
-                        }
-                    } else if (o instanceof String[]) {
-                        for (String s : (String[]) o) {
-                            NavigatorFilterComparator comparator = Emulator.getGameEnvironment().getNavigatorManager().comperatorForField(method);
-
-                            if (comparator != null) {
-                                if (!this.applies(comparator, s, (String) value)) {
-                                    toRemove.add(room);
-                                }
-                            }
-                        }
-                    } else {
-                        if (o != value) {
-                            toRemove.add(room);
+                boolean matches;
+                if (o == null) {
+                    matches = false;
+                } else if (o instanceof String && value instanceof String) {
+                    matches = this.applies(comparator, (String) o, (String) value);
+                } else if (o instanceof String[] && value instanceof String) {
+                    // filterAnything(): any field may match
+                    matches = false;
+                    for (String s : (String[]) o) {
+                        if (s != null && this.applies(comparator, s, (String) value)) {
+                            matches = true;
+                            break;
                         }
                     }
+                } else {
+                    matches = o.equals(value);
                 }
+                if (!matches) toRemove.add(room);
+            } catch (Exception e) {
+                toRemove.add(room);
             }
-        } catch (Exception e) {
         }
 
         result.removeAll(toRemove);
@@ -106,6 +100,10 @@ public abstract class NavigatorFilter {
             case EQUALS:
                 if (o.equals(value)) {
                     return true;
+                }
+                // ";"-joined lists (room tags): equal to any single entry
+                for (String entry : o.split(";")) {
+                    if (entry.trim().equalsIgnoreCase(value.trim())) return true;
                 }
                 break;
 

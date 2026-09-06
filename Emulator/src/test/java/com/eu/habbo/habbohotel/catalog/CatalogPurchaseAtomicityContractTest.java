@@ -32,7 +32,7 @@ class CatalogPurchaseAtomicityContractTest {
                 "credit debit must use the locked, audited economy ledger");
         String ledger = source("com/eu/habbo/habbohotel/economy/EconomyLedger.java");
         assertTrue(
-                ledger.contains("int balanceAfter = checkedBalance(balanceBefore, operation.delta())"),
+                ledger.contains("long balanceAfter = checkedBalance(balanceBefore, operation.delta())"),
                 "the ledger must reject insufficient concurrent balances");
         assertTrue(transaction.contains("connection.commit()"));
         assertTrue(transaction.contains("connection.rollback()"));

@@ -45,6 +45,8 @@ final class RoomPersistentStateFactory {
                 room.isStaffPromotedRoom(),
                 room.getPromotionManager().getPromotedFlag(),
                 room.getTradeMode(),
+                room.isPullEnabled(),
+                room.isPushEnabled(),
                 room.moveDiagonally(),
                 room.isJukeboxActive(),
                 room.isHideWired(),

@@ -260,7 +260,8 @@ public final class MariaDbMigrationBackup implements MigrationBackup {
         return List.of(
                 options.executable(),
                 "--defaults-extra-file=" + credentials,
-                "--lock-all-tables",
+                "--single-transaction",
+                "--skip-lock-tables",
                 "--quick",
                 "--routines",
                 "--events",

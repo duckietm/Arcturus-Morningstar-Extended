@@ -54,6 +54,9 @@ cms.api.allowed=127.0.0.1;::1
 # Set true only when plugins are ready for annotation priority and ignoreCancelled semantics.
 polaris.events.honor_priority=false
 
+# Maximum furniture items selectable by hand in a WIRED box.
+hotel.wired.furni.selection.count=50
+
 # Databse configuration
 db.pool.connection_timeout_ms = 10000
 db.pool.idle_timeout_ms       = 600000

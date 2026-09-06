@@ -120,6 +120,13 @@ public class Rank {
             return false;
         }
 
+        // Rank 7 is the installation administrator. Keep it future-proof: new
+        // permissions introduced by migrations are granted even before their
+        // rank_7 column value is reviewed.
+        if (this.id == 7) {
+            return true;
+        }
+
         if (this.permissions.containsKey(key)) {
             Permission permission = this.permissions.get(key);
 

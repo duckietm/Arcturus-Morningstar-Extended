@@ -85,6 +85,35 @@ public final class JdbcCatalogLiveSnapshotRepository implements CatalogLiveSnaps
         return new CatalogVersionSnapshot(version, pages, offers);
     }
 
+    /** Every page of both catalogs, plain read (no lock). */
+    public List<CatalogPageSnapshot> loadAllPages(Connection connection) throws SQLException {
+        List<CatalogPageSnapshot> pages =
+                new ArrayList<>(loadPages(connection, READ_NORMAL_PAGES_SQL, CatalogPageType.NORMAL));
+        pages.addAll(loadPages(connection, READ_BUILDER_PAGES_SQL, CatalogPageType.BUILDER));
+        return pages;
+    }
+
+    /** The offers with the given ids in one catalog, plain read (no lock), batched to keep IN lists short. */
+    public List<CatalogOfferSnapshot> loadOffersByIds(
+            Connection connection, CatalogPageType catalogType, java.util.Collection<Integer> ids) throws SQLException {
+        if (ids == null || ids.isEmpty()) return List.of();
+        String select = catalogType == CatalogPageType.BUILDER ? BUILDER_OFFERS_SELECT : NORMAL_OFFERS_SELECT;
+        List<Integer> all = new ArrayList<>(ids);
+        List<CatalogOfferSnapshot> offers = new ArrayList<>();
+        for (int start = 0; start < all.size(); start += 500) {
+            List<Integer> batch = all.subList(start, Math.min(start + 500, all.size()));
+            String sql = select + " WHERE id IN (" + placeholders(batch.size()) + ") ORDER BY id";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                int index = 1;
+                for (int id : batch) statement.setInt(index++, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) offers.add(readOffer(resultSet, catalogType));
+                }
+            }
+        }
+        return offers;
+    }
+
     private static List<CatalogOfferSnapshot> loadScopedOffers(
             Connection connection, String selectSql, CatalogPageType catalogType, CatalogMutationScope scope)
             throws SQLException {

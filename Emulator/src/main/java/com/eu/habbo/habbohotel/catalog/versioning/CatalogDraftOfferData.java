@@ -23,6 +23,11 @@ public record CatalogDraftOfferData(
     }
 
     CatalogOfferSnapshot withId(CatalogPageType catalogType, int offerId) {
+        return withId(catalogType, offerId, offerIdClient);
+    }
+
+    // CATALOG_BULK_OFFERS_V1
+    CatalogOfferSnapshot withId(CatalogPageType catalogType, int offerId, int resolvedOfferIdClient) {
         return new CatalogOfferSnapshot(
                 catalogType,
                 offerId,
@@ -35,7 +40,7 @@ public record CatalogDraftOfferData(
                 amount,
                 limitedStack,
                 orderNumber,
-                offerIdClient,
+                resolvedOfferIdClient,
                 songId,
                 extradata,
                 haveOffer,

@@ -2,7 +2,9 @@ package com.eu.habbo.messages.incoming.rooms.items;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.commands.FurniDataCommand;
+import com.eu.habbo.habbohotel.items.interactions.InteractionDefault;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDice;
+import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.pets.InteractionMonsterPlantSeed;
 import com.eu.habbo.habbohotel.pets.MonsterplantPet;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -159,6 +161,15 @@ public class ToggleFloorItemEvent extends MessageHandler {
             }
 
             item.onClick(this.client, room, new Object[] {state});
+
+            // "Furni usato" (wf_trg_state_changed) is raised here, for EVERY user double-click:
+            // it does not matter whether the state changed, whether the user has rights, or what the
+            // interaction class does with the click. Dice keep their own roll handling and wired
+            // boxes only open their dialog, so both are skipped. Use wf_cnd_trg_state_is /
+            // wf_cnd_stuff_is if you want to react only to a specific state.
+            if (!(item instanceof InteractionDice) && !(item instanceof InteractionWired)) {
+                WiredManager.triggerFurniStateChanged(room, this.client.getHabbo().getRoomUnit(), item);
+            }
         } catch (Exception e) {
             LOGGER.error("Caught exception", e);
         }

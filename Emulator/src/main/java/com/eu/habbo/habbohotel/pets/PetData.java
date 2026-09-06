@@ -205,6 +205,9 @@ public class PetData implements Comparable<PetData> {
         boolean allowAll = this.drinkItems.isEmpty() && PetData.generalDrinkItems.isEmpty();
 
         for (InteractionPetDrink drink : items) {
+            // An empty bowl is not a drink until someone refills it (double-click), so the pet does not walk to it.
+            if (!drink.hasWater()) continue;
+
             if (allowAll || this.haveDrinkItem(drink)) {
                 drinkList.add(drink);
             }
@@ -327,21 +330,21 @@ public class PetData implements Comparable<PetData> {
      */
     private static PetVocal getDefaultVocal(PetVocalsType type) {
         return switch (type) {
-            case GENERIC_HAPPY -> new PetVocal("*wags tail happily*");
-            case GENERIC_SAD -> new PetVocal("*whimpers*");
-            case GENERIC_NEUTRAL -> new PetVocal("*looks around*");
-            case HUNGRY -> new PetVocal("*stomach growls*");
-            case THIRSTY -> new PetVocal("*pants*");
-            case TIRED -> new PetVocal("*yawns*");
-            case SLEEPING -> new PetVocal("*snores softly*");
-            case PLAYFUL -> new PetVocal("*bounces excitedly*");
-            case DISOBEY -> new PetVocal("*ignores command*");
-            case EATING -> new PetVocal("*munches happily*");
-            case DRINKING -> new PetVocal("*laps up water*");
-            case LEVEL_UP -> new PetVocal("*jumps with joy*");
-            case GREET_OWNER -> new PetVocal("*perks up excitedly*");
-            case MUTED -> new PetVocal("*stays quiet*");
-            case UNKNOWN_COMMAND -> new PetVocal("*tilts head confused*");
+            case GENERIC_HAPPY -> new PetVocal("*Scodinzola felice*");
+            case GENERIC_SAD -> new PetVocal("*Guaisce tristemente*");
+            case GENERIC_NEUTRAL -> new PetVocal("*Si guarda intorno*");
+            case HUNGRY -> new PetVocal("*Gli brontola lo stomaco*");
+            case THIRSTY -> new PetVocal("*Ha molta sete*");
+            case TIRED -> new PetVocal("*Sbadiglia*");
+            case SLEEPING -> new PetVocal("*Russa dolcemente*");
+            case PLAYFUL -> new PetVocal("*Saltella emozionato*");
+            case DISOBEY -> new PetVocal("*Ignora il comando*");
+            case EATING -> new PetVocal("*Mangia con gusto*");
+            case DRINKING -> new PetVocal("*Beve l'acqua*");
+            case LEVEL_UP -> new PetVocal("*Salta dalla gioia*");
+            case GREET_OWNER -> new PetVocal("*Saluta felicemente il proprietario*");
+            case MUTED -> new PetVocal("*Resta in silenzio*");
+            case UNKNOWN_COMMAND -> new PetVocal("*Inclina la testa confuso*");
         };
     }
 

@@ -20,7 +20,12 @@ public final class WiredTriggerSourceUtil {
             case WiredSourceUtil.SOURCE_TRIGGER:
                 return event.getSourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
             case WiredSourceUtil.SOURCE_SELECTED:
-                return (selectedItems != null) ? new ArrayList<>(selectedItems) : Collections.emptyList();
+                // "furni selezionati manualmente" with nothing selected behaves like the old default
+                // (SOURCE_TRIGGER): the furni that raised the event, e.g. any double-clicked furni.
+                if (selectedItems == null || selectedItems.isEmpty()) {
+                    return event.getSourceItem().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return new ArrayList<>(selectedItems);
             case WiredSourceUtil.SOURCE_SELECTOR:
                 return resolveSelectorItems(trigger, event);
             case WiredSourceUtil.SOURCE_SIGNAL:
@@ -39,7 +44,10 @@ public final class WiredTriggerSourceUtil {
             case WiredSourceUtil.SOURCE_TRIGGER:
                 return event.getActor().map(Collections::singletonList).orElse(Collections.emptyList());
             case WiredSourceUtil.SOURCE_SELECTED:
-                return (selectedUsers != null) ? new ArrayList<>(selectedUsers) : Collections.emptyList();
+                if (selectedUsers == null || selectedUsers.isEmpty()) {
+                    return event.getActor().map(Collections::singletonList).orElse(Collections.emptyList());
+                }
+                return new ArrayList<>(selectedUsers);
             case WiredSourceUtil.SOURCE_SELECTOR:
                 return resolveSelectorUsers(trigger, event);
             case WiredSourceUtil.SOURCE_SIGNAL:

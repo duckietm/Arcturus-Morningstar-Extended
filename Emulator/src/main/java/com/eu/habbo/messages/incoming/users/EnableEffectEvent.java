@@ -1,21 +1,29 @@
 package com.eu.habbo.messages.incoming.users;
 
+import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 
 public class EnableEffectEvent extends MessageHandler {
     @Override
     public void handle() throws Exception {
         int effectId = this.packet.readInt();
+        Habbo habbo = this.client.getHabbo();
+        if (habbo == null) return;
 
         if (effectId > 0) {
-            if (this.client.getHabbo().getInventory().getEffectsComponent().ownsEffect(effectId)) {
-                this.client.getHabbo().getInventory().getEffectsComponent().enableEffect(effectId);
+            // CUSTOM: staff locks (special_enables) apply to owned effects as well.
+            int rankId = habbo.getHabboInfo().getRank().getId();
+            if (Emulator.getGameEnvironment().getPermissionsManager().isEffectBlocked(effectId, rankId)) return;
+
+            if (habbo.getInventory().getEffectsComponent().ownsEffect(effectId)) {
+                habbo.getInventory().getEffectsComponent().enableEffect(effectId);
             }
         } else {
-            this.client.getHabbo().getInventory().getEffectsComponent().activatedEffect = 0;
+            habbo.getInventory().getEffectsComponent().activatedEffect = 0;
 
-            if (this.client.getHabbo().getHabboInfo().getCurrentRoom() != null) {
-                this.client.getHabbo().getHabboInfo().getCurrentRoom().giveEffect(this.client.getHabbo().getRoomUnit(), 0, -1);
+            if (habbo.getHabboInfo().getCurrentRoom() != null) {
+                habbo.getHabboInfo().getCurrentRoom().giveEffect(habbo.getRoomUnit(), 0, -1);
             }
         }
     }

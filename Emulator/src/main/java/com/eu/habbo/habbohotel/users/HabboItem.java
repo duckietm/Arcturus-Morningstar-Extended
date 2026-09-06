@@ -8,6 +8,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.IEventTriggers;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.interactions.FurnitureCustomColors;
 import com.eu.habbo.habbohotel.items.interactions.InteractionCrackable;
 import com.eu.habbo.habbohotel.items.interactions.InteractionDice;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGuildGate;
@@ -71,6 +72,9 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     private boolean needsUpdate = false;
     private boolean needsDelete = false;
     private boolean isFromGift = false;
+    /** Free custom colours of a recolourable furni (empty = none). Stored in items.wired_data. */
+    private String customColorOne = "";
+    private String customColorTwo = "";
 
     public HabboItem(ResultSet set, Item baseItem) throws SQLException {
         this.id = set.getInt("id");
@@ -85,11 +89,28 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         this.rotation = set.getInt("rot");
         this.extradata = set.getString("extra_data").isEmpty() ? "0" : set.getString("extra_data");
 
+        // parse() only accepts a payload carrying "colorOne", so a wired item's own wired_data is ignored.
+        String[] colors = FurnitureCustomColors.parse(readWiredDataColumn(set));
+        if (colors != null) {
+            this.customColorOne = colors[0];
+            this.customColorTwo = colors[1];
+        }
+
         String ltdData = set.getString("limited_data");
         if (!ltdData.isEmpty()) {
             this.limitedStack = Integer.parseInt(set.getString("limited_data").split(":")[0]);
             this.limitedSells = Integer.parseInt(set.getString("limited_data").split(":")[1]);
         }
+    }
+
+    /**
+     * Rebinds this furni to a reloaded definition. ItemManager.loadItems() builds NEW Item objects, so a furni
+     * already alive in a room or an inventory keeps pointing at the old one and never sees an edit that did not
+     * change its interaction class - a new footprint or seat direction reached the database and nothing else.
+     * Only the furni editor's live refresh should call this.
+     */
+    public void setBaseItem(Item item) {
+        if (item != null) this.baseItem = item;
     }
 
     public HabboItem(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
@@ -282,6 +303,63 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         this.needsDelete = value;
     }
 
+    /** The wired_data column is absent from some item queries; a missing column is simply "no colours". */
+    private static String readWiredDataColumn(ResultSet set) {
+        try {
+            return set.getString("wired_data");
+        } catch (SQLException ignored) {
+            return null;
+        }
+    }
+
+    public boolean hasCustomColors() {
+        return !this.customColorOne.isEmpty();
+    }
+
+    public String getCustomColorOne() {
+        return this.customColorOne;
+    }
+
+    public String getCustomColorTwo() {
+        return this.customColorTwo.isEmpty() ? this.customColorOne : this.customColorTwo;
+    }
+
+    /**
+     * Sets (or clears, with empty values) the custom colours and persists them. The caller re-sends the furni
+     * (room.updateItem) so every client tints it immediately.
+     */
+    public boolean setCustomColors(String colorOne, String colorTwo) {
+        if (this instanceof InteractionWired || this instanceof InteractionWiredHighscore) return false;
+
+        String one = FurnitureCustomColors.normalizeColor(colorOne);
+        String two = FurnitureCustomColors.normalizeColor(colorTwo);
+        if (one.isEmpty()) two = "";
+
+        if (!FurnitureCustomColors.save(this.getId(), one, two)) return false;
+
+        this.customColorOne = one;
+        this.customColorTwo = two;
+        return true;
+    }
+
+    /** True when the interaction writes the guild-customised colour block itself (guild furni). */
+    protected boolean writesOwnCustomColors() {
+        return false;
+    }
+
+    /**
+     * What the room composers send. A recolourable furni carrying custom colours needs the guild-customised
+     * stuff data whatever its interaction is, so the colour block wins over the interaction's own extradata.
+     */
+    public final void serializeItemData(ServerMessage serverMessage) {
+        if (this.hasCustomColors() && !this.writesOwnCustomColors()) {
+            FurnitureCustomColors.serialize(this, serverMessage);
+            return;
+        }
+
+        this.serializeExtradata(serverMessage);
+    }
+
     public boolean isLimited() {
         return this.limitedStack > 0;
     }
@@ -350,14 +428,8 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                 }
             }
 
-            boolean isTogglingInteraction = Arrays.stream(HabboItem.TOGGLING_INTERACTIONS)
-                    .anyMatch(type -> type.isAssignableFrom(this.getClass()));
-
-            if ((this.getBaseItem().getStateCount() > 1 && !(this instanceof InteractionDice))
-                    || isTogglingInteraction
-                    || (objects != null && objects.length == 1 && objects[0].equals("TOGGLE_OVERRIDE"))) {
-                WiredManager.triggerFurniStateChanged(room, client.getHabbo().getRoomUnit(), this);
-            }
+            // "Furni usato" (wf_trg_state_changed) is dispatched once by ToggleFloorItemEvent for
+            // every user double-click, so nothing to do here.
         }
     }
 
@@ -515,21 +587,13 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
             List<Bot> newBots = new ArrayList<>();
 
             for (RoomTile tile : room.getLayout()
-                    .getTilesAt(
-                            oldLocation,
-                            this.getBaseItem().getWidth(),
-                            this.getBaseItem().getLength(),
-                            this.getRotation())) {
+                    .getTilesAt(oldLocation, this)) {
                 oldHabbos.addAll(room.getHabbosAt(tile));
                 oldBots.addAll(room.getBotsAt(tile));
             }
 
             for (RoomTile tile : room.getLayout()
-                    .getTilesAt(
-                            oldLocation,
-                            this.getBaseItem().getWidth(),
-                            this.getBaseItem().getLength(),
-                            this.getRotation())) {
+                    .getTilesAt(oldLocation, this)) {
                 newHabbos.addAll(room.getHabbosAt(tile));
                 newBots.addAll(room.getBotsAt(tile));
             }

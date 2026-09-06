@@ -1,5 +1,6 @@
 package com.eu.habbo.habbohotel.rooms;
 
+import com.eu.habbo.habbohotel.commands.BssPlacementPreferences;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.interactions.InteractionBuildArea;
 import com.eu.habbo.habbohotel.items.interactions.InteractionStackHelper;
@@ -9,7 +10,9 @@ import com.eu.habbo.habbohotel.items.interactions.wired.effects.WiredEffectSendS
 import com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerReceiveSignal;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.users.HabboInfo;
 import com.eu.habbo.habbohotel.users.HabboItem;
+import com.eu.habbo.habbohotel.users.HabboManager;
 import com.eu.habbo.messages.outgoing.rooms.items.AddFloorItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.AddWallItemComposer;
 import com.eu.habbo.plugin.Event;
@@ -42,7 +45,8 @@ final class RoomItemPlacementService {
     }
 
     FurnitureMovementError canPlaceFurnitureAt(HabboItem item, Habbo habbo, RoomTile tile, int rotation) {
-        if (this.facade.itemCount() >= Room.MAXIMUM_FURNI) {
+        // hotel.room.furni.max <= 0 disables the room furniture cap entirely.
+        if (Room.MAXIMUM_FURNI > 0 && this.facade.itemCount() >= Room.MAXIMUM_FURNI) {
             return FurnitureMovementError.MAX_ITEMS;
         }
         if (tile == null || tile.state == RoomTileState.INVALID) {
@@ -89,8 +93,7 @@ final class RoomItemPlacementService {
 
     FurnitureMovementError furnitureFitsAt(RoomTile tile, HabboItem item, int rotation, boolean checkForUnits) {
         RoomLayout layout = this.room.getLayout();
-        if (!layout.fitsOnMap(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation)) {
+        if (!layout.fitsOnMap(tile, item.getBaseItem(), rotation)) {
             return FurnitureMovementError.INVALID_MOVE;
         }
         if (this.isStackPlacementBypassItem(item)) {
@@ -98,7 +101,7 @@ final class RoomItemPlacementService {
         }
 
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
         for (RoomTile occupiedTile : occupiedTiles) {
             if (occupiedTile.state == RoomTileState.INVALID) {
                 return FurnitureMovementError.INVALID_MOVE;
@@ -157,7 +160,7 @@ final class RoomItemPlacementService {
 
         RoomLayout layout = this.room.getLayout();
         Set<RoomTile> occupiedTiles = layout.getTilesAt(
-                tile, item.getBaseItem().getWidth(), item.getBaseItem().getLength(), rotation);
+                tile, item.getBaseItem(), rotation);
         FurnitureMovementError fits = this.furnitureFitsAt(tile, item, rotation, true);
         if (fits != FurnitureMovementError.NONE && !pluginHelper) {
             return fits;
@@ -175,6 +178,9 @@ final class RoomItemPlacementService {
                 height = layout.getHeightAtSquare(tile.x, tile.y) + event.getUpdatedHeight();
             }
         }
+
+        Double forcedHeight = BssPlacementPreferences.consumeHeight(owner.getHabboInfo().getId());
+        if (forcedHeight != null) height = Math.max(layout.getHeightAtSquare(tile.x, tile.y), forcedHeight);
 
         item.setZ(height);
         item.setX(tile.x);
@@ -283,14 +289,12 @@ final class RoomItemPlacementService {
     }
 
     private void ensureOwnerName(HabboItem item, Habbo owner) {
-        if (!this.index.ownerNames().containsKey(item.getUserId()) && owner != null) {
-            this.index
-                    .ownerNames()
-                    .put(
-                            item.getUserId(),
-                            item.getUserId() == BuildersClubRoomSupport.VIRTUAL_OWNER_ID
-                                    ? BuildersClubRoomSupport.DISPLAY_OWNER_NAME
-                                    : owner.getHabboInfo().getUsername());
+        if (!this.index.ownerNames().containsKey(item.getUserId())) {
+            // Everything placed in a room is presented as the room owner's property.
+            HabboInfo roomOwner = HabboManager.getOfflineHabboInfo(this.room.getOwnerId());
+            if (roomOwner != null) {
+                this.index.ownerNames().put(item.getUserId(), roomOwner.getUsername());
+            }
         }
     }
 }

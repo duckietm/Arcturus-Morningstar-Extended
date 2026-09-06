@@ -79,6 +79,10 @@ public class FurniEditorDetailComposer extends MessageComposer {
         this.response.appendString(this.furniDataJson != null ? this.furniDataJson : "{}");
         this.response.appendString(this.furniDataDiagnosticJson != null ? this.furniDataDiagnosticJson : "{}");
 
+        // Appended last so an older client, which stops reading here, is unaffected.
+        this.response.appendString((String) item.getOrDefault("tile_shape", ""));
+        this.response.appendString((String) item.getOrDefault("sit_directions", ""));
+
         return this.response;
     }
 }

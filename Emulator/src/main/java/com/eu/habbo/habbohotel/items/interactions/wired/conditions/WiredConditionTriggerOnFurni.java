@@ -30,7 +30,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
     public static final WiredConditionType type = WiredConditionType.TRIGGER_ON_FURNI;
 
     protected Set<HabboItem> items = new LinkedHashSet<>();
-    protected int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    protected int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
     protected int quantifier = QUANTIFIER_ALL;
 
@@ -149,7 +149,7 @@ public class WiredConditionTriggerOnFurni extends InteractionWiredCondition {
     @Override
     public void onPickUp() {
         this.items.clear();
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.quantifier = QUANTIFIER_ALL;
     }

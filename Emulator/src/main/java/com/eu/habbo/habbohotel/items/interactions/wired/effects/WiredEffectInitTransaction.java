@@ -199,9 +199,9 @@ public class WiredEffectInitTransaction extends InteractionWiredEffect {
         return null;
     }
 
-    private static int balance(Habbo habbo, int currencyType) {
+    private static long balance(Habbo habbo, int currencyType) {
         return (currencyType < 0)
-                ? habbo.getHabboInfo().getCredits()
+                ? habbo.getHabboInfo().getCreditsLong()
                 : habbo.getHabboInfo().getCurrencyAmount(currencyType);
     }
 

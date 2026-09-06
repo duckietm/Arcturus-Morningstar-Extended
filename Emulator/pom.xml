@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -6,7 +6,7 @@
 
     <groupId>com.eu.habbo</groupId>
     <artifactId>Polaris</artifactId>
-    <version>4.2.75</version>
+    <version>4.2.153</version>
     <name>Polaris</name>
     <licenses>
         <license>
@@ -70,6 +70,8 @@
     </properties>
 
     <build>
+        <!-- The former target/classes tree can retain unusable ACLs on the mapped Z: drive. -->
+        <directory>${project.basedir}/target-build</directory>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -598,7 +600,7 @@
             <version>${bcrypt.version}</version>
         </dependency>
 
-        <!-- Jakarta Mail — used by the built-in forgot-password endpoint
+        <!-- Jakarta Mail â€” used by the built-in forgot-password endpoint
              when smtp.* keys are configured in emulator_settings -->
         <dependency>
             <groupId>org.eclipse.angus</groupId>
@@ -606,7 +608,7 @@
             <version>${jakarta-mail.version}</version>
         </dependency>
 
-        <!-- Flyway — versioned schema migrations run at startup and in CI.
+        <!-- Flyway â€” versioned schema migrations run at startup and in CI.
              flyway-mysql provides MariaDB/MySQL support (free / Apache-2.0). -->
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -628,7 +630,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- japicmp — test-only plugin ABI gate vs the Arcturus Morningstar 3.5.5
+        <!-- japicmp â€” test-only plugin ABI gate vs the Arcturus Morningstar 3.5.5
              baseline (see abi-baseline/README.md and PluginAbiCompatibilityTest) -->
         <dependency>
             <groupId>com.github.siom79.japicmp</groupId>
@@ -655,7 +657,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers — throwaway MariaDB for integration (*IT) tests -->
+        <!-- Testcontainers â€” throwaway MariaDB for integration (*IT) tests -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-mariadb</artifactId>
@@ -667,7 +669,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito — collaborators that aren't the DB in unit tests -->
+        <!-- Mockito â€” collaborators that aren't the DB in unit tests -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>

@@ -3,6 +3,8 @@ package com.eu.habbo.habbohotel.items.interactions.wired.effects;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.games.Game;
+import com.eu.habbo.habbohotel.games.GamePlayer;
+import com.eu.habbo.habbohotel.games.wired.WiredGame;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
@@ -44,15 +46,62 @@ public class WiredEffectGiveScore extends InteractionWiredEffect {
 
         for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
-            if (habbo == null || habbo.getHabboInfo().getCurrentGame() == null) continue;
+            if (habbo == null) continue;
 
-            Game game = room.getGame(habbo.getHabboInfo().getCurrentGame());
+            Game game = habbo.getHabboInfo().getCurrentGame() != null
+                    ? room.getGame(habbo.getHabboInfo().getCurrentGame())
+                    : null;
 
+            if (game == null) game = autoEnrol(room, habbo);
             if (game == null) continue;
 
-            if (habbo.getHabboInfo().getGamePlayer() != null) {
-                habbo.getHabboInfo().getGamePlayer().addScore(this.getAppliedAmount(), true);
+            GamePlayer player = habbo.getHabboInfo().getGamePlayer();
+            if (player == null) continue;
+
+            WiredGame wiredGame = game instanceof WiredGame ? (WiredGame) game : null;
+            if (wiredGame != null) {
+                // Scoring outside a round opens a new one (timer-less rooms), before the points land.
+                wiredGame.ensureRoundOpen();
             }
+
+            int applied = this.getAppliedAmount();
+            player.addScore(applied, true);
+
+            // tell the player what they just earned/lost
+            try {
+                String key = applied >= 0 ? "wired.score.given" : "wired.score.removed";
+                String fallback = applied >= 0
+                        ? "Hai ricevuto %points% punti! (totale: %total%)"
+                        : "Hai perso %points% punti! (totale: %total%)";
+                habbo.whisper(
+                        com.eu.habbo.Emulator.getTexts()
+                                .getValue(key, fallback)
+                                .replace("%points%", String.valueOf(Math.abs(applied)))
+                                .replace("%total%", String.valueOf(player.getScore())),
+                        com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles.ALERT);
+            } catch (Exception ignored) {
+            }
+
+            if (wiredGame != null) {
+                wiredGame.refreshScoreboards(player.getTeamColor());
+                wiredGame.publishLiveHighscores();
+            }
+        }
+    }
+
+    /**
+     * A user who never joined a team has no game, so wf_act_give_score had nothing to add points to.
+     * Enrol them in the room's wired game (green by default) and open the round.
+     */
+    private static Game autoEnrol(Room room, Habbo habbo) {
+        try {
+            Game game = room.getGameOrCreate(WiredGame.class);
+            if (game == null) return null;
+            if (game instanceof WiredGame) ((WiredGame) game).ensureRoundOpen();
+            game.addHabbo(habbo, com.eu.habbo.habbohotel.games.GameTeamColors.GREEN);
+            return habbo.getHabboInfo().getCurrentGame() != null ? room.getGame(habbo.getHabboInfo().getCurrentGame()) : game;
+        } catch (Exception e) {
+            return null;
         }
     }
 

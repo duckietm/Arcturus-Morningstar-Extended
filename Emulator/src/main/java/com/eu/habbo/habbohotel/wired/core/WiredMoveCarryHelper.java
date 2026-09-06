@@ -630,11 +630,8 @@ public final class WiredMoveCarryHelper {
 
         double targetZ = room.getStackHeight(targetTile.x, targetTile.y, false, movingItem);
         Collection<RoomTile> occupiedTiles = room.getLayout()
-                .getTilesAt(
-                        targetTile,
-                        movingItem.getBaseItem().getWidth(),
-                        movingItem.getBaseItem().getLength(),
-                        rotation);
+                .getTilesAt(targetTile,
+                        movingItem.getBaseItem(), rotation);
 
         if (occupiedTiles == null || occupiedTiles.isEmpty()) {
             return targetZ;
@@ -795,10 +792,7 @@ public final class WiredMoveCarryHelper {
 
         Collection<RoomTile> occupiedTiles = room.getLayout()
                 .getTilesAt(
-                        anchorTile,
-                        movingItem.getBaseItem().getWidth(),
-                        movingItem.getBaseItem().getLength(),
-                        movingItem.getRotation());
+                        anchorTile, movingItem);
 
         if (occupiedTiles == null || occupiedTiles.isEmpty()) {
             return CarryContext.disabled();
@@ -902,9 +896,7 @@ public final class WiredMoveCarryHelper {
         Collection<RoomTile> occupiedTiles = room.getLayout()
                 .getTilesAt(
                         targetTile,
-                        movingItem.getBaseItem().getWidth(),
-                        movingItem.getBaseItem().getLength(),
-                        rotation);
+                        movingItem.getBaseItem(), rotation);
 
         if (occupiedTiles == null || occupiedTiles.isEmpty()) {
             return FurnitureMovementError.NONE;
@@ -1024,9 +1016,7 @@ public final class WiredMoveCarryHelper {
         Collection<RoomTile> occupiedTiles = room.getLayout()
                 .getTilesAt(
                         targetTile,
-                        movingItem.getBaseItem().getWidth(),
-                        movingItem.getBaseItem().getLength(),
-                        rotation);
+                        movingItem.getBaseItem(), rotation);
 
         for (CarriedRoomUnit carriedRoomUnit : carryContext.carriedUsers) {
             RoomUnit roomUnit = carriedRoomUnit.roomUnit;

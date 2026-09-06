@@ -9,8 +9,21 @@ import com.eu.habbo.messages.incoming.catalog.catalogadmin.studio.CatalogStudioR
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
 
 public class CatalogAdminSetPageVisibleEvent extends MessageHandler {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(CatalogAdminSetPageVisibleEvent.class);
     @Override
     public void handle() throws Exception {
+        try {
+            this.handleGuarded();
+        } catch (RuntimeException exception) {
+            // A rejected edit must always answer the client: an escaped exception left the admin editor waiting
+            // forever ("Saving page...") and blocked every later action until the client was reloaded.
+            String message = exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
+            LOGGER.warn("{} rejected: {}", this.getClass().getSimpleName(), message);
+            this.client.sendResponse(new CatalogAdminResultComposer(false, message));
+        }
+    }
+
+    private void handleGuarded() throws Exception {
         if (!this.client.getHabbo().hasPermission(Permission.ACC_CATALOGFURNI)) {
             this.client.sendResponse(new CatalogAdminResultComposer(false, "No permission"));
             return;

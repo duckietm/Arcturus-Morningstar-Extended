@@ -50,7 +50,7 @@ public class WiredExtraTextOutputVariable extends InteractionWiredExtra {
     private int displayType = DISPLAY_NUMERIC;
     private int placeholderType = TYPE_SINGLE;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
-    private int furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+    private int furniSource = WiredSourceUtil.SOURCE_SELECTED;
     private int variableItemId = 0;
     private String variableToken = DEFAULT_VARIABLE_TOKEN;
     private String placeholderName = DEFAULT_PLACEHOLDER_NAME;
@@ -234,7 +234,7 @@ public class WiredExtraTextOutputVariable extends InteractionWiredExtra {
         this.displayType = DISPLAY_NUMERIC;
         this.placeholderType = TYPE_SINGLE;
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
-        this.furniSource = WiredSourceUtil.SOURCE_TRIGGER;
+        this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         this.placeholderName = DEFAULT_PLACEHOLDER_NAME;
         this.delimiter = DEFAULT_DELIMITER;
     }

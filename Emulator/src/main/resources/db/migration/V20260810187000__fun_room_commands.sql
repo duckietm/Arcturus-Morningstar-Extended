@@ -1,0 +1,21 @@
+INSERT INTO `emulator_texts` (`key`, `value`) VALUES
+    ('commands.keys.cmd_fun_room', 'fun;disco;rave;terremoto;cannoni;levitazione;girotondo;invasionefufo;piratiparty;ghostparty;robotparty;pioggiadisco;caos;statue;carnevale;rapisci;rimbalza;vola;orbita;frullatore;yoyo;fantasma;papera;mummia;zombie;goblin;alieno;scambio;calamita;duello;abbraccio;telepatia;catapulta;spazio;aurora;temporale;tramonto;neonvoid;blackout;oceano;inferno'),
+    ('commands.help.cmd_fun_room', 'COMANDI STANZA: :disco, :rave, :terremoto, :cannoni, :levitazione, :girotondo, :invasionefufo, :piratiparty, :ghostparty, :robotparty, :pioggiadisco, :caos, :statue, :carnevale.\r\nATMOSFERE NEL VUOTO: :spazio, :aurora, :temporale, :tramonto, :neonvoid, :blackout, :oceano, :inferno.\r\nCOMANDI UTENTE: :rapisci, :rimbalza, :vola, :orbita, :frullatore, :yoyo, :fantasma, :papera, :mummia, :zombie, :goblin, :alieno + username.\r\nINTERAZIONI A DUE: :scambio, :calamita, :duello, :abbraccio, :telepatia, :catapulta + username.'),
+    ('commands.error.cmd_fun_room.active', 'C e gia un evento divertente attivo in questa stanza.'),
+    ('commands.error.cmd_fun_room.usage', 'Uso corretto: :%command% username'),
+    ('commands.action.cmd_fun_room.started', 'Evento %event% iniziato!'),
+    ('commands.action.cmd_fun_room.finished', 'Evento terminato: tutto e stato ripristinato.'),
+    ('commands.action.cmd_fun_target.started', 'Sei stato colpito da %event%!'),
+    ('commands.action.cmd_fun_pair.scambio', '%actor% e %target% si scambiano di posto!'),
+    ('commands.action.cmd_fun_pair.calamita', '%actor% ha magnetizzato %target%!'),
+    ('commands.action.cmd_fun_pair.duello', '%actor% sfida %target% a duello!'),
+    ('commands.action.cmd_fun_pair.abbraccio', '%actor% abbraccia %target%!'),
+    ('commands.action.cmd_fun_pair.telepatia', '%actor% e %target% sono collegati mentalmente!'),
+    ('commands.action.cmd_fun_pair.catapulta', '%actor% catapulta %target% attraverso la stanza!'),
+    ('commands.action.cmd_terremoto.started', 'TERREMOTO! I furni stanno tremando!'),
+    ('commands.error.cmd_terremoto.no_furni', 'Non ci sono furni da scuotere in questa stanza.'),
+    ('commands.action.cmd_cannoni.started', 'FUOCO! I cannoni sparano da ogni lato: nascondetevi dietro i furni!'),
+    ('commands.action.cmd_cannoni.finished', 'Cessate il fuoco! Cannoni e proiettili sono spariti.'),
+    ('commands.error.cmd_cannoni.no_space', 'Non ci sono bordi validi da cui sparare in questa stanza.'),
+    ('commands.error.cmd_cannoni.no_asset', 'Gli asset dei cannoni non sono disponibili.')
+ON DUPLICATE KEY UPDATE `value`=VALUES(`value`);

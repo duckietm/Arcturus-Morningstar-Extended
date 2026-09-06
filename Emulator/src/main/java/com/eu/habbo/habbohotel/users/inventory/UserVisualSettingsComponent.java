@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class UserVisualSettingsComponent {
@@ -20,6 +21,8 @@ public class UserVisualSettingsComponent {
 
     private final Habbo habbo;
     private String displayOrder = DEFAULT_DISPLAY_ORDER;
+    /** Username colour as "#RRGGBB", or "" for the default (white). */
+    private String nameColor = "";
 
     public UserVisualSettingsComponent(Habbo habbo) {
         this.habbo = habbo;
@@ -27,7 +30,9 @@ public class UserVisualSettingsComponent {
     }
 
     private void loadSettings() {
-        this.displayOrder = loadDisplayOrder(this.habbo.getHabboInfo().getId());
+        int userId = this.habbo.getHabboInfo().getId();
+        this.displayOrder = loadDisplayOrder(userId);
+        this.nameColor = loadNameColor(userId);
     }
 
     public String getDisplayOrder() {
@@ -48,6 +53,25 @@ public class UserVisualSettingsComponent {
         }
     }
 
+    public String getNameColor() {
+        return sanitizeNameColor(this.nameColor);
+    }
+
+    public void setNameColor(String nameColor) {
+        this.nameColor = sanitizeNameColor(nameColor);
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "INSERT INTO user_visual_settings (user_id, display_order, name_color) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name_color = VALUES(name_color)")) {
+            statement.setInt(1, this.habbo.getHabboInfo().getId());
+            statement.setString(2, this.getDisplayOrder());
+            statement.setString(3, this.nameColor);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception while saving user name colour", e);
+        }
+    }
+
     public static String loadDisplayOrder(int userId) {
         try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(
@@ -64,6 +88,33 @@ public class UserVisualSettingsComponent {
         }
 
         return DEFAULT_DISPLAY_ORDER;
+    }
+
+    public static String loadNameColor(int userId) {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "SELECT name_color FROM user_visual_settings WHERE user_id = ? LIMIT 1")) {
+            statement.setInt(1, userId);
+
+            try (ResultSet set = statement.executeQuery()) {
+                if (set.next()) {
+                    return sanitizeNameColor(set.getString("name_color"));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception while loading user name colour", e);
+        }
+
+        return "";
+    }
+
+    /** Accepts "#RRGGBB" / "RRGGBB" (case-insensitive); anything else clears the colour. */
+    public static String sanitizeNameColor(String nameColor) {
+        if (nameColor == null) return "";
+        String value = nameColor.trim();
+        if (value.startsWith("#")) value = value.substring(1);
+        if (!value.matches("(?i)[0-9a-f]{6}")) return "";
+        return "#" + value.toUpperCase(Locale.ROOT);
     }
 
     public static String sanitizeDisplayOrder(String displayOrder) {
@@ -90,5 +141,6 @@ public class UserVisualSettingsComponent {
 
     public void dispose() {
         this.displayOrder = DEFAULT_DISPLAY_ORDER;
+        this.nameColor = "";
     }
 }

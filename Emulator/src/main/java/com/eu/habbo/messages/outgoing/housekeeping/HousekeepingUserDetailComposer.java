@@ -39,7 +39,10 @@ public class HousekeepingUserDetailComposer extends MessageComposer {
         this.response.appendString(rank != null ? safe(rank.getName()) : "");
         this.response.appendBoolean(this.info.isOnline());
         this.response.appendInt(this.info.getLastOnline());
-        this.response.appendInt(this.info.getCredits());
+        // This legacy housekeeping packet has a signed-int field. Preserve its
+        // layout while the authoritative wallet and USER_CREDITS packet remain
+        // fully 64 bit.
+        this.response.appendInt((int) Math.min(Integer.MAX_VALUE, this.info.getCreditsLong()));
         this.response.appendInt(this.info.getCurrencyAmount(CURRENCY_DUCKETS));
         this.response.appendInt(this.info.getCurrencyAmount(CURRENCY_DIAMONDS));
         this.response.appendString(safe(this.info.getMail()));

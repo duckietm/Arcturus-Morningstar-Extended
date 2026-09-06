@@ -8,9 +8,22 @@ import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminPageDetai
 import com.eu.habbo.messages.outgoing.catalog.catalogadmin.CatalogAdminResultComposer;
 
 public class CatalogAdminLoadPageEvent extends MessageHandler {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(CatalogAdminLoadPageEvent.class);
 
     @Override
     public void handle() throws Exception {
+        try {
+            this.handleGuarded();
+        } catch (RuntimeException exception) {
+            // A rejected edit must always answer the client: an escaped exception left the admin editor waiting
+            // forever ("Saving page...") and blocked every later action until the client was reloaded.
+            String message = exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
+            LOGGER.warn("{} rejected: {}", this.getClass().getSimpleName(), message);
+            this.client.sendResponse(new CatalogAdminResultComposer(false, message));
+        }
+    }
+
+    private void handleGuarded() throws Exception {
         if (!this.client.getHabbo().hasPermission(Permission.ACC_CATALOGFURNI)) {
             this.client.sendResponse(new CatalogAdminResultComposer(false, "No permission"));
             return;
@@ -22,7 +35,7 @@ public class CatalogAdminLoadPageEvent extends MessageHandler {
         this.packet.readInt(); // legacy revision field
         var page = CatalogStudioRuntime.services()
                 .liveMutations()
-                .loadLiveForRead()
+                .loadLive()
                 .page(pageType, pageId)
                 .orElse(null);
         if (page == null) {

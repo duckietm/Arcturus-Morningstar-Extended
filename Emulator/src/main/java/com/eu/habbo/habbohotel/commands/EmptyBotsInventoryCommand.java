@@ -17,21 +17,29 @@ public class EmptyBotsInventoryCommand extends Command {
         super("cmd_empty_bots", Emulator.getTexts().getValue("commands.keys.cmd_empty_bots").split(";"));
     }
 
+    private static String verifyMessage(String[] params) {
+        String alias = params.length > 0 && params[0] != null && !params[0].isEmpty() ? params[0] : "emptybots";
+        return Emulator.getTexts().getValue("commands.succes.cmd_empty_bots.verify")
+                .replace("%generic.yes%", Emulator.getTexts().getValue("generic.yes"))
+                .replace("%command%", alias)
+                .replace(":emptybots ", ":" + alias + " ");
+    }
+
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
-        if (params.length == 1 || (params.length >= 2 && !params[1].equals(Emulator.getTexts().getValue("generic.yes")))) {
+        if (params.length == 1 || (params.length >= 2 && !EmptyInventoryCommand.isConfirmation(params[1]))) {
             if (gameClient.getHabbo().getHabboInfo().getCurrentRoom() != null) {
                 if (gameClient.getHabbo().getHabboInfo().getCurrentRoom().getUserCount() > 10) {
-                    gameClient.getHabbo().alert(Emulator.getTexts().getValue("commands.succes.cmd_empty_bots.verify").replace("%generic.yes%", Emulator.getTexts().getValue("generic.yes")));
+                    gameClient.getHabbo().alert(verifyMessage(params));
                 } else {
-                    gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.succes.cmd_empty_bots.verify").replace("%generic.yes%", Emulator.getTexts().getValue("generic.yes")), RoomChatMessageBubbles.ALERT);
+                    gameClient.getHabbo().whisper(verifyMessage(params), RoomChatMessageBubbles.ALERT);
                 }
             }
 
             return true;
         }
 
-        if (params.length >= 2 && params[1].equalsIgnoreCase(Emulator.getTexts().getValue("generic.yes"))) {
+        if (params.length >= 2 && EmptyInventoryCommand.isConfirmation(params[1])) {
 
             Habbo habbo = (params.length == 3 && gameClient.getHabbo().hasPermission(Permission.ACC_EMPTY_OTHERS)) ? Emulator.getGameEnvironment().getHabboManager().getHabbo(params[2]) : gameClient.getHabbo();
 

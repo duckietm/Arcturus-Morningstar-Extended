@@ -20,7 +20,8 @@ final class RoomPersistence {
             + "who_can_ban = ?, poll_id = ?, guild_id = ?, "
             + "roller_speed = ?, override_model = ?, "
             + "is_staff_picked = ?, promoted = ?, trade_mode = ?, "
-            + "move_diagonally = ?, owner_id = ?, owner_name = ?, "
+            + "pull_enabled = ?, push_enabled = ?, move_diagonally = ?, "
+            + "owner_id = ?, owner_name = ?, "
             + "jukebox_active = ?, hidewired = ?, allow_underpass = ?, "
             + "youtube_enabled = ?, builders_club_trial_locked = ?, "
             + "builders_club_original_state = ?, mute_all_pets = ?, "
@@ -70,26 +71,28 @@ final class RoomPersistence {
             statement.setString(32, databaseBoolean(state.staffPromotedRoom()));
             statement.setString(33, databaseBoolean(state.promoted()));
             statement.setInt(34, state.tradeMode());
-            statement.setString(35, databaseBoolean(state.moveDiagonally()));
-            statement.setInt(36, state.ownerId());
-            statement.setString(37, state.ownerName());
-            statement.setString(38, databaseBoolean(state.jukeboxActive()));
-            statement.setString(39, databaseBoolean(state.hideWired()));
-            statement.setString(40, databaseBoolean(state.allowUnderpass()));
-            statement.setString(41, databaseBoolean(state.youtubeEnabled()));
-            statement.setString(42, databaseBoolean(state.buildersClubTrialLocked()));
+            statement.setString(35, databaseBoolean(state.pullEnabled()));
+            statement.setString(36, databaseBoolean(state.pushEnabled()));
+            statement.setString(37, databaseBoolean(state.moveDiagonally()));
+            statement.setInt(38, state.ownerId());
+            statement.setString(39, state.ownerName());
+            statement.setString(40, databaseBoolean(state.jukeboxActive()));
+            statement.setString(41, databaseBoolean(state.hideWired()));
+            statement.setString(42, databaseBoolean(state.allowUnderpass()));
+            statement.setString(43, databaseBoolean(state.youtubeEnabled()));
+            statement.setString(44, databaseBoolean(state.buildersClubTrialLocked()));
             statement.setString(
-                    43,
+                    45,
                     Objects.requireNonNullElse(state.buildersClubOriginalState(), RoomState.OPEN)
                             .name()
                             .toLowerCase());
-            statement.setString(44, databaseBoolean(state.muteAllPets()));
-            statement.setString(45, databaseBoolean(state.leaveOnDoorTileEnabled()));
-            statement.setString(46, databaseBoolean(state.idleSleepEnabled()));
-            statement.setInt(47, state.idleSleepTimeoutSeconds());
-            statement.setString(48, databaseBoolean(state.idleAutokickEnabled()));
-            statement.setInt(49, state.idleAutokickTimeoutSeconds());
-            statement.setInt(50, state.id());
+            statement.setString(46, databaseBoolean(state.muteAllPets()));
+            statement.setString(47, databaseBoolean(state.leaveOnDoorTileEnabled()));
+            statement.setString(48, databaseBoolean(state.idleSleepEnabled()));
+            statement.setInt(49, state.idleSleepTimeoutSeconds());
+            statement.setString(50, databaseBoolean(state.idleAutokickEnabled()));
+            statement.setInt(51, state.idleAutokickTimeoutSeconds());
+            statement.setInt(52, state.id());
             statement.executeUpdate();
         }
     }
@@ -149,6 +152,8 @@ final class RoomPersistence {
             boolean staffPromotedRoom,
             boolean promoted,
             int tradeMode,
+            boolean pullEnabled,
+            boolean pushEnabled,
             boolean moveDiagonally,
             boolean jukeboxActive,
             boolean hideWired,

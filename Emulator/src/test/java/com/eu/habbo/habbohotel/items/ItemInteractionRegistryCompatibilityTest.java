@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.eu.habbo.habbohotel.items.interactions.InteractionDefault;
 import com.eu.habbo.habbohotel.items.interactions.InteractionGate;
+import com.eu.habbo.habbohotel.items.interactions.InteractionTeleportTile;
+import com.eu.habbo.habbohotel.items.interactions.InteractionVendingMachine;
+import com.eu.habbo.habbohotel.items.interactions.InteractionYoutubeTV;
 import com.eu.habbo.habbohotel.items.interactions.wired.contract.InteractionWiredContractPayment;
 import com.eu.habbo.habbohotel.items.interactions.wired.contract.InteractionWiredContractReward;
 import com.eu.habbo.habbohotel.items.interactions.wired.contract.InteractionWiredContractTrade;
@@ -77,6 +80,47 @@ class ItemInteractionRegistryCompatibilityTest {
         assertThrows(IllegalStateException.class, () -> registry.add(replacement));
         assertSame(first, registry.find("FIRST"));
         assertSame(first, registry.find(InteractionDefault.class));
+    }
+
+    @Test
+    void furniEditorClassnameRecoversEveryRegisteredWiredInteraction() {
+        TestItemManager manager = new TestItemManager();
+        manager.loadDefaults();
+
+        ItemInteraction selector = manager.resolveItemInteraction(
+                "default", "wf_slc_users_area", "WIRED Selector: Users In Area");
+        assertEquals("wf_slc_users_area", selector.getName());
+
+        ItemInteraction extra = manager.resolveItemInteraction(
+                "default", "wf_xtra_anim_time", "WIRED Add-on: Animation Time");
+        assertEquals("wf_xtra_anim_time", extra.getName());
+
+        ItemInteraction explicit = manager.resolveItemInteraction(
+                "gate", "wf_slc_users_area", "WIRED Selector: Users In Area");
+        assertEquals("gate", explicit.getName(), "an explicit non-default interaction must win");
+
+        ItemInteraction decorative = manager.resolveItemInteraction(
+                "default", "wf_wire2", "Wire Junction");
+        assertEquals("default", decorative.getName(), "unregistered wf assets remain decorative");
+    }
+
+    @Test
+    void legacyImportedActionAliasesResolveToTheirWorkingRuntimeHandlers() {
+        TestItemManager manager = new TestItemManager();
+        manager.loadDefaults();
+
+        assertSame(
+                InteractionTeleportTile.class,
+                manager.resolveItemInteraction("teletile", "custom_tele", "Teleport").getType());
+        assertSame(
+                InteractionVendingMachine.class,
+                manager.resolveItemInteraction("Vending", "custom_vendor", "Vendor").getType());
+        assertSame(
+                InteractionYoutubeTV.class,
+                manager.resolveItemInteraction("yt_jukebox", "custom_tv", "TV").getType());
+        assertEquals(
+                "wf_conf_handitem_block",
+                manager.resolveItemInteraction("conf_handitem_block", "conf_handitem_block", "Blocker").getName());
     }
 
     private static final class TestItemManager extends ItemManager {

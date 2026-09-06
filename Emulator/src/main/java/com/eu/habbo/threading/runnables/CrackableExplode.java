@@ -2,6 +2,7 @@ package com.eu.habbo.threading.runnables;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.FurnitureType;
+import com.eu.habbo.habbohotel.items.CrackableReward;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionCrackable;
 import com.eu.habbo.habbohotel.rooms.Room;
@@ -11,8 +12,11 @@ import com.eu.habbo.messages.outgoing.inventory.AddHabboItemComposer;
 import com.eu.habbo.messages.outgoing.inventory.InventoryRefreshComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.AddFloorItemComposer;
 import com.eu.habbo.messages.outgoing.rooms.items.RemoveFloorItemComposer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CrackableExplode implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrackableExplode.class);
     private final Room room;
     private final InteractionCrackable habboItem;
     private final Habbo habbo;
@@ -36,6 +40,19 @@ public class CrackableExplode implements Runnable {
             return;
         }
 
+        CrackableReward rewardData = Emulator.getGameEnvironment().getItemManager().getCrackableData(this.habboItem.getBaseItem().getId());
+        Item rewardItem = Emulator.getGameEnvironment().getItemManager().getCrackableReward(this.habboItem.getBaseItem().getId());
+        if (rewardData == null) {
+            this.habboItem.cracked = false;
+            LOGGER.error("Refusing to consume crackable {} because its configuration is missing", this.habboItem.getBaseItem().getId());
+            return;
+        }
+        if (!rewardData.prizes.isEmpty() && rewardItem == null) {
+            this.habboItem.cracked = false;
+            LOGGER.error("Refusing to consume crackable {} because its selected reward TypeID is missing", this.habboItem.getBaseItem().getId());
+            return;
+        }
+
         if (!this.habboItem.resetable()) {
             this.room.removeHabboItem(this.habboItem);
             this.room.sendComposer(new RemoveFloorItemComposer(this.habboItem, true).compose());
@@ -44,8 +61,6 @@ public class CrackableExplode implements Runnable {
         } else {
             this.habboItem.reset(this.room);
         }
-
-        Item rewardItem = Emulator.getGameEnvironment().getItemManager().getCrackableReward(this.habboItem.getBaseItem().getId());
 
         if (rewardItem != null) {
             HabboItem newItem = Emulator.getGameEnvironment().getItemManager().createItem(this.habboItem.allowAnyone() ? this.habbo.getHabboInfo().getId() : this.habboItem.getUserId(), rewardItem, 0, 0, "");

@@ -131,11 +131,7 @@ public class PetUseItemEvent extends MessageHandler {
                             .getHabboInfo()
                             .getCurrentRoom()
                             .updateTiles(room.getLayout()
-                                    .getTilesAt(
-                                            room.getLayout().getTile(item.getX(), item.getY()),
-                                            item.getBaseItem().getWidth(),
-                                            item.getBaseItem().getLength(),
-                                            item.getRotation()));
+                                    .getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item));
                     AchievementManager.progressAchievement(
                             this.client.getHabbo(),
                             Emulator.getGameEnvironment()
@@ -177,11 +173,7 @@ public class PetUseItemEvent extends MessageHandler {
                             .getHabboInfo()
                             .getCurrentRoom()
                             .updateTiles(room.getLayout()
-                                    .getTilesAt(
-                                            room.getLayout().getTile(item.getX(), item.getY()),
-                                            item.getBaseItem().getWidth(),
-                                            item.getBaseItem().getLength(),
-                                            item.getRotation()));
+                                    .getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item));
                     pet.getRoomUnit().removeStatus(RoomUnitStatus.GESTURE);
                     pet.cycle();
                     Emulator.getThreading().runPersistence(new QueryDeleteHabboItem(item.getId()));
@@ -226,11 +218,7 @@ public class PetUseItemEvent extends MessageHandler {
                                 .getHabboInfo()
                                 .getCurrentRoom()
                                 .updateTiles(room.getLayout()
-                                        .getTilesAt(
-                                                room.getLayout().getTile(item.getX(), item.getY()),
-                                                item.getBaseItem().getWidth(),
-                                                item.getBaseItem().getLength(),
-                                                item.getRotation()));
+                                        .getTilesAt(room.getLayout().getTile(item.getX(), item.getY()), item));
                         pet.getRoomUnit().removeStatus(RoomUnitStatus.GESTURE);
                         Emulator.getThreading().runPersistence(new QueryDeleteHabboItem(item.getId()));
                     }

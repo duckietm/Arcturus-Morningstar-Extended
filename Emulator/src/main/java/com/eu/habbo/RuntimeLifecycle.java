@@ -92,6 +92,9 @@ final class RuntimeLifecycle {
     private void stopNetworkPhase() {
         phases.advanceTo(ShutdownPhase.STOP);
         if (services.gameServer() != null) {
+            run(
+                    "disconnect active game clients",
+                    () -> services.gameServer().getGameClientManager().forceDisposeAllClients());
             run("stop game server", () -> services.gameServer().stop());
         }
         run("dispose resumed sessions", sessionCleanup);

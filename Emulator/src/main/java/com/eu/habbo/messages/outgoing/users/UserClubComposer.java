@@ -72,6 +72,10 @@ public class UserClubComposer extends MessageComposer {
             if(days < 1 && minutes > 0) {
                 days = 1;
             }
+        } else if (this.habbo.getHabboStats().hasActiveClub()) {
+            timeRemaining = Integer.MAX_VALUE - Emulator.getIntUnixTimestamp();
+            days = (int) Math.floor(timeRemaining / 86400.0);
+            minutes = (int) Math.ceil(timeRemaining / 60.0);
         }
 
         int responseType = ((this.responseType <= RESPONSE_TYPE_LOGIN) && timeRemaining > 0 && SubscriptionHabboClub.DISCOUNT_ENABLED && days <= SubscriptionHabboClub.DISCOUNT_DAYS_BEFORE_END) ? RESPONSE_TYPE_DISCOUNT_AVAILABLE : this.responseType;

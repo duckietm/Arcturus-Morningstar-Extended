@@ -41,6 +41,11 @@ class WiredInputGuardTest {
         assertEquals(2, WiredInputGuard.normalizeStuffSelectionCode(2));
     }
 
+    @Test
+    void defaultsManualFurniSelectionToFifty() {
+        assertEquals(50, WiredInputGuard.maxFurniSelectionCount());
+    }
+
     private static ByteBuf stringBuffer(String value) {
         byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
         ByteBuf buffer = Unpooled.buffer();

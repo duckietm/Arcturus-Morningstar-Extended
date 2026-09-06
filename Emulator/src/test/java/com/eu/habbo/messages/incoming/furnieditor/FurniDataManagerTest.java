@@ -80,6 +80,21 @@ class FurniDataManagerTest {
     }
 
     @Test
+    void mapsBrowserRootRendererUrlRelativeToAssetBase(@TempDir Path dir) throws Exception {
+        Path assetBase = dir.resolve("nitro-assets");
+        Files.createDirectories(assetBase);
+        Path furnitureData = assetBase.resolve("FurnitureData.json");
+        Files.writeString(furnitureData, "{}");
+
+        FurnidataSourceResolver.Source source =
+                FurnidataSourceResolver.toLocalSource(assetBase, "/nitro-assets/FurnitureData.json?t=123");
+
+        assertNotNull(source);
+        assertEquals(furnitureData, source.path());
+        assertFalse(source.directory());
+    }
+
+    @Test
     void prefersRendererConfigOverLegacyFurnidataPath(@TempDir Path dir) throws Exception {
         Path legacy = dir.resolve("legacy").resolve("FurnitureData.json");
         Files.createDirectories(legacy.getParent());

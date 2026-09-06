@@ -33,13 +33,27 @@ public final class CatalogAdminCacheSync {
 
     public static void attachCreatedPage(CatalogPage page, int parentId, int orderNum, CatalogPageType pageType) {
         if (page == null) return;
-        reparentPage(page, parentId, orderNum, pageType);
+
+        CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
+
+        // CREATE must attach even when page.getParentId() already equals
+        // parentId (which is the normal case for an object reconstructed from
+        // the freshly inserted DB row).
+        page.setParentId(parentId);
+        page.setOrderNum(Math.max(0, orderNum));
+
+        CatalogPage parent = catalogManager.getCatalogPage(parentId, pageType);
+        if (parent != null) {
+            parent.addChildPage(page);
+        }
     }
 
     public static void reparentPage(CatalogPage page, int newParentId, int newOrderNum, CatalogPageType pageType) {
         if (page == null) return;
 
         CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
         int oldParentId = page.getParentId();
 
         if (oldParentId != newParentId) {
@@ -59,6 +73,81 @@ public final class CatalogAdminCacheSync {
         page.setOrderNum(newOrderNum);
     }
 
+    // Full PAGE cache synchronization for Catalog Studio live mutations.
+    public static boolean reloadCatalogPage(int pageId, CatalogPageType pageType) {
+        CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
+        CatalogPage existing = catalogManager.getCatalogPage(pageId, pageType);
+
+        String sql = (pageType == CatalogPageType.BUILDER)
+                ? "SELECT id, parent_id, caption, caption AS caption_save, page_layout, icon_color, icon_image, "
+                        + "1 AS min_rank, order_num, visible, enabled, '0' AS club_only, "
+                        + "'BUILDERS_CLUB' AS catalog_mode, page_headline, page_teaser, page_special, "
+                        + "page_text1, page_text2, page_text_details, page_text_teaser, '' AS includes "
+                        + "FROM catalog_pages_bc WHERE id = ? LIMIT 1"
+                : "SELECT * FROM catalog_pages WHERE id = ? LIMIT 1";
+
+        try (Connection connection = openCatalogConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, pageId);
+
+            try (ResultSet set = statement.executeQuery()) {
+                // DELETE: the committed row disappeared. Remove the stale live
+                // object and unlink it from its old parent.
+                if (!set.next()) {
+                    if (existing != null) {
+                        detachDeletedPage(existing, pageType);
+                    }
+                    return false;
+                }
+
+                String layout = set.getString("page_layout");
+                Class<? extends CatalogPage> pageClass = CatalogManager.pageDefinitions.get(layout);
+
+                if (pageClass == null) {
+                    LOGGER.error("Cannot reload catalog page {}: unknown layout {}", pageId, layout);
+                    return false;
+                }
+
+                CatalogPage refreshed;
+                try {
+                    refreshed = pageClass.getConstructor(ResultSet.class).newInstance(set);
+                } catch (ReflectiveOperationException exception) {
+                    LOGGER.error("Cannot instantiate catalog page {} using layout {}", pageId, layout, exception);
+                    return false;
+                }
+
+                // SAVE/MOVE: preserve live children and offers while replacing
+                // the page object. Re-instantiation matters when page_layout
+                // changes to a different CatalogPage subclass.
+                if (existing != null) {
+                    refreshed.getChildPages().putAll(existing.getChildPages());
+                    refreshed.getCatalogItems().putAll(existing.getCatalogItems());
+
+                    for (int i = 0; i < existing.getOfferIds().size(); i++) {
+                        refreshed.addOfferId(existing.getOfferIds().getInt(i));
+                    }
+
+                    CatalogPage oldParent = catalogManager.getCatalogPage(existing.getParentId(), pageType);
+                    if (oldParent != null) {
+                        oldParent.getChildPages().remove(pageId);
+                    }
+                }
+
+                catalogManager.getCatalogPagesMap(pageType).put(pageId, refreshed);
+                attachCreatedPage(
+                        refreshed,
+                        refreshed.getParentId(),
+                        refreshed.getOrderNum(),
+                        pageType);
+
+                return true;
+            }
+        } catch (SQLException exception) {
+            LOGGER.error("Failed to reload catalog page {}", pageId, exception);
+            return false;
+        }
+    }
     public static void refreshPageFlagsFromDb(int pageId, CatalogPageType pageType) {
         CatalogManager catalogManager = currentCatalogManager();
         CatalogPage page = catalogManager.getCatalogPage(pageId, pageType);
@@ -154,6 +243,7 @@ public final class CatalogAdminCacheSync {
             CatalogPageType pageType) {
         if (page == null) return;
 
+        currentCatalogManager().invalidateSearchIndex();
         if (page.getParentId() != parentId) {
             reparentPage(page, parentId, orderNum, pageType);
         } else {
@@ -189,6 +279,7 @@ public final class CatalogAdminCacheSync {
         if (page == null) return;
 
         CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
         CatalogPage parent = catalogManager.getCatalogPage(page.getParentId(), pageType);
 
         if (parent != null) {
@@ -200,6 +291,7 @@ public final class CatalogAdminCacheSync {
 
     public static boolean reloadCatalogItem(int offerId, CatalogPageType pageType) {
         CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
         CatalogItem existing = catalogManager.getCatalogItem(offerId, pageType);
         int previousPageId = existing != null ? existing.getPageId() : -1;
 
@@ -258,6 +350,7 @@ public final class CatalogAdminCacheSync {
 
     public static void removeCatalogItem(int offerId, CatalogPageType pageType, int pageIdHint) {
         CatalogManager catalogManager = currentCatalogManager();
+        catalogManager.invalidateSearchIndex();
         CatalogItem item = catalogManager.getCatalogItem(offerId, pageType);
 
         if (item != null) {

@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.messages.outgoing.users.InClientLinkComposer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,11 @@ public class EnableCommand extends Command {
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
+        if (params.length == 2 && params[1].equalsIgnoreCase("list")) {
+            gameClient.sendResponse(new InClientLinkComposer("avatar-effects/show"));
+            return true;
+        }
+
         if (params.length >= 2) {
             int effectId;
             try {

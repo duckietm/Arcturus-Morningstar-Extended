@@ -17,17 +17,21 @@ public final class ChestWiredCurrencyUtil {
     private ChestWiredCurrencyUtil() {}
 
     public static int getBalance(Habbo habbo, int currencyType) {
+        return (int) Math.min(Integer.MAX_VALUE, getBalanceLong(habbo, currencyType));
+    }
+
+    private static long getBalanceLong(Habbo habbo, int currencyType) {
         if (habbo == null) {
             return 0;
         }
         if (currencyType < 0) {
-            return habbo.getHabboInfo().getCredits();
+            return habbo.getHabboInfo().getCreditsLong();
         }
         return habbo.getHabboInfo().getCurrencyAmount(currencyType);
     }
 
     public static boolean has(Habbo habbo, int currencyType, int amount) {
-        return amount <= 0 || getBalance(habbo, currencyType) >= amount;
+        return amount <= 0 || getBalanceLong(habbo, currencyType) >= amount;
     }
 
     public static boolean take(Habbo habbo, int currencyType, int amount) {

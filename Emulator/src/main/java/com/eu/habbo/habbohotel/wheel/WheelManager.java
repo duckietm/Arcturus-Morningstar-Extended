@@ -22,7 +22,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class WheelManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(WheelManager.class);
-    private static final int RECENT_KEEP = 50;
+    public static final int RECENT_KEEP = 50;
+    public static final int MAX_FREE_SPINS_PER_DAY = 100;
+    public static final int MAX_SPIN_COST = 1_000_000;
     private static final int SECONDS_PER_DAY = 86400;
 
     public static final Set<String> VALID_PRIZE_TYPES = Set.of(
@@ -31,7 +33,8 @@ public class WheelManager {
     public static final int MAX_STRING_LEN = 64;
     public static final int MAX_PRIZE_AMOUNT = 1_000_000;
     public static final int MAX_ITEM_QUANTITY = 100;
-    public static final int MAX_WEIGHT = 1_000_000;
+    // Weights store hundredths (two-decimal admin input); 10M = display weight 100000.00.
+    public static final int MAX_WEIGHT = 10_000_000;
     public static final int MAX_EXTRA_SPINS = 10_000;
     private static final long MIN_SPIN_INTERVAL_MS = 1500L;
 
@@ -90,6 +93,47 @@ public class WheelManager {
 
     public int getSpinCostType() {
         return this.spinCostType;
+    }
+
+    public int getFreeSpinsPerDay() {
+        return this.freeSpinsPerDay;
+    }
+
+    public int getTotalWeight() {
+        return this.totalWeight;
+    }
+
+    public int getRecentWinsCount() {
+        return this.recentWinsCache.size();
+    }
+
+    /** Admin: wipe the "latest winners" list (table + cache). */
+    public synchronized void clearRecentWins() {
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM wheel_recent_wins")) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Failed to clear wheel recent wins", e);
+        }
+        this.recentWinsCache.clear();
+    }
+
+    /**
+     * Admin: persist the hotel-wide settings (emulator_settings) and apply them. Free spins per day, the price of an
+     * extra spin and the currency it is paid with (-1 credits, 0 duckets, 5 diamonds, or any custom points type).
+     */
+    public synchronized void updateSettings(int freeSpinsPerDay, int spinCost, int spinCostType) {
+        int safeFreeSpins = clamp(freeSpinsPerDay, 0, MAX_FREE_SPINS_PER_DAY);
+        int safeCost = clamp(spinCost, 0, MAX_SPIN_COST);
+        int safeType = clamp(spinCostType, -1, 1000);
+
+        Emulator.getConfig().update("wheel.free_spins_per_day", Integer.toString(safeFreeSpins));
+        Emulator.getConfig().update("wheel.spin_cost", Integer.toString(safeCost));
+        Emulator.getConfig().update("wheel.spin_cost_type", Integer.toString(safeType));
+        Emulator.getConfig().saveToDatabase();
+
+        this.loadSettings();
+        // Users already at their daily quota keep it; the new quota applies from the next daily reset.
     }
 
     private int today() {
@@ -230,17 +274,28 @@ public class WheelManager {
         }
     }
 
+    /** A furni prize accepts either the items_base id or the classname, so admins can type "throne". */
+    private static Item resolveBaseItem(String value) {
+        if (value == null) return null;
+        String needle = value.trim();
+        if (needle.isEmpty()) return null;
+
+        try {
+            Item byId = Emulator.getGameEnvironment().getItemManager().getItem(Integer.parseInt(needle));
+            if (byId != null) return byId;
+        } catch (NumberFormatException ignored) {
+        }
+
+        for (Item item : Emulator.getGameEnvironment().getItemManager().getItems().values()) {
+            if (item.getName() != null && item.getName().equalsIgnoreCase(needle)) return item;
+        }
+        return null;
+    }
+
     private void giveItem(Habbo habbo, WheelPrize prize, int quantity) {
         if (quantity <= 0 || prize.value == null) return;
 
-        int baseId;
-        try {
-            baseId = Integer.parseInt(prize.value.trim());
-        } catch (NumberFormatException e) {
-            return;
-        }
-
-        Item base = Emulator.getGameEnvironment().getItemManager().getItem(baseId);
+        Item base = resolveBaseItem(prize.value);
         if (base == null) return;
 
         Set<HabboItem> items = new HashSet<>();

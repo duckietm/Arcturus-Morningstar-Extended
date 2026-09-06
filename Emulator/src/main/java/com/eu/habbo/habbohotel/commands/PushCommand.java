@@ -16,6 +16,13 @@ public class PushCommand extends Command {
 
     @Override
     public boolean handle(GameClient gameClient, String[] params) throws Exception {
+        if (gameClient.getHabbo().getHabboInfo().getCurrentRoom() == null) return true;
+
+        if (!gameClient.getHabbo().getHabboInfo().getCurrentRoom().isPushEnabled()) {
+            gameClient.getHabbo().whisper(Emulator.getTexts().getValue("commands.error.cmd_push.disabled"), RoomChatMessageBubbles.ALERT);
+            return true;
+        }
+
         if (params.length == 2) {
             Habbo habbo = gameClient.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(params[1]);
 

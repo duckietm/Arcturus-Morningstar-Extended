@@ -33,14 +33,17 @@ public class RoomPickupItemEvent extends MessageHandler {
             room.pickUpItem(item, this.client.getHabbo());
         } else {
             if (room.hasRights(this.client.getHabbo())) {
-                if (this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)) {
+                // The room owner and staff keep what they pick up; a user with room rights only sends the
+                // piece to the room owner's inventory.
+                boolean keepsIt = this.client.getHabbo().hasPermission(Permission.ACC_ANYROOMOWNER)
+                        || this.client.getHabbo().getHabboInfo().getId() == room.getOwnerId();
+                if (keepsIt) {
                     item.setUserId(this.client.getHabbo().getHabboInfo().getId());
-                } else if (this.client.getHabbo().getHabboInfo().getId() != room.getOwnerId()
-                        && item.getUserId() == room.getOwnerId()) {
-                    return;
+                    room.pickUpItem(item, this.client.getHabbo());
+                } else {
+                    item.setUserId(room.getOwnerId());
+                    room.ejectUserItem(item);
                 }
-
-                room.ejectUserItem(item);
             }
         }
     }

@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,52 @@ public class BadgesComponent {
             badge.setSlot(0);
             badge.needsUpdate(true);
             Emulator.getThreading().run(badge);
+        }
+    }
+
+    /**
+     * Replaces all worn badge slots in one transaction. This deliberately does
+     * not queue one update per badge: concurrent asynchronous updates could
+     * otherwise land out of order and corrupt the visible slot arrangement.
+     */
+    public boolean replaceWearingBadges(Habbo habbo, Map<Integer, HabboBadge> requestedSlots) {
+        synchronized (this.badges) {
+            try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
+                boolean previousAutoCommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+
+                try (PreparedStatement clear = connection.prepareStatement(
+                                "UPDATE users_badges SET slot_id = 0 WHERE user_id = ? AND slot_id <> 0");
+                        PreparedStatement assign = connection.prepareStatement(
+                                "UPDATE users_badges SET slot_id = ? WHERE id = ? AND user_id = ?")) {
+                    clear.setInt(1, habbo.getHabboInfo().getId());
+                    clear.executeUpdate();
+
+                    for (Map.Entry<Integer, HabboBadge> entry : requestedSlots.entrySet()) {
+                        assign.setInt(1, entry.getKey());
+                        assign.setInt(2, entry.getValue().getId());
+                        assign.setInt(3, habbo.getHabboInfo().getId());
+                        assign.addBatch();
+                    }
+                    assign.executeBatch();
+                    connection.commit();
+
+                    for (HabboBadge badge : this.badges) badge.setSlot(0);
+                    for (Map.Entry<Integer, HabboBadge> entry : requestedSlots.entrySet()) {
+                        entry.getValue().setSlot(entry.getKey());
+                        entry.getValue().needsUpdate(false);
+                    }
+                } catch (SQLException e) {
+                    connection.rollback();
+                    throw e;
+                } finally {
+                    connection.setAutoCommit(previousAutoCommit);
+                }
+                return true;
+            } catch (SQLException e) {
+                LOGGER.error("Unable to replace worn badge slots for user {}", habbo.getHabboInfo().getId(), e);
+                return false;
+            }
         }
     }
 

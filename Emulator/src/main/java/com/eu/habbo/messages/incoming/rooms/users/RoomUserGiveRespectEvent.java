@@ -2,6 +2,7 @@ package com.eu.habbo.messages.incoming.rooms.users;
 
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.users.Habbo;
+import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.plugin.events.users.UserRespectedEvent;
 
@@ -20,7 +21,8 @@ public class RoomUserGiveRespectEvent extends MessageHandler {
             return;
         }
 
-        if (this.client.getHabbo().getHabboStats().respectPointsToGive > 0) {
+        if (this.client.getHabbo().getHabboStats().respectPointsToGive > 0
+                || this.client.getHabbo().hasPermission(Permission.ACC_INFINITE_RESPECT)) {
             if (this.client.getHabbo().getHabboInfo().getCurrentRoom() == null) return;
 
             Habbo target = this.client.getHabbo().getHabboInfo().getCurrentRoom().getHabbo(userId);
