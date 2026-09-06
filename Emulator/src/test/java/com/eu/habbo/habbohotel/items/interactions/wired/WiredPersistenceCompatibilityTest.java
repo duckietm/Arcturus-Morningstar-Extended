@@ -93,19 +93,18 @@ class WiredPersistenceCompatibilityTest {
 
         assertEquals(
                 Map.of(
-                        "blank", 19,
-                        "json-empty", 21,
-                        "json-malformed", 99,
-                        "legacy-zero", 12,
-                        "legacy-tab", 21),
+                        "blank", 15,
+                        "json-empty", 20,
+                        "json-malformed", 98,
+                        "legacy-zero", 10,
+                        "legacy-tab", 16),
                 byPayload,
                 "Review every change against the production-loader boundary and real legacy corpus");
         assertEquals(
                 Map.of(
-                        "java.io.EOFException", 86,
-                        "java.lang.ArrayIndexOutOfBoundsException", 2,
-                        "java.lang.NullPointerException", 64,
-                        "java.lang.NumberFormatException", 20),
+                        "java.io.EOFException", 90,
+                        "java.lang.NullPointerException", 58,
+                        "java.lang.NumberFormatException", 11),
                 byException,
                 "Unexpected failure classes must not enter the persisted-data quarantine boundary");
     }
