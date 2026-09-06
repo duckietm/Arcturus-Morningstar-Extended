@@ -180,6 +180,20 @@ public final class WiredEvents {
                 .build();
     }
 
+    /**
+     * Create the companion of {@link #userSays} for the say-your-username trigger, which has its own
+     * legacy type and therefore its own event.
+     */
+    public static WiredEvent userSaysUsername(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
+        return WiredEvent.builder(WiredEvent.Type.USER_SAYS_USERNAME, room)
+                .actor(user)
+                .text(message)
+                .chatType(chatType)
+                .chatStyle(chatStyle)
+                .tile(user.getCurrentLocation())
+                .build();
+    }
+
     // ========== Furniture Events ==========
 
     /**

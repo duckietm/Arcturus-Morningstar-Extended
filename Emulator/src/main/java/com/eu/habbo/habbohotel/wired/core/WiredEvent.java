@@ -58,6 +58,9 @@ public final class WiredEvent {
         /** Furniture state is toggled/changed */
         FURNI_STATE_CHANGED(WiredTriggerType.STATE_CHANGED),
 
+        /** A user said their own username; its own event because the room index looks stacks up by legacy type */
+        USER_SAYS_USERNAME(WiredTriggerType.USERNAME_AS_TRIGGER),
+
         /** Timer fires at a given time */
         TIMER_TICK(WiredTriggerType.AT_GIVEN_TIME),
 

@@ -267,5 +267,5 @@ com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerTeamWins |
 com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerTransactionComplete | TRIGGER | type=TRANSACTION_COMPLETE | event=TRANSACTION_COMPLETE | actor=false | match=true
 com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerTransactionFail | TRIGGER | type=TRANSACTION_FAIL | event=TRANSACTION_FAIL | actor=false | match=true
 com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUserGetsHandItem | TRIGGER | type=USER_GETS_HANDITEM | event=USER_GETS_HANDITEM | actor=true | match=false
-com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger | TRIGGER | type=SAY_SOMETHING | event=USER_SAYS | actor=true | match=false
+com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger | TRIGGER | type=USERNAME_AS_TRIGGER | event=USER_SAYS_USERNAME | actor=true | match=false
 com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerVariableChanged | TRIGGER | type=VARIABLE_CHANGED | event=VARIABLE_CHANGED | actor=false | match=false

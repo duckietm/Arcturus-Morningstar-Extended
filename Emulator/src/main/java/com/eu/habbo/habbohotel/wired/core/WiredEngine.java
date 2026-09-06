@@ -706,7 +706,9 @@ public final class WiredEngine {
      * This mirrors trigger and condition eligibility without executing regular effects.
      */
     public boolean shouldSuppressUserSaysOutput(WiredEvent event) {
-        if (event == null || event.getType() != WiredEvent.Type.USER_SAYS) {
+        if (event == null
+                || (event.getType() != WiredEvent.Type.USER_SAYS
+                        && event.getType() != WiredEvent.Type.USER_SAYS_USERNAME)) {
             return false;
         }
 

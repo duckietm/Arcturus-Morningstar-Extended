@@ -515,7 +515,10 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
-        return handleEvent(event);
+        boolean handled = handleEvent(event);
+        // The say-your-username trigger listens on its own event; both fire from one chat line.
+        boolean handledUsername = handleEvent(WiredEvents.userSaysUsername(room, user, message, chatType, chatStyle));
+        return handled || handledUsername;
     }
 
     public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message) {
@@ -533,7 +536,9 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
-        return engine.shouldSuppressUserSaysOutput(event);
+        return engine.shouldSuppressUserSaysOutput(event)
+                || engine.shouldSuppressUserSaysOutput(
+                        WiredEvents.userSaysUsername(room, user, message, chatType, chatStyle));
     }
 
     /**

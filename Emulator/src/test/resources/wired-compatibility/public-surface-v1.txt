@@ -5076,6 +5076,7 @@ METHOD public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTri
 TYPE public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger extends com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerHabboSaysKeyword
 CONSTRUCTOR public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger(int,int,com.eu.habbo.habbohotel.items.Item,java.lang.String,int,int) throws -
 CONSTRUCTOR public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger(java.sql.ResultSet,com.eu.habbo.habbohotel.items.Item) throws java.sql.SQLException
+METHOD public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger#getType(-):com.eu.habbo.habbohotel.wired.WiredTriggerType throws -
 METHOD public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerUsernameAsTrigger#matches(com.eu.habbo.habbohotel.users.HabboItem,com.eu.habbo.habbohotel.wired.core.WiredEvent):boolean throws -
 
 TYPE public com.eu.habbo.habbohotel.items.interactions.wired.triggers.WiredTriggerVariableChanged extends com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger
@@ -5519,6 +5520,7 @@ ENUM com.eu.habbo.habbohotel.wired.WiredTriggerType 32 DICE_ROLLED
 ENUM com.eu.habbo.habbohotel.wired.WiredTriggerType 33 PRESS_KEYBIND
 ENUM com.eu.habbo.habbohotel.wired.WiredTriggerType 34 TEAM_GAME_RESULT
 ENUM com.eu.habbo.habbohotel.wired.WiredTriggerType 35 AT_GIVEN_TIME_LONG
+ENUM com.eu.habbo.habbohotel.wired.WiredTriggerType 36 USERNAME_AS_TRIGGER
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#AT_GIVEN_TIME:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#AT_GIVEN_TIME_LONG:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#BOT_REACHED_AVTR:com.eu.habbo.habbohotel.wired.WiredTriggerType
@@ -5550,6 +5552,7 @@ FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#TEAM_GA
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#TRANSACTION_COMPLETE:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#TRANSACTION_FAIL:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#UNIDLES:com.eu.habbo.habbohotel.wired.WiredTriggerType
+FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#USERNAME_AS_TRIGGER:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#USER_GETS_HANDITEM:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#USER_PERFORMS_ACTION:com.eu.habbo.habbohotel.wired.WiredTriggerType
 FIELD public static final com.eu.habbo.habbohotel.wired.WiredTriggerType#VARIABLE_CHANGED:com.eu.habbo.habbohotel.wired.WiredTriggerType
@@ -5862,34 +5865,35 @@ ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 4 USER_CLICKS_TILE
 ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 5 USER_CLICKS_USER
 ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 6 USER_PERFORMS_ACTION
 ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 7 FURNI_STATE_CHANGED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 8 TIMER_TICK
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 9 TIMER_REPEAT
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 10 CLOCK_COUNTER_REACHED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 11 VARIABLE_CHANGED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 12 TIMER_REPEAT_LONG
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 13 TIMER_TICK_LONG
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 14 TIMER_REPEAT_SHORT
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 15 USER_ENTERS_ROOM
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 16 USER_LEAVES_ROOM
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 17 GAME_STARTS
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 18 GAME_ENDS
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 19 BOT_COLLISION
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 20 BOT_REACHED_FURNI
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 21 BOT_REACHED_HABBO
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 22 SCORE_ACHIEVED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 23 USER_IDLES
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 24 USER_UNIDLES
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 25 USER_STARTS_DANCING
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 26 USER_STOPS_DANCING
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 27 TEAM_WINS
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 28 TEAM_LOSES
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 29 SIGNAL_RECEIVED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 30 TRANSACTION_COMPLETE
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 31 TRANSACTION_FAIL
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 32 USER_GETS_HANDITEM
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 33 DICE_ROLLED
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 34 PRESS_KEYBIND
-ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 35 CUSTOM
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 8 USER_SAYS_USERNAME
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 9 TIMER_TICK
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 10 TIMER_REPEAT
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 11 CLOCK_COUNTER_REACHED
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 12 VARIABLE_CHANGED
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 13 TIMER_REPEAT_LONG
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 14 TIMER_TICK_LONG
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 15 TIMER_REPEAT_SHORT
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 16 USER_ENTERS_ROOM
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 17 USER_LEAVES_ROOM
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 18 GAME_STARTS
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 19 GAME_ENDS
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 20 BOT_COLLISION
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 21 BOT_REACHED_FURNI
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 22 BOT_REACHED_HABBO
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 23 SCORE_ACHIEVED
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 24 USER_IDLES
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 25 USER_UNIDLES
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 26 USER_STARTS_DANCING
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 27 USER_STOPS_DANCING
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 28 TEAM_WINS
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 29 TEAM_LOSES
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 30 SIGNAL_RECEIVED
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 31 TRANSACTION_COMPLETE
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 32 TRANSACTION_FAIL
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 33 USER_GETS_HANDITEM
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 34 DICE_ROLLED
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 35 PRESS_KEYBIND
+ENUM com.eu.habbo.habbohotel.wired.core.WiredEvent$Type 36 CUSTOM
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#BOT_COLLISION:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#BOT_REACHED_FURNI:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#BOT_REACHED_HABBO:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
@@ -5920,6 +5924,7 @@ FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USE
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_LEAVES_ROOM:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_PERFORMS_ACTION:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_SAYS:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
+FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_SAYS_USERNAME:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_STARTS_DANCING:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_STOPS_DANCING:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
 FIELD public static final com.eu.habbo.habbohotel.wired.core.WiredEvent$Type#USER_UNIDLES:com.eu.habbo.habbohotel.wired.core.WiredEvent$Type
@@ -6465,6 +6470,7 @@ METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userLeave
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userPerformsAction(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit,int,int):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userSays(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit,java.lang.String):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userSays(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit,java.lang.String,int,int):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
+METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userSaysUsername(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit,java.lang.String,int,int):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userStartsDancing(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userStopsDancing(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -
 METHOD public static com.eu.habbo.habbohotel.wired.migrate.WiredEvents#userUnidles(com.eu.habbo.habbohotel.rooms.Room,com.eu.habbo.habbohotel.rooms.RoomUnit):com.eu.habbo.habbohotel.wired.core.WiredEvent throws -

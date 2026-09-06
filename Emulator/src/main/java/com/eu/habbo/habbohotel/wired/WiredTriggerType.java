@@ -46,7 +46,10 @@ public enum WiredTriggerType {
     // The long one-shot timer. It reported AT_GIVEN_TIME, so the client drew the half-second dialog
     // for a trigger that counts in five-second steps. Needs the matching Nitro WiredTriggerLayoutCode
     // value and a WiredEvent.Type whose legacy type maps back here, or the room index never finds it.
-    AT_GIVEN_TIME_LONG(30);
+    AT_GIVEN_TIME_LONG(30),
+    // "Say your username" borrowed the keyword dialog, whose keyword and match-mode controls it
+    // never reads. Its own code lets the client draw only what the box uses.
+    USERNAME_AS_TRIGGER(31);
 
     public final int code;
 
