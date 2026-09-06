@@ -164,7 +164,8 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
             Integer referenceValue = this.referenceFor(references, roomUnit.getId(), TARGET_USER, index++);
             if (!this.isUnaryOperation() && referenceValue == null) continue;
 
-            this.writeUserInternalValue(room, roomUnit, key, applyOperation(this.operation, currentValue, referenceValue));
+            this.writeUserInternalValue(
+                    room, roomUnit, key, applyOperation(this.operation, currentValue, referenceValue));
         }
     }
 
@@ -235,7 +236,8 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
 
         int currentValue = room.getRoomVariableManager().getCurrentValue(this.destinationVariableItemId);
         room.getRoomVariableManager()
-                .updateVariableValue(this.destinationVariableItemId, applyOperation(this.operation, currentValue, referenceValue));
+                .updateVariableValue(
+                        this.destinationVariableItemId, applyOperation(this.operation, currentValue, referenceValue));
     }
 
     private void executeContext(WiredContext ctx, Room room) {
