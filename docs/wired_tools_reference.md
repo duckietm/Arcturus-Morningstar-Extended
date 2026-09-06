@@ -393,6 +393,16 @@ Each log/history entry can carry:
 
 ---
 
+## 4.5 Variables tab: clearing a variable
+
+Next to `Manage` the Variables tab offers `Clear this variable`, the official
+"delete all" action: it takes a user or furni variable away from every holder,
+in the room and in permanent storage, and fires the trigger's `deleted` event
+once per holder. It goes through the existing manage packet as action `2`.
+The button only appears to the owner of the definition box (or a staff member
+with `ACC_ANYROOMOWNER`), and the server enforces the same rule in
+`WiredVariableClearPolicy`; room and array variables are not covered.
+
 ## 5. Inspection tab
 
 ## 5.1 Furni inspection
