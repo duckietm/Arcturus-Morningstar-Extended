@@ -19,6 +19,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionTrophy;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWired;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredHighscore;
 import com.eu.habbo.habbohotel.items.interactions.games.InteractionGameTimer;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurniture;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurnitureManager;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomLayout;
 import com.eu.habbo.habbohotel.rooms.RoomTile;
@@ -71,6 +73,8 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     private boolean needsUpdate = false;
     private boolean needsDelete = false;
     private boolean isFromGift = false;
+    /** Unix timestamp the rent period ends at, {@link RentableFurniture#NEVER} for furni owned outright. */
+    private int expiresTimestamp = RentableFurniture.NEVER;
 
     public HabboItem(ResultSet set, Item baseItem) throws SQLException {
         this.id = set.getInt("id");
@@ -90,6 +94,9 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
             this.limitedStack = Integer.parseInt(set.getString("limited_data").split(":")[0]);
             this.limitedSells = Integer.parseInt(set.getString("limited_data").split(":")[1]);
         }
+
+        this.expiresTimestamp = RentableFurniture.readExpires(set);
+        RentableFurnitureManager.track(this);
     }
 
     public HabboItem(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
@@ -153,7 +160,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         if (this instanceof InteractionPostIt)
             serverMessage.appendString(this.extradata.split(" ")[0]);
         else serverMessage.appendString(this.extradata);
-        serverMessage.appendInt(-1);
+        serverMessage.appendInt(this.getSecondsToExpiration());
         serverMessage.appendInt(this.isUsable());
         serverMessage.appendInt(this.getUserId());
         serverMessage.appendInt(this.getBaseItem().allowStack() ? 1 : 0);
@@ -311,7 +318,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                 }
             } else if (this.needsUpdate) {
                 try (PreparedStatement statement = connection.prepareStatement(
-                        "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ? WHERE id = ?")) {
+                        "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ?, expires = ? WHERE id = ?")) {
                     statement.setInt(1, this.databaseUserId);
                     statement.setInt(2, this.roomId);
                     statement.setString(3, this.wallPosition);
@@ -322,7 +329,8 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                     statement.setInt(7, this.rotation);
                     statement.setString(8, this instanceof InteractionGuildGate ? "" : this.getDatabaseExtraData());
                     statement.setString(9, this.limitedStack + ":" + this.limitedSells);
-                    statement.setInt(10, this.id);
+                    statement.setInt(10, this.expiresTimestamp);
+                    statement.setInt(11, this.id);
                     statement.execute();
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
@@ -335,6 +343,25 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         } catch (SQLException e) {
             LOGGER.error("Caught SQL exception", e);
         }
+    }
+
+    /** Unix timestamp the rent period ends at, {@link RentableFurniture#NEVER} when the furni is owned outright. */
+    public int getExpiresTimestamp() {
+        return this.expiresTimestamp;
+    }
+
+    public void setExpiresTimestamp(int expiresTimestamp) {
+        this.expiresTimestamp = expiresTimestamp;
+    }
+
+    /** True for furni bought through a rent offer that has not been bought out. */
+    public boolean hasRentPeriod() {
+        return RentableFurniture.hasRentPeriod(this.expiresTimestamp);
+    }
+
+    /** Seconds left on the rent period as the client expects them, -1 for furni owned outright. */
+    public int getSecondsToExpiration() {
+        return RentableFurniture.secondsToExpiration(this.expiresTimestamp, Emulator.getIntUnixTimestamp());
     }
 
     public abstract boolean canWalkOn(RoomUnit roomUnit, Room room, Object[] objects);

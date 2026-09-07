@@ -14,7 +14,10 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +65,35 @@ public final class SnowWarLeaderboardRepository {
         } catch (SQLException exception) {
             LOGGER.error("Unable to persist SnowWar leaderboard scores", exception);
         }
+    }
+
+    /**
+     * All-time score per user (0 for users without a row), used to derive the
+     * AIR skill level shown in the lobby and on the results screen.
+     */
+    public Map<Integer, Integer> loadTotalScores(Collection<Integer> userIds) {
+        Map<Integer, Integer> totals = new HashMap<>();
+        if (userIds.isEmpty()) {
+            return totals;
+        }
+        String placeholders = String.join(", ", java.util.Collections.nCopies(userIds.size(), "?"));
+        String sql = "SELECT user_id, SUM(score) score FROM snowwar_scores WHERE user_id IN (" + placeholders
+                + ") GROUP BY user_id";
+        try (Connection connection = this.connections.openConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            int index = 1;
+            for (Integer userId : userIds) {
+                statement.setInt(index++, userId);
+            }
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    totals.put(result.getInt("user_id"), clampScore(result.getLong("score")));
+                }
+            }
+        } catch (SQLException exception) {
+            LOGGER.error("Unable to load SnowWar total scores", exception);
+        }
+        return totals;
     }
 
     public Page load(int viewerUserId, boolean weekly, boolean friendsOnly, int weekOffset, int startRank, int limit) {

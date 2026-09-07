@@ -1435,6 +1435,11 @@
           "kind": "scalar",
           "type": "int",
           "name": "userId"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "block"
         }
       ]
     },
@@ -2290,6 +2295,60 @@
         {
           "kind": "scalar",
           "type": "boolean",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "name": "ROOM_SETTINGS_UPDATE_ROOM_CATEGORY_AND_TRADE",
+      "direction": "client_to_server",
+      "header": 1265,
+      "java": {
+        "symbol": "UpdateRoomCategoryAndTradeSettingsEvent",
+        "className": "UpdateRoomCategoryAndTradeSettingsEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/UpdateRoomCategoryAndTradeSettingsEvent.java"
+      },
+      "typescript": {
+        "symbol": "ROOM_SETTINGS_UPDATE_ROOM_CATEGORY_AND_TRADE",
+        "className": "UpdateRoomCategoryAndTradeSettingsComposer",
+        "path": "packages/communication/src/messages/outgoing/roomsettings/UpdateRoomCategoryAndTradeSettingsComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": ""
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": ""
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "name": "GET_QUIZ_QUESTIONS",
+      "direction": "client_to_server",
+      "header": 1296,
+      "java": {
+        "symbol": "GetQuizQuestionsEvent",
+        "className": "GetQuizQuestionsEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/habboway/GetQuizQuestionsEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_QUIZ_QUESTIONS",
+        "className": "GetQuizQuestionsComposer",
+        "path": "packages/communication/src/messages/outgoing/help/GetQuizQuestionsComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
           "name": ""
         }
       ]
@@ -4701,6 +4760,119 @@
           "kind": "scalar",
           "type": "int",
           "name": "itemId"
+        }
+      ]
+    },
+    {
+      "name": "RENTABLE_SPACE_STATUS",
+      "direction": "client_to_server",
+      "header": 872,
+      "java": {
+        "symbol": "GetRentableSpaceStatusEvent",
+        "className": "GetRentableSpaceStatusEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/rentablespace/GetRentableSpaceStatusEvent.java"
+      },
+      "typescript": {
+        "symbol": "RENTABLE_SPACE_STATUS",
+        "className": "RentableSpaceStatusMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/RentableSpaceStatusMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "itemId"
+        }
+      ]
+    },
+    {
+      "name": "RENTABLE_GET_RENT_OR_BUYOUT_OFFER",
+      "direction": "client_to_server",
+      "header": 2518,
+      "java": {
+        "symbol": "GetRentOrBuyoutOfferEvent",
+        "className": "GetRentOrBuyoutOfferEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/rentable/GetRentOrBuyoutOfferEvent.java"
+      },
+      "typescript": {
+        "symbol": "RENTABLE_GET_RENT_OR_BUYOUT_OFFER",
+        "className": "GetRentOrBuyoutOfferMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/GetRentOrBuyoutOfferMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "isWallItem"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "furniTypeName"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "buyout"
+        }
+      ]
+    },
+    {
+      "name": "RENTABLE_EXTEND_RENT_OR_BUYOUT_FURNI",
+      "direction": "client_to_server",
+      "header": 1071,
+      "java": {
+        "symbol": "ExtendRentOrBuyoutFurniEvent",
+        "className": "ExtendRentOrBuyoutFurniEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/rentable/ExtendRentOrBuyoutFurniEvent.java"
+      },
+      "typescript": {
+        "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_FURNI",
+        "className": "ExtendRentOrBuyoutFurniMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutFurniMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "isWallItem"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "itemId"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "buyout"
+        }
+      ]
+    },
+    {
+      "name": "RENTABLE_EXTEND_RENT_OR_BUYOUT_STRIP_ITEM",
+      "direction": "client_to_server",
+      "header": 2115,
+      "java": {
+        "symbol": "ExtendRentOrBuyoutStripItemEvent",
+        "className": "ExtendRentOrBuyoutStripItemEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/rentable/ExtendRentOrBuyoutStripItemEvent.java"
+      },
+      "typescript": {
+        "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_STRIP_ITEM",
+        "className": "ExtendRentOrBuyoutStripItemMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutStripItemMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "stripId"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "buyout"
         }
       ]
     },
@@ -9671,32 +9843,32 @@
         {
           "kind": "scalar",
           "type": "boolean",
-          "name": ""
+          "name": "isWallItem"
         },
         {
           "kind": "scalar",
           "type": "string",
-          "name": ""
+          "name": "furniTypeName"
         },
         {
           "kind": "scalar",
           "type": "boolean",
-          "name": ""
+          "name": "buyout"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "priceInCredits"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "priceInActivityPoints"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "activityPointType"
         }
       ]
     },
@@ -12735,9 +12907,9 @@
       "direction": "server_to_client",
       "header": 1868,
       "java": {
-        "symbol": "RentableSpaceUnknown2Composer",
-        "className": "RentableSpaceUnknown2Composer",
-        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/items/rentablespaces/RentableSpaceUnknown2Composer.java"
+        "symbol": "RentableSpaceRentFailedComposer",
+        "className": "RentableSpaceRentFailedComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/items/rentablespaces/RentableSpaceRentFailedComposer.java"
       },
       "typescript": {
         "symbol": "RENTABLE_SPACE_RENT_FAILED",
@@ -12919,7 +13091,7 @@
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "reason"
         }
       ]
     },
@@ -13041,9 +13213,9 @@
       "direction": "server_to_client",
       "header": 2046,
       "java": {
-        "symbol": "RentableSpaceUnknownComposer",
-        "className": "RentableSpaceUnknownComposer",
-        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/items/rentablespaces/RentableSpaceUnknownComposer.java"
+        "symbol": "RentableSpaceRentOkComposer",
+        "className": "RentableSpaceRentOkComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/items/rentablespaces/RentableSpaceRentOkComposer.java"
       },
       "typescript": {
         "symbol": "RENTABLE_SPACE_RENT_OK",
@@ -13166,7 +13338,7 @@
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "expiryTime"
         }
       ]
     },
@@ -14431,28 +14603,6 @@
       ]
     },
     {
-      "name": "QUEST_CANCELLED",
-      "direction": "server_to_client",
-      "header": 3027,
-      "java": {
-        "symbol": "QuestExpiredComposer",
-        "className": "QuestExpiredComposer",
-        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/QuestExpiredComposer.java"
-      },
-      "typescript": {
-        "symbol": "QUEST_CANCELLED",
-        "className": "QuestCancelledMessageParser",
-        "path": "packages/communication/src/messages/parser/quest/QuestCancelledMessageParser.ts"
-      },
-      "fields": [
-        {
-          "kind": "scalar",
-          "type": "boolean",
-          "name": ""
-        }
-      ]
-    },
-    {
       "name": "MESSENGER_FOLLOW_FAILED",
       "direction": "server_to_client",
       "header": 3048,
@@ -15280,32 +15430,32 @@
         {
           "kind": "scalar",
           "type": "boolean",
-          "name": ""
+          "name": "rented"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "canRentErrorCode"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "renterId"
         },
         {
           "kind": "scalar",
           "type": "string",
-          "name": ""
+          "name": "renterName"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "timeRemaining"
         },
         {
           "kind": "scalar",
           "type": "int",
-          "name": ""
+          "name": "price"
         }
       ]
     },
@@ -17256,6 +17406,438 @@
           "name": "itemId"
         }
       ]
+    },
+    {
+      "name": "GROUP_UNBLOCK_MEMBER",
+      "direction": "client_to_server",
+      "header": 2864,
+      "java": {
+        "symbol": "GuildUnblockMemberEvent",
+        "className": "GuildUnblockMemberEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/guilds/GuildUnblockMemberEvent.java"
+      },
+      "typescript": {
+        "symbol": "GROUP_UNBLOCK_MEMBER",
+        "className": "UnblockGroupMemberMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/user/UnblockGroupMemberMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "guildId"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "userId"
+        }
+      ]
+    },
+    {
+      "name": "GET_HOT_LOOKS",
+      "direction": "client_to_server",
+      "header": 9360,
+      "java": {
+        "symbol": "GetHotLooksEvent",
+        "className": "GetHotLooksEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/hotlooks/GetHotLooksEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_HOT_LOOKS",
+        "className": "GetHotLooksComposer",
+        "path": "packages/communication/src/messages/outgoing/hotlooks/GetHotLooksComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "count"
+        }
+      ]
+    },
+    {
+      "name": "GET_QUESTS",
+      "direction": "client_to_server",
+      "header": 3333,
+      "java": {
+        "symbol": "GetQuestsEvent",
+        "className": "GetQuestsEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/GetQuestsEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_QUESTS",
+        "className": "GetQuestsMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/GetQuestsMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "GET_SEASONAL_QUESTS_ONLY",
+      "direction": "client_to_server",
+      "header": 1190,
+      "java": {
+        "symbol": "GetSeasonalQuestsOnlyEvent",
+        "className": "GetSeasonalQuestsOnlyEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/GetSeasonalQuestsOnlyEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_SEASONAL_QUESTS_ONLY",
+        "className": "GetSeasonalQuestsOnlyMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/GetSeasonalQuestsOnlyMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "ACCEPT_QUEST",
+      "direction": "client_to_server",
+      "header": 3604,
+      "java": {
+        "symbol": "AcceptQuestEvent",
+        "className": "AcceptQuestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/AcceptQuestEvent.java"
+      },
+      "typescript": {
+        "symbol": "ACCEPT_QUEST",
+        "className": "AcceptQuestMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/AcceptQuestMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "questId"
+        }
+      ]
+    },
+    {
+      "name": "ACTIVATE_QUEST",
+      "direction": "client_to_server",
+      "header": 793,
+      "java": {
+        "symbol": "ActivateQuestEvent",
+        "className": "ActivateQuestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/ActivateQuestEvent.java"
+      },
+      "typescript": {
+        "symbol": "ACTIVATE_QUEST",
+        "className": "ActivateQuestMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/ActivateQuestMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "questId"
+        }
+      ]
+    },
+    {
+      "name": "REJECT_QUEST",
+      "direction": "client_to_server",
+      "header": 2397,
+      "java": {
+        "symbol": "RejectQuestEvent",
+        "className": "RejectQuestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/RejectQuestEvent.java"
+      },
+      "typescript": {
+        "symbol": "REJECT_QUEST",
+        "className": "RejectQuestMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/RejectQuestMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "questId"
+        }
+      ]
+    },
+    {
+      "name": "CANCEL_QUEST",
+      "direction": "client_to_server",
+      "header": 3133,
+      "java": {
+        "symbol": "CancelDailyQuestEvent",
+        "className": "CancelDailyQuestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/CancelDailyQuestEvent.java"
+      },
+      "typescript": {
+        "symbol": "CANCEL_QUEST",
+        "className": "CancelQuestMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/CancelQuestMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "GET_DAILY_QUEST",
+      "direction": "client_to_server",
+      "header": 2486,
+      "java": {
+        "symbol": "GetDailyQuestEvent",
+        "className": "GetDailyQuestEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/GetDailyQuestEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_DAILY_QUEST",
+        "className": "GetDailyQuestMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/GetDailyQuestMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "easy"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "index"
+        }
+      ]
+    },
+    {
+      "name": "OPEN_QUEST_TRACKER",
+      "direction": "client_to_server",
+      "header": 2750,
+      "java": {
+        "symbol": "OpenQuestTrackerEvent",
+        "className": "OpenQuestTrackerEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/OpenQuestTrackerEvent.java"
+      },
+      "typescript": {
+        "symbol": "OPEN_QUEST_TRACKER",
+        "className": "OpenQuestTrackerMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/OpenQuestTrackerMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "START_CAMPAIGN",
+      "direction": "client_to_server",
+      "header": 1697,
+      "java": {
+        "symbol": "StartCampaignEvent",
+        "className": "StartCampaignEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/StartCampaignEvent.java"
+      },
+      "typescript": {
+        "symbol": "START_CAMPAIGN",
+        "className": "StartCampaignMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/StartCampaignMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "campaignCode"
+        }
+      ]
+    },
+    {
+      "name": "GET_DAILY_TASKS",
+      "direction": "client_to_server",
+      "header": 4100,
+      "java": {
+        "symbol": "GetDailyTasksEvent",
+        "className": "GetDailyTasksEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/GetDailyTasksEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_DAILY_TASKS",
+        "className": "GetDailyTasksMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/GetDailyTasksMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "CLAIM_DAILY_TASK",
+      "direction": "client_to_server",
+      "header": 4101,
+      "java": {
+        "symbol": "ClaimDailyTaskEvent",
+        "className": "ClaimDailyTaskEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/ClaimDailyTaskEvent.java"
+      },
+      "typescript": {
+        "symbol": "CLAIM_DAILY_TASK",
+        "className": "ClaimDailyTaskMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/ClaimDailyTaskMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "taskId"
+        }
+      ]
+    },
+    {
+      "name": "GET_REWARD_TRACKS",
+      "direction": "client_to_server",
+      "header": 9450,
+      "java": {
+        "symbol": "GetRewardTracksEvent",
+        "className": "GetRewardTracksEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/GetRewardTracksEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_REWARD_TRACKS",
+        "className": "GetRewardTracksMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/GetRewardTracksMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "CLAIM_REWARD_TRACK_PRIZE",
+      "direction": "client_to_server",
+      "header": 1111,
+      "java": {
+        "symbol": "ClaimRewardTrackPrizeEvent",
+        "className": "ClaimRewardTrackPrizeEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/ClaimRewardTrackPrizeEvent.java"
+      },
+      "typescript": {
+        "symbol": "CLAIM_REWARD_TRACK_PRIZE",
+        "className": "ClaimRewardTrackPrizeMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/ClaimRewardTrackPrizeMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "trackId"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "rewardId"
+        }
+      ]
+    },
+    {
+      "name": "PURCHASE_REWARD_TRACK_PREMIUM",
+      "direction": "client_to_server",
+      "header": 3022,
+      "java": {
+        "symbol": "PurchaseRewardTrackPremiumEvent",
+        "className": "PurchaseRewardTrackPremiumEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/quests/PurchaseRewardTrackPremiumEvent.java"
+      },
+      "typescript": {
+        "symbol": "PURCHASE_REWARD_TRACK_PREMIUM",
+        "className": "PurchaseRewardTrackPremiumMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/quest/PurchaseRewardTrackPremiumMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "trackId"
+        }
+      ]
+    },
+    {
+      "name": "REWARD_TRACK_CLAIM_RESULT",
+      "direction": "server_to_client",
+      "header": 9451,
+      "java": {
+        "symbol": "RewardTrackClaimResultComposer",
+        "className": "RewardTrackClaimResultComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/RewardTrackClaimResultComposer.java"
+      },
+      "typescript": {
+        "symbol": "REWARD_TRACK_CLAIM_RESULT",
+        "className": "RewardTrackClaimResultMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/RewardTrackClaimResultMessageParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "trackId"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "rewardId"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "resultCode"
+        }
+      ]
+    },
+    {
+      "name": "REWARD_TRACK_PROGRESS",
+      "direction": "server_to_client",
+      "header": 9452,
+      "java": {
+        "symbol": "RewardTrackProgressComposer",
+        "className": "RewardTrackProgressComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/RewardTrackProgressComposer.java"
+      },
+      "typescript": {
+        "symbol": "REWARD_TRACK_PROGRESS",
+        "className": "RewardTrackProgressMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/RewardTrackProgressMessageParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "trackId"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "taskId"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "progressCount"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "points"
+        }
+      ]
+    },
+    {
+      "name": "REWARD_TRACK_PREMIUM_PURCHASE_RESULT",
+      "direction": "server_to_client",
+      "header": 2248,
+      "java": {
+        "symbol": "RewardTrackPremiumPurchaseResultComposer",
+        "className": "RewardTrackPremiumPurchaseResultComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/RewardTrackPremiumPurchaseResultComposer.java"
+      },
+      "typescript": {
+        "symbol": "REWARD_TRACK_PREMIUM_PURCHASE_RESULT",
+        "className": "RewardTrackPremiumPurchaseResultMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/RewardTrackPremiumPurchaseResultMessageParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "trackId"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "resultCode"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "points"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -17550,14 +18132,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 793,
-      "symbol": "ACTIVATE_QUEST",
-      "path": "packages/communication/src/messages/outgoing/quest/ActivateQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 801,
       "symbol": "GET_DIRECT_CLUB_BUY_AVAILABLE",
       "path": "packages/communication/src/messages/outgoing/catalog/GetDirectClubBuyAvailableComposer.ts",
@@ -17569,14 +18143,6 @@
       "header": 865,
       "symbol": "FORWARD_TO_RANDOM_COMPETITION_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/ForwardToRandomCompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 872,
-      "symbol": "RENTABLE_SPACE_STATUS",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/RentableSpaceStatusMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -17601,14 +18167,6 @@
       "header": 1053,
       "symbol": "CLIENT_VARIABLES",
       "path": "packages/communication/src/messages/outgoing/handshake/VersionCheckMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 1071,
-      "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_FURNI",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutFurniMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -17646,14 +18204,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 1190,
-      "symbol": "GET_SEASONAL_QUESTS_ONLY",
-      "path": "packages/communication/src/messages/outgoing/quest/GetSeasonalQuestsOnlyMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 1229,
       "symbol": "GET_OFFICIAL_ROOMS",
       "path": "packages/communication/src/messages/outgoing/navigator/GetOfficialRoomsMessageComposer.ts",
@@ -17665,22 +18215,6 @@
       "header": 1232,
       "symbol": "GAME2GETWEEKLYFRIENDSLEADERBOARD",
       "path": "packages/communication/src/messages/outgoing/game/score/Game2GetWeeklyFriendsLeaderboardComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 1265,
-      "symbol": "ROOM_SETTINGS_UPDATE_ROOM_CATEGORY_AND_TRADE",
-      "path": "packages/communication/src/messages/outgoing/roomsettings/UpdateRoomCategoryAndTradeSettingsComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 1296,
-      "symbol": "GET_QUIZ_QUESTIONS",
-      "path": "packages/communication/src/messages/outgoing/help/GetQuizQuestionsComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -17774,14 +18308,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 1697,
-      "symbol": "START_CAMPAIGN",
-      "path": "packages/communication/src/messages/outgoing/quest/StartCampaignMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 1849,
       "symbol": "GET_FAQ_TEXT",
       "path": "packages/communication/src/messages/outgoing/help/GetFaqTextMessageComposer.ts",
@@ -17817,14 +18343,6 @@
       "header": 2077,
       "symbol": "GET_IS_USER_PART_OF_COMPETITION",
       "path": "packages/communication/src/messages/outgoing/competition/GetIsUserPartOfCompetitionMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2115,
-      "symbol": "RENTABLE_EXTEND_RENT_OR_BUYOUT_STRIP_ITEM",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/ExtendRentOrBuyoutStripItemMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -17886,14 +18404,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 2397,
-      "symbol": "REJECT_QUEST",
-      "path": "packages/communication/src/messages/outgoing/quest/RejectQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 2399,
       "symbol": "GETGAMEACHIEVEMENTSMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/GetGameAchievementsMessageComposer.ts",
@@ -17934,14 +18444,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 2486,
-      "symbol": "GET_DAILY_QUEST",
-      "path": "packages/communication/src/messages/outgoing/quest/GetDailyQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 2487,
       "symbol": "GET_TARGETED_OFFER",
       "path": "packages/communication/src/messages/outgoing/catalog/GetTargetedOfferComposer.ts",
@@ -17953,14 +18455,6 @@
       "header": 2502,
       "symbol": "GAME2GAMECHATMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2GameChatMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2518,
-      "symbol": "RENTABLE_GET_RENT_OR_BUYOUT_OFFER",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/GetRentOrBuyoutOfferMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -18070,14 +18564,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 2750,
-      "symbol": "OPEN_QUEST_TRACKER",
-      "path": "packages/communication/src/messages/outgoing/quest/OpenQuestTrackerMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 2755,
       "symbol": "CALL_FOR_HELP_FROM_SELFIE",
       "path": "packages/communication/src/messages/outgoing/help/CallForHelpFromSelfieMessageComposer.ts",
@@ -18097,14 +18583,6 @@
       "header": 2809,
       "symbol": "ROOM_AD_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/RoomAdSearchMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2864,
-      "symbol": "GROUP_UNBLOCK_MEMBER",
-      "path": "packages/communication/src/messages/outgoing/user/UnblockGroupMemberMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -18137,14 +18615,6 @@
       "header": 3093,
       "symbol": "CHANGE_QUEUE",
       "path": "packages/communication/src/messages/outgoing/room/session/ChangeQueueMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 3133,
-      "symbol": "CANCEL_QUEST",
-      "path": "packages/communication/src/messages/outgoing/quest/CancelQuestMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -18214,14 +18684,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 3333,
-      "symbol": "GET_QUESTS",
-      "path": "packages/communication/src/messages/outgoing/quest/GetQuestsMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 3445,
       "symbol": "GET_FAQ_CATEGORY",
       "path": "packages/communication/src/messages/outgoing/help/GetFaqCategoryMessageComposer.ts",
@@ -18262,25 +18724,9 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 3604,
-      "symbol": "ACCEPT_QUEST",
-      "path": "packages/communication/src/messages/outgoing/quest/AcceptQuestMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 3605,
       "symbol": "DELETE_PENDING_CALLS_FOR_HELP",
       "path": "packages/communication/src/messages/outgoing/help/DeletePendingCallsForHelpMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 3720,
-      "symbol": "POST_QUIZ_ANSWERS",
-      "path": "packages/communication/src/messages/outgoing/help/PostQuizAnswersComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -18430,14 +18876,6 @@
     {
       "direction": "server_to_client",
       "side": "typescript",
-      "header": 1122,
-      "symbol": "SEASONAL_QUESTS",
-      "path": "packages/communication/src/messages/parser/quest/SeasonalQuestsParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
       "header": 1180,
       "symbol": "GROUP_MEMBERSHIP_REQUESTED",
       "path": "packages/communication/src/messages/parser/user/GroupMembershipRequestedMessageParser.ts",
@@ -18473,14 +18911,6 @@
       "header": 1730,
       "symbol": "GAME_CENTER_JOINING_FAILED",
       "path": "packages/communication/src/messages/parser/game/directory/Game2JoiningGameFailedMessageParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 1878,
-      "symbol": "QUEST_DAILY",
-      "path": "packages/communication/src/messages/parser/quest/QuestDailyMessageParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -19924,6 +20354,22 @@
         "path": "packages/communication/src/messages/outgoing/room/engine/SetObjectDataMessageComposer.ts"
       },
       "reason": "Java analyzer: Data-dependent packet operations in IfStmt inside handle; TypeScript analyzer: Outgoing message array _data is mutated with push"
+    },
+    {
+      "name": "POST_QUIZ_ANSWERS",
+      "direction": "client_to_server",
+      "header": 3720,
+      "java": {
+        "symbol": "PostQuizAnswersEvent",
+        "className": "PostQuizAnswersEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/habboway/PostQuizAnswersEvent.java"
+      },
+      "typescript": {
+        "symbol": "POST_QUIZ_ANSWERS",
+        "className": "PostQuizAnswersComposer",
+        "path": "packages/communication/src/messages/outgoing/help/PostQuizAnswersComposer.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside handle; TypeScript analyzer: Outgoing value answerIds.length has no statically resolvable wire type"
     },
     {
       "name": "MODTOOL_SANCTION_TRADELOCK",
@@ -24532,6 +24978,134 @@
         "path": "packages/communication/src/messages/outgoing/roomevents/WiredMenuSettingsComposer.ts"
       },
       "reason": "Java analyzer: Packet fields delegated to external reader in UserPreferencePackets inside handle"
+    },
+    {
+      "name": "HOT_LOOKS",
+      "direction": "server_to_client",
+      "header": 9360,
+      "java": {
+        "symbol": "HotLooksComposer",
+        "className": "HotLooksComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/hotlooks/HotLooksComposer.java"
+      },
+      "typescript": {
+        "symbol": "HOT_LOOKS",
+        "className": "HotLooksParser",
+        "path": "packages/communication/src/messages/parser/hotlooks/HotLooksParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "QUEST_CANCELLED",
+      "direction": "server_to_client",
+      "header": 3027,
+      "java": {
+        "symbol": "QuestExpiredComposer",
+        "className": "QuestExpiredComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/QuestExpiredComposer.java"
+      },
+      "typescript": {
+        "symbol": "QUEST_CANCELLED",
+        "className": "QuestCancelledMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/QuestCancelledMessageParser.ts"
+      },
+      "reason": "Java analyzer: Packet fields delegated to external serializer serialize inside composeInternal; TypeScript analyzer: Packet fields delegated to external constructor QuestMessageData inside parse"
+    },
+    {
+      "name": "SEASONAL_QUESTS",
+      "direction": "server_to_client",
+      "header": 1122,
+      "java": {
+        "symbol": "SeasonalQuestsComposer",
+        "className": "SeasonalQuestsComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/SeasonalQuestsComposer.java"
+      },
+      "typescript": {
+        "symbol": "SEASONAL_QUESTS",
+        "className": "SeasonalQuestsParser",
+        "path": "packages/communication/src/messages/parser/quest/SeasonalQuestsParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "QUEST_DAILY",
+      "direction": "server_to_client",
+      "header": 1878,
+      "java": {
+        "symbol": "DailyQuestComposer",
+        "className": "DailyQuestComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/DailyQuestComposer.java"
+      },
+      "typescript": {
+        "symbol": "QUEST_DAILY",
+        "className": "QuestDailyMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/QuestDailyMessageParser.ts"
+      },
+      "reason": "Java analyzer: Packet fields delegated to external serializer serialize inside composeInternal; TypeScript analyzer: Packet fields delegated to external constructor QuestMessageData inside parse"
+    },
+    {
+      "name": "ACTIVE_DAILY_TASKS",
+      "direction": "server_to_client",
+      "header": 2900,
+      "java": {
+        "symbol": "ActiveDailyTasksComposer",
+        "className": "ActiveDailyTasksComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/ActiveDailyTasksComposer.java"
+      },
+      "typescript": {
+        "symbol": "ACTIVE_DAILY_TASKS",
+        "className": "ActiveDailyTasksMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/ActiveDailyTasksMessageParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "DAILY_TASKS_ADDED",
+      "direction": "server_to_client",
+      "header": 670,
+      "java": {
+        "symbol": "DailyTasksAddedComposer",
+        "className": "DailyTasksAddedComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/DailyTasksAddedComposer.java"
+      },
+      "typescript": {
+        "symbol": "DAILY_TASKS_ADDED",
+        "className": "ActiveDailyTasksMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/ActiveDailyTasksMessageParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "DAILY_TASK_UPDATED",
+      "direction": "server_to_client",
+      "header": 9450,
+      "java": {
+        "symbol": "DailyTaskUpdatedComposer",
+        "className": "DailyTaskUpdatedComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/DailyTaskUpdatedComposer.java"
+      },
+      "typescript": {
+        "symbol": "DAILY_TASK_UPDATED",
+        "className": "DailyTaskUpdatedMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/DailyTaskUpdatedMessageParser.ts"
+      },
+      "reason": "TypeScript analyzer: the 64-bit task id is read through the external helper DailyTaskData.readLong inside parse; the Java side writes it as two ints"
+    },
+    {
+      "name": "REWARD_TRACKS",
+      "direction": "server_to_client",
+      "header": 2327,
+      "java": {
+        "symbol": "RewardTracksComposer",
+        "className": "RewardTracksComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/quests/RewardTracksComposer.java"
+      },
+      "typescript": {
+        "symbol": "REWARD_TRACKS",
+        "className": "RewardTracksMessageParser",
+        "path": "packages/communication/src/messages/parser/quest/RewardTracksMessageParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
     }
   ]
 }

@@ -1113,6 +1113,8 @@ public class RoomManager {
 
         WiredManager.triggerUserEntersRoom(room, habbo.getRoomUnit());
         room.habboEntered(habbo);
+        com.eu.habbo.habbohotel.quests.QuestProgressEvents.progress(
+                habbo, com.eu.habbo.habbohotel.quests.QuestGoalType.VISIT_ROOMS, 1);
 
         if (!habbo.getHabboStats().nux && (room.isOwner(habbo) || room.isPublicRoom())) {
             UserNuxEvent.handle(habbo);

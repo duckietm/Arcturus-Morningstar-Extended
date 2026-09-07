@@ -4,16 +4,16 @@ import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-
 import java.util.List;
 
+/** Quests (3625): one entry per campaign plus the "open the window" flag. */
 public class QuestsComposer extends MessageComposer {
     private final List<Quest> quests;
-    private final boolean unknownBoolean;
+    private final boolean openWindow;
 
-    public QuestsComposer(List<Quest> quests, boolean unknownBoolean) {
+    public QuestsComposer(List<Quest> quests, boolean openWindow) {
         this.quests = quests;
-        this.unknownBoolean = unknownBoolean;
+        this.openWindow = openWindow;
     }
 
     @Override
@@ -23,10 +23,11 @@ public class QuestsComposer extends MessageComposer {
         for (Quest quest : this.quests) {
             this.response.append(quest);
         }
-        this.response.appendBoolean(this.unknownBoolean);
+        this.response.appendBoolean(this.openWindow);
         return this.response;
     }
 
+    /** The official QuestMessageData layout (AIR 13 class_1894), shared by every quest packet. */
     public static class Quest implements ISerialize {
         private final String campaignCode;
         private final int completedQuestsInCampaign;
@@ -44,8 +45,28 @@ public class QuestsComposer extends MessageComposer {
         private final String catalogPageName;
         private final String chainCode;
         private final boolean easy;
+        private final boolean seasonal;
+        private final int secondsLeft;
 
-        public Quest(String campaignCode, int completedQuestsInCampaign, int questCountInCampaign, int activityPointType, int id, boolean accepted, String type, String imageVersion, int rewardCurrencyAmount, String localizationCode, int completedSteps, int totalSteps, int sortOrder, String catalogPageName, String chainCode, boolean easy) {
+        public Quest(
+                String campaignCode,
+                int completedQuestsInCampaign,
+                int questCountInCampaign,
+                int activityPointType,
+                int id,
+                boolean accepted,
+                String type,
+                String imageVersion,
+                int rewardCurrencyAmount,
+                String localizationCode,
+                int completedSteps,
+                int totalSteps,
+                int sortOrder,
+                String catalogPageName,
+                String chainCode,
+                boolean easy,
+                boolean seasonal,
+                int secondsLeft) {
             this.campaignCode = campaignCode;
             this.completedQuestsInCampaign = completedQuestsInCampaign;
             this.questCountInCampaign = questCountInCampaign;
@@ -62,6 +83,8 @@ public class QuestsComposer extends MessageComposer {
             this.catalogPageName = catalogPageName;
             this.chainCode = chainCode;
             this.easy = easy;
+            this.seasonal = seasonal;
+            this.secondsLeft = secondsLeft;
         }
 
         @Override
@@ -82,6 +105,10 @@ public class QuestsComposer extends MessageComposer {
             message.appendString(this.catalogPageName);
             message.appendString(this.chainCode);
             message.appendBoolean(this.easy);
+            message.appendBoolean(this.seasonal);
+            if (this.seasonal) {
+                message.appendInt(this.secondsLeft);
+            }
         }
 
         public String getCampaignCode() {
@@ -147,13 +174,21 @@ public class QuestsComposer extends MessageComposer {
         public boolean isEasy() {
             return easy;
         }
+
+        public boolean isSeasonal() {
+            return seasonal;
+        }
+
+        public int getSecondsLeft() {
+            return secondsLeft;
+        }
     }
 
     public List<Quest> getQuests() {
         return quests;
     }
 
-    public boolean isUnknownBoolean() {
-        return unknownBoolean;
+    public boolean isOpenWindow() {
+        return openWindow;
     }
 }

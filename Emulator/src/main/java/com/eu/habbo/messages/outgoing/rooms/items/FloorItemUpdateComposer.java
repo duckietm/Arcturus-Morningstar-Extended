@@ -20,14 +20,14 @@ public class FloorItemUpdateComposer extends MessageComposer {
         this.response.init(Outgoing.FloorItemUpdateComposer);
         this.item.serializeFloorData(this.response);
         this.response.appendInt(
-            this.item instanceof InteractionGift
-                ? ((((InteractionGift) this.item).getColorId() * 1000) + ((InteractionGift) this.item).getRibbonId())
-                : (this.item instanceof InteractionMusicDisc
-                    ? ((InteractionMusicDisc) this.item).getSongId()
-                    : (this.item instanceof InteractionStackWalkHelper ? 2147483001 : 0))
-        );
+                this.item instanceof InteractionGift
+                        ? ((((InteractionGift) this.item).getColorId() * 1000)
+                                + ((InteractionGift) this.item).getRibbonId())
+                        : (this.item instanceof InteractionMusicDisc
+                                ? ((InteractionMusicDisc) this.item).getSongId()
+                                : (this.item instanceof InteractionStackWalkHelper ? 2147483001 : 0)));
         this.item.serializeExtradata(this.response);
-        this.response.appendInt(-1);
+        this.response.appendInt(this.item.getSecondsToExpiration());
         this.response.appendInt(0);
         this.response.appendInt(this.item.getUserId());
         this.response.appendInt(this.item.getBaseItem().allowStack() ? 1 : 0);

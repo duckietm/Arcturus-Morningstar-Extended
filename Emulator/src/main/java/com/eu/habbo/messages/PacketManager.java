@@ -153,6 +153,7 @@ import com.eu.habbo.messages.incoming.guilds.GuildRemoveFavoriteEvent;
 import com.eu.habbo.messages.incoming.guilds.GuildRemoveMemberEvent;
 import com.eu.habbo.messages.incoming.guilds.GuildSetAdminEvent;
 import com.eu.habbo.messages.incoming.guilds.GuildSetFavoriteEvent;
+import com.eu.habbo.messages.incoming.guilds.GuildUnblockMemberEvent;
 import com.eu.habbo.messages.incoming.guilds.RequestGuildBuyEvent;
 import com.eu.habbo.messages.incoming.guilds.RequestGuildBuyRoomsEvent;
 import com.eu.habbo.messages.incoming.guilds.RequestGuildFurniWidgetEvent;
@@ -172,6 +173,8 @@ import com.eu.habbo.messages.incoming.guilds.forums.GuildForumThreadUpdateEvent;
 import com.eu.habbo.messages.incoming.guilds.forums.GuildForumThreadsEvent;
 import com.eu.habbo.messages.incoming.guilds.forums.GuildForumThreadsMessagesEvent;
 import com.eu.habbo.messages.incoming.guilds.forums.GuildForumUpdateSettingsEvent;
+import com.eu.habbo.messages.incoming.habboway.GetQuizQuestionsEvent;
+import com.eu.habbo.messages.incoming.habboway.PostQuizAnswersEvent;
 import com.eu.habbo.messages.incoming.handshake.CompleteDiffieHandshakeEvent;
 import com.eu.habbo.messages.incoming.handshake.DisconnectEvent;
 import com.eu.habbo.messages.incoming.handshake.InitDiffieHandshakeEvent;
@@ -274,6 +277,20 @@ import com.eu.habbo.messages.incoming.navigator.SearchRoomsWithRightsEvent;
 import com.eu.habbo.messages.incoming.polls.AnswerPollEvent;
 import com.eu.habbo.messages.incoming.polls.CancelPollEvent;
 import com.eu.habbo.messages.incoming.polls.GetPollDataEvent;
+import com.eu.habbo.messages.incoming.quests.AcceptQuestEvent;
+import com.eu.habbo.messages.incoming.quests.ActivateQuestEvent;
+import com.eu.habbo.messages.incoming.quests.CancelDailyQuestEvent;
+import com.eu.habbo.messages.incoming.quests.ClaimDailyTaskEvent;
+import com.eu.habbo.messages.incoming.quests.ClaimRewardTrackPrizeEvent;
+import com.eu.habbo.messages.incoming.quests.GetDailyQuestEvent;
+import com.eu.habbo.messages.incoming.quests.GetDailyTasksEvent;
+import com.eu.habbo.messages.incoming.quests.GetQuestsEvent;
+import com.eu.habbo.messages.incoming.quests.GetRewardTracksEvent;
+import com.eu.habbo.messages.incoming.quests.GetSeasonalQuestsOnlyEvent;
+import com.eu.habbo.messages.incoming.quests.OpenQuestTrackerEvent;
+import com.eu.habbo.messages.incoming.quests.PurchaseRewardTrackPremiumEvent;
+import com.eu.habbo.messages.incoming.quests.RejectQuestEvent;
+import com.eu.habbo.messages.incoming.quests.StartCampaignEvent;
 import com.eu.habbo.messages.incoming.rooms.HandleDoorbellEvent;
 import com.eu.habbo.messages.incoming.rooms.RequestRoomDataEvent;
 import com.eu.habbo.messages.incoming.rooms.RequestRoomHeightmapEvent;
@@ -294,6 +311,7 @@ import com.eu.habbo.messages.incoming.rooms.RoomUnFavoriteEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomVoteEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomWordFilterModifyEvent;
 import com.eu.habbo.messages.incoming.rooms.SetHomeRoomEvent;
+import com.eu.habbo.messages.incoming.rooms.UpdateRoomCategoryAndTradeSettingsEvent;
 import com.eu.habbo.messages.incoming.rooms.bots.BotPickupEvent;
 import com.eu.habbo.messages.incoming.rooms.bots.BotPlaceEvent;
 import com.eu.habbo.messages.incoming.rooms.bots.BotSaveSettingsEvent;
@@ -354,6 +372,10 @@ import com.eu.habbo.messages.incoming.rooms.items.jukebox.JukeBoxEventTwo;
 import com.eu.habbo.messages.incoming.rooms.items.jukebox.JukeBoxRemoveSoundTrackEvent;
 import com.eu.habbo.messages.incoming.rooms.items.jukebox.JukeBoxRequestPlayListEvent;
 import com.eu.habbo.messages.incoming.rooms.items.lovelock.LoveLockStartConfirmEvent;
+import com.eu.habbo.messages.incoming.rooms.items.rentable.ExtendRentOrBuyoutFurniEvent;
+import com.eu.habbo.messages.incoming.rooms.items.rentable.ExtendRentOrBuyoutStripItemEvent;
+import com.eu.habbo.messages.incoming.rooms.items.rentable.GetRentOrBuyoutOfferEvent;
+import com.eu.habbo.messages.incoming.rooms.items.rentablespace.GetRentableSpaceStatusEvent;
 import com.eu.habbo.messages.incoming.rooms.items.rentablespace.RentSpaceCancelEvent;
 import com.eu.habbo.messages.incoming.rooms.items.rentablespace.RentSpaceEvent;
 import com.eu.habbo.messages.incoming.rooms.items.youtube.YoutubeRequestPlaylistChange;
@@ -915,6 +937,10 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomVoteEvent, RoomVoteEvent.class);
         this.registerHandler(Incoming.RequestRoomDataEvent, RequestRoomDataEvent.class);
         this.registerHandler(Incoming.RoomSettingsSaveEvent, RoomSettingsSaveEvent.class);
+        this.registerHandler(
+                Incoming.UpdateRoomCategoryAndTradeSettingsEvent, UpdateRoomCategoryAndTradeSettingsEvent.class);
+        this.registerHandler(Incoming.GetQuizQuestionsEvent, GetQuizQuestionsEvent.class);
+        this.registerHandler(Incoming.PostQuizAnswersEvent, PostQuizAnswersEvent.class);
         this.registerHandler(Incoming.RoomPlaceItemEvent, RoomPlaceItemEvent.class);
         this.registerHandler(Incoming.RotateMoveItemEvent, RotateMoveItemEvent.class);
         this.registerHandler(Incoming.MoveWallItemEvent, MoveWallItemEvent.class);
@@ -996,6 +1022,10 @@ public class PacketManager {
         this.registerHandler(Incoming.MoodLightSaveSettingsEvent, MoodLightSaveSettingsEvent.class);
         this.registerHandler(Incoming.RentSpaceEvent, RentSpaceEvent.class);
         this.registerHandler(Incoming.RentSpaceCancelEvent, RentSpaceCancelEvent.class);
+        this.registerHandler(Incoming.GetRentableSpaceStatusEvent, GetRentableSpaceStatusEvent.class);
+        this.registerHandler(Incoming.GetRentOrBuyoutOfferEvent, GetRentOrBuyoutOfferEvent.class);
+        this.registerHandler(Incoming.ExtendRentOrBuyoutFurniEvent, ExtendRentOrBuyoutFurniEvent.class);
+        this.registerHandler(Incoming.ExtendRentOrBuyoutStripItemEvent, ExtendRentOrBuyoutStripItemEvent.class);
         this.registerHandler(Incoming.SetHomeRoomEvent, SetHomeRoomEvent.class);
         this.registerHandler(Incoming.RoomUserGiveHandItemEvent, RoomUserGiveHandItemEvent.class);
         this.registerHandler(Incoming.RoomMuteEvent, RoomMuteEvent.class);
@@ -1098,6 +1128,7 @@ public class PacketManager {
         this.registerHandler(Incoming.GuildChangeColorsEvent, GuildChangeColorsEvent.class);
         this.registerHandler(Incoming.GuildRemoveAdminEvent, GuildRemoveAdminEvent.class);
         this.registerHandler(Incoming.GuildRemoveMemberEvent, GuildRemoveMemberEvent.class);
+        this.registerHandler(Incoming.GuildUnblockMemberEvent, GuildUnblockMemberEvent.class);
         this.registerHandler(Incoming.GuildChangeSettingsEvent, GuildChangeSettingsEvent.class);
         this.registerHandler(Incoming.GuildAcceptMembershipEvent, GuildAcceptMembershipEvent.class);
         this.registerHandler(Incoming.GuildDeclineMembershipEvent, GuildDeclineMembershipEvent.class);
@@ -1381,6 +1412,7 @@ public class PacketManager {
         this.registerHandler(
                 Incoming.RequestRareValuesEvent,
                 com.eu.habbo.messages.incoming.rarevalues.RequestRareValuesEvent.class);
+        this.registerHandler(Incoming.GetHotLooksEvent, com.eu.habbo.messages.incoming.hotlooks.GetHotLooksEvent.class);
 
         this.registerHandler(Incoming.WheelOpenEvent, com.eu.habbo.messages.incoming.wheel.WheelOpenEvent.class);
         this.registerHandler(Incoming.WheelSpinEvent, com.eu.habbo.messages.incoming.wheel.WheelSpinEvent.class);
@@ -1430,5 +1462,20 @@ public class PacketManager {
         this.registerHandler(Incoming.RequestEarningsCenterEvent, RequestEarningsCenterEvent.class);
         this.registerHandler(Incoming.ClaimEarningsRewardEvent, ClaimEarningsRewardEvent.class);
         this.registerHandler(Incoming.ClaimAllEarningsRewardsEvent, ClaimAllEarningsRewardsEvent.class);
+
+        this.registerHandler(Incoming.GetQuestsEvent, GetQuestsEvent.class);
+        this.registerHandler(Incoming.GetSeasonalQuestsOnlyEvent, GetSeasonalQuestsOnlyEvent.class);
+        this.registerHandler(Incoming.AcceptQuestEvent, AcceptQuestEvent.class);
+        this.registerHandler(Incoming.ActivateQuestEvent, ActivateQuestEvent.class);
+        this.registerHandler(Incoming.RejectQuestEvent, RejectQuestEvent.class);
+        this.registerHandler(Incoming.CancelDailyQuestEvent, CancelDailyQuestEvent.class);
+        this.registerHandler(Incoming.GetDailyQuestEvent, GetDailyQuestEvent.class);
+        this.registerHandler(Incoming.OpenQuestTrackerEvent, OpenQuestTrackerEvent.class);
+        this.registerHandler(Incoming.StartCampaignEvent, StartCampaignEvent.class);
+        this.registerHandler(Incoming.GetDailyTasksEvent, GetDailyTasksEvent.class);
+        this.registerHandler(Incoming.ClaimDailyTaskEvent, ClaimDailyTaskEvent.class);
+        this.registerHandler(Incoming.GetRewardTracksEvent, GetRewardTracksEvent.class);
+        this.registerHandler(Incoming.ClaimRewardTrackPrizeEvent, ClaimRewardTrackPrizeEvent.class);
+        this.registerHandler(Incoming.PurchaseRewardTrackPremiumEvent, PurchaseRewardTrackPremiumEvent.class);
     }
 }

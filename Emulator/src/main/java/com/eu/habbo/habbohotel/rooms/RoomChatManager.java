@@ -275,6 +275,8 @@ public class RoomChatManager {
             }
         }
         habbo.getHabboStats().lastChat = millis;
+        com.eu.habbo.habbohotel.quests.QuestProgressEvents.progress(
+                habbo, com.eu.habbo.habbohotel.quests.QuestGoalType.TALK_IN_ROOM, 1);
 
         // Handle idle event
         UserIdleEvent event = new UserIdleEvent(habbo, UserIdleEvent.IdleReason.TALKED, false);
