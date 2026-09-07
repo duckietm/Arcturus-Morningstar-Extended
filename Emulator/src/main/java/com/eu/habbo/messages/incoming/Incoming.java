@@ -294,6 +294,10 @@ public class Incoming {
     public static final int RoomMuteEvent = 3637;
     public static final int RequestRoomWordFilterEvent = 1911;
     public static final int RoomWordFilterModifyEvent = 3001;
+    // Personal word filter (AIR 13 GetCustomFilter / AddCustomFilterWord / RemoveCustomFilterWord)
+    public static final int RequestCustomWordFilterEvent = 145;
+    public static final int AddCustomWordFilterWordEvent = 68;
+    public static final int RemoveCustomWordFilterWordEvent = 1996;
     public static final int RequestRoomUserTagsEvent = 17;
     public static final int CatalogSearchedItemEvent = 2594;
     public static final int JukeBoxRequestTrackCodeEvent = 3189;
@@ -589,6 +593,10 @@ public class Incoming {
     public static final int HotelViewLandingResetVotesEvent = 9414;
     public static final int SaveGamePrivacySettingsEvent = 9415;
     public static final int RequestOfflineMessagesEvent = 9416;
+    // Official AIR 13 ids: SetChatPreferences, SetOnlineIndicatorPreference, wired menu preferences
+    public static final int SaveChatPreferencesEvent = 2506;
+    public static final int SaveOnlineIndicatorPreferenceEvent = 818;
+    public static final int SaveWiredMenuSettingsEvent = 1226;
     // 6010 (used by the original PR) is reserved by UNKNOWN_SNOWSTORM_6010, so habbicon uses 9417
     public static final int RoomUserHabbiconEvent = 9417;
     public static final int DisconnectEvent = 2445;

@@ -350,6 +350,9 @@ public class Outgoing {
     public static final int GuildEditFailComposer = 3988; // PRODUCTION-201611291003-338511768
     public static final int MinimailNewMessageComposer = 1911; // PRODUCTION-201611291003-338511768
     public static final int RoomFilterWordsComposer = 2937; // PRODUCTION-201611291003-338511768
+    // Personal word filter (AIR 13 CustomFilterResult / ModifyCustomFilterResult)
+    public static final int CustomWordFilterWordsComposer = 3883;
+    public static final int CustomWordFilterModifyResultComposer = 3333;
     public static final int VerifyMobileNumberComposer = 3639; // PRODUCTION-201611291003-338511768
     public static final int NewUserGiftComposer = 3575; // PRODUCTION-201611291003-338511768
     public static final int UpdateUserLookComposer = 2429; // PRODUCTION-201611291003-338511768

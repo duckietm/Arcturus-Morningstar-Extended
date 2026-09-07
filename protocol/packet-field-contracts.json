@@ -509,6 +509,28 @@
       "fields": []
     },
     {
+      "name": "ADD_CUSTOM_FILTER_WORD",
+      "direction": "client_to_server",
+      "header": 68,
+      "java": {
+        "symbol": "AddCustomWordFilterWordEvent",
+        "className": "AddCustomWordFilterWordEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/AddCustomWordFilterWordEvent.java"
+      },
+      "typescript": {
+        "symbol": "ADD_CUSTOM_FILTER_WORD",
+        "className": "AddCustomFilterWordMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/user/wordfilter/AddCustomFilterWordMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "word"
+        }
+      ]
+    },
+    {
       "name": "FURNITURE_MULTISTATE",
       "direction": "client_to_server",
       "header": 99,
@@ -572,6 +594,22 @@
           "name": "pollId"
         }
       ]
+    },
+    {
+      "name": "GET_CUSTOM_FILTER",
+      "direction": "client_to_server",
+      "header": 145,
+      "java": {
+        "symbol": "RequestCustomWordFilterEvent",
+        "className": "RequestCustomWordFilterEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/RequestCustomWordFilterEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_CUSTOM_FILTER",
+        "className": "GetCustomFilterMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/user/wordfilter/GetCustomFilterMessageComposer.ts"
+      },
+      "fields": []
     },
     {
       "name": "FURNITURE_WALL_UPDATE",
@@ -3162,6 +3200,28 @@
           "kind": "scalar",
           "type": "int",
           "name": "itemId"
+        }
+      ]
+    },
+    {
+      "name": "REMOVE_CUSTOM_FILTER_WORD",
+      "direction": "client_to_server",
+      "header": 1996,
+      "java": {
+        "symbol": "RemoveCustomWordFilterWordEvent",
+        "className": "RemoveCustomWordFilterWordEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/RemoveCustomWordFilterWordEvent.java"
+      },
+      "typescript": {
+        "symbol": "REMOVE_CUSTOM_FILTER_WORD",
+        "className": "RemoveCustomFilterWordMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/user/wordfilter/RemoveCustomFilterWordMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "word"
         }
       ]
     },
@@ -10388,6 +10448,31 @@
           "kind": "scalar",
           "type": "int",
           "name": ""
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "wiredWhisperDisabled"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "chatMode"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "chatBubbleWidth"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "chatScrollSpeed"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "onlineIndicatorPreference"
         }
       ]
     },
@@ -14762,6 +14847,33 @@
           "kind": "scalar",
           "type": "int",
           "name": ""
+        }
+      ]
+    },
+    {
+      "name": "MODIFY_CUSTOM_FILTER_RESULT",
+      "direction": "server_to_client",
+      "header": 3333,
+      "java": {
+        "symbol": "CustomWordFilterModifyResultComposer",
+        "className": "CustomWordFilterModifyResultComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/users/CustomWordFilterModifyResultComposer.java"
+      },
+      "typescript": {
+        "symbol": "MODIFY_CUSTOM_FILTER_RESULT",
+        "className": "ModifyCustomFilterResultParser",
+        "path": "packages/communication/src/messages/parser/user/wordfilter/ModifyCustomFilterResultParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "result"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "word"
         }
       ]
     },
@@ -23206,6 +23318,22 @@
       "reason": "TypeScript analyzer: Data-dependent packet operations in IfStatement inside parse"
     },
     {
+      "name": "CUSTOM_FILTER_RESULT",
+      "direction": "server_to_client",
+      "header": 3883,
+      "java": {
+        "symbol": "CustomWordFilterWordsComposer",
+        "className": "CustomWordFilterWordsComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/users/CustomWordFilterWordsComposer.java"
+      },
+      "typescript": {
+        "symbol": "CUSTOM_FILTER_RESULT",
+        "className": "CustomFilterResultParser",
+        "path": "packages/communication/src/messages/parser/user/wordfilter/CustomFilterResultParser.ts"
+      },
+      "reason": "Java analyzer: Data-dependent packet operations in ForEachStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in WhileStatement inside parse"
+    },
+    {
       "name": "MARKETPLACE_OWN_ITEMS",
       "direction": "server_to_client",
       "header": 3884,
@@ -24356,6 +24484,54 @@
         "path": "packages/communication/src/messages/parser/catalog/metadata/CatalogProductMetadataMessageParser.ts"
       },
       "reason": "Java analyzer: Data-dependent packet operations in ForStmt inside composeInternal; TypeScript analyzer: Data-dependent packet operations in ForStatement inside parse"
+    },
+    {
+      "name": "USER_SETTINGS_CHAT_PREFERENCES",
+      "direction": "client_to_server",
+      "header": 2506,
+      "java": {
+        "symbol": "SaveChatPreferencesEvent",
+        "className": "SaveChatPreferencesEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/SaveChatPreferencesEvent.java"
+      },
+      "typescript": {
+        "symbol": "USER_SETTINGS_CHAT_PREFERENCES",
+        "className": "UserSettingsChatPreferencesComposer",
+        "path": "packages/communication/src/messages/outgoing/user/settings/UserSettingsChatPreferencesComposer.ts"
+      },
+      "reason": "Java analyzer: Packet fields delegated to external reader in UserPreferencePackets inside handle"
+    },
+    {
+      "name": "USER_SETTINGS_ONLINE_INDICATOR",
+      "direction": "client_to_server",
+      "header": 818,
+      "java": {
+        "symbol": "SaveOnlineIndicatorPreferenceEvent",
+        "className": "SaveOnlineIndicatorPreferenceEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/SaveOnlineIndicatorPreferenceEvent.java"
+      },
+      "typescript": {
+        "symbol": "USER_SETTINGS_ONLINE_INDICATOR",
+        "className": "UserSettingsOnlineIndicatorComposer",
+        "path": "packages/communication/src/messages/outgoing/user/settings/UserSettingsOnlineIndicatorComposer.ts"
+      },
+      "reason": "Java analyzer: Packet fields delegated to external reader in UserPreferencePackets inside handle"
+    },
+    {
+      "name": "WIRED_MENU_SETTINGS_SAVE",
+      "direction": "client_to_server",
+      "header": 1226,
+      "java": {
+        "symbol": "SaveWiredMenuSettingsEvent",
+        "className": "SaveWiredMenuSettingsEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/users/SaveWiredMenuSettingsEvent.java"
+      },
+      "typescript": {
+        "symbol": "WIRED_MENU_SETTINGS_SAVE",
+        "className": "WiredMenuSettingsComposer",
+        "path": "packages/communication/src/messages/outgoing/roomevents/WiredMenuSettingsComposer.ts"
+      },
+      "reason": "Java analyzer: Packet fields delegated to external reader in UserPreferencePackets inside handle"
     }
   ]
 }

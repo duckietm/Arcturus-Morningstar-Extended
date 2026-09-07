@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.rooms.RoomChatMessageBubbles;
 import com.eu.habbo.habbohotel.rooms.RoomTrade;
 import com.eu.habbo.habbohotel.users.cache.HabboOfferPurchase;
 import com.eu.habbo.habbohotel.users.subscriptions.Subscription;
+import com.eu.habbo.messages.incoming.users.UserPreferencePackets;
 import com.eu.habbo.plugin.events.users.subscriptions.UserSubscriptionCreatedEvent;
 import com.eu.habbo.plugin.events.users.subscriptions.UserSubscriptionExtendedEvent;
 import gnu.trove.map.hash.THashMap;
@@ -55,6 +56,7 @@ public class HabboStats implements Runnable {
     private boolean recentPurchasesInitialized = false;
     private final IntArrayList favoriteRooms;
     private final IntArrayList ignoredUsers;
+    private final UserWordFilter customWordFilter;
     private IntArrayList roomsVists;
     public int achievementScore;
     public int respectPointsReceived;
@@ -73,6 +75,11 @@ public class HabboStats implements Runnable {
     public int volumeFurni;
     public int volumeTrax;
     public int volumeSoundboard;
+    public int chatMode;
+    public int chatBubbleWidth;
+    public int chatScrollSpeed;
+    public int onlineIndicatorPreference;
+    public boolean wiredWhisperDisabled;
     public int guild;
     public List<Integer> guilds;
     public String[] tags;
@@ -128,6 +135,7 @@ public class HabboStats implements Runnable {
         this.recentPurchases = new LinkedHashMap<>(0);
         this.favoriteRooms = new IntArrayList(0);
         this.ignoredUsers = new IntArrayList(0);
+        this.customWordFilter = new UserWordFilter();
         this.roomsVists = new IntArrayList(0);
         this.secretRecipes = new IntArrayList(0);
         this.calendarRewardsClaimed = new ArrayList<>();
@@ -160,6 +168,14 @@ public class HabboStats implements Runnable {
         this.volumeFurni = set.getInt("volume_furni");
         this.volumeTrax = set.getInt("volume_trax");
         this.volumeSoundboard = set.getInt("volume_soundboard");
+        this.chatMode = UserPreferencePackets.sanitizeChatMode(safeColumnInt(set, "chat_mode", 0));
+        this.chatBubbleWidth =
+                UserPreferencePackets.sanitizeChatBubbleWidth(safeColumnInt(set, "chat_bubble_width", 1));
+        this.chatScrollSpeed =
+                UserPreferencePackets.sanitizeChatScrollSpeed(safeColumnInt(set, "chat_scroll_speed", 1));
+        this.onlineIndicatorPreference = UserPreferencePackets.sanitizeOnlineIndicatorPreference(
+                safeColumnInt(set, "online_indicator_preference", 0));
+        this.wiredWhisperDisabled = "1".equals(safeColumnString(set, "wired_whisper_disabled", "0"));
         this.chatColor = RoomChatMessageBubbles.getBubble(set.getInt("chat_color"));
         this.hofPoints = set.getInt("hof_points");
         this.blockStaffAlerts = set.getString("block_alerts").equals("1");
@@ -269,6 +285,17 @@ public class HabboStats implements Runnable {
             try (ResultSet ignoredSet = ignoredPlayersStatement.executeQuery()) {
                 while (ignoredSet.next()) {
                     this.ignoredUsers.add(ignoredSet.getInt(1));
+                }
+            }
+        }
+
+        try (PreparedStatement wordFilterStatement = set.getStatement()
+                .getConnection()
+                .prepareStatement("SELECT word FROM users_wordfilter WHERE user_id = ?")) {
+            wordFilterStatement.setInt(1, this.habboInfo.getId());
+            try (ResultSet wordSet = wordFilterStatement.executeQuery()) {
+                while (wordSet.next()) {
+                    this.customWordFilter.add(wordSet.getString(1));
                 }
             }
         }
@@ -963,6 +990,48 @@ public class HabboStats implements Runnable {
         }
     }
 
+    public UserWordFilter getCustomWordFilter() {
+        return this.customWordFilter;
+    }
+
+    /** Adds a word to the personal word filter; false when it was already listed or unusable. */
+    public boolean addCustomFilterWord(String word) {
+        if (!this.customWordFilter.add(word)) {
+            return false;
+        }
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "INSERT IGNORE INTO users_wordfilter (user_id, word) VALUES (?, ?)")) {
+            statement.setInt(1, this.habboInfo.getId());
+            statement.setString(2, UserWordFilter.normalize(word));
+            statement.execute();
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        return true;
+    }
+
+    /** Removes a word from the personal word filter; false when it was not listed. */
+    public boolean removeCustomFilterWord(String word) {
+        if (!this.customWordFilter.remove(word)) {
+            return false;
+        }
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+                PreparedStatement statement =
+                        connection.prepareStatement("DELETE FROM users_wordfilter WHERE user_id = ? AND word = ?")) {
+            statement.setInt(1, this.habboInfo.getId());
+            statement.setString(2, UserWordFilter.normalize(word));
+            statement.execute();
+        } catch (SQLException e) {
+            LOGGER.error("Caught SQL exception", e);
+        }
+
+        return true;
+    }
+
     public boolean userIgnored(int userId) {
         return this.ignoredUsers.contains(userId);
     }
@@ -1009,7 +1078,8 @@ public class HabboStats implements Runnable {
         }
     }
 
-    private static final Set<String> PERSIST_FLAG_COLUMNS = Set.of("mentions_enabled", "mass_mentions_enabled");
+    private static final Set<String> PERSIST_FLAG_COLUMNS =
+            Set.of("mentions_enabled", "mass_mentions_enabled", "wired_whisper_disabled");
 
     private void persistFlag(String column, boolean enabled) {
         if (!PERSIST_FLAG_COLUMNS.contains(column)) {
@@ -1021,6 +1091,62 @@ public class HabboStats implements Runnable {
                 PreparedStatement statement = connection.prepareStatement(
                         "UPDATE users_settings SET `" + column + "` = ? WHERE user_id = ? LIMIT 1")) {
             statement.setString(1, enabled ? "1" : "0");
+            statement.setInt(2, this.habboInfo.getId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Failed to persist users_settings.{} for user {}", column, this.habboInfo.getId(), e);
+        }
+    }
+
+    private static int safeColumnInt(ResultSet set, String column, int defaultValue) {
+        try {
+            return set.getInt(column);
+        } catch (SQLException e) {
+            return defaultValue;
+        }
+    }
+
+    /** Official SetChatPreferences: values are already sanitized by UserPreferencePackets. */
+    public void setChatPreferences(int chatMode, int chatBubbleWidth, int chatScrollSpeed) {
+        this.chatMode = chatMode;
+        this.chatBubbleWidth = chatBubbleWidth;
+        this.chatScrollSpeed = chatScrollSpeed;
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE users_settings SET chat_mode = ?, chat_bubble_width = ?, chat_scroll_speed = ? WHERE user_id = ? LIMIT 1")) {
+            statement.setInt(1, chatMode);
+            statement.setInt(2, chatBubbleWidth);
+            statement.setInt(3, chatScrollSpeed);
+            statement.setInt(4, this.habboInfo.getId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Failed to persist chat preferences for user {}", this.habboInfo.getId(), e);
+        }
+    }
+
+    public void setOnlineIndicatorPreference(int preference) {
+        this.onlineIndicatorPreference = preference;
+        persistInt("online_indicator_preference", preference);
+    }
+
+    public void setWiredWhisperDisabled(boolean disabled) {
+        this.wiredWhisperDisabled = disabled;
+        persistFlag("wired_whisper_disabled", disabled);
+    }
+
+    private static final Set<String> PERSIST_INT_COLUMNS = Set.of("online_indicator_preference");
+
+    private void persistInt(String column, int value) {
+        if (!PERSIST_INT_COLUMNS.contains(column)) {
+            LOGGER.error("Refusing to persist unknown users_settings column '{}'", column);
+            return;
+        }
+
+        try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE users_settings SET `" + column + "` = ? WHERE user_id = ? LIMIT 1")) {
+            statement.setInt(1, value);
             statement.setInt(2, this.habboInfo.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
