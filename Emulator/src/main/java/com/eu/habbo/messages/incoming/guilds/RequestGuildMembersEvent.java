@@ -11,7 +11,8 @@ import com.eu.habbo.messages.outgoing.guilds.GuildMembersComposer;
 public class RequestGuildMembersEvent extends MessageHandler {
     private static final int MAX_PAGE_ID = 1000;
     private static final int MAX_QUERY_LENGTH = 32;
-    private static final int MAX_LEVEL_ID = 3; // 0 all, 1 admins, 2 pending, 3 blocked (AIR 13)
+    private static final int MAX_LEVEL_ID = 2; // 0 all, 1 admins, 2 pending
+    private static final int BLOCKED_LEVEL_ID = 3; // the blocked list (AIR 13)
 
     @Override
     public int getRatelimit() {
@@ -24,13 +25,10 @@ public class RequestGuildMembersEvent extends MessageHandler {
         int pageId = this.packet.readInt();
         String query = this.packet.readString();
         int levelId = this.packet.readInt();
-        if (!GuildInputGuard.isPositiveId(groupId)
-                || pageId < 0
-                || pageId > MAX_PAGE_ID
-                || levelId < 0
-                || levelId > MAX_LEVEL_ID
-                || query == null
-                || query.length() > MAX_QUERY_LENGTH) {
+        boolean pageValid = !(pageId < 0 || pageId > MAX_PAGE_ID);
+        boolean levelKnown = levelId >= 0 && (levelId <= MAX_LEVEL_ID || levelId == BLOCKED_LEVEL_ID);
+        boolean queryValid = query != null && query.length() <= MAX_QUERY_LENGTH;
+        if (!GuildInputGuard.isPositiveId(groupId) || !pageValid || !levelKnown || !queryValid) {
             return;
         }
 

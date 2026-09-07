@@ -257,6 +257,15 @@ public class Outgoing {
     public static final int RentableSpaceInfoComposer = 3559; // PRODUCTION-201611291003-338511768
     public static final int RentableSpaceRentOkComposer = 2046; // PRODUCTION-201611291003-338511768
     public static final int RentableSpaceRentFailedComposer = 1868; // PRODUCTION-201611291003-338511768
+
+    /** @deprecated plugin ABI alias of {@link #RentableSpaceRentOkComposer}. */
+    @Deprecated
+    public static final int RentableSpaceUnknownComposer = RentableSpaceRentOkComposer;
+
+    /** @deprecated plugin ABI alias of {@link #RentableSpaceRentFailedComposer}. */
+    @Deprecated
+    public static final int RentableSpaceUnknown2Composer = RentableSpaceRentFailedComposer;
+
     public static final int GuildConfirmRemoveMemberComposer = 1876; // PRODUCTION-201611291003-338511768
 
     public static final int HotelViewBadgeButtonConfigComposer = 2998; // PRODUCTION-201611291003-338511768
@@ -425,6 +434,11 @@ public class Outgoing {
     public static final int TalentLevelUpdateComposer = 638; // PRODUCTION-201611291003-338511768
     public static final int BullyReportedMessageComposer = 3285; // PRODUCTION-201611291003-338511768
     public static final int SeasonalQuestsComposer = 1122; // PRODUCTION-201611291003-338511768
+
+    /** @deprecated plugin ABI alias of {@link #SeasonalQuestsComposer}. */
+    @Deprecated
+    public static final int UnknownQuestComposer3 = SeasonalQuestsComposer;
+
     public static final int FriendToolbarNotificationComposer = 3082; // PRODUCTION-201611291003-338511768
     public static final int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public static final int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768

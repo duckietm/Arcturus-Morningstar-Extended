@@ -146,12 +146,21 @@ public class InteractionRentableSpace extends HabboItem {
      * Rents the space to {@code habbo}. Returns 0 when the rent went through,
      * otherwise the RentableSpaceInfoComposer error code the client shows.
      */
-    public int rent(Habbo habbo) {
+    public int tryRent(Habbo habbo) {
         int errorCode = this.getRentErrorCode(habbo);
         if (errorCode != 0) return errorCode;
 
+        this.rent(habbo);
+        return this.getRenterId() == habbo.getHabboInfo().getId() ? 0 : RentableSpaceInfoComposer.NOT_ENOUGH_CREDITS;
+    }
+
+    /** Charges the rent and marks the space rented; silently does nothing when the user cannot pay. */
+    public void rent(Habbo habbo) {
         int cost = this.rentCost();
-        if (!habbo.hasPermission(Permission.ACC_INFINITE_CREDITS)) {
+        boolean hasInfiniteCredits = habbo.hasPermission(Permission.ACC_INFINITE_CREDITS);
+        if (!hasInfiniteCredits && habbo.getHabboInfo().getCredits() < cost) return;
+
+        if (!hasInfiniteCredits) {
             habbo.giveCredits(-cost);
         }
 
@@ -164,7 +173,6 @@ public class InteractionRentableSpace extends HabboItem {
         this.needsUpdate(true);
         this.run();
         this.scheduleExpiry();
-        return 0;
     }
 
     /** Ends the rent when the period runs out, so the renter's furni goes home while the room is loaded. */

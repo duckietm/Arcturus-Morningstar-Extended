@@ -48,6 +48,46 @@ public class QuestsComposer extends MessageComposer {
         private final boolean seasonal;
         private final int secondsLeft;
 
+        /** @deprecated plugin ABI; a quest that is not seasonal. */
+        @Deprecated
+        public Quest(
+                String campaignCode,
+                int completedQuestsInCampaign,
+                int questCountInCampaign,
+                int activityPointType,
+                int id,
+                boolean accepted,
+                String type,
+                String imageVersion,
+                int rewardCurrencyAmount,
+                String localizationCode,
+                int completedSteps,
+                int totalSteps,
+                int sortOrder,
+                String catalogPageName,
+                String chainCode,
+                boolean easy) {
+            this(
+                    campaignCode,
+                    completedQuestsInCampaign,
+                    questCountInCampaign,
+                    activityPointType,
+                    id,
+                    accepted,
+                    type,
+                    imageVersion,
+                    rewardCurrencyAmount,
+                    localizationCode,
+                    completedSteps,
+                    totalSteps,
+                    sortOrder,
+                    catalogPageName,
+                    chainCode,
+                    easy,
+                    false,
+                    0);
+        }
+
         public Quest(
                 String campaignCode,
                 int completedQuestsInCampaign,
@@ -182,6 +222,12 @@ public class QuestsComposer extends MessageComposer {
         public int getSecondsLeft() {
             return secondsLeft;
         }
+    }
+
+    /** @deprecated plugin ABI; see {@link #isOpenWindow()}. */
+    @Deprecated
+    public boolean isUnknownBoolean() {
+        return openWindow;
     }
 
     public List<Quest> getQuests() {

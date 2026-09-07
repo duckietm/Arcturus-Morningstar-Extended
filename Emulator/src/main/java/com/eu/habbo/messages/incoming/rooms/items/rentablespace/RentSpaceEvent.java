@@ -28,7 +28,7 @@ public class RentSpaceEvent extends MessageHandler {
 
         if (!(item instanceof InteractionRentableSpace space)) return;
 
-        int errorCode = space.rent(this.client.getHabbo());
+        int errorCode = space.tryRent(this.client.getHabbo());
 
         if (errorCode != 0) {
             this.client.sendResponse(new RentableSpaceRentFailedComposer(errorCode));

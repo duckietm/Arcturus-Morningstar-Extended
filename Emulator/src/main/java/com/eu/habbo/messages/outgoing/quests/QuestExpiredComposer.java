@@ -14,11 +14,17 @@ public class QuestExpiredComposer extends MessageComposer {
         this.quest = quest;
     }
 
+    /** @deprecated plugin ABI; sends the flag alone, as before the quest block was added. */
+    @Deprecated
+    public QuestExpiredComposer(boolean expired) {
+        this(expired, null);
+    }
+
     @Override
     protected ServerMessage composeInternal() {
         this.response.init(Outgoing.QuestExpiredComposer);
         this.response.appendBoolean(this.expired);
-        this.response.append(this.quest);
+        if (this.quest != null) this.response.append(this.quest);
         return this.response;
     }
 
