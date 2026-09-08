@@ -57,6 +57,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionHopper;
 import com.eu.habbo.habbohotel.items.interactions.InteractionMusicDisc;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTeleport;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTrophy;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurniture;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurnitureManager;
 import com.eu.habbo.habbohotel.modtool.ScripterManager;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.pets.Pet;
@@ -967,11 +969,21 @@ public class CatalogManager {
         if (ids != null) {
             for (int id : ids) {
                 CatalogItem item = this.getCatalogItem(id);
-                if (item != null) history.add(item);
+                if (item == null) continue;
+                if (isPetOrBotItem(item)) continue;
+                history.add(item);
             }
         }
 
         stats.initRecentPurchases(history);
+    }
+
+    private static boolean isPetOrBotItem(CatalogItem item) {
+        if (item == null) return false;
+        for (Item baseItem : item.getBaseItems()) {
+            if (Item.isPet(baseItem) || Item.isBot(baseItem)) return true;
+        }
+        return false;
     }
 
     public List<CatalogPage> getCatalogPages(int parentId, final Habbo habbo) {
@@ -1902,6 +1914,16 @@ public class CatalogManager {
                 }
 
                 if (purchasedEvent.itemsList != null && !purchasedEvent.itemsList.isEmpty()) {
+                    if (item.isRentOffer()) {
+                        int expires =
+                                RentableFurniture.expiresAfter(Emulator.getIntUnixTimestamp(), item.getRentDays());
+                        for (HabboItem rented : purchasedEvent.itemsList) {
+                            rented.setExpiresTimestamp(expires);
+                            rented.needsUpdate(true);
+                            Emulator.getThreading().run(rented);
+                            RentableFurnitureManager.track(rented);
+                        }
+                    }
                     habbo.getClient()
                             .getHabbo()
                             .getInventory()
@@ -1958,7 +1980,9 @@ public class CatalogManager {
                         Emulator.getGameEnvironment().getItemManager().deleteItem(createdItem);
                     }
                 }
-                habbo.getClient().getHabbo().getHabboStats().addPurchase(purchasedEvent.catalogItem);
+                if (!isPetOrBotItem(purchasedEvent.catalogItem)) {
+                    habbo.getClient().getHabbo().getHabboStats().addPurchase(purchasedEvent.catalogItem);
+                }
 
                 habbo.getClient().sendResponse(new AddHabboItemComposer(unseenItems));
 
@@ -2164,7 +2188,9 @@ public class CatalogManager {
                     .computeIfAbsent(AddHabboItemComposer.AddHabboItemCategory.PET, ignored -> new ArrayList<>())
                     .add(pet.getId());
         }
-        habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        if (!isPetOrBotItem(purchase.event().catalogItem)) {
+            habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        }
         habbo.getClient().sendResponse(new AddHabboItemComposer(unseenItems));
         habbo.getClient().sendResponse(new PurchaseOKComposer(purchase.event().catalogItem));
         habbo.getClient().sendResponse(new InventoryRefreshComposer());
@@ -2248,7 +2274,9 @@ public class CatalogManager {
         for (EffectsComponent.HabboEffect effect : purchase.effects().values()) {
             habbo.getInventory().getEffectsComponent().publishEffect(effect);
         }
-        habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        if (!isPetOrBotItem(purchase.event().catalogItem)) {
+            habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        }
         habbo.getClient().sendResponse(new AddHabboItemComposer(unseenItems));
         habbo.getClient().sendResponse(new PurchaseOKComposer(purchase.event().catalogItem));
         habbo.getClient().sendResponse(new InventoryRefreshComposer());
@@ -2517,7 +2545,9 @@ public class CatalogManager {
             AchievementManager.progressAchievement(
                     habbo, Emulator.getGameEnvironment().getAchievementManager().getAchievement("MusicCollector"));
         }
-        habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        if (!isPetOrBotItem(purchase.event().catalogItem)) {
+            habbo.getHabboStats().addPurchase(purchase.event().catalogItem);
+        }
         habbo.getClient().sendResponse(new AddHabboItemComposer(unseenItems));
         habbo.getClient().sendResponse(new PurchaseOKComposer(purchase.event().catalogItem));
         habbo.getClient().sendResponse(new InventoryRefreshComposer());

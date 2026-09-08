@@ -5,6 +5,7 @@ public enum GuildRank {
     ADMIN(1),
     MEMBER(2),
     REQUESTED(3),
+    /** Blocked by a group admin (AIR 13 "block member"): kept in guilds_members so the user cannot rejoin. */
     DELETED(4);
 
     public final int type;

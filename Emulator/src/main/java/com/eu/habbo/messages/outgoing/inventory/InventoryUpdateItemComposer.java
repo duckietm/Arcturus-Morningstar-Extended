@@ -49,14 +49,15 @@ public class InventoryUpdateItemComposer extends MessageComposer {
         }
         this.response.appendBoolean(this.habboItem.getBaseItem().allowRecyle());
         this.response.appendBoolean(this.habboItem.getBaseItem().allowTrade());
-        this.response.appendBoolean(!this.habboItem.isLimited() && this.habboItem.getBaseItem().allowInventoryStack());
+        this.response.appendBoolean(
+                !this.habboItem.isLimited() && this.habboItem.getBaseItem().allowInventoryStack());
         this.response.appendBoolean(this.habboItem.getBaseItem().allowMarketplace());
-        this.response.appendInt(-1);
-        this.response.appendBoolean(false);
+        this.response.appendInt(this.habboItem.getSecondsToExpiration());
+        this.response.appendBoolean(this.habboItem.hasRentPeriod());
         this.response.appendInt(-1);
 
         if (this.habboItem.getBaseItem().getType() == FurnitureType.FLOOR) {
-            this.response.appendString(""); //slotId
+            this.response.appendString(""); // slotId
             this.response.appendInt(0);
         }
         this.response.appendInt(100);

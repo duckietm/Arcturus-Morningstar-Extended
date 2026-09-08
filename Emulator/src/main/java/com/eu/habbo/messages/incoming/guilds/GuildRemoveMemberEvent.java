@@ -23,6 +23,7 @@ public class GuildRemoveMemberEvent extends MessageHandler {
     public void handle() throws Exception {
         int guildId = this.packet.readInt();
         int userId = this.packet.readInt();
+        boolean block = this.packet.readBoolean(); // AIR 13 KickMember third field; false when a client omits it
 
         if (!GuildInputGuard.arePositiveIds(guildId, userId)) {
             return;
@@ -30,41 +31,53 @@ public class GuildRemoveMemberEvent extends MessageHandler {
 
         Guild guild = Emulator.getGameEnvironment().getGuildManager().getGuild(guildId);
 
-        if(guild == null) {
+        if (guild == null) {
             return;
         }
 
-        GuildMember member = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild, this.client.getHabbo());
+        GuildMember member =
+                Emulator.getGameEnvironment().getGuildManager().getGuildMember(guild, this.client.getHabbo());
 
-        if(member == null) {
+        if (member == null) {
             return;
         }
 
-        if(userId == guild.getOwnerId()) {
+        if (userId == guild.getOwnerId()) {
             return;
         }
 
-        GuildMember targetMember = Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, userId);
+        GuildMember targetMember =
+                Emulator.getGameEnvironment().getGuildManager().getGuildMember(guildId, userId);
         if (targetMember == null) {
             return;
         }
 
-        boolean actorIsGuildOwner = guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || member.getRank().equals(GuildRank.OWNER);
+        boolean actorIsGuildOwner =
+                guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId()
+                        || member.getRank().equals(GuildRank.OWNER);
         boolean actorIsGlobalGuildAdmin = this.client.getHabbo().hasPermission(Permission.ACC_GUILD_ADMIN);
-        if ((targetMember.getRank().equals(GuildRank.ADMIN) || targetMember.getRank().equals(GuildRank.OWNER))
+        if ((targetMember.getRank().equals(GuildRank.ADMIN)
+                        || targetMember.getRank().equals(GuildRank.OWNER))
                 && !actorIsGuildOwner
                 && !actorIsGlobalGuildAdmin) {
             return;
         }
 
-        if (userId == this.client.getHabbo().getHabboInfo().getId() || guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId() || member.getRank().equals(GuildRank.OWNER) || member.getRank().equals(GuildRank.ADMIN) || this.client.getHabbo().hasPermission(Permission.ACC_GUILD_ADMIN)) {
+        if (userId == this.client.getHabbo().getHabboInfo().getId()
+                || guild.getOwnerId() == this.client.getHabbo().getHabboInfo().getId()
+                || member.getRank().equals(GuildRank.OWNER)
+                || member.getRank().equals(GuildRank.ADMIN)
+                || this.client.getHabbo().hasPermission(Permission.ACC_GUILD_ADMIN)) {
             Habbo habbo = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
             GuildRemovedMemberEvent removedMemberEvent = new GuildRemovedMemberEvent(guild, userId, habbo);
             Emulator.getPluginManager().fireEvent(removedMemberEvent);
-            if (removedMemberEvent.isCancelled())
-                return;
+            if (removedMemberEvent.isCancelled()) return;
 
-            Emulator.getGameEnvironment().getGuildManager().removeMember(guild, userId);
+            if (block && userId != this.client.getHabbo().getHabboInfo().getId()) {
+                Emulator.getGameEnvironment().getGuildManager().blockMember(guild, userId);
+            } else {
+                Emulator.getGameEnvironment().getGuildManager().removeMember(guild, userId);
+            }
             guild.decreaseMemberCount();
 
             if (userId != this.client.getHabbo().getHabboInfo().getId()) {
@@ -75,14 +88,15 @@ public class GuildRemoveMemberEvent extends MessageHandler {
 
             if (habbo != null) {
                 habbo.getHabboStats().removeGuild(guild.getId());
-                if (habbo.getHabboStats().guild == guildId)
-                    habbo.getHabboStats().guild = 0;
+                if (habbo.getHabboStats().guild == guildId) habbo.getHabboStats().guild = 0;
 
                 if (room != null) {
                     if (habbo.getHabboInfo().getCurrentRoom() != null && habbo.getRoomUnit() != null)
-                        habbo.getHabboInfo().getCurrentRoom().sendComposer(new GuildFavoriteRoomUserUpdateComposer(habbo.getRoomUnit(), null).compose());
-                    if (habbo.getHabboInfo().getCurrentRoom() == room)
-                        room.refreshRightsForHabbo(habbo);
+                        habbo.getHabboInfo()
+                                .getCurrentRoom()
+                                .sendComposer(
+                                        new GuildFavoriteRoomUserUpdateComposer(habbo.getRoomUnit(), null).compose());
+                    if (habbo.getHabboInfo().getCurrentRoom() == room) room.refreshRightsForHabbo(habbo);
                 }
 
                 habbo.getClient().sendResponse(new GuildInfoComposer(guild, habbo.getClient(), false, null));

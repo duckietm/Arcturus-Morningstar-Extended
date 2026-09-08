@@ -142,6 +142,9 @@ public class Incoming {
     public static final int RequestDiscountEvent = 223;
     public static final int RequestFriendRequestEvent = 2448;
     public static final int RoomSettingsSaveEvent = 1969;
+    public static final int UpdateRoomCategoryAndTradeSettingsEvent = 1265;
+    public static final int GetQuizQuestionsEvent = 1296;
+    public static final int PostQuizAnswersEvent = 3720;
     public static final int AcceptFriendRequest = 137;
     public static final int DeclineFriendRequest = 2890;
     public static final int ReleaseVersionEvent = 4000; // 4000
@@ -203,6 +206,7 @@ public class Incoming {
     public static final int SearchUserEvent = 1210;
     public static final int GuildConfirmRemoveMemberEvent = 3593;
     public static final int GuildRemoveMemberEvent = 593;
+    public static final int GuildUnblockMemberEvent = 2864;
     public static final int WiredConditionSaveDataEvent = 3203;
     public static final int RoomUserLookAtPoint = 3301;
     public static final int MoodLightTurnOnEvent = 2296;
@@ -276,6 +280,10 @@ public class Incoming {
     public static final int RequestClubGiftsEvent = 487;
     public static final int RentSpaceEvent = 2946;
     public static final int RentSpaceCancelEvent = 1667;
+    public static final int GetRentableSpaceStatusEvent = 872;
+    public static final int GetRentOrBuyoutOfferEvent = 2518;
+    public static final int ExtendRentOrBuyoutFurniEvent = 1071;
+    public static final int ExtendRentOrBuyoutStripItemEvent = 2115;
     public static final int RequestInitFriendsEvent = 2781;
     public static final int RequestCameraConfigurationEvent = 796;
     public static final int PingEvent = 295;
@@ -294,6 +302,10 @@ public class Incoming {
     public static final int RoomMuteEvent = 3637;
     public static final int RequestRoomWordFilterEvent = 1911;
     public static final int RoomWordFilterModifyEvent = 3001;
+    // Personal word filter (AIR 13 GetCustomFilter / AddCustomFilterWord / RemoveCustomFilterWord)
+    public static final int RequestCustomWordFilterEvent = 145;
+    public static final int AddCustomWordFilterWordEvent = 68;
+    public static final int RemoveCustomWordFilterWordEvent = 1996;
     public static final int RequestRoomUserTagsEvent = 17;
     public static final int CatalogSearchedItemEvent = 2594;
     public static final int JukeBoxRequestTrackCodeEvent = 3189;
@@ -562,6 +574,7 @@ public class Incoming {
 
     // Custom features — IDs 9300+ reserved
     public static final int RequestRareValuesEvent = 9300;
+    public static final int GetHotLooksEvent = 9360; // AIR 13 avatar editor hot looks tab
     public static final int WheelOpenEvent = 9301;
     public static final int WheelSpinEvent = 9302;
     public static final int WheelBuySpinEvent = 9303;
@@ -589,6 +602,10 @@ public class Incoming {
     public static final int HotelViewLandingResetVotesEvent = 9414;
     public static final int SaveGamePrivacySettingsEvent = 9415;
     public static final int RequestOfflineMessagesEvent = 9416;
+    // Official AIR 13 ids: SetChatPreferences, SetOnlineIndicatorPreference, wired menu preferences
+    public static final int SaveChatPreferencesEvent = 2506;
+    public static final int SaveOnlineIndicatorPreferenceEvent = 818;
+    public static final int SaveWiredMenuSettingsEvent = 1226;
     // 6010 (used by the original PR) is reserved by UNKNOWN_SNOWSTORM_6010, so habbicon uses 9417
     public static final int RoomUserHabbiconEvent = 9417;
     public static final int DisconnectEvent = 2445;
@@ -603,4 +620,19 @@ public class Incoming {
     public static final int RenameFriendCategoryEvent = 4082;
     public static final int RemoveFriendCategoryEvent = 4083;
     public static final int MoveFriendToCategoryEvent = 4084;
+    // Quest engine (AIR 13 quests, daily tasks and reward track; the client-side ids of the renderer)
+    public static final int GetQuestsEvent = 3333;
+    public static final int GetSeasonalQuestsOnlyEvent = 1190;
+    public static final int AcceptQuestEvent = 3604;
+    public static final int ActivateQuestEvent = 793;
+    public static final int RejectQuestEvent = 2397;
+    public static final int CancelDailyQuestEvent = 3133;
+    public static final int GetDailyQuestEvent = 2486;
+    public static final int OpenQuestTrackerEvent = 2750;
+    public static final int StartCampaignEvent = 1697;
+    public static final int GetDailyTasksEvent = 4100;
+    public static final int ClaimDailyTaskEvent = 4101;
+    public static final int ClaimRewardTrackPrizeEvent = 1111;
+    public static final int PurchaseRewardTrackPremiumEvent = 3022;
+    public static final int GetRewardTracksEvent = 9450;
 }

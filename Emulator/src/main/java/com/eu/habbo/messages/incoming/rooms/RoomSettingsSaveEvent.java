@@ -6,12 +6,16 @@ import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomCategory;
 import com.eu.habbo.habbohotel.rooms.RoomState;
 import com.eu.habbo.messages.incoming.MessageHandler;
-import com.eu.habbo.messages.outgoing.rooms.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.eu.habbo.messages.outgoing.rooms.RoomChatSettingsComposer;
+import com.eu.habbo.messages.outgoing.rooms.RoomEditSettingsErrorComposer;
+import com.eu.habbo.messages.outgoing.rooms.RoomSettingsSavedComposer;
+import com.eu.habbo.messages.outgoing.rooms.RoomSettingsUpdatedComposer;
+import com.eu.habbo.messages.outgoing.rooms.RoomThicknessComposer;
+import com.eu.habbo.messages.outgoing.unknown.RoomCategoryUpdateMessageComposer;
 import java.util.HashSet;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RoomSettingsSaveEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomSettingsSaveEvent.class);
@@ -36,12 +40,17 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 String name = this.packet.readString();
 
                 if (name.trim().isEmpty() || name.length() > 60) {
-                    this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.ROOM_NAME_MISSING, ""));
+                    this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                            room.getId(), RoomEditSettingsErrorComposer.ROOM_NAME_MISSING, ""));
                     return;
                 }
 
-                if (!Emulator.getGameEnvironment().getWordFilter().filter(name, this.client.getHabbo()).equals(name)) {
-                    this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.ROOM_NAME_BADWORDS, ""));
+                if (!Emulator.getGameEnvironment()
+                        .getWordFilter()
+                        .filter(name, this.client.getHabbo())
+                        .equals(name)) {
+                    this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                            room.getId(), RoomEditSettingsErrorComposer.ROOM_NAME_BADWORDS, ""));
                     return;
                 }
 
@@ -51,8 +60,12 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                     return;
                 }
 
-                if (!Emulator.getGameEnvironment().getWordFilter().filter(description, this.client.getHabbo()).equals(description)) {
-                    this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.ROOM_DESCRIPTION_BADWORDS, ""));
+                if (!Emulator.getGameEnvironment()
+                        .getWordFilter()
+                        .filter(description, this.client.getHabbo())
+                        .equals(description)) {
+                    this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                            room.getId(), RoomEditSettingsErrorComposer.ROOM_DESCRIPTION_BADWORDS, ""));
                     return;
                 }
 
@@ -66,8 +79,11 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 if (password == null || password.length() > MAX_ROOM_PASSWORD_LENGTH) {
                     return;
                 }
-                if (state == RoomState.PASSWORD && password.isEmpty() && (room.getPassword() == null || room.getPassword().isEmpty())) {
-                    this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.PASSWORD_REQUIRED, ""));
+                if (state == RoomState.PASSWORD
+                        && password.isEmpty()
+                        && (room.getPassword() == null || room.getPassword().isEmpty())) {
+                    this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                            room.getId(), RoomEditSettingsErrorComposer.PASSWORD_REQUIRED, ""));
                     return;
                 }
 
@@ -87,25 +103,32 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                     String tag = this.packet.readString();
 
                     if (tag.length() > 15) {
-                        this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.TAGS_TOO_LONG, ""));
+                        this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                                room.getId(), RoomEditSettingsErrorComposer.TAGS_TOO_LONG, ""));
                         return;
                     }
-                    if(!uniqueTags.contains(tag)) {
+                    if (!uniqueTags.contains(tag)) {
                         uniqueTags.add(tag);
                         tags.append(tag).append(";");
                     }
                 }
 
-                if (!Emulator.getGameEnvironment().getWordFilter().filter(tags.toString(), this.client.getHabbo()).contentEquals(tags)) {
-                    this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.ROOM_TAGS_BADWWORDS, ""));
+                if (!Emulator.getGameEnvironment()
+                        .getWordFilter()
+                        .filter(tags.toString(), this.client.getHabbo())
+                        .contentEquals(tags)) {
+                    this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                            room.getId(), RoomEditSettingsErrorComposer.ROOM_TAGS_BADWWORDS, ""));
                     return;
                 }
 
-
                 if (tags.length() > 0) {
-                    for (String s : Emulator.getConfig().getValue("hotel.room.tags.staff").split(";")) {
+                    for (String s : Emulator.getConfig()
+                            .getValue("hotel.room.tags.staff")
+                            .split(";")) {
                         if (tags.toString().contains(s)) {
-                            this.client.sendResponse(new RoomEditSettingsErrorComposer(room.getId(), RoomEditSettingsErrorComposer.RESTRICTED_TAGS, "1"));
+                            this.client.sendResponse(new RoomEditSettingsErrorComposer(
+                                    room.getId(), RoomEditSettingsErrorComposer.RESTRICTED_TAGS, "1"));
                             return;
                         }
                     }
@@ -117,24 +140,38 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 if (!password.isEmpty()) room.setPassword(password);
                 room.setUsersMax(usersMax);
 
-
+                // Official flow: a room saved without a usable category keeps
+                // its old one and the client is told to pick a valid category
+                // (RoomCategoryUpdateMessage 3896 -> enforce category dialog).
+                boolean enforceCategory = false;
                 if (Emulator.getGameEnvironment().getRoomManager().hasCategory(categoryId, this.client.getHabbo()))
                     room.setCategory(categoryId);
                 else {
-                    RoomCategory category = Emulator.getGameEnvironment().getRoomManager().getCategory(categoryId);
-
-                    String message;
+                    RoomCategory category =
+                            Emulator.getGameEnvironment().getRoomManager().getCategory(categoryId);
+                    enforceCategory = true;
 
                     if (category == null) {
-                        message = Emulator.getTexts().getValue("scripter.warning.roomsettings.category.nonexisting").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername());
+                        LOGGER.info(
+                                "Room {} saved without a valid category ({}) by {}; enforcing a category choice",
+                                room.getId(),
+                                categoryId,
+                                this.client.getHabbo().getHabboInfo().getUsername());
                     } else {
-                        message = Emulator.getTexts().getValue("scripter.warning.roomsettings.category.permission").replace("%username%", this.client.getHabbo().getHabboInfo().getUsername()).replace("%category%", Emulator.getGameEnvironment().getRoomManager().getCategory(categoryId) + "");
+                        String message = Emulator.getTexts()
+                                .getValue("scripter.warning.roomsettings.category.permission")
+                                .replace(
+                                        "%username%",
+                                        this.client.getHabbo().getHabboInfo().getUsername())
+                                .replace(
+                                        "%category%",
+                                        Emulator.getGameEnvironment()
+                                                        .getRoomManager()
+                                                        .getCategory(categoryId) + "");
+                        ScripterManager.scripterDetected(this.client, message);
+                        LOGGER.info(message);
                     }
-
-                    ScripterManager.scripterDetected(this.client, message);
-                    LOGGER.info(message);
                 }
-
 
                 int tradeMode = this.packet.readInt();
                 boolean allowPets = this.packet.readBoolean();
@@ -197,7 +234,9 @@ public class RoomSettingsSaveEvent extends MessageHandler {
 
                     if ((idleSleepEnabled && !isInRange(idleSleepTimeoutSeconds, 30, 3600))
                             || (idleAutokickEnabled && !isInRange(idleAutokickTimeoutSeconds, 60, 36000))
-                            || (idleSleepEnabled && idleAutokickEnabled && idleAutokickTimeoutSeconds < idleSleepTimeoutSeconds + 30)) {
+                            || (idleSleepEnabled
+                                    && idleAutokickEnabled
+                                    && idleAutokickTimeoutSeconds < idleSleepTimeoutSeconds + 30)) {
                         return;
                     }
 
@@ -215,7 +254,11 @@ public class RoomSettingsSaveEvent extends MessageHandler {
                 room.sendComposer(new RoomChatSettingsComposer(room).compose());
                 room.sendComposer(new RoomSettingsUpdatedComposer(room).compose());
                 this.client.sendResponse(new RoomSettingsSavedComposer(room));
-                //TODO Find packet for update room name.
+                if (enforceCategory) {
+                    this.client.sendResponse(new RoomCategoryUpdateMessageComposer(
+                            RoomCategoryUpdateMessageComposer.SELECTION_ROOM_SETTINGS));
+                }
+                // TODO Find packet for update room name.
             }
         }
     }
@@ -223,5 +266,4 @@ public class RoomSettingsSaveEvent extends MessageHandler {
     private static boolean isInRange(int value, int min, int max) {
         return value >= min && value <= max;
     }
-
 }

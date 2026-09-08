@@ -95,6 +95,12 @@ class SoundboardPacketContractTest {
         assertFalse(packet.readBoolean());
         assertTrue(packet.readBoolean());
         assertEquals(40, packet.readInt());
+        // The AIR 13 tail: wired whisper switch, chat mode, bubble width, scroll speed, online indicator.
+        assertFalse(packet.readBoolean());
+        assertEquals(0, packet.readInt());
+        assertEquals(0, packet.readInt());
+        assertEquals(0, packet.readInt());
+        assertEquals(0, packet.readInt());
         assertFalse(packet.isReadable());
     }
 

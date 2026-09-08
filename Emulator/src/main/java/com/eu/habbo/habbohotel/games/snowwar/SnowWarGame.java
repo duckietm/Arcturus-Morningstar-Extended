@@ -308,10 +308,16 @@ public class SnowWarGame {
 
         this.state = SnowWarGameState.ENDING;
 
-        SnowWarManager.getInstance().recordScores(this.getActivePlayers());
+        List<SnowWarGamePlayer> finalPlayers = this.getActivePlayers();
+        SnowWarManager.getInstance().recordScores(finalPlayers);
+        List<Integer> finalPlayerIds = new ArrayList<>();
+        for (SnowWarGamePlayer player : finalPlayers) {
+            finalPlayerIds.add(player.getUserId());
+        }
+        Map<Integer, Integer> skillLevels = SnowWarManager.getInstance().getSkillLevels(finalPlayerIds);
 
         this.broadcast(new SnowStormOnStageEndingComposer());
-        this.broadcast(new SnowStormOnGameEndingComposer(this.restartSeconds, this));
+        this.broadcast(new SnowStormOnGameEndingComposer(this.restartSeconds, this, skillLevels));
         this.broadcast(new SnowStormGameEndedComposer());
 
         this.state = SnowWarGameState.ENDED;
