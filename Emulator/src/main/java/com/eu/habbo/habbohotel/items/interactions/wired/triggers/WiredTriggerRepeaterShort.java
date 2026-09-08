@@ -35,16 +35,20 @@ public class WiredTriggerRepeaterShort extends WiredTriggerRepeater {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         String wiredData = set.getString("wired_data");
 
-        if (wiredData != null && wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            this.repeatTime = (data != null) ? data.repeatTime : DEFAULT_DELAY;
-        } else if (wiredData != null && wiredData.length() >= 1) {
-            this.repeatTime = Integer.parseInt(wiredData);
-        } else {
-            this.repeatTime = DEFAULT_DELAY;
+        Integer storedRepeatTime = null;
+        try {
+            if (wiredData != null && wiredData.startsWith("{")) {
+                JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+                storedRepeatTime = data != null ? data.repeatTime : null;
+            } else if (wiredData != null && wiredData.length() >= 1) {
+                storedRepeatTime = Integer.parseInt(wiredData);
+            }
+        } catch (RuntimeException ignored) {
+            // A row that cannot be read is no configuration; the default delay stands.
+            storedRepeatTime = null;
         }
 
-        this.repeatTime = clampRepeatTime(this.repeatTime);
+        this.repeatTime = clampRepeatTime(storedRepeatTime != null ? storedRepeatTime : DEFAULT_DELAY);
     }
 
     @Override

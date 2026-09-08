@@ -97,11 +97,14 @@ public class WiredEffectGiveReward extends InteractionWiredEffect {
             this.uniqueRewards = data.unique_rewards;
             this.limitationInterval = data.limit_interval;
             this.rewardItems.clear();
-            this.rewardItems.addAll(data.rewards);
+            if (data.rewards != null) {
+                this.rewardItems.addAll(data.rewards);
+            }
             this.userSource = data.userSource;
         } else {
             String[] data = wiredData.split(":");
-            if (data.length > 0) {
+            // The legacy row reads six fixed fields before the optional reward list.
+            if (data.length >= 6) {
                 this.limit = Integer.parseInt(data[0]);
                 this.given.set(Integer.parseInt(data[1]));
                 this.rewardTime = Integer.parseInt(data[2]);

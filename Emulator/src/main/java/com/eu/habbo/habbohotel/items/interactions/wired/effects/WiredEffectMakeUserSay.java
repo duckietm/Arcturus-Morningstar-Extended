@@ -20,6 +20,7 @@ import com.eu.habbo.habbohotel.wired.core.WiredSourceUtil;
 import com.eu.habbo.habbohotel.wired.core.WiredTextPlaceholderUtil;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.incoming.wired.WiredSaveException;
+import com.eu.habbo.messages.outgoing.rooms.users.RoomUserTalkComposer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
     protected int userSource = WiredSourceUtil.SOURCE_TRIGGER;
     protected int visibilitySelection = VISIBILITY_SOURCE_USERS;
     protected int bubbleStyle = RoomChatMessageBubbles.WIRED.getType();
+    protected int bubbleWidthOverride = RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE;
 
     public WiredEffectMakeUserSay(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -53,10 +55,11 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.message);
-        message.appendInt(3);
+        message.appendInt(4);
         message.appendInt(this.userSource);
         message.appendInt(this.visibilitySelection);
         message.appendInt(this.bubbleStyle);
+        message.appendInt(this.bubbleWidthOverride);
         message.appendInt(0);
         message.appendInt(type.code);
         message.appendInt(this.getDelay());
@@ -86,6 +89,8 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
                 ? VISIBILITY_ALL_ROOM_USERS
                 : VISIBILITY_SOURCE_USERS;
         this.bubbleStyle = (params.length > 2) ? params[2] : RoomChatMessageBubbles.WIRED.getType();
+        this.bubbleWidthOverride = RoomChatMessage.normalizeBubbleWidthOverride(
+                (params.length > 3) ? params[3] : RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
 
         if (gameClient.getHabbo() == null || !gameClient.getHabbo().hasPermission(Permission.ACC_SUPERWIRED)) {
             message = Emulator.getGameEnvironment().getWordFilter().filter(message, null);
@@ -171,6 +176,7 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
             }
 
             List<RoomUnit> sourceUsers = resolveUsers(ctx);
+            boolean toEveryone = this.visibilitySelection == VISIBILITY_ALL_ROOM_USERS;
 
             for (RoomUnit unit : sourceUsers) {
                 Habbo h = room.getHabbo(unit);
@@ -178,12 +184,13 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
                     continue;
                 }
 
-                String msg = buildMessage(ctx, h);
-                room.talk(
-                        h,
-                        new RoomChatMessage(msg, unit, RoomChatMessageBubbles.getBubble(this.bubbleStyle)),
-                        RoomChatType.TALK,
-                        true);
+                RoomChatMessage chatMessage = this.chatMessage(buildMessage(ctx, h), unit);
+
+                if (toEveryone) {
+                    room.talk(h, chatMessage, RoomChatType.TALK, true);
+                } else {
+                    sayToSpeakerOnly(h, chatMessage);
+                }
 
                 if (h.getRoomUnit().isIdle()) {
                     h.getRoomUnit().getRoom().unIdle(h);
@@ -192,17 +199,48 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
         }
     }
 
+    /**
+     * The dialog's "message visibility" choice, which this box stored and never read. Everyone goes
+     * through the room's own chat path, so distance, ignore lists and tents keep applying; the narrow
+     * choice puts the bubble on the speaker's own screen only, and needs none of that filtering because
+     * the speaker is the single recipient.
+     */
+    private void sayToSpeakerOnly(Habbo speaker, RoomChatMessage chatMessage) {
+        GameClient client = speaker.getClient();
+        if (client == null) {
+            return;
+        }
+
+        client.sendResponse(new RoomUserTalkComposer(chatMessage));
+    }
+
     @Deprecated
     @Override
     public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
+    public int getBubbleWidthOverride() {
+        return this.bubbleWidthOverride;
+    }
+
+    private RoomChatMessage chatMessage(String text, RoomUnit unit) {
+        RoomChatMessage chatMessage =
+                new RoomChatMessage(text, unit, RoomChatMessageBubbles.getBubble(this.bubbleStyle));
+        chatMessage.setBubbleWidthOverride(this.bubbleWidthOverride);
+        return chatMessage;
+    }
+
     @Override
     public String getWiredData() {
         return WiredManager.getGson()
                 .toJson(new JsonData(
-                        this.message, this.getDelay(), this.userSource, this.visibilitySelection, this.bubbleStyle));
+                        this.message,
+                        this.getDelay(),
+                        this.userSource,
+                        this.visibilitySelection,
+                        this.bubbleStyle,
+                        this.bubbleWidthOverride));
     }
 
     @Override
@@ -222,6 +260,10 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
                             : VISIBILITY_SOURCE_USERS;
             this.bubbleStyle =
                     (jsonData.bubbleStyle != null) ? jsonData.bubbleStyle : RoomChatMessageBubbles.WIRED.getType();
+            this.bubbleWidthOverride = RoomChatMessage.normalizeBubbleWidthOverride(
+                    (jsonData.bubbleWidthOverride != null)
+                            ? jsonData.bubbleWidthOverride
+                            : RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
         } else {
             this.message = "";
 
@@ -234,6 +276,7 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
             this.visibilitySelection = VISIBILITY_SOURCE_USERS;
             this.bubbleStyle = RoomChatMessageBubbles.WIRED.getType();
+            this.bubbleWidthOverride = RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE;
             this.needsUpdate(true);
         }
     }
@@ -244,6 +287,7 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
         this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         this.visibilitySelection = VISIBILITY_SOURCE_USERS;
         this.bubbleStyle = RoomChatMessageBubbles.WIRED.getType();
+        this.bubbleWidthOverride = RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE;
         this.setDelay(0);
     }
 
@@ -264,13 +308,21 @@ public class WiredEffectMakeUserSay extends InteractionWiredEffect {
         Integer userSource;
         Integer visibilitySelection;
         Integer bubbleStyle;
+        Integer bubbleWidthOverride;
 
-        public JsonData(String message, int delay, int userSource, int visibilitySelection, int bubbleStyle) {
+        public JsonData(
+                String message,
+                int delay,
+                int userSource,
+                int visibilitySelection,
+                int bubbleStyle,
+                int bubbleWidthOverride) {
             this.message = message;
             this.delay = delay;
             this.userSource = userSource;
             this.visibilitySelection = visibilitySelection;
             this.bubbleStyle = bubbleStyle;
+            this.bubbleWidthOverride = bubbleWidthOverride;
         }
     }
 }

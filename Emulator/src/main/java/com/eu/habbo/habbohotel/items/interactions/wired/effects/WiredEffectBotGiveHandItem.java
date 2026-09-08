@@ -109,35 +109,42 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         Room room = ctx.room();
         List<RoomUnit> targets = WiredSourceUtil.resolveUsers(ctx, this.userSource);
         if (targets.isEmpty()) return;
-        RoomUnit roomUnit = targets.get(0);
 
-        Habbo habbo = room.getHabbo(roomUnit);
-        Bot bot = this.resolveBot(ctx, room);
+        List<Bot> bots = this.resolveBots(ctx, room);
+        if (bots.isEmpty()) return;
 
-        if (habbo != null && bot != null) {
+        // Every resolved user is served, by every bot the source names; the box used to serve the
+        // first user only and gave up entirely when two bots shared the name.
+        for (RoomUnit roomUnit : targets) {
+            Habbo habbo = room.getHabbo(roomUnit);
+            if (habbo == null) continue;
 
-            List<Runnable> tasks = new ArrayList<>();
-            tasks.add(new RoomUnitGiveHanditem(roomUnit, room, this.itemId));
-            tasks.add(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, 0));
-            tasks.add(() -> {
-                if (roomUnit.getRoom() != null
-                        && roomUnit.getRoom().getId() == room.getId()
-                        && roomUnit.getCurrentLocation()
-                                        .distance(bot.getRoomUnit().getCurrentLocation())
-                                < 2) {
-                    WiredManager.triggerBotReachedHabbo(room, bot.getRoomUnit(), roomUnit);
-                }
-            });
-
-            RoomTile tile = bot.getRoomUnit().getClosestAdjacentTile(roomUnit.getX(), roomUnit.getY(), true);
-
-            if (tile != null) {
-                bot.getRoomUnit().setGoalLocation(tile);
+            for (Bot bot : bots) {
+                this.serve(room, bot, roomUnit);
             }
-
-            Emulator.getThreading().run(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, this.itemId));
-            Emulator.getThreading().run(new RoomUnitWalkToLocation(bot.getRoomUnit(), tile, room, tasks, tasks));
         }
+    }
+
+    private void serve(Room room, Bot bot, RoomUnit roomUnit) {
+        List<Runnable> tasks = new ArrayList<>();
+        tasks.add(new RoomUnitGiveHanditem(roomUnit, room, this.itemId));
+        tasks.add(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, 0));
+        tasks.add(() -> {
+            if (roomUnit.getRoom() != null
+                    && roomUnit.getRoom().getId() == room.getId()
+                    && roomUnit.getCurrentLocation().distance(bot.getRoomUnit().getCurrentLocation()) < 2) {
+                WiredManager.triggerBotReachedHabbo(room, bot.getRoomUnit(), roomUnit);
+            }
+        });
+
+        RoomTile tile = bot.getRoomUnit().getClosestAdjacentTile(roomUnit.getX(), roomUnit.getY(), true);
+
+        if (tile != null) {
+            bot.getRoomUnit().setGoalLocation(tile);
+        }
+
+        Emulator.getThreading().run(new RoomUnitGiveHanditem(bot.getRoomUnit(), room, this.itemId));
+        Emulator.getThreading().run(new RoomUnitWalkToLocation(bot.getRoomUnit(), tile, room, tasks, tasks));
     }
 
     @Deprecated
@@ -233,20 +240,22 @@ public class WiredEffectBotGiveHandItem extends InteractionWiredEffect {
         }
     }
 
-    private Bot resolveBot(WiredContext ctx, Room room) {
+    private List<Bot> resolveBots(WiredContext ctx, Room room) {
         if (this.botSource == BOT_SOURCE_NAME) {
+            if (this.botName == null || this.botName.isEmpty()) return new ArrayList<>();
             List<Bot> bots = room.getBots(this.botName);
-            return (bots.size() == 1) ? bots.get(0) : null;
+            return (bots != null) ? new ArrayList<>(bots) : new ArrayList<>();
         }
 
+        List<Bot> resolved = new ArrayList<>();
         for (RoomUnit roomUnit : WiredSourceUtil.resolveUsers(ctx, this.botSource)) {
             Bot bot = room.getBot(roomUnit);
 
-            if (bot != null) {
-                return bot;
+            if (bot != null && !resolved.contains(bot)) {
+                resolved.add(bot);
             }
         }
 
-        return null;
+        return resolved;
     }
 }

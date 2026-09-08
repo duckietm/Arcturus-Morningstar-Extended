@@ -66,23 +66,39 @@ public class WiredTriggerHabboSaysKeyword extends InteractionWiredTrigger {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        this.onPickUp();
+
         String wiredData = set.getString("wired_data");
+        if (wiredData == null || wiredData.isEmpty()) {
+            return;
+        }
 
         if (wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            JsonData data;
+            try {
+                data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+            } catch (RuntimeException ignored) {
+                // A row that cannot be read is no configuration; the defaults stand.
+                return;
+            }
+            if (data == null) {
+                return;
+            }
+
             this.ownerOnly = data.ownerOnly;
             this.hideMessage = data.hideMessage;
-            this.key = data.key;
+            // A row saved without a keyword must not leave it null: matches() reads its length.
+            this.key = (data.key == null) ? "" : data.key;
             this.matchMode = this.normalizeMatchMode(data.matchMode);
-        } else {
-            String[] data = wiredData.split("\t");
+            return;
+        }
 
-            if (data.length == 2) {
-                this.ownerOnly = data[0].equalsIgnoreCase("1");
-                this.key = data[1];
-                this.hideMessage = false;
-                this.matchMode = MATCH_CONTAINS;
-            }
+        String[] data = wiredData.split("\t");
+        if (data.length == 2) {
+            this.ownerOnly = data[0].equalsIgnoreCase("1");
+            this.key = data[1];
+            this.hideMessage = false;
+            this.matchMode = MATCH_CONTAINS;
         }
     }
 

@@ -180,6 +180,20 @@ public final class WiredEvents {
                 .build();
     }
 
+    /**
+     * Create the companion of {@link #userSays} for the say-your-username trigger, which has its own
+     * legacy type and therefore its own event.
+     */
+    public static WiredEvent userSaysUsername(Room room, RoomUnit user, String message, int chatType, int chatStyle) {
+        return WiredEvent.builder(WiredEvent.Type.USER_SAYS_USERNAME, room)
+                .actor(user)
+                .text(message)
+                .chatType(chatType)
+                .chatStyle(chatStyle)
+                .tile(user.getCurrentLocation())
+                .build();
+    }
+
     // ========== Furniture Events ==========
 
     /**
@@ -287,6 +301,18 @@ public final class WiredEvents {
      */
     public static WiredEvent timerRepeatLong(Room room, HabboItem timerItem) {
         return WiredEvent.builder(WiredEvent.Type.TIMER_REPEAT_LONG, room)
+                .sourceItem(timerItem)
+                .build();
+    }
+
+    /**
+     * Create an event for the long one-shot timer (AT_GIVEN_TIME_LONG).
+     * @param room the room
+     * @param timerItem the timer furniture
+     * @return the event
+     */
+    public static WiredEvent timerTickLong(Room room, HabboItem timerItem) {
+        return WiredEvent.builder(WiredEvent.Type.TIMER_TICK_LONG, room)
                 .sourceItem(timerItem)
                 .build();
     }

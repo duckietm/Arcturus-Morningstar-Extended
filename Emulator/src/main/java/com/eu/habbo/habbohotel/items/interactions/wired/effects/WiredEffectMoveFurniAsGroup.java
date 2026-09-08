@@ -1,5 +1,7 @@
 package com.eu.habbo.habbohotel.items.interactions.wired.effects;
 
+import com.eu.habbo.WiredPlatform;
+import com.eu.habbo.core.ConfigurationManager;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
@@ -64,6 +66,13 @@ public class WiredEffectMoveFurniAsGroup extends InteractionWiredEffect {
         this.furniSource = settings.getIntParams()[1];
 
         int count = settings.getFurniIds().length;
+
+        ConfigurationManager config = WiredPlatform.configuration();
+        int cap = (config == null) ? Integer.MAX_VALUE : config.getInt("hotel.wired.furni.selection.count");
+        if (count > cap) {
+            throw new WiredSaveException("Too many furni selected");
+        }
+
         if (count > 0 && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
             this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }

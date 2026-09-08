@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
@@ -21,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class WiredEffectAllUsersLeaveTeam extends InteractionWiredEffect {
-    public static final WiredEffectType type = WiredEffectType.LEAVE_TEAM;
+    public static final WiredEffectType type = WiredEffectType.ALL_USERS_LEAVE_TEAM;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
 
     public WiredEffectAllUsersLeaveTeam(ResultSet set, Item baseItem) throws SQLException {
@@ -35,18 +36,32 @@ public class WiredEffectAllUsersLeaveTeam extends InteractionWiredEffect {
 
     @Override
     public void execute(WiredContext ctx) {
-        if (ctx == null || ctx.room() == null || ctx.room().getCurrentHabbos() == null) {
+        if (ctx == null || ctx.room() == null) {
             return;
         }
 
-        Collection<Habbo> currentHabbos = ctx.room().getCurrentHabbos().values();
-        if (currentHabbos == null || currentHabbos.isEmpty()) {
-            return;
-        }
+        Room room = ctx.room();
+        List<Habbo> snapshot = new ArrayList<>();
 
-        Habbo[] snapshot = currentHabbos.toArray(Habbo[]::new);
-        if (snapshot == null) {
-            return;
+        // The box is "all users leave team": on its default source it empties every team in the
+        // room, whoever fired it. Any other source narrows it to the users that source resolves,
+        // which the saved userSource used to promise and execute ignored.
+        if (this.userSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            Collection<Habbo> currentHabbos =
+                    room.getCurrentHabbos() != null ? room.getCurrentHabbos().values() : null;
+            if (currentHabbos == null || currentHabbos.isEmpty()) {
+                return;
+            }
+            Habbo[] copy = currentHabbos.toArray(Habbo[]::new);
+            if (copy == null) {
+                return;
+            }
+            for (Habbo h : copy) snapshot.add(h);
+        } else {
+            for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
+                Habbo habbo = room.getHabbo(unit);
+                if (habbo != null) snapshot.add(habbo);
+            }
         }
 
         for (Habbo h : snapshot) {
@@ -61,7 +76,7 @@ public class WiredEffectAllUsersLeaveTeam extends InteractionWiredEffect {
 
     @Deprecated
     @Override
-    public boolean execute(com.eu.habbo.habbohotel.rooms.RoomUnit roomUnit, Room room, Object[] stuff) {
+    public boolean execute(RoomUnit roomUnit, Room room, Object[] stuff) {
         return false;
     }
 
@@ -74,12 +89,13 @@ public class WiredEffectAllUsersLeaveTeam extends InteractionWiredEffect {
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
         String wiredData = set.getString("wired_data");
 
-        if (wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
-            this.setDelay(data.delay);
+        JsonData data = WiredUtilityPayloadGuard.fromJson(wiredData, JsonData.class);
+        if (data != null) {
+            this.setDelay(WiredUtilityPayloadGuard.delay(data.delay));
             this.userSource = data.userSource;
         } else {
-            this.setDelay(Integer.parseInt(wiredData));
+            // A legacy row is the bare delay; anything else keeps the furni loading with no delay.
+            this.setDelay(WiredUtilityPayloadGuard.parseDelay(wiredData));
             this.userSource = WiredSourceUtil.SOURCE_TRIGGER;
         }
     }

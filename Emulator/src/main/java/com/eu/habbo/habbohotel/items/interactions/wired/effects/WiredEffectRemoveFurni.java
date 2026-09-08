@@ -81,6 +81,10 @@ public class WiredEffectRemoveFurni extends InteractionWiredEffect {
             if (removed >= MAX_REMOVE_PER_FIRE) break;
 
             if (this.mode == MODE_DELETE) {
+                // Deleting is for good. A guest's furni standing in the room is not the owner's to
+                // destroy, so it stays; the return mode below hands it back to whoever owns it.
+                if (target.getUserId() != room.getOwnerId()) continue;
+
                 room.pickUpItem(target, null);
                 Emulator.getGameEnvironment().getItemManager().deleteItem(target);
             } else {

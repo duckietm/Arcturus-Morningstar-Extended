@@ -250,6 +250,26 @@ public abstract class InteractionWiredContract extends InteractionWiredExtra {
     }
 
     /**
+     * The poster ids in the shape the dialog sends them: {@code index=poster} pairs against the
+     * flattened order, give rules first and then the get rule. The reopened dialog reads these
+     * back, so a wall poster keeps its id across a re-save instead of losing it silently.
+     */
+    String posterIdParam() {
+        List<Term> flat = new ArrayList<>();
+        for (List<Term> rule : this.giveRules) flat.addAll(rule);
+        flat.addAll(this.getRule);
+
+        StringBuilder out = new StringBuilder();
+        for (int index = 0; index < flat.size(); index++) {
+            String posterId = flat.get(index).posterId();
+            if (posterId.isEmpty()) continue;
+            if (out.length() > 0) out.append(',');
+            out.append(index).append('=').append(posterId);
+        }
+        return out.toString();
+    }
+
+    /**
      * Wall posters cannot be identified by base item id alone, so their id rides in the string param
      * as {@code index=poster} pairs against the flattened order.
      */
@@ -329,7 +349,7 @@ public abstract class InteractionWiredContract extends InteractionWiredExtra {
 
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
-        message.appendString("");
+        message.appendString(posterIdParam());
 
         // The same array the dialog sends back on save, so the two directions cannot drift into
         // disagreeing about what a contract says -- which is exactly what had gone wrong.

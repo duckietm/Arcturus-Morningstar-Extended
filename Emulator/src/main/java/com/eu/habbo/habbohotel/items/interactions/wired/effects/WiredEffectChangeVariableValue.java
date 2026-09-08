@@ -56,7 +56,24 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
             OP_XOR = 102,
             OP_NOT = 103,
             OP_LSHIFT = 104,
-            OP_RSHIFT = 105;
+            OP_RSHIFT = 105,
+            OP_BIT_COUNT = 110,
+            // The bit family the official client lists under "advanced". A "low" bit is a cleared bit
+            // and a "high" bit a set bit; a scan answers the bit position or -1 when nothing matches;
+            // an inclusive scan starts at the operand position, an exclusive one a position further on.
+            OP_NEXT_LOW_BIT = 111,
+            OP_NEXT_HIGH_BIT = 112,
+            OP_PREV_LOW_BIT = 113,
+            OP_PREV_HIGH_BIT = 114,
+            OP_GET_BIT = 115,
+            OP_SET_BIT = 116,
+            OP_CLEAR_BIT = 117,
+            OP_TOGGLE_BIT = 118,
+            OP_NEXT_LOW_BIT_EXCLUSIVE = 119,
+            OP_NEXT_HIGH_BIT_EXCLUSIVE = 120,
+            OP_PREV_LOW_BIT_EXCLUSIVE = 121,
+            OP_PREV_HIGH_BIT_EXCLUSIVE = 122;
+    private static final int LOWEST_BIT = 0, HIGHEST_BIT = Integer.SIZE - 1;
 
     private static final int SOURCE_SECONDARY_SELECTED = 101;
     private static final String DELIM = "\t", FURNI_DELIM = ";";
@@ -128,7 +145,7 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
                     .updateVariableValue(
                             habbo.getHabboInfo().getId(),
                             this.destinationVariableItemId,
-                            this.applyOperation(currentValue, referenceValue));
+                            applyOperation(this.operation, currentValue, referenceValue));
         }
     }
 
@@ -147,7 +164,8 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
             Integer referenceValue = this.referenceFor(references, roomUnit.getId(), TARGET_USER, index++);
             if (!this.isUnaryOperation() && referenceValue == null) continue;
 
-            this.writeUserInternalValue(room, roomUnit, key, this.applyOperation(currentValue, referenceValue));
+            this.writeUserInternalValue(
+                    room, roomUnit, key, applyOperation(this.operation, currentValue, referenceValue));
         }
     }
 
@@ -179,7 +197,7 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
                     .updateVariableValue(
                             item.getId(),
                             this.destinationVariableItemId,
-                            this.applyOperation(currentValue, referenceValue));
+                            applyOperation(this.operation, currentValue, referenceValue));
         }
     }
 
@@ -201,7 +219,7 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
             Integer referenceValue = this.referenceFor(references, item.getId(), TARGET_FURNI, index++);
             if (!this.isUnaryOperation() && referenceValue == null) continue;
 
-            this.writeFurniInternalValue(room, item, key, this.applyOperation(currentValue, referenceValue));
+            this.writeFurniInternalValue(room, item, key, applyOperation(this.operation, currentValue, referenceValue));
         }
     }
 
@@ -218,7 +236,8 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
 
         int currentValue = room.getRoomVariableManager().getCurrentValue(this.destinationVariableItemId);
         room.getRoomVariableManager()
-                .updateVariableValue(this.destinationVariableItemId, this.applyOperation(currentValue, referenceValue));
+                .updateVariableValue(
+                        this.destinationVariableItemId, applyOperation(this.operation, currentValue, referenceValue));
     }
 
     private void executeContext(WiredContext ctx, Room room) {
@@ -234,7 +253,7 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
         if (!WiredContextVariableSupport.hasVariable(ctx, this.destinationVariableItemId)) return;
 
         Integer currentValue = WiredContextVariableSupport.getCurrentValue(ctx, this.destinationVariableItemId);
-        int nextValue = this.applyOperation(currentValue != null ? currentValue : 0, referenceValue);
+        int nextValue = applyOperation(this.operation, currentValue != null ? currentValue : 0, referenceValue);
         WiredContextVariableSupport.updateVariableValue(ctx, room, this.destinationVariableItemId, nextValue);
     }
 
@@ -581,8 +600,9 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
         return new ArrayList<>(snapshot.values.values()).get(0);
     }
 
-    private int applyOperation(int currentValue, Integer referenceValue) {
-        return switch (this.operation) {
+    static int applyOperation(int operation, int currentValue, Integer referenceValue) {
+        if (referenceValue == null && isBitOperation(operation)) return currentValue;
+        return switch (operation) {
             case OP_ASSIGN -> (referenceValue != null) ? referenceValue : currentValue;
             case OP_ADD -> clamp((long) currentValue + referenceValue);
             case OP_SUB -> clamp((long) currentValue - referenceValue);
@@ -608,12 +628,41 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
             case OP_NOT -> ~currentValue;
             case OP_LSHIFT -> currentValue << shift(referenceValue);
             case OP_RSHIFT -> currentValue >> shift(referenceValue);
+            case OP_BIT_COUNT -> Integer.bitCount(currentValue);
+            case OP_GET_BIT -> isBitPosition(referenceValue) ? ((currentValue >>> referenceValue) & 1) : 0;
+            case OP_SET_BIT -> isBitPosition(referenceValue) ? (currentValue | (1 << referenceValue)) : currentValue;
+            case OP_CLEAR_BIT -> isBitPosition(referenceValue) ? (currentValue & ~(1 << referenceValue)) : currentValue;
+            case OP_TOGGLE_BIT -> isBitPosition(referenceValue) ? (currentValue ^ (1 << referenceValue)) : currentValue;
+            case OP_NEXT_LOW_BIT -> scanBit(currentValue, referenceValue, 1, false);
+            case OP_NEXT_HIGH_BIT -> scanBit(currentValue, referenceValue, 1, true);
+            case OP_PREV_LOW_BIT -> scanBit(currentValue, referenceValue, -1, false);
+            case OP_PREV_HIGH_BIT -> scanBit(currentValue, referenceValue, -1, true);
+            case OP_NEXT_LOW_BIT_EXCLUSIVE -> scanBit(currentValue, referenceValue + 1, 1, false);
+            case OP_NEXT_HIGH_BIT_EXCLUSIVE -> scanBit(currentValue, referenceValue + 1, 1, true);
+            case OP_PREV_LOW_BIT_EXCLUSIVE -> scanBit(currentValue, referenceValue - 1, -1, false);
+            case OP_PREV_HIGH_BIT_EXCLUSIVE -> scanBit(currentValue, referenceValue - 1, -1, true);
             default -> currentValue;
         };
     }
 
+    private static boolean isBitOperation(int operation) {
+        return operation >= OP_NEXT_LOW_BIT && operation <= OP_PREV_HIGH_BIT_EXCLUSIVE;
+    }
+
+    private static boolean isBitPosition(int position) {
+        return position >= LOWEST_BIT && position <= HIGHEST_BIT;
+    }
+
+    /** Walks from {@code from} one bit at a time and answers the first position whose bit matches. */
+    private static int scanBit(int value, int from, int step, boolean wantSet) {
+        for (int position = from; isBitPosition(position); position += step) {
+            if ((((value >>> position) & 1) == 1) == wantSet) return position;
+        }
+        return -1;
+    }
+
     private boolean isUnaryOperation() {
-        return this.operation == OP_ABS || this.operation == OP_NOT;
+        return this.operation == OP_ABS || this.operation == OP_NOT || this.operation == OP_BIT_COUNT;
     }
 
     private void validateDestination(Room room, int targetType, String variableToken) throws WiredSaveException {
@@ -1001,7 +1050,7 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
         };
     }
 
-    private static int normalizeOperation(int value) {
+    static int normalizeOperation(int value) {
         return switch (value) {
             case OP_ADD,
                     OP_SUB,
@@ -1018,7 +1067,20 @@ public class WiredEffectChangeVariableValue extends InteractionWiredEffect {
                     OP_XOR,
                     OP_NOT,
                     OP_LSHIFT,
-                    OP_RSHIFT -> value;
+                    OP_RSHIFT,
+                    OP_BIT_COUNT,
+                    OP_NEXT_LOW_BIT,
+                    OP_NEXT_HIGH_BIT,
+                    OP_PREV_LOW_BIT,
+                    OP_PREV_HIGH_BIT,
+                    OP_GET_BIT,
+                    OP_SET_BIT,
+                    OP_CLEAR_BIT,
+                    OP_TOGGLE_BIT,
+                    OP_NEXT_LOW_BIT_EXCLUSIVE,
+                    OP_NEXT_HIGH_BIT_EXCLUSIVE,
+                    OP_PREV_LOW_BIT_EXCLUSIVE,
+                    OP_PREV_HIGH_BIT_EXCLUSIVE -> value;
             default -> OP_ASSIGN;
         };
     }

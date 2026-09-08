@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.items.interactions.wired.contract.InteractionWiredContract.Term;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -199,5 +200,55 @@ class InteractionWiredContractRulesTest {
         contract.readRules(fromDialog);
 
         assertArrayEquals(fromDialog, contract.buildRuleParams());
+    }
+
+    @Test
+    void wallPosterIdsGoBackToTheDialogInTheShapeItSentThem() throws Exception {
+        // A wall poster is not identified by its base item alone, so the dialog sends its id as
+        // "index=poster" pairs against the flattened term order. The reopened dialog reads the same
+        // pairs back; sending it an empty string meant every poster lost its id on the next save.
+        int[] fromDialog = {
+            InteractionWiredContract.RULES_FORMAT,
+            2,
+            2,
+            InteractionWiredContract.KIND_FURNI,
+            0,
+            1,
+            1389,
+            2,
+            InteractionWiredContract.KIND_CURRENCY,
+            -1,
+            0,
+            0,
+            5,
+            1,
+            InteractionWiredContract.KIND_FURNI,
+            0,
+            1,
+            4242,
+            1,
+            1,
+            InteractionWiredContract.KIND_CURRENCY,
+            0,
+            0,
+            0,
+            9,
+        };
+
+        TestContract contract = new TestContract();
+        contract.saveData(new WiredSettings(fromDialog, "0=abc,2=xyz", new int[0], 0), null);
+
+        assertEquals("abc", contract.getGiveRules().get(0).get(0).posterId());
+        assertEquals("xyz", contract.getGiveRules().get(1).get(0).posterId());
+        assertEquals("0=abc,2=xyz", contract.posterIdParam());
+    }
+
+    @Test
+    void aContractWithoutPostersSendsNoPairs() {
+        TestContract contract = new TestContract();
+        contract.giveRules.add(List.of(Term.currency(0, -1, 5), Term.furni(0, false, 1389, "", 1)));
+        contract.rebuildFlatTerms();
+
+        assertEquals("", contract.posterIdParam());
     }
 }

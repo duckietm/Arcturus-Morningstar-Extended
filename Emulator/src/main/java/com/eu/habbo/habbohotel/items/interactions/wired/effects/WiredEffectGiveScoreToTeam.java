@@ -71,7 +71,9 @@ public class WiredEffectGiveScoreToTeam extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.points = data.score;
             this.operation = this.normalizeOperation(data.operation);
-            this.teamColor = data.team;
+            // Gson hands back null for a team name it does not know, and serializeWiredData then
+            // dereferences it; an unknown team is the default one.
+            this.teamColor = (data.team != null) ? data.team : GameTeamColors.RED;
             this.setDelay(data.delay);
         } else {
             String[] data = set.getString("wired_data").split(";");

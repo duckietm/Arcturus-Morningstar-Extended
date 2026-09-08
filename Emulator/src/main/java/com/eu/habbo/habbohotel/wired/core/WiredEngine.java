@@ -706,7 +706,9 @@ public final class WiredEngine {
      * This mirrors trigger and condition eligibility without executing regular effects.
      */
     public boolean shouldSuppressUserSaysOutput(WiredEvent event) {
-        if (event == null || event.getType() != WiredEvent.Type.USER_SAYS) {
+        if (event == null
+                || (event.getType() != WiredEvent.Type.USER_SAYS
+                        && event.getType() != WiredEvent.Type.USER_SAYS_USERNAME)) {
             return false;
         }
 
@@ -1041,6 +1043,16 @@ public final class WiredEngine {
      */
     public WiredRoomDiagnostics.Snapshot getDiagnosticsSnapshot(int roomId) {
         return this.executionGuard.snapshot(roomId);
+    }
+
+    /**
+     * Note a furni that cannot be fed by anything in its room. Not an execution failure, so it does
+     * not go through the guard's counters - it only needs to reach the monitor.
+     */
+    public void noteUnreachable(int roomId, String reason, String sourceLabel, int sourceId) {
+        this.executionGuard
+                .diagnostics(roomId)
+                .recordUnreachable(System.currentTimeMillis(), reason, sourceLabel, sourceId);
     }
 
     private void handleRateLimit(

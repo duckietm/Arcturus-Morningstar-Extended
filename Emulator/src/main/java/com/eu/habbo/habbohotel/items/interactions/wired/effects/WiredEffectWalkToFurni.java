@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class WiredEffectWalkToFurni extends InteractionWiredEffect {
-    public static final WiredEffectType type = WiredEffectType.TELEPORT;
+    public static final WiredEffectType type = WiredEffectType.WALK_TO_FURNI;
 
     protected List<HabboItem> items;
     private boolean fastTeleport = false;
@@ -171,7 +171,12 @@ public class WiredEffectWalkToFurni extends InteractionWiredEffect {
             if (item == null) continue;
 
             RoomTile tile = room.getLayout().getTile(item.getX(), item.getY());
-            if (tile != null) {
+            if (tile == null) continue;
+
+            // The dialog's "teleport" checkbox was saved and echoed back but the box always walked.
+            if (this.fastTeleport) {
+                WiredEffectTeleport.teleportUnitToTile(roomUnit, tile, true);
+            } else {
                 roomUnit.setGoalLocation(tile);
             }
         }

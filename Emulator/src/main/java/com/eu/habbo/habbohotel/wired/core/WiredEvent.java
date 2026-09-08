@@ -5,6 +5,7 @@ import com.eu.habbo.habbohotel.rooms.RoomTile;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredTriggerType;
+import com.eu.habbo.habbohotel.wired.WiredVariableChangeOrigin;
 import java.util.Optional;
 
 /**
@@ -57,6 +58,9 @@ public final class WiredEvent {
         /** Furniture state is toggled/changed */
         FURNI_STATE_CHANGED(WiredTriggerType.STATE_CHANGED),
 
+        /** A user said their own username; its own event because the room index looks stacks up by legacy type */
+        USER_SAYS_USERNAME(WiredTriggerType.USERNAME_AS_TRIGGER),
+
         /** Timer fires at a given time */
         TIMER_TICK(WiredTriggerType.AT_GIVEN_TIME),
 
@@ -71,6 +75,9 @@ public final class WiredEvent {
 
         /** Long timer repeat */
         TIMER_REPEAT_LONG(WiredTriggerType.PERIODICALLY_LONG),
+
+        /** The long one-shot timer fires; its own event because the room index looks stacks up by legacy type */
+        TIMER_TICK_LONG(WiredTriggerType.AT_GIVEN_TIME_LONG),
 
         /** Short timer repeat */
         TIMER_REPEAT_SHORT(WiredTriggerType.PERIODICALLY_SHORT),
@@ -112,10 +119,10 @@ public final class WiredEvent {
         USER_STOPS_DANCING(WiredTriggerType.STOPS_DANCING),
 
         /** Team wins a game */
-        TEAM_WINS(WiredTriggerType.CUSTOM),
+        TEAM_WINS(WiredTriggerType.TEAM_GAME_RESULT),
 
         /** Team loses a game */
-        TEAM_LOSES(WiredTriggerType.CUSTOM),
+        TEAM_LOSES(WiredTriggerType.TEAM_GAME_RESULT),
 
         /** Signal received from a Send Signal effect */
         SIGNAL_RECEIVED(WiredTriggerType.RECEIVE_SIGNAL),
@@ -197,6 +204,7 @@ public final class WiredEvent {
     private final boolean variableCreated;
     private final boolean variableDeleted;
     private final VariableChangeKind variableChangeKind;
+    private final int variableChangeOrigin;
     private final WiredContextVariableScope contextVariableScope;
     private final long createdAtMs;
 
@@ -225,6 +233,7 @@ public final class WiredEvent {
         this.variableCreated = builder.variableCreated;
         this.variableDeleted = builder.variableDeleted;
         this.variableChangeKind = builder.variableChangeKind;
+        this.variableChangeOrigin = builder.variableChangeOrigin;
         this.contextVariableScope = builder.contextVariableScope;
         this.createdAtMs = builder.createdAtMs;
     }
@@ -383,6 +392,11 @@ public final class WiredEvent {
         return variableChangeKind;
     }
 
+    /** One of the {@link WiredVariableChangeOrigin} codes; only meaningful for VARIABLE_CHANGED. */
+    public int getVariableChangeOrigin() {
+        return this.variableChangeOrigin;
+    }
+
     public WiredContextVariableScope getContextVariableScope() {
         return contextVariableScope;
     }
@@ -453,6 +467,8 @@ public final class WiredEvent {
         private boolean variableCreated;
         private boolean variableDeleted;
         private VariableChangeKind variableChangeKind = VariableChangeKind.NONE;
+        // Read when the builder is made, on the thread that performed the write.
+        private int variableChangeOrigin = WiredVariableChangeOrigin.current();
         private WiredContextVariableScope contextVariableScope;
         private long createdAtMs = System.currentTimeMillis();
 
@@ -615,6 +631,11 @@ public final class WiredEvent {
 
         public Builder variableChangeKind(VariableChangeKind variableChangeKind) {
             this.variableChangeKind = (variableChangeKind != null) ? variableChangeKind : VariableChangeKind.NONE;
+            return this;
+        }
+
+        public Builder variableChangeOrigin(int variableChangeOrigin) {
+            this.variableChangeOrigin = WiredVariableChangeOrigin.normalize(variableChangeOrigin);
             return this;
         }
 

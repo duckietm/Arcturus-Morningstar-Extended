@@ -207,6 +207,12 @@ public class WiredEffectAdjustClock extends InteractionWiredEffect {
             newItems.add(item);
         }
 
+        // Picked clocks with the dropdown left on "triggering furni" resolved the trigger item at
+        // run time, so the validated clocks were stored and never adjusted.
+        if (!newItems.isEmpty() && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
+        }
+
         this.items.clear();
         this.items.addAll(newItems);
         this.setDelay(delay);

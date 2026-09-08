@@ -547,6 +547,35 @@ public class RoomUserVariableManager {
         }
     }
 
+    /**
+     * Takes the variable away from every user that holds it, in the room and in storage, and
+     * tells the wired about each loss. The definition itself stays: the box is still on the floor.
+     * Answers how many holders lost it.
+     */
+    public int clearAllAssignments(int definitionItemId) {
+        WiredVariableDefinitionInfo definitionInfo = this.getDefinitionInfo(definitionItemId);
+        if (definitionInfo == null || definitionInfo.isReadOnly()) return 0;
+
+        Map<Integer, Integer> previousValues = new LinkedHashMap<>();
+        for (Map.Entry<Integer, ConcurrentHashMap<Integer, VariableAssignment>> entry :
+                this.activeAssignmentsByUserId.entrySet()) {
+            ConcurrentHashMap<Integer, VariableAssignment> assignments = entry.getValue();
+            VariableAssignment assignment = assignments.remove(definitionItemId);
+            if (assignment == null) continue;
+
+            previousValues.put(entry.getKey(), definitionInfo.hasValue() ? assignment.getValue() : null);
+            if (assignments.isEmpty()) this.activeAssignmentsByUserId.remove(entry.getKey(), assignments);
+        }
+
+        this.deletePersistentAssignmentsForDefinition(definitionItemId);
+        for (Map.Entry<Integer, Integer> entry : previousValues.entrySet()) {
+            this.emitVariableChangedEvent(
+                    entry.getKey(), definitionItemId, definitionInfo.hasValue(), true, entry.getValue(), false, null);
+        }
+        if (!previousValues.isEmpty()) this.broadcastSnapshot();
+        return previousValues.size();
+    }
+
     public void removeDefinition(int definitionItemId) {
         boolean changed = false;
 
