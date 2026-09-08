@@ -15,8 +15,11 @@ import com.eu.habbo.messages.outgoing.snowwar.SnowStormStartLobbyCounterComposer
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
@@ -112,6 +115,16 @@ public class SnowWarManager {
 
     void recordScores(List<SnowWarGamePlayer> players) {
         this.leaderboard.recordScores(players);
+    }
+
+    /** AIR skill level (1..30) per user id, derived from the all-time score. */
+    public Map<Integer, Integer> getSkillLevels(Collection<Integer> userIds) {
+        Map<Integer, Integer> totals = this.leaderboard.loadTotalScores(userIds);
+        Map<Integer, Integer> levels = new HashMap<>();
+        for (Integer userId : userIds) {
+            levels.put(userId, SnowWarSkillLevel.fromTotalScore(totals.getOrDefault(userId, 0)));
+        }
+        return levels;
     }
 
     public SnowWarArenaDefinition findArena(int arenaId) {
@@ -397,8 +410,17 @@ public class SnowWarManager {
         }
         // teamCount 2 matches SnowWarGame (Red / Blue).
         int leaderUserId = roster.isEmpty() ? 0 : roster.get(0).getHabboInfo().getId();
+        List<Integer> rosterIds = new ArrayList<>();
+        for (Habbo habbo : roster) {
+            rosterIds.add(habbo.getHabboInfo().getId());
+        }
         this.broadcastToQueue(new SnowStormLobbyTeamsComposer(
-                roster, 2, leaderUserId, this.selectedArenaId, this.getAvailableArenas()));
+                roster,
+                2,
+                leaderUserId,
+                this.selectedArenaId,
+                this.getAvailableArenas(),
+                this.getSkillLevels(rosterIds)));
     }
 
     // ========================================================================

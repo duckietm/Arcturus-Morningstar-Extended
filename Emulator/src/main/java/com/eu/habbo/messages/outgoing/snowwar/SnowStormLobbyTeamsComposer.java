@@ -5,7 +5,9 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provisional lobby line-up broadcast during the pre-match countdown so the
@@ -17,7 +19,9 @@ import java.util.List;
  * round-robin way {@code SnowWarGame} does at creation ({@code index %
  * teamCount}). Player records are written in the SnowWarPlayerData wire shape
  * (objectId, userId, teamId, name, look, gender) with objectId 0 so the client
- * can reuse the existing player parser.
+ * can reuse the existing player parser. The AIR GameLobbyPlayerData skill
+ * level (1..30) follows as an optional tail {@code int count, [userId,
+ * skillLevel]} after the arena list.
  */
 public class SnowStormLobbyTeamsComposer extends MessageComposer {
 
@@ -26,6 +30,7 @@ public class SnowStormLobbyTeamsComposer extends MessageComposer {
     private final int leaderUserId;
     private final int selectedArenaId;
     private final List<SnowWarArenaDefinition> arenas;
+    private final Map<Integer, Integer> skillLevels;
 
     public SnowStormLobbyTeamsComposer(
             List<Habbo> players,
@@ -33,11 +38,22 @@ public class SnowStormLobbyTeamsComposer extends MessageComposer {
             int leaderUserId,
             int selectedArenaId,
             List<SnowWarArenaDefinition> arenas) {
+        this(players, teamCount, leaderUserId, selectedArenaId, arenas, Collections.emptyMap());
+    }
+
+    public SnowStormLobbyTeamsComposer(
+            List<Habbo> players,
+            int teamCount,
+            int leaderUserId,
+            int selectedArenaId,
+            List<SnowWarArenaDefinition> arenas,
+            Map<Integer, Integer> skillLevels) {
         this.players = players;
         this.teamCount = teamCount;
         this.leaderUserId = leaderUserId;
         this.selectedArenaId = selectedArenaId;
         this.arenas = arenas;
+        this.skillLevels = skillLevels;
     }
 
     @Override
@@ -65,6 +81,13 @@ public class SnowStormLobbyTeamsComposer extends MessageComposer {
             this.response.appendInt(arena.id());
             this.response.appendString(arena.name());
             this.response.appendBoolean(arena.official());
+        }
+
+        this.response.appendInt(this.players.size());
+        for (Habbo habbo : this.players) {
+            this.response.appendInt(habbo.getHabboInfo().getId());
+            this.response.appendInt(
+                    this.skillLevels.getOrDefault(habbo.getHabboInfo().getId(), 1));
         }
 
         return this.response;

@@ -3,6 +3,7 @@ package com.eu.habbo.habbohotel.catalog;
 import com.eu.habbo.Emulator;
 import com.eu.habbo.habbohotel.items.FurnitureType;
 import com.eu.habbo.habbohotel.items.Item;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurniture;
 import com.eu.habbo.messages.ISerialize;
 import com.eu.habbo.messages.ServerMessage;
 import java.sql.Connection;
@@ -41,6 +42,9 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
     private boolean needsUpdate;
 
     private int orderNumber;
+
+    /** Days the furni stays with the buyer; 0 for a plain purchase (AIR rent offers). */
+    private int rentDays;
 
     private Map<Integer, Integer> bundle;
 
@@ -90,6 +94,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         this.haveOffer = set.getBoolean("have_offer");
         this.offerId = set.getInt("offer_id");
         this.orderNumber = set.getInt("order_number");
+        this.rentDays = RentableFurniture.readRentDays(set);
 
         this.bundle = new HashMap<>();
         this.loadBundle();
@@ -160,6 +165,15 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
 
     public boolean isHaveOffer() {
         return this.haveOffer;
+    }
+
+    public int getRentDays() {
+        return this.rentDays;
+    }
+
+    /** True when buying this offer rents the furni for {@link #getRentDays()} days. */
+    public boolean isRentOffer() {
+        return this.rentDays > 0;
     }
 
     public int getOfferId() {
@@ -291,7 +305,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
     public void serialize(ServerMessage message) {
         message.appendInt(this.getId());
         message.appendString(this.getName());
-        message.appendBoolean(false);
+        message.appendBoolean(this.isRentOffer());
         message.appendInt(this.getCredits());
         message.appendInt(this.getPoints());
         message.appendInt(this.getPointsType());

@@ -320,6 +320,7 @@ public class Habbo implements Runnable {
         this.run();
         this.getInventory().dispose();
         AchievementManager.saveAchievements(this);
+        com.eu.habbo.habbohotel.quests.QuestProgressEvents.unload(this.habboInfo.getId());
         this.habboStats.dispose();
         LOGGER.info("{} disconnected.", this.habboInfo.getUsername());
     }
@@ -756,6 +757,8 @@ public class Habbo implements Runnable {
             AchievementManager.progressAchievement(
                     target,
                     Emulator.getGameEnvironment().getAchievementManager().getAchievement("RespectEarned"));
+            com.eu.habbo.habbohotel.quests.QuestProgressEvents.progress(
+                    this, com.eu.habbo.habbohotel.quests.QuestGoalType.GIVE_RESPECT, 1);
 
             this.getHabboInfo().getCurrentRoom().unIdle(this);
             this.getHabboInfo().getCurrentRoom().dance(this.getRoomUnit(), DanceType.NONE);

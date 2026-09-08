@@ -84,6 +84,7 @@ public class RoomChatMessage implements Runnable, ISerialize, DatabaseLoggable {
         this.bubble = chatMessage.getBubble();
         this.roomUnitId = chatMessage.roomUnitId;
         this.emotion = (byte) chatMessage.getEmotion();
+        this.RoomChatColour = chatMessage.RoomChatColour;
     }
 
     public RoomChatMessage(String message, RoomUnit roomUnit, RoomChatMessageBubbles bubble) {

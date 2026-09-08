@@ -37,6 +37,11 @@ public class SnowWarAttributes {
     // Score
     private final AtomicInteger score = new AtomicInteger(0);
 
+    // Match statistics (AIR Game2PlayerStatsData): snowballs that hit an
+    // opponent and opponents knocked out (stunned) by this player.
+    private final AtomicInteger snowballHits = new AtomicInteger(0);
+    private final AtomicInteger kills = new AtomicInteger(0);
+
     public boolean isWalkableState() {
         return this.activityState == SnowWarActivityState.NORMAL
                 || this.activityState == SnowWarActivityState.INVINCIBLE;
@@ -189,6 +194,14 @@ public class SnowWarAttributes {
         return this.score;
     }
 
+    public AtomicInteger getSnowballHits() {
+        return this.snowballHits;
+    }
+
+    public AtomicInteger getKills() {
+        return this.kills;
+    }
+
     /**
      * Resets the attributes for a fresh (re)spawn at the given tile.
      */
@@ -212,5 +225,7 @@ public class SnowWarAttributes {
         this.activityState = SnowWarActivityState.NORMAL;
         this.activityTimer = 0;
         this.score.set(0);
+        this.snowballHits.set(0);
+        this.kills.set(0);
     }
 }
