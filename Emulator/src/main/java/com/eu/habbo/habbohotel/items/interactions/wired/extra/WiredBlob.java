@@ -88,7 +88,7 @@ public class WiredBlob extends InteractionDefault {
         if (!this.RESETS_WITH_GAME
                 && objects != null
                 && objects.length == 2
-                && objects[1].equals(WiredEffectType.TOGGLE_STATE)
+                && WiredEffectType.TOGGLE_STATE.equals(objects[1])
                 && room.getGames().stream()
                         .anyMatch(game -> game.getState().equals(GameState.RUNNING)
                                 || game.getState().equals(GameState.PAUSED))) {
@@ -113,7 +113,10 @@ public class WiredBlob extends InteractionDefault {
     }
 
     private void parseCustomParams() {
-        String[] params = this.getBaseItem().getCustomParams().split(",");
+        // The customparams column is nullable; a blob without one stays inert instead of failing.
+        String customParams =
+                this.getBaseItem() == null ? null : this.getBaseItem().getCustomParams();
+        String[] params = customParams == null ? new String[0] : customParams.split(",");
 
         if (params.length != 2) {
             LOGGER.error("Wired blobs should have customparams with two parameters (points,resetsWithGame)");

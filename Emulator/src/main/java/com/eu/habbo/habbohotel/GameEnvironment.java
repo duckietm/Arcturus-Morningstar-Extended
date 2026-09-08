@@ -14,8 +14,10 @@ import com.eu.habbo.habbohotel.crafting.CraftingManager;
 import com.eu.habbo.habbohotel.guides.GuideManager;
 import com.eu.habbo.habbohotel.guilds.GuildManager;
 import com.eu.habbo.habbohotel.hotelview.HotelViewManager;
+import com.eu.habbo.habbohotel.hotlooks.HotLooksManager;
 import com.eu.habbo.habbohotel.items.FurnitureTextProvider;
 import com.eu.habbo.habbohotel.items.ItemManager;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurnitureManager;
 import com.eu.habbo.habbohotel.mentions.MentionManager;
 import com.eu.habbo.habbohotel.modtool.ModToolManager;
 import com.eu.habbo.habbohotel.modtool.ModToolSanctions;
@@ -80,9 +82,14 @@ public class GameEnvironment {
     private CustomBadgeManager customBadgeManager;
     private InfostandBackgroundManager infostandBackgroundManager;
     private WheelManager wheelManager;
+    private HotLooksManager hotLooksManager;
     private SoundboardManager soundboardManager;
     private TraxEditorManager traxEditorManager;
     private MentionManager mentionManager;
+    private com.eu.habbo.habbohotel.quests.QuestManager questManager;
+    private com.eu.habbo.habbohotel.quests.DailyTaskManager dailyTaskManager;
+    private com.eu.habbo.habbohotel.quests.RewardTrackManager rewardTrackManager;
+    private RentableFurnitureManager rentableFurnitureManager;
 
     public GameEnvironment() {
         this(Runnable::run);
@@ -129,10 +136,18 @@ public class GameEnvironment {
         this.infostandBackgroundManager =
                 this.services.create("infostand backgrounds", InfostandBackgroundManager::new);
         this.wheelManager = this.services.create("wheel manager", WheelManager::new);
+        this.hotLooksManager = this.services.create("hot looks manager", HotLooksManager::new);
         this.soundboardManager =
                 this.services.create("soundboard manager", () -> new SoundboardManager(this.permissionsManager));
         this.traxEditorManager = this.services.create("trax editor manager", TraxEditorManager::new);
         this.mentionManager = this.services.create("mention manager", MentionManager::new);
+        this.questManager = this.services.create("quest manager", com.eu.habbo.habbohotel.quests.QuestManager::new);
+        this.dailyTaskManager =
+                this.services.create("daily task manager", com.eu.habbo.habbohotel.quests.DailyTaskManager::new);
+        this.rewardTrackManager =
+                this.services.create("reward track manager", com.eu.habbo.habbohotel.quests.RewardTrackManager::new);
+        this.rentableFurnitureManager = this.services.create(
+                "rentable furniture", RentableFurnitureManager::new, RentableFurnitureManager::dispose);
 
         this.roomManager.loadPublicRooms();
         this.navigatorManager.loadNavigator();
@@ -288,6 +303,10 @@ public class GameEnvironment {
         return this.wheelManager;
     }
 
+    public HotLooksManager getHotLooksManager() {
+        return this.hotLooksManager;
+    }
+
     public SoundboardManager getSoundboardManager() {
         return this.soundboardManager;
     }
@@ -330,6 +349,22 @@ public class GameEnvironment {
 
     public MentionManager getMentionManager() {
         return this.mentionManager;
+    }
+
+    public com.eu.habbo.habbohotel.quests.QuestManager getQuestManager() {
+        return this.questManager;
+    }
+
+    public com.eu.habbo.habbohotel.quests.DailyTaskManager getDailyTaskManager() {
+        return this.dailyTaskManager;
+    }
+
+    public com.eu.habbo.habbohotel.quests.RewardTrackManager getRewardTrackManager() {
+        return this.rewardTrackManager;
+    }
+
+    public RentableFurnitureManager getRentableFurnitureManager() {
+        return this.rentableFurnitureManager;
     }
 
     public AchievementManager getAchievementManager() {

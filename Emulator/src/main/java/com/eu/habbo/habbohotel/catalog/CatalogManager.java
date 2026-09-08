@@ -57,6 +57,8 @@ import com.eu.habbo.habbohotel.items.interactions.InteractionHopper;
 import com.eu.habbo.habbohotel.items.interactions.InteractionMusicDisc;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTeleport;
 import com.eu.habbo.habbohotel.items.interactions.InteractionTrophy;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurniture;
+import com.eu.habbo.habbohotel.items.rentable.RentableFurnitureManager;
 import com.eu.habbo.habbohotel.modtool.ScripterManager;
 import com.eu.habbo.habbohotel.permissions.Permission;
 import com.eu.habbo.habbohotel.pets.Pet;
@@ -1912,6 +1914,16 @@ public class CatalogManager {
                 }
 
                 if (purchasedEvent.itemsList != null && !purchasedEvent.itemsList.isEmpty()) {
+                    if (item.isRentOffer()) {
+                        int expires =
+                                RentableFurniture.expiresAfter(Emulator.getIntUnixTimestamp(), item.getRentDays());
+                        for (HabboItem rented : purchasedEvent.itemsList) {
+                            rented.setExpiresTimestamp(expires);
+                            rented.needsUpdate(true);
+                            Emulator.getThreading().run(rented);
+                            RentableFurnitureManager.track(rented);
+                        }
+                    }
                     habbo.getClient()
                             .getHabbo()
                             .getInventory()

@@ -142,19 +142,38 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
             usersToSend = Collections.singletonList(triggeringUser);
         }
 
-        Collection<HabboItem> furniToSend =
-                !forwardedFurni.isEmpty() ? forwardedFurni : Collections.singletonList(null);
+        // "Send signal for each furni", the mirror of signalPerUser, which this box stored and never
+        // read: it always split. Off now means one signal carrying the first forwarded furni, so the
+        // receiving stack still has a source item to work with and reads the full count from
+        // @signal_furni_count.
+        Collection<HabboItem> furniToSend;
+        if (forwardedFurni.isEmpty()) {
+            furniToSend = Collections.singletonList(null);
+        } else if (signalPerFurni) {
+            furniToSend = forwardedFurni;
+        } else {
+            furniToSend = Collections.singletonList(forwardedFurni.get(0));
+        }
 
         int nextDepth = currentDepth + 1;
         int signalUserCount = signalPerUser
                 ? (int) usersToSend.stream().filter(Objects::nonNull).count()
                 : (!forwardedUsers.isEmpty() ? forwardedUsers.size() : (triggeringUser != null ? 1 : 0));
+        int signalFurniCount = forwardedFurni.size();
 
         for (RoomUnit user : usersToSend) {
             for (HabboItem sourceItem : furniToSend) {
                 for (HabboItem antenna : resolvedAntennas) {
                     fireSignalAtAntenna(
-                            ctx, room, antenna, user, triggeringUser, sourceItem, signalUserCount, nextDepth);
+                            ctx,
+                            room,
+                            antenna,
+                            user,
+                            triggeringUser,
+                            sourceItem,
+                            signalUserCount,
+                            signalFurniCount,
+                            nextDepth);
                 }
             }
         }
@@ -168,6 +187,7 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
             RoomUnit originActor,
             HabboItem sourceItem,
             int signalUserCount,
+            int signalFurniCount,
             int depth) {
         if (antenna == null) return;
         RoomTile tile = room.getLayout().getTile(antenna.getX(), antenna.getY());
@@ -192,7 +212,7 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 .callStackDepth(depth)
                 .signalChannel(signalChannel)
                 .signalUserCount(signalUserCount)
-                .signalFurniCount(sourceItem != null ? 1 : 0)
+                .signalFurniCount(signalFurniCount)
                 .contextVariableScope(ctx.contextVariables().copy())
                 .triggeredByEffect(true);
 
@@ -318,13 +338,18 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
 
         int[] params = settings.getIntParams();
         int requestedAntennaSource = params.length > 0 ? params[0] : ANTENNA_PICKED;
+        if (requestedAntennaSource < ANTENNA_PICKED) {
+            requestedAntennaSource = ANTENNA_PICKED;
+        }
         this.furniForward = normalizeSource(params.length > 1 ? params[1] : WiredSourceUtil.SOURCE_TRIGGER);
         this.userForward = normalizeSource(params.length > 2 ? params[2] : WiredSourceUtil.SOURCE_TRIGGER);
         this.signalPerFurni = params.length > 3 && params[3] == 1;
         this.signalPerUser = params.length > 4 && params[4] == 1;
         this.channel = params.length > 5 ? params[5] : 0;
         this.antennaSource = requestedAntennaSource;
-        if (!newItems.isEmpty()) {
+        // "Use the triggering furni" is a deliberate choice; picking antennas alongside it used to
+        // silently turn it into the first picked antenna.
+        if (!newItems.isEmpty() && requestedAntennaSource != ANTENNA_TRIGGER) {
             this.antennaSource = newItems.get(0).getId();
         }
 
@@ -410,7 +435,8 @@ public class WiredEffectSendSignal extends InteractionWiredEffect {
                 }
             }
 
-            if (this.antennaSource <= ANTENNA_TRIGGER && !this.items.isEmpty()) {
+            // The same rule as saveData: a stored "triggering furni" choice survives a reload.
+            if (this.antennaSource < ANTENNA_TRIGGER && !this.items.isEmpty()) {
                 HabboItem first = this.items.iterator().next();
                 if (first != null) this.antennaSource = first.getId();
             }

@@ -390,9 +390,9 @@ Current context-status note:
 ### `wf_trg_at_time_long`
 
 - **Class:** `WiredTriggerAtTimeLong`
-- **Behavior:** long-duration variant of the set-time trigger.
-- **Main settings:** time value.
-- **Notes:** used when the short version is not sufficient for the desired range.
+- **Behavior:** long-duration variant of the set-time trigger: fires once, a number of 5-second steps after the stack is armed.
+- **Main settings:** time value in 5-second steps (dialog code 30, its own window).
+- **Notes:** until 2026-09-06 it used the half-second steps and dialog of `wf_trg_at_given_time`, so it was that trigger under another name. Stored values are milliseconds, so boxes saved before keep their delay; only the number the dialog shows changed.
 
 ### `wf_trg_collision`
 
@@ -461,6 +461,13 @@ Current context-status note:
 
 ## 4. Effects
 
+### `wf_act_roll_dice`
+
+- **Class:** `WiredEffectRollDice`
+- **Behavior:** rolls every resolved dice as if a user next to it had clicked it, so `wf_trg_dice_rolled` and the dice value follow as usual.
+- **Main settings:** furni source, selected furni (the toggle-state dialog: a furni picker and nothing else).
+- **Notes:** only dice furni (`InteractionDice`) roll; a dice already rolling is skipped, and a room where dice are disabled rolls nothing.
+
 ### `wf_act_toggle_state`
 
 - **Class:** `WiredEffectToggleFurni`
@@ -500,8 +507,8 @@ Current context-status note:
 
 - **Class:** `WiredEffectWhisper`
 - **Behavior:** sends the configured message text.
-- **Main settings:** message text, effect delay.
-- **Notes:** text length is limited by wired message config.
+- **Main settings:** message text, user source, visibility, chat bubble style, bubble width, effect delay.
+- **Notes:** text length is limited by wired message config. The fourth int is the bubble width override: `-1` keeps the room setting, `0`/`1`/`2` force wide/normal/thin; it travels as an optional trailing int on the chat packet, so older clients ignore it.
 
 ### `wf_act_teleport_to`
 
@@ -557,7 +564,7 @@ Current context-status note:
 - **Class:** `WiredEffectToggleRandom`
 - **Behavior:** toggles a random compatible furni among the selected set.
 - **Main settings:** selected furni.
-- **Notes:** randomness is per execution.
+- **Notes:** randomness is per execution, over the furni's valid states (0 to state count minus one).
 
 ### `wf_act_move_furni_to`
 
@@ -612,7 +619,7 @@ Current context-status note:
 
 - **Class:** `WiredEffectBotTalk`
 - **Behavior:** makes a bot say configured text.
-- **Main settings:** bot source, message text.
+- **Main settings:** talk/shout mode, bot source, bubble width (third int, `-1` = room setting), message text.
 - **Notes:** subject to wired/bot text size limits.
 
 ### `wf_act_bot_give_handitem`
@@ -640,7 +647,7 @@ Current context-status note:
 
 - **Class:** `WiredEffectBotTalkToHabbo`
 - **Behavior:** makes a bot talk toward an avatar/target.
-- **Main settings:** bot source, avatar target, text.
+- **Main settings:** talk/whisper mode, user source, bot source, bubble width (fourth int, `-1` = room setting), text.
 - **Notes:** dialogue-oriented bot effect.
 
 ### `wf_act_give_respect`
@@ -746,7 +753,7 @@ Current context-status note:
 - **Class:** `WiredEffectSendSignal`
 - **Behavior:** sends a signal through antenna-based wiring.
 - **Main settings:** selected antenna furni, signal payload/source options.
-- **Notes:** can carry user/furni payload to `wf_trg_recv_signal`.
+- **Notes:** can carry user/furni payload to `wf_trg_recv_signal`. Picking antennas only overrides the antenna source when the dialog asked for picked antennas; "the triggering furni" is kept. The channel number is not used: a signal's channel is the antenna's item id.
 
 ### `wf_act_give_var`
 
@@ -767,7 +774,8 @@ Current context-status note:
 - **Class:** `WiredEffectChangeVariableValue`
 - **Behavior:** changes the value of a variable by applying an operation.
 - **Main settings:** variable selection, operation, reference mode, constant or reference variable, reference source, target source.
-- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift.
+- **Supported operations:** assign, add, subtract, multiply, divide, power, modulo, min, max, random, absolute, bitwise AND/OR/XOR/NOT, left shift, right shift, bit count (110), get/set/clear/toggle bit (115-118), and the bit scans next/previous low/high bit in the inclusive (111-114) and exclusive (119-122) forms.
+- **Bit scans:** a "low" bit is a cleared bit and a "high" bit a set bit; the operand is the starting position (0-31); the result is the position found or -1; the exclusive forms start one position past the operand. Values are 32-bit, so position 31 is the sign bit.
 - **Notes:** one of the most flexible variable effects; textual rendering is separate and handled by extras.
 
 ---
@@ -923,6 +931,8 @@ When the UI exposes classic selector options, those usually include:
 
 ## 6. Conditions
 
+Negative boxes (`wf_cnd_not_*`) answer the positive box's result with the same settings, turned around: with the `all` quantifier they pass when not every target matches, with `any` when no target matches. What they answer when no target resolves still differs per box (some pass, some fail); that is documented per box where it matters.
+
 ### General condition notes
 
 Conditions can be thought of as gates for the stack.
@@ -1012,6 +1022,7 @@ Common patterns:
 - **Class:** `WiredConditionNotFurniTypeMatch`
 - **Behavior:** logical negation of `wf_cnd_stuff_is`.
 - **Main settings:** furni type.
+- **Notes:** negative boxes answer the positive box's result, turned around, with the same quantifier (`all` = not all match, `any` = none match); this one used to swap the quantifier.
 
 ### `wf_cnd_not_user_count`
 
@@ -1193,6 +1204,48 @@ Common patterns:
 
 ---
 
+### `wf_cnd_habbo_has_rank`
+
+- **Class:** `WiredConditionHabboHasRank`
+- **Behavior:** passes when the account rank of the resolved users compares as configured with a rank.
+- **Main settings:** rank (1-1000), comparison (`>`, `>=`, `=`, `<=`, `<`, `!=`), user source, quantifier (dialog code 62).
+- **Notes:** the rank is the one in `permissions`, read live. `wf_cnd_not_habbo_has_rank` (`WiredConditionNotHabboHasRank`) shares the dialog and turns the per-user check around.
+
+### `wf_cnd_user_cooldown`
+
+- **Class:** `WiredConditionUserCooldown`
+- **Behavior:** the triggering user passes, and then not again until the configured seconds have gone by.
+- **Main settings:** seconds (1 to seven days, dialog code 64).
+- **Notes:** the memory is per user and per box and lives in memory only: a restart forgives everyone, which is the kinder failure for a cooldown. Needs a triggering user; a periodic trigger without one never passes.
+
+### `wf_cnd_first_trg`
+
+- **Class:** `WiredConditionUserFirstTime`
+- **Behavior:** the triggering user passes the first time and never again.
+- **Main settings:** none (dialog code 65).
+- **Notes:** who has passed is stored with the box (`wired_data`), so a restart does not hand out a second first time; picking the box up forgets everyone. Bounded to the 10,000 most recent users.
+
+### `wf_cnd_daily_trg`
+
+- **Class:** `WiredConditionUserDaily`
+- **Behavior:** the triggering user passes once per calendar day, on the server clock.
+- **Main settings:** none (dialog code 66).
+- **Notes:** same persistence and pick-up rules as `wf_cnd_first_trg`.
+
+### `wf_cnd_furni_opacity_is`
+
+- **Class:** `WiredConditionFurniOpacityIs`
+- **Behavior:** passes when the opacity the room currently shows for every resolved furni compares as configured.
+- **Main settings:** opacity (0-100), comparison, furni source, selected furni (dialog code 63).
+- **Notes:** the opacity read is the one the triggering user sees, because `wf_act_change_opacity` can give one user a private opacity; without a triggering user the room-wide value is read. No furni resolved means the condition fails. `wf_cnd_not_furni_opacity_is` (`WiredConditionNotFurniOpacityIs`) passes when no resolved furni compares as asked.
+
+### `wf_cnd_x_points_leaderboard`
+
+- **Class:** `WiredConditionHabboHasHighscorePoints`
+- **Behavior:** passes when the best score the resolved users hold on the selected highscore boards compares as configured with a number.
+- **Main settings:** points, comparison, user source, quantifier, selected scoreboard furni (dialog code 67).
+- **Notes:** a user with no entry has zero points; a box with no scoreboard selected never passes. `wf_cnd_not_x_points_leaderboard` (`WiredConditionNotHabboHasHighscorePoints`) turns the per-user check around.
+
 ## 7. Extras
 
 ### `wf_xtra_random`
@@ -1228,14 +1281,14 @@ Common patterns:
 - **Class:** `WiredExtraFilterFurni`
 - **Behavior:** trims the current furni selection to a limited quantity.
 - **Main settings:** quantity.
-- **Notes:** selection-filter extra, not a normal selector.
+- **Notes:** selection-filter extra, not a normal selector. A quantity of 0 (the unconfigured value) means no limit; until 2026-09-06 it silently emptied the selection.
 
 ### `wf_xtra_filter_user`
 
 - **Class:** `WiredExtraFilterUser`
 - **Behavior:** trims the current user selection to a limited quantity.
 - **Main settings:** quantity.
-- **Notes:** same runtime family as `wf_xtra_filter_users`.
+- **Notes:** same runtime family as `wf_xtra_filter_users`. A quantity of 0 means no limit, as for the furni filter.
 
 ### `wf_xtra_filter_users`
 

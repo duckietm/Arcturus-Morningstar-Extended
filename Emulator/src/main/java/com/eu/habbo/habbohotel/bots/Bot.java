@@ -246,14 +246,16 @@ public class Bot implements Runnable {
     }
 
     public void talk(String message) {
+        this.talk(message, RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
+    }
+
+    public void talk(String message, int bubbleWidthOverride) {
         if (this.room != null) {
             BotChatEvent event = new BotTalkEvent(this, message);
             if (Emulator.getPluginManager().fireEvent(event).isCancelled()) return;
 
             this.chatTimestamp = Emulator.getIntUnixTimestamp();
-            this.room.botChat(new RoomUserTalkComposer(new RoomChatMessage(
-                            event.message, this.roomUnit, RoomChatMessageBubbles.getBubble(this.getBubbleId())))
-                    .compose());
+            this.room.botChat(new RoomUserTalkComposer(this.chatMessage(event.message, bubbleWidthOverride)).compose());
 
             if (message.equals("o/") || message.equals("_o/")) {
                 this.room.sendComposer(new RoomUserActionComposer(this.roomUnit, RoomUserAction.WAVE).compose());
@@ -262,14 +264,17 @@ public class Bot implements Runnable {
     }
 
     public void shout(String message) {
+        this.shout(message, RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
+    }
+
+    public void shout(String message, int bubbleWidthOverride) {
         if (this.room != null) {
             BotChatEvent event = new BotShoutEvent(this, message);
             if (Emulator.getPluginManager().fireEvent(event).isCancelled()) return;
 
             this.chatTimestamp = Emulator.getIntUnixTimestamp();
-            this.room.botChat(new RoomUserShoutComposer(new RoomChatMessage(
-                            event.message, this.roomUnit, RoomChatMessageBubbles.getBubble(this.getBubbleId())))
-                    .compose());
+            this.room.botChat(
+                    new RoomUserShoutComposer(this.chatMessage(event.message, bubbleWidthOverride)).compose());
 
             if (message.equals("o/") || message.equals("_o/")) {
                 this.room.sendComposer(new RoomUserActionComposer(this.roomUnit, RoomUserAction.WAVE).compose());
@@ -278,6 +283,10 @@ public class Bot implements Runnable {
     }
 
     public void whisper(String message, Habbo habbo) {
+        this.whisper(message, habbo, RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
+    }
+
+    public void whisper(String message, Habbo habbo, int bubbleWidthOverride) {
         if (this.room != null && habbo != null) {
             BotWhisperEvent event = new BotWhisperEvent(this, message, habbo);
             if (Emulator.getPluginManager().fireEvent(event).isCancelled()) return;
@@ -285,9 +294,15 @@ public class Bot implements Runnable {
             this.chatTimestamp = Emulator.getIntUnixTimestamp();
             event.target
                     .getClient()
-                    .sendResponse(new RoomUserWhisperComposer(new RoomChatMessage(
-                            event.message, this.roomUnit, RoomChatMessageBubbles.getBubble(this.getBubbleId()))));
+                    .sendResponse(new RoomUserWhisperComposer(this.chatMessage(event.message, bubbleWidthOverride)));
         }
+    }
+
+    private RoomChatMessage chatMessage(String text, int bubbleWidthOverride) {
+        RoomChatMessage chatMessage =
+                new RoomChatMessage(text, this.roomUnit, RoomChatMessageBubbles.getBubble(this.getBubbleId()));
+        chatMessage.setBubbleWidthOverride(bubbleWidthOverride);
+        return chatMessage;
     }
 
     public void onPlace(Habbo habbo, Room room) {

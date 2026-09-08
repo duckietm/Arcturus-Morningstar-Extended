@@ -156,7 +156,7 @@ public class WiredEffectControlClock extends InteractionWiredEffect {
             JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
             this.setDelay(data.delay);
             this.action = this.normalizeAction(data.action);
-            this.furniSource = data.furniSource;
+            this.furniSource = WiredEffectPayloadGuard.furniSource(data.furniSource);
 
             if (data.itemIds != null) {
                 for (Integer id : data.itemIds) {
@@ -255,6 +255,12 @@ public class WiredEffectControlClock extends InteractionWiredEffect {
             }
 
             newItems.add(item);
+        }
+
+        // Picked clocks with the dropdown left on "triggering furni" resolved the trigger item at
+        // run time, so the validated clocks were stored and never controlled.
+        if (!newItems.isEmpty() && this.furniSource == WiredSourceUtil.SOURCE_TRIGGER) {
+            this.furniSource = WiredSourceUtil.SOURCE_SELECTED;
         }
 
         this.items.clear();

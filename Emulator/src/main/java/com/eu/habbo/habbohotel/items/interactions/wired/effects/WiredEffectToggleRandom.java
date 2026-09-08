@@ -230,8 +230,10 @@ public class WiredEffectToggleRandom extends InteractionWiredEffect {
             }
 
             try {
-                item.setExtradata(
-                        Emulator.getRandom().nextInt(item.getBaseItem().getStateCount() + 1) + "");
+                // States run 0..stateCount-1; the old "+ 1" could write stateCount itself, a state
+                // the furni does not have.
+                int stateCount = item.getBaseItem().getStateCount();
+                item.setExtradata(Emulator.getRandom().nextInt(Math.max(1, stateCount)) + "");
                 item.needsUpdate(true);
                 room.updateItem(item);
             } catch (Exception e) {

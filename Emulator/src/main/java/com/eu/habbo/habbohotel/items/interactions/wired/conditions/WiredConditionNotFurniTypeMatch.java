@@ -24,11 +24,13 @@ public class WiredConditionNotFurniTypeMatch extends WiredConditionFurniTypeMatc
             return false;
         }
 
+        // The positive box's answer with the same quantifier, turned around: "any" is "not any
+        // matches" and "all" is "not all match", as every other negative condition reads it.
         if (this.getQuantifier() == QUANTIFIER_ANY) {
-            return !this.evaluateAllMatches(ctx);
+            return !this.evaluateAnyMatches(ctx);
         }
 
-        return !this.evaluateAnyMatches(ctx);
+        return !this.evaluateAllMatches(ctx);
     }
 
     @Override

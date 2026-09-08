@@ -39,12 +39,12 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
     private static final int SOURCE_FURNI_PICKED = 4;
     private static final int SOURCE_FURNI_SIGNAL = 5;
 
-    private static boolean isUserGroup(int src) {
-        return src <= SOURCE_USER_CLICKED;
-    }
-
-    private static boolean isFurniGroup(int src) {
-        return src >= SOURCE_FURNI_TRIGGER;
+    /**
+     * The dialog and the saved row both carry the source as a bare int. Anything outside the six
+     * sources falls back to the trigger user: stored as-is it would select nothing, silently.
+     */
+    private static int normalizeSourceType(int value) {
+        return (value >= SOURCE_USER_TRIGGER && value <= SOURCE_FURNI_SIGNAL) ? value : SOURCE_USER_TRIGGER;
     }
 
     private static final int MAX_PICKED_FURNI = 20;
@@ -83,7 +83,9 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         Set<HabboItem> result = new LinkedHashSet<>();
         Set<HabboItem> neighborhoodItems = new LinkedHashSet<>();
         for (int[] src : sourcePositions) {
-            LOGGER.info("[FurniNeighborhood] Source: ({},{}), offsets: {}", src[0], src[1], tileOffsets.size());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[FurniNeighborhood] Source: ({},{}), offsets: {}", src[0], src[1], tileOffsets.size());
+            }
             for (int[] offset : getFullGridOffsets()) {
                 int tx = src[0] + (offset[0] - this.targetOffsetX);
                 int ty = src[1] + (offset[1] - this.targetOffsetY);
@@ -103,25 +105,29 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
                     totalRaw++;
                     if (!includeWiredItems && item instanceof InteractionWired) {
                         wiredSkipped++;
-                        LOGGER.info(
-                                "[FurniNeighborhood]   SKIP wired item {} ({}) at ({},{})",
-                                item.getId(),
-                                item.getClass().getSimpleName(),
-                                tx,
-                                ty);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(
+                                    "[FurniNeighborhood]   SKIP wired item {} ({}) at ({},{})",
+                                    item.getId(),
+                                    item.getClass().getSimpleName(),
+                                    tx,
+                                    ty);
+                        }
                     } else {
                         result.add(item);
-                        LOGGER.info(
-                                "[FurniNeighborhood]   KEEP item {} ({}) at ({},{})",
-                                item.getId(),
-                                item.getClass().getSimpleName(),
-                                tx,
-                                ty);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(
+                                    "[FurniNeighborhood]   KEEP item {} ({}) at ({},{})",
+                                    item.getId(),
+                                    item.getClass().getSimpleName(),
+                                    tx,
+                                    ty);
+                        }
                     }
                 }
             }
         }
-        LOGGER.info("[FurniNeighborhood] Raw={}, wiredSkipped={}, kept={}", totalRaw, wiredSkipped, result.size());
+        LOGGER.debug("[FurniNeighborhood] Raw={}, wiredSkipped={}, kept={}", totalRaw, wiredSkipped, result.size());
 
         result = this.applyNeighborhoodModifiers(
                 result, neighborhoodItems, ctx.targets().items());
@@ -130,7 +136,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
         // An empty result means no items matched the neighborhood, so downstream
         // effects should target nothing rather than falling back to the original targets.
         ctx.targets().setItems(result);
-        LOGGER.info("[FurniNeighborhood] Set {} items as targets", result.size());
+        LOGGER.debug("[FurniNeighborhood] Set {} items as targets", result.size());
     }
 
     private List<int[]> getFullGridOffsets() {
@@ -247,7 +253,7 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
             throw new WiredSaveException("wf_slc_furni_neighborhood: intParams must have at least 1 element");
         }
 
-        this.sourceType = params[0];
+        this.sourceType = normalizeSourceType(params[0]);
         this.filterExisting = params.length > 1 && params[1] == 1;
         this.invert = params.length > 2 && params[2] == 1;
         this.targetOffsetX = params.length > 3 ? params[3] : 0;
@@ -274,20 +280,25 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
 
         this.setDelay(settings.getDelay());
 
-        LOGGER.info(
-                "[FurniNeighborhood] saveData: sourceType={}, filterExisting={}, invert={}, target=({},{}), offsets={}, pickedFurniIds={}",
-                sourceType,
-                filterExisting,
-                invert,
-                targetOffsetX,
-                targetOffsetY,
-                tileOffsets.size(),
-                pickedFurniIds);
-        for (int[] o : tileOffsets) {
-            LOGGER.info("[FurniNeighborhood]   offset: ({}, {})", o[0], o[1]);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
+                    "[FurniNeighborhood] saveData: sourceType={}, filterExisting={}, invert={}, target=({},{}),"
+                            + " offsets={}, pickedFurniIds={}",
+                    sourceType,
+                    filterExisting,
+                    invert,
+                    targetOffsetX,
+                    targetOffsetY,
+                    tileOffsets.size(),
+                    pickedFurniIds);
+            for (int[] o : tileOffsets) {
+                LOGGER.debug("[FurniNeighborhood]   offset: ({}, {})", o[0], o[1]);
+            }
+            LOGGER.debug(
+                    "[FurniNeighborhood]   raw intParams (len={}): {}",
+                    params.length,
+                    java.util.Arrays.toString(params));
         }
-        LOGGER.info(
-                "[FurniNeighborhood]   raw intParams (len={}): {}", params.length, java.util.Arrays.toString(params));
 
         return true;
     }
@@ -365,10 +376,14 @@ public class WiredEffectFurniNeighborhood extends InteractionWiredEffect {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        this.onPickUp();
+
         String wiredData = set.getString("wired_data");
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredSelectorPayloadGuard.fromJson(wiredData, JsonData.class);
-            this.sourceType = data.sourceType;
+            if (data == null) return;
+
+            this.sourceType = normalizeSourceType(data.sourceType);
             this.filterExisting = data.filterExisting;
             this.invert = data.invert;
             this.targetOffsetX = data.targetOffsetX;

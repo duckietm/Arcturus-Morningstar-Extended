@@ -7,6 +7,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
+import com.eu.habbo.habbohotel.rooms.RoomChatMessage;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
@@ -28,6 +29,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
     private String botName = "";
     private String message = "";
     private int botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
+    private int bubbleWidthOverride = RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE;
 
     public WiredEffectBotTalk(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -45,9 +47,10 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         message.appendInt(this.getBaseItem().getSpriteId());
         message.appendInt(this.getId());
         message.appendString(this.botName + "" + ((char) 9) + "" + this.message);
-        message.appendInt(2);
+        message.appendInt(3);
         message.appendInt(this.mode);
         message.appendInt(this.botSource);
+        message.appendInt(this.bubbleWidthOverride);
         message.appendInt(0);
         message.appendInt(this.getType().code);
         message.appendInt(this.getDelay());
@@ -61,6 +64,10 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         this.botSource = (settings.getIntParams().length > 1)
                 ? WiredBotSourceUtil.normalizeBotSource(settings.getIntParams()[1])
                 : WiredBotSourceUtil.SOURCE_BOT_NAME;
+        this.bubbleWidthOverride = RoomChatMessage.normalizeBubbleWidthOverride(
+                (settings.getIntParams().length > 2)
+                        ? settings.getIntParams()[2]
+                        : RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
 
         if (mode != 0 && mode != 1) throw new WiredSaveException("Mode is invalid");
 
@@ -136,9 +143,9 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
 
             if (!WiredManager.triggerUserSays(room, bot.getRoomUnit(), botMessage)) {
                 if (this.mode == 1) {
-                    bot.shout(botMessage);
+                    bot.shout(botMessage, this.bubbleWidthOverride);
                 } else {
-                    bot.talk(botMessage);
+                    bot.talk(botMessage, this.bubbleWidthOverride);
                 }
             }
         }
@@ -150,10 +157,20 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         return false;
     }
 
+    public int getBubbleWidthOverride() {
+        return this.bubbleWidthOverride;
+    }
+
     @Override
     public String getWiredData() {
         return WiredManager.getGson()
-                .toJson(new JsonData(this.botName, this.mode, this.message, this.getDelay(), this.botSource));
+                .toJson(new JsonData(
+                        this.botName,
+                        this.mode,
+                        this.message,
+                        this.getDelay(),
+                        this.botSource,
+                        this.bubbleWidthOverride));
     }
 
     @Override
@@ -169,6 +186,10 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
             this.botSource = (jsonData.botSource != null)
                     ? WiredBotSourceUtil.normalizeBotSource(jsonData.botSource)
                     : WiredBotSourceUtil.SOURCE_BOT_NAME;
+            this.bubbleWidthOverride = RoomChatMessage.normalizeBubbleWidthOverride(
+                    (jsonData.bubbleWidthOverride != null)
+                            ? jsonData.bubbleWidthOverride
+                            : RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE);
         } else {
             String[] data = wiredData != null ? wiredData.split(((char) 9) + "") : new String[0];
 
@@ -190,6 +211,7 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         this.botName = "";
         this.message = "";
         this.botSource = WiredBotSourceUtil.SOURCE_BOT_NAME;
+        this.bubbleWidthOverride = RoomChatMessage.NO_BUBBLE_WIDTH_OVERRIDE;
         this.setDelay(0);
     }
 
@@ -234,13 +256,15 @@ public class WiredEffectBotTalk extends InteractionWiredEffect {
         String message;
         int delay;
         Integer botSource;
+        Integer bubbleWidthOverride;
 
-        public JsonData(String bot_name, int mode, String message, int delay, int botSource) {
+        public JsonData(String bot_name, int mode, String message, int delay, int botSource, int bubbleWidthOverride) {
             this.bot_name = bot_name;
             this.mode = mode;
             this.message = message;
             this.delay = delay;
             this.botSource = botSource;
+            this.bubbleWidthOverride = bubbleWidthOverride;
         }
     }
 }

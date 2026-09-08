@@ -19,15 +19,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The official rentable space ({@code furniture_rentable_space}, widget
+ * RWE_RENTABLESPACE): a Habbo Club member rents the tiles under the furni for
+ * {@code hotel.rentablespace.days} days, only the renter can walk on and build
+ * there, and when the rent ends their furni goes back to their inventory.
+ */
 public class InteractionRentableSpace extends HabboItem {
     private static final Logger LOGGER = LoggerFactory.getLogger(InteractionRentableSpace.class);
+    private static final String RENT_DAYS_CONFIG = "hotel.rentablespace.days";
+    private static final int DEFAULT_RENT_DAYS = 7;
 
     private int renterId;
     private String renterName;
     private int endTimestamp;
+    private ScheduledFuture<?> expiry;
 
     public InteractionRentableSpace(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);
@@ -62,6 +72,7 @@ public class InteractionRentableSpace extends HabboItem {
                             LOGGER.error("Caught SQL exception", e);
                         }
                     }
+                    this.scheduleExpiry();
                 } else {
                     if (this.getRoomId() > 0) {
                         Emulator.getThreading()
@@ -131,16 +142,23 @@ public class InteractionRentableSpace extends HabboItem {
         super.serializeExtradata(serverMessage);
     }
 
+    /**
+     * Rents the space to {@code habbo}. Returns 0 when the rent went through,
+     * otherwise the RentableSpaceInfoComposer error code the client shows.
+     */
+    public int tryRent(Habbo habbo) {
+        int errorCode = this.getRentErrorCode(habbo);
+        if (errorCode != 0) return errorCode;
+
+        this.rent(habbo);
+        return this.getRenterId() == habbo.getHabboInfo().getId() ? 0 : RentableSpaceInfoComposer.NOT_ENOUGH_CREDITS;
+    }
+
+    /** Charges the rent and marks the space rented; silently does nothing when the user cannot pay. */
     public void rent(Habbo habbo) {
-        if (this.isRented()) return;
-
-        if (habbo.getHabboStats().isRentingSpace()) return;
-
         int cost = this.rentCost();
         boolean hasInfiniteCredits = habbo.hasPermission(Permission.ACC_INFINITE_CREDITS);
         if (!hasInfiniteCredits && habbo.getHabboInfo().getCredits() < cost) return;
-
-        if (habbo.getHabboStats().getClubExpireTimestamp() < Emulator.getIntUnixTimestamp()) return;
 
         if (!hasInfiniteCredits) {
             habbo.giveCredits(-cost);
@@ -148,15 +166,43 @@ public class InteractionRentableSpace extends HabboItem {
 
         this.setRenterId(habbo.getHabboInfo().getId());
         this.setRenterName(habbo.getHabboInfo().getUsername());
-        this.setEndTimestamp(Emulator.getIntUnixTimestamp() + (7 * 86400));
+        this.setEndTimestamp(Emulator.getIntUnixTimestamp() + rentDays() * 86400);
 
         habbo.getHabboStats().setRentedItemId(this.getId());
         habbo.getHabboStats().setRentedTimeEnd(this.endTimestamp);
         this.needsUpdate(true);
         this.run();
+        this.scheduleExpiry();
+    }
+
+    /** Ends the rent when the period runs out, so the renter's furni goes home while the room is loaded. */
+    private void scheduleExpiry() {
+        this.cancelExpiry();
+        if (!this.isRented()) return;
+
+        long delay = Math.max(0L, (long) (this.endTimestamp - Emulator.getIntUnixTimestamp()) * 1000L);
+        this.expiry = Emulator.getThreading().run(this::expire, delay);
+    }
+
+    private void cancelExpiry() {
+        if (this.expiry != null) {
+            this.expiry.cancel(false);
+            this.expiry = null;
+        }
+    }
+
+    private void expire() {
+        this.expiry = null;
+        if (this.renterId <= 0 || this.isRented()) return;
+
+        this.endRent();
+
+        Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
+        if (room != null) room.updateItem(this);
     }
 
     public void endRent() {
+        this.cancelExpiry();
         this.setEndTimestamp(0);
 
         Room room = Emulator.getGameEnvironment().getRoomManager().getRoom(this.getRoomId());
@@ -189,19 +235,15 @@ public class InteractionRentableSpace extends HabboItem {
             habbo.getHabboStats().setRentedItemId(0);
             habbo.getHabboStats().setRentedTimeEnd(0);
         } else {
-            int zero = 0;
-
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
                     PreparedStatement statement = connection.prepareStatement(
-                            "UPDATE users_settings SET rent_space_id = ?, rent_space_endtime = ? WHERE user_id = ? LIMIT 1")) {
-                statement.setInt(1, zero);
-                statement.setInt(2, zero);
+                            "UPDATE users_settings SET rent_space_id = 0, rent_space_endtime = 0 WHERE user_id = ? LIMIT 1")) {
+                statement.setInt(1, this.renterId);
+                statement.execute();
             } catch (SQLException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
         }
-
-        // room.ejectUserFurni(this.renterId);
 
         this.setRenterId(0);
         this.setRenterName("");
@@ -242,6 +284,15 @@ public class InteractionRentableSpace extends HabboItem {
         return this.endTimestamp > Emulator.getIntUnixTimestamp();
     }
 
+    /** Seconds left on the current rent, 0 when the space is free. */
+    public int getSecondsRemaining() {
+        return Math.max(0, this.endTimestamp - Emulator.getIntUnixTimestamp());
+    }
+
+    public static int rentDays() {
+        return Emulator.getConfig().getInt(RENT_DAYS_CONFIG, DEFAULT_RENT_DAYS);
+    }
+
     public int rentCost() {
         String[] data =
                 this.getBaseItem().getName().replace("hblooza_spacerent", "").split("x");
@@ -256,8 +307,18 @@ public class InteractionRentableSpace extends HabboItem {
         return 1337;
     }
 
+    /** Who may cancel a rent: the furni owner, the room owner and staff, as the official widget shows the button. */
+    public boolean canCancelRent(Habbo habbo, Room room) {
+        if (habbo == null) return false;
+
+        int userId = habbo.getHabboInfo().getId();
+        return this.getUserId() == userId
+                || (room != null && room.getOwnerId() == userId)
+                || habbo.hasPermission(Permission.ACC_ANYROOMOWNER);
+    }
+
     public int getRentErrorCode(Habbo habbo) {
-        if (this.isRented() && this.renterId != habbo.getHabboInfo().getId()) {
+        if (this.isRented()) {
             return RentableSpaceInfoComposer.SPACE_ALREADY_RENTED;
         }
 
@@ -269,7 +330,8 @@ public class InteractionRentableSpace extends HabboItem {
             return RentableSpaceInfoComposer.CANT_RENT_NO_HABBO_CLUB;
         }
 
-        if (this.rentCost() > habbo.getHabboInfo().getCredits()) {
+        if (!habbo.hasPermission(Permission.ACC_INFINITE_CREDITS)
+                && this.rentCost() > habbo.getHabboInfo().getCredits()) {
             return RentableSpaceInfoComposer.NOT_ENOUGH_CREDITS;
         }
 

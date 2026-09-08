@@ -6,6 +6,7 @@ import com.eu.habbo.habbohotel.items.Item;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredEffect;
 import com.eu.habbo.habbohotel.items.interactions.InteractionWiredTrigger;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredNumericInputGuard;
+import com.eu.habbo.habbohotel.items.interactions.wired.WiredRewardPolicy;
 import com.eu.habbo.habbohotel.items.interactions.wired.WiredSettings;
 import com.eu.habbo.habbohotel.rooms.Room;
 import com.eu.habbo.habbohotel.rooms.RoomUnit;
@@ -22,7 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEffect {
-    public static final WiredEffectType type = WiredEffectType.SHOW_MESSAGE;
+    // The amount travels in the string slot and the user source in the int slot, which is
+    // exactly what the amount dialog reads - the box asked for a number through a window that
+    // said "what should the user say?", and the swap costs no migration.
+    public static final WiredEffectType type = WiredEffectType.EFFECT_AMOUNT;
 
     private int amount = 0;
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
@@ -68,6 +72,11 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) {
+        // Value out of nothing: the amount cap bounds one firing, not a room full of them.
+        if (!WiredRewardPolicy.canConfigure(gameClient)) {
+            return false;
+        }
+
         int nextAmount = WiredNumericInputGuard.parsePositiveAmount(
                 settings.getStringParam(), WiredNumericInputGuard.maxRewardAmount());
         if (nextAmount <= 0) {
@@ -98,7 +107,11 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
     public void execute(WiredContext ctx) {
         Room room = ctx.room();
         if (room == null || this.amount <= 0) return;
-        int pointsType = WiredPlatform.configuration().getInt("hotelview.promotional.points.type");
+        // 5 is the type the hotel ships with in emulator_settings; the same fallback saveData uses
+        // for its own reads, so a missing row degrades to the default instead of failing the stack.
+        int pointsType = WiredPlatform.configuration() == null
+                ? 5
+                : WiredPlatform.configuration().getInt("hotelview.promotional.points.type", 5);
 
         for (RoomUnit unit : WiredSourceUtil.resolveUsers(ctx, this.userSource)) {
             Habbo habbo = room.getHabbo(unit);
@@ -126,8 +139,10 @@ public class WiredEffectGiveHotelviewBonusRarePoints extends InteractionWiredEff
         String wiredData = set.getString("wired_data");
         this.amount = 0;
 
-        if (wiredData != null && wiredData.startsWith("{")) {
-            JsonData data = WiredManager.getGson().fromJson(wiredData, JsonData.class);
+        // The guard answers null for anything it cannot parse, truncated documents included,
+        // so the defaults below cover a corrupt row instead of the load failing on it.
+        JsonData data = WiredEffectPayloadGuard.fromJson(wiredData, JsonData.class);
+        if (data != null) {
             this.setDelay(data.delay);
             this.amount = Math.min(Math.max(data.amount, 0), WiredNumericInputGuard.maxRewardAmount());
             this.userSource = data.userSource;

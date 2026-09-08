@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class WiredEffectLay extends InteractionWiredEffect {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiredEffectLay.class);
-    public static final WiredEffectType type = WiredEffectType.KICK_USER;
+    public static final WiredEffectType type = WiredEffectType.USER_TARGET;
 
     private String message = "";
     private int userSource = WiredSourceUtil.SOURCE_TRIGGER;
@@ -82,6 +82,7 @@ public class WiredEffectLay extends InteractionWiredEffect {
 
             unit.setStatus(RoomUnitStatus.LAY, 0.5 + "");
             room.sendComposer(new RoomUserStatusComposer(unit).compose());
+            WiredEffectUserMessage.whisper(ctx, habbo, this.message);
         }
     }
 

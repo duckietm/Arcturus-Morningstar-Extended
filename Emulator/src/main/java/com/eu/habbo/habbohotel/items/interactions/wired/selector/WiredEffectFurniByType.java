@@ -174,9 +174,13 @@ public class WiredEffectFurniByType extends InteractionWiredEffect {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        this.onPickUp();
+
         String wiredData = set.getString("wired_data");
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredSelectorPayloadGuard.fromJson(wiredData, JsonData.class);
+            if (data == null) return;
+
             this.sourceType = normalizeSourceType(data.sourceType);
             this.matchState = data.matchState;
             this.filterExisting = data.filterExisting;

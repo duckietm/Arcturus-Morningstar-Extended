@@ -453,6 +453,7 @@ public class SnowWarGameTask implements Runnable {
                 case HIT:
                     attr.getHealth().set(attr.getPendingHealth());
                     throwerAttr.getScore().addAndGet(SnowWarConstants.HIT_SCORE);
+                    throwerAttr.getSnowballHits().incrementAndGet();
                     break;
 
                 case STUN:
@@ -466,6 +467,7 @@ public class SnowWarGameTask implements Runnable {
                             SnowWarMath.direction360To8(event.getBall().getDirection()) + 4, 8));
 
                     throwerAttr.getScore().addAndGet(SnowWarConstants.STUN_SCORE);
+                    throwerAttr.getKills().incrementAndGet();
                     break;
 
                 default:

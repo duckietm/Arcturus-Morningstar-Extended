@@ -7,12 +7,12 @@ import java.sql.SQLException;
 
 /**
  * Server-side log that runs only when the stack's conditions FAIL (the negative branch). Identical to
- * {@link WiredEffectLog} except its {@link WiredEffectType#NEG_LOG} type makes
- * WiredEngine.isNegativeConditionEffect schedule it on condition failure instead of success. Reuses the
- * SHOW_MESSAGE(7) client text dialog (NEG_LOG shares code 7).
+ * {@link WiredEffectLog}, and it answers the same {@link WiredEffectType#EFFECT_MESSAGE} type because
+ * the type code only picks the client dialog. WiredEffectPlanner recognises the negative branch by
+ * this class, not by the type.
  */
 public class WiredEffectNegativeLog extends WiredEffectLog {
-    public static final WiredEffectType type = WiredEffectType.NEG_LOG;
+    public static final WiredEffectType type = WiredEffectType.EFFECT_MESSAGE;
 
     public WiredEffectNegativeLog(ResultSet set, Item baseItem) throws SQLException {
         super(set, baseItem);

@@ -4,6 +4,11 @@ import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
 
+/**
+ * @deprecated kept for the plugin ABI; the value is what {@link RentableSpaceRentFailedComposer} sends
+ *     (the old class wrote the item id where the official client reads the expiry time or the reason).
+ */
+@Deprecated
 public class RentableSpaceUnknown2Composer extends MessageComposer {
     private final int itemId;
 

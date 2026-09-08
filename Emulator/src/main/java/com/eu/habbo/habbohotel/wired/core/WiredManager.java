@@ -289,6 +289,18 @@ public final class WiredManager {
         return engine.getDiagnosticsSnapshot(roomId);
     }
 
+    /**
+     * Note a furni that nothing in its room can ever feed. Silent when the engine is not up, so a
+     * furni loading before the engine cannot fail on this.
+     */
+    public static void noteUnreachable(int roomId, String reason, String sourceLabel, int sourceId) {
+        if (engine == null) {
+            return;
+        }
+
+        engine.noteUnreachable(roomId, reason, sourceLabel, sourceId);
+    }
+
     public static void clearDiagnosticsLogs(int roomId) {
         if (engine == null) {
             return;
@@ -503,7 +515,10 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
-        return handleEvent(event);
+        boolean handled = handleEvent(event);
+        // The say-your-username trigger listens on its own event; both fire from one chat line.
+        boolean handledUsername = handleEvent(WiredEvents.userSaysUsername(room, user, message, chatType, chatStyle));
+        return handled || handledUsername;
     }
 
     public static boolean shouldSuppressUserSaysOutput(Room room, RoomUnit user, String message) {
@@ -521,7 +536,9 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.userSays(room, user, message, chatType, chatStyle);
-        return engine.shouldSuppressUserSaysOutput(event);
+        return engine.shouldSuppressUserSaysOutput(event)
+                || engine.shouldSuppressUserSaysOutput(
+                        WiredEvents.userSaysUsername(room, user, message, chatType, chatStyle));
     }
 
     /**
@@ -646,6 +663,18 @@ public final class WiredManager {
         }
 
         WiredEvent event = WiredEvents.timerRepeatLong(room, timerItem);
+        return handleEventForSourceItem(event, timerItem);
+    }
+
+    /**
+     * Trigger the long one-shot timer.
+     */
+    public static boolean triggerTimerTickLong(Room room, HabboItem timerItem) {
+        if (!isEnabled() || room == null || timerItem == null) {
+            return false;
+        }
+
+        WiredEvent event = WiredEvents.timerTickLong(room, timerItem);
         return handleEventForSourceItem(event, timerItem);
     }
 

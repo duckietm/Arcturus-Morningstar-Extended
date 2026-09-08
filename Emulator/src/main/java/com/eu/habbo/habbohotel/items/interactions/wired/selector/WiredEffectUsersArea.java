@@ -100,10 +100,14 @@ public class WiredEffectUsersArea extends InteractionWiredEffect {
 
     @Override
     public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        this.onPickUp();
+
         String wiredData = set.getString("wired_data");
 
         if (wiredData != null && wiredData.startsWith("{")) {
             JsonData data = WiredSelectorPayloadGuard.fromJson(wiredData, JsonData.class);
+            if (data == null) return;
+
             this.rootX = data.rootX;
             this.rootY = data.rootY;
             this.areaWidth = data.width;

@@ -12,6 +12,7 @@ import com.eu.habbo.habbohotel.rooms.RoomUnit;
 import com.eu.habbo.habbohotel.users.HabboItem;
 import com.eu.habbo.habbohotel.wired.WiredEffectType;
 import com.eu.habbo.habbohotel.wired.core.WiredContext;
+import com.eu.habbo.habbohotel.wired.core.WiredManager;
 import com.eu.habbo.messages.ServerMessage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,6 +63,8 @@ public class WiredEffectResetHighscores extends InteractionWiredEffect {
 
     @Override
     public boolean saveData(WiredSettings settings, GameClient gameClient) {
+        // The dialog shows a delay slider like "reset timers" has; the value was dropped on save.
+        this.setDelay(settings.getDelay());
         return true;
     }
 
@@ -85,17 +88,39 @@ public class WiredEffectResetHighscores extends InteractionWiredEffect {
 
     @Override
     public String getWiredData() {
-        return "";
+        return WiredManager.getGson().toJson(new JsonData(this.getDelay()));
     }
 
     @Override
-    public void loadWiredData(ResultSet set, Room room) throws SQLException {}
+    public void loadWiredData(ResultSet set, Room room) throws SQLException {
+        String wiredData = set.getString("wired_data");
+        int parsedDelay = 0;
+
+        JsonData jsonData = WiredUtilityPayloadGuard.fromJson(wiredData, JsonData.class);
+        if (jsonData != null) {
+            parsedDelay = WiredUtilityPayloadGuard.delay(jsonData.delay);
+        } else if (wiredData != null && !wiredData.isEmpty()) {
+            parsedDelay = WiredUtilityPayloadGuard.parseDelay(wiredData);
+        }
+
+        this.setDelay(WiredUtilityPayloadGuard.delay(parsedDelay));
+    }
 
     @Override
-    public void onPickUp() {}
+    public void onPickUp() {
+        this.setDelay(0);
+    }
 
     @Override
     public WiredEffectType getType() {
         return type;
+    }
+
+    static class JsonData {
+        int delay;
+
+        public JsonData(int delay) {
+            this.delay = delay;
+        }
     }
 }

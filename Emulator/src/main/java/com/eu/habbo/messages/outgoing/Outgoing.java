@@ -255,8 +255,17 @@ public class Outgoing {
     public static final int MysticBoxCloseComposer = 596; // PRODUCTION-201611291003-338511768
     public static final int MysticBoxPrizeComposer = 3712; // PRODUCTION-201611291003-338511768
     public static final int RentableSpaceInfoComposer = 3559; // PRODUCTION-201611291003-338511768
-    public static final int RentableSpaceUnknownComposer = 2046; // PRODUCTION-201611291003-338511768
-    public static final int RentableSpaceUnknown2Composer = 1868; // PRODUCTION-201611291003-338511768
+    public static final int RentableSpaceRentOkComposer = 2046; // PRODUCTION-201611291003-338511768
+    public static final int RentableSpaceRentFailedComposer = 1868; // PRODUCTION-201611291003-338511768
+
+    /** @deprecated plugin ABI alias of {@link #RentableSpaceRentOkComposer}. */
+    @Deprecated
+    public static final int RentableSpaceUnknownComposer = RentableSpaceRentOkComposer;
+
+    /** @deprecated plugin ABI alias of {@link #RentableSpaceRentFailedComposer}. */
+    @Deprecated
+    public static final int RentableSpaceUnknown2Composer = RentableSpaceRentFailedComposer;
+
     public static final int GuildConfirmRemoveMemberComposer = 1876; // PRODUCTION-201611291003-338511768
 
     public static final int HotelViewBadgeButtonConfigComposer = 2998; // PRODUCTION-201611291003-338511768
@@ -350,6 +359,9 @@ public class Outgoing {
     public static final int GuildEditFailComposer = 3988; // PRODUCTION-201611291003-338511768
     public static final int MinimailNewMessageComposer = 1911; // PRODUCTION-201611291003-338511768
     public static final int RoomFilterWordsComposer = 2937; // PRODUCTION-201611291003-338511768
+    // Personal word filter (AIR 13 CustomFilterResult / ModifyCustomFilterResult)
+    public static final int CustomWordFilterWordsComposer = 3883;
+    public static final int CustomWordFilterModifyResultComposer = 3333;
     public static final int VerifyMobileNumberComposer = 3639; // PRODUCTION-201611291003-338511768
     public static final int NewUserGiftComposer = 3575; // PRODUCTION-201611291003-338511768
     public static final int UpdateUserLookComposer = 2429; // PRODUCTION-201611291003-338511768
@@ -421,7 +433,12 @@ public class Outgoing {
 
     public static final int TalentLevelUpdateComposer = 638; // PRODUCTION-201611291003-338511768
     public static final int BullyReportedMessageComposer = 3285; // PRODUCTION-201611291003-338511768
-    public static final int UnknownQuestComposer3 = 1122; // PRODUCTION-201611291003-338511768
+    public static final int SeasonalQuestsComposer = 1122; // PRODUCTION-201611291003-338511768
+
+    /** @deprecated plugin ABI alias of {@link #SeasonalQuestsComposer}. */
+    @Deprecated
+    public static final int UnknownQuestComposer3 = SeasonalQuestsComposer;
+
     public static final int FriendToolbarNotificationComposer = 3082; // PRODUCTION-201611291003-338511768
     public static final int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public static final int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768
@@ -650,6 +667,7 @@ public class Outgoing {
 
     // Custom features — IDs 9400+ reserved
     public static final int RareValuesComposer = 9400;
+    public static final int HotLooksComposer = 9360; // AIR 13 avatar editor hot looks tab
     public static final int WheelDataComposer = 9401;
     public static final int WheelResultComposer = 9402;
     public static final int WheelRecentWinsComposer = 9403;
@@ -673,4 +691,12 @@ public class Outgoing {
     public static final int MessengerMessageFailedComposer = 4903;
     public static final int MessengerMessageComposer = 4904;
     public static final int MessengerReadCursorComposer = 4905;
+    // Quest engine (AIR 13 daily tasks and reward track; 9450-9452 replace the colliding official 2392/596/2142)
+    public static final int ActiveDailyTasksComposer = 2900;
+    public static final int DailyTasksAddedComposer = 670;
+    public static final int DailyTaskUpdatedComposer = 9450;
+    public static final int RewardTracksComposer = 2327;
+    public static final int RewardTrackClaimResultComposer = 9451;
+    public static final int RewardTrackProgressComposer = 9452;
+    public static final int RewardTrackPremiumPurchaseResultComposer = 2248;
 }

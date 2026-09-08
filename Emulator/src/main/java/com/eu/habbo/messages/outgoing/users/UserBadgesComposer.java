@@ -1,12 +1,18 @@
 package com.eu.habbo.messages.outgoing.users;
 
 import com.eu.habbo.habbohotel.users.HabboBadge;
+import com.eu.habbo.habbohotel.users.inventory.BadgeOwnerCounts;
+import com.eu.habbo.habbohotel.users.inventory.BadgeRarity;
 import com.eu.habbo.messages.ServerMessage;
 import com.eu.habbo.messages.outgoing.MessageComposer;
 import com.eu.habbo.messages.outgoing.Outgoing;
-
 import java.util.ArrayList;
 
+/**
+ * UserCurrentBadges (1087) in the official layout: per worn slot
+ * {@code int slot, string code, int ownerCount, int badgeRarityId}, the
+ * rarity tier being derived from how many users hold the badge.
+ */
 public class UserBadgesComposer extends MessageComposer {
     private final ArrayList<HabboBadge> badges;
     private final int habbo;
@@ -23,8 +29,11 @@ public class UserBadgesComposer extends MessageComposer {
         synchronized (this.badges) {
             this.response.appendInt(this.badges.size());
             for (HabboBadge badge : this.badges) {
+                int ownerCount = BadgeOwnerCounts.ownerCount(badge.getCode());
                 this.response.appendInt(badge.getSlot());
                 this.response.appendString(badge.getCode());
+                this.response.appendInt(ownerCount);
+                this.response.appendInt(BadgeRarity.tierForOwnerCount(ownerCount));
             }
         }
         return this.response;

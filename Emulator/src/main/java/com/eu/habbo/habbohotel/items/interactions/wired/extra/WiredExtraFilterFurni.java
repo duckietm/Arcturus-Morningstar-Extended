@@ -34,7 +34,9 @@ public class WiredExtraFilterFurni extends InteractionWiredExtra {
     public boolean saveData(WiredSettings settings, GameClient gameClient) {
         int value = (settings.getIntParams().length > 0) ? settings.getIntParams()[0] : 0;
 
-        if (value == 0
+        // The string is the fallback for a dialog that only has a text field: it is read when no
+        // int was sent at all, never over an int that merely equals the current value.
+        if (settings.getIntParams().length == 0
                 && settings.getStringParam() != null
                 && !settings.getStringParam().isEmpty()) {
             try {

@@ -63,7 +63,8 @@ public class WiredTriggerGameStarts extends InteractionWiredTrigger {
         message.appendString("");
         message.appendInt(0);
         message.appendInt(0);
-        message.appendInt(WiredTriggerGameStarts.type.code);
+        // The team-result triggers inherit this body and report a type of their own.
+        message.appendInt(this.getType().code);
 
         if (!this.isTriggeredByRoomUnit()) {
             List<Integer> invalidTriggers = new ArrayList<>();
