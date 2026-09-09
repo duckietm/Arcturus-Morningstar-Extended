@@ -88,6 +88,10 @@ public class Incoming {
     public static final int RequestUserProfileEvent = 3265;
     public static final int SearchRoomsFriendsNowEvent = 1786;
     public static final int SetStackHelperHeightEvent = 3839;
+    public static final int SetStackHelperAdjacentHeightEvent = 2687;
+    public static final int GetBadgeInfoEvent = 2895;
+    public static final int PetSupplementEvent = 749;
+    public static final int PetSupplementOfficialEvent = 2868;
     public static final int RedeemVoucherEvent = 339;
     public static final int PetUseItemEvent = 1328;
     public static final int HorseRemoveSaddleEvent = 186;
@@ -467,6 +471,10 @@ public class Incoming {
     public static final int SnowStormGetAllTimeFriendsLeaderboardEvent = 6028;
     public static final int SnowStormGetWeeklyLeaderboardEvent = 6029;
     public static final int SnowStormGetWeeklyFriendsLeaderboardEvent = 6030;
+    public static final int SnowStormGetTotalGroupLeaderboardEvent = 1776;
+    public static final int SnowStormGetWeeklyGroupLeaderboardEvent = 2691;
+    public static final int GetSnowWarGameTokensOfferEvent = 980;
+    public static final int PurchaseSnowWarGameTokensOfferEvent = 391;
 
     // CUSTOM
     public static final int UpdateFurniturePositionEvent = 10019;
@@ -480,6 +488,15 @@ public class Incoming {
     public static final int WiredUserInspectMoveEvent = 10027;
     public static final int WiredFurniRuntimeStateRequestEvent = 10028;
     public static final int WiredFeatureCapabilitiesEvent = 10029;
+    // AIR 13 wired leftovers, all on their official ids.
+    public static final int WiredUserSelectedEvent = 3122;
+    public static final int WiredMenuPermissionsSaveEvent = 1936;
+    public static final int WiredRoomStateActionEvent = 3761;
+    public static final int WiredRoomLogsPageEvent = 3882;
+    public static final int WiredVariableHoldersPageEvent = 975;
+    public static final int WiredVariableHoldersRequestEvent = 2973;
+    public static final int WiredVariableHashesEvent = 1497;
+    public static final int WiredAllVariablesRequestEvent = 1735;
     public static final int TranslationLanguagesRequestEvent = 10032;
     public static final int TranslationTextRequestEvent = 10033;
     public static final int RequestInventoryPetDelete = 10030;
@@ -635,4 +652,38 @@ public class Incoming {
     public static final int ClaimRewardTrackPrizeEvent = 1111;
     public static final int PurchaseRewardTrackPremiumEvent = 3022;
     public static final int GetRewardTracksEvent = 9450;
+    // AIR 13 room queue and room hopper network (ids of the renderer composers)
+    public static final int ChangeQueueEvent = 3093;
+    public static final int RoomNetworkOpenConnectionEvent = 3736;
+    // AIR 13 marketplace batch actions and the multi-item offer (official ids, free in both repos)
+    public static final int CancelAllOwnItemsEvent = 1228;
+    public static final int ClearOwnHistoryEvent = 2058;
+    public static final int SellMultipleItemsEvent = 1551;
+    // AIR 13 club extend confirmation (ClubDiscountPromoExtension)
+    public static final int RequestClubExtendConfirmEvent = 352;
+    // AIR 13 my-reports window: ask for the list, appeal one report
+    public static final int GetMyReportsStatusEvent = 2935;
+    public static final int AppealReportEvent = 3063;
+    // AIR 13 session block list, replenish respect, notification feed activation and ambassador
+    // unmute (official ids, free in both repos)
+    public static final int GetBlockedUsersEvent = 485;
+    public static final int BlockUserEvent = 697;
+    public static final int UnblockUserEvent = 1886;
+    public static final int ReplenishRespectEvent = 3728;
+    public static final int ActivateNotificationsEvent = 3235;
+    public static final int UnmuteUserEvent = 3302;
+    // AIR 13 Discord Rich Presence preferences (official ids, free in both repos)
+    public static final int GetDiscordPreferencesEvent = 1055;
+    public static final int UpdateDiscordPreferencesEvent = 2774;
+    // AIR 13 packets the renderer already composed but the emulator never handled
+    public static final int ModToolPreferencesEvent = 31;
+    public static final int GuildAcceptAllMembershipsEvent = 882;
+    public static final int ModToolDefaultSanctionEvent = 1681;
+    public static final int UnseenResetItemsEvent = 2343;
+    public static final int GetEmailStatusEvent = 2557;
+    public static final int UnseenResetCategoryEvent = 3493;
+    public static final int ChangeEmailEvent = 3965;
+    // AIR 13 self donation tool (official id 2499) and community goal vote (official id 3536)
+    public static final int SelfDonationEvent = 2499;
+    public static final int CommunityGoalVoteEvent = 3536;
 }

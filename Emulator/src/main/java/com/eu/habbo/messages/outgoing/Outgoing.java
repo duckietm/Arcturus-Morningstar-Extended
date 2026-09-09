@@ -62,6 +62,7 @@ public class Outgoing {
     public static final int GiftConfigurationComposer = 2234;
     public static final int UserClubComposer = 954;
     public static final int InventoryBadgesComposer = 717;
+    public static final int BadgeInfoComposer = 3228;
     public static final int RoomUserTypingComposer = 1717;
     public static final int GuildJoinErrorComposer = 762;
     public static final int RoomCategoriesComposer = 1562;
@@ -144,6 +145,16 @@ public class Outgoing {
     public static final int WiredMonitorDataComposer = 5101; // CUSTOM
     public static final int WiredRoomSettingsDataComposer = 5102; // CUSTOM
     public static final int WiredUserVariablesDataComposer = 5103; // CUSTOM
+    // AIR 13 wired leftovers. 420 (WiredClickUserResponse) and 2901 (WiredUserVariablesPage) are
+    // already GuildListComposer / PetInformationComposer, so those two use the custom range.
+    public static final int WiredEnvironmentComposer = 347;
+    public static final int WiredClickSettingsComposer = 2288;
+    public static final int WiredRoomLogPageComposer = 918;
+    public static final int WiredAllVariablesHashComposer = 1646;
+    public static final int WiredAllVariablesDiffComposer = 2498;
+    public static final int WiredClickUserResponseComposer = 9460; // CUSTOM
+    public static final int WiredVariableHoldersPageComposer = 9461; // CUSTOM
+    public static final int WiredVariableHoldersComposer = 9462; // CUSTOM
     public static final int ConfInvisStateComposer = 5104; // CUSTOM
     public static final int TranslationLanguagesComposer = 5106; // CUSTOM
     public static final int TranslationResultComposer = 5107; // CUSTOM
@@ -443,7 +454,8 @@ public class Outgoing {
     public static final int SimpleAlertComposer = 5100; // PRODUCTION-201611291003-338511768
     public static final int MessengerErrorComposer = 896; // PRODUCTION-201611291003-338511768
     public static final int CameraPriceComposer = 3878; // PRODUCTION-201611291003-338511768
-    public static final int PetBreedingCompleted = 2527; // PRODUCTION-201611291003-338511768
+    public static final int PetBreedingCompleted = 2527;
+    public static final int NestBreedingSuccessComposer = 1901; // PRODUCTION-201611291003-338511768
     public static final int RoomUserUnbannedComposer = 3429; // PRODUCTION-201611291003-338511768
     public static final int HotelViewCommunityGoalComposer = 2525; // PRODUCTION-201611291003-338511768
     public static final int UserClassificationComposer = 966; // PRODUCTION-201611291003-338511768
@@ -581,7 +593,14 @@ public class Outgoing {
     public static final int QuestExpiredComposer = 3027;
     public static final int UnknownTradeComposer = 3128;
     public static final int UnknownMessengerErrorComposer = 3359;
-    public static final int UnknownComposer8 = 3441;
+    public static final int PetSupplementedNotificationComposer = 3441;
+
+    /**
+     * @deprecated kept for the plugin ABI; use {@link #PetSupplementedNotificationComposer}.
+     */
+    @Deprecated
+    public static final int UnknownComposer8 = PetSupplementedNotificationComposer;
+
     public static final int RemoveRoomEventComposer = 3479;
     public static final int UnknownCompetitionComposer = 3506;
     public static final int UnknownRoomViewerComposer = 3523;
@@ -623,6 +642,17 @@ public class Outgoing {
     public static final int SnowStormOnPlayerExitedArenaComposer = 5027;
     public static final int SnowStormGenericErrorComposer = 5028;
     public static final int SnowStormUserRematchedComposer = 5029;
+
+    // AIR 13 game hub: all-time / group leaderboards, game notifications and
+    // the "get more games" token offers.
+    public static final int Game2FriendsLeaderboardComposer = 47;
+    public static final int Game2TotalLeaderboardComposer = 2594;
+    public static final int Game2TotalGroupLeaderboardComposer = 1769;
+    public static final int Game2WeeklyGroupLeaderboardComposer = 2956;
+    public static final int Game2GameNotFoundComposer = 444;
+    public static final int Game2GameCancelledComposer = 3493;
+    public static final int Game2UserBlockedComposer = 3508;
+    public static final int SnowWarGameTokensComposer = 3419;
 
     // Furni Editor
     public static final int FurniEditorSearchComposer = 10040;
@@ -699,4 +729,42 @@ public class Outgoing {
     public static final int RewardTrackClaimResultComposer = 9451;
     public static final int RewardTrackProgressComposer = 9452;
     public static final int RewardTrackPremiumPurchaseResultComposer = 2248;
+    // AIR 13 official rooms view, room flags and batched removals (official ids, free in both repos)
+    public static final int OfficialRoomsComposer = 438;
+    public static final int ConfigurationItemStatesComposer = 1508;
+    public static final int ObjectRemoveMultipleComposer = 1451;
+    public static final int SpecialSystemChatComposer = 1971;
+    public static final int SpecialRoomEventComposer = 2163;
+    public static final int ItemRemoveMultipleComposer = 2204;
+    public static final int FurniListRemoveMultipleComposer = 2813;
+    public static final int YouAreNotSpectatorComposer = 3242;
+    public static final int ObjectRemoveConfirmComposer = 3488;
+    public static final int ItemsStateUpdateComposer = 3697;
+    // AIR 13 marketplace batch results, LTD raffle, purchasable chat styles and the
+    // my-reports list (official ids, free in both repos)
+    public static final int MarketplaceCancelAllOffersComposer = 1949;
+    public static final int MarketplaceClearOwnHistoryComposer = 175;
+    public static final int LtdRaffleEnteredComposer = 933;
+    public static final int LtdRaffleResultComposer = 2316;
+    public static final int PurchasableChatStylesComposer = 946;
+    public static final int ChatStyleNotificationComposer = 2580;
+    public static final int MyReportsStatusComposer = 2981;
+    // AIR 13 session block list (official ids 2649 / 366, free in both repos)
+    public static final int BlockListComposer = 2649;
+    public static final int BlockResultComposer = 366;
+    // AIR 13 PetRespectFailed (official 2703 is taken by RemoveFloorItemComposer),
+    // BanInfo (official 2524 is taken by FavoriteRoomChangedComposer) and Discord preferences
+    // (official 1600 is taken by GenericErrorMessages): 9470-9472 of the custom range.
+    public static final int PetRespectFailedComposer = 9470;
+    public static final int BanInfoComposer = 9471;
+    public static final int DiscordPreferencesComposer = 9472;
+    // AIR 13 IncomeRewardNotification: the official id is free on our outgoing table.
+    public static final int IncomeRewardNotificationComposer = 1753;
+    // AIR 13 treasure hunt. TreasureHuntFirstWinner's official id 1631 is taken by
+    // RoomUserActionComposer, so it uses 9485 of the custom range; the other two are official.
+    public static final int TreasureHuntFirstWinnerComposer = 9485;
+    public static final int TreasureHuntFailComposer = 2383;
+    public static final int TreasureHuntUpdateComposer = 3368;
+    // AIR 13 self donation tool result: the official id is free on our outgoing table.
+    public static final int SelfDonationResultComposer = 2920;
 }
