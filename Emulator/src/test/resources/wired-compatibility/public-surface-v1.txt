@@ -6651,6 +6651,27 @@ METHOD public static com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer
 METHOD public static com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer#userWalkMovement(int,int,int,int,int,double,double,int,int,int):com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer$MovementData throws -
 METHOD public static com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer#wallItemMovement(int,boolean,int[]):com.eu.habbo.messages.outgoing.rooms.WiredMovementsComposer$MovementData throws -
 
+TYPE public com.eu.habbo.messages.outgoing.wired.WiredAllVariablesDiffComposer extends com.eu.habbo.messages.outgoing.MessageComposer
+CONSTRUCTOR public com.eu.habbo.messages.outgoing.wired.WiredAllVariablesDiffComposer(int,boolean,java.util.List<java.lang.String>,java.util.List<com.eu.habbo.habbohotel.rooms.RoomWiredVariableCatalog$Variable>) throws -
+METHOD protected com.eu.habbo.messages.outgoing.wired.WiredAllVariablesDiffComposer#composeInternal(-):com.eu.habbo.messages.ServerMessage throws -
+
+TYPE public com.eu.habbo.messages.outgoing.wired.WiredAllVariablesHashComposer extends com.eu.habbo.messages.outgoing.MessageComposer
+CONSTRUCTOR public com.eu.habbo.messages.outgoing.wired.WiredAllVariablesHashComposer(int) throws -
+METHOD protected com.eu.habbo.messages.outgoing.wired.WiredAllVariablesHashComposer#composeInternal(-):com.eu.habbo.messages.ServerMessage throws -
+
+TYPE public com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer extends com.eu.habbo.messages.outgoing.MessageComposer
+FIELD public static final com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#CLICK_FURNI_DEFAULT:int
+FIELD public static final com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#CLICK_FURNI_PASS_THROUGH:int
+FIELD public static final com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#CLICK_USER_CLICK_WALK_BEHIND:int
+FIELD public static final com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#CLICK_USER_DEFAULT:int
+FIELD public static final com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#CLICK_USER_PASS_THROUGH:int
+CONSTRUCTOR public com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer(int,int) throws -
+METHOD protected com.eu.habbo.messages.outgoing.wired.WiredClickSettingsComposer#composeInternal(-):com.eu.habbo.messages.ServerMessage throws -
+
+TYPE public com.eu.habbo.messages.outgoing.wired.WiredClickUserResponseComposer extends com.eu.habbo.messages.outgoing.MessageComposer
+CONSTRUCTOR public com.eu.habbo.messages.outgoing.wired.WiredClickUserResponseComposer(int,boolean) throws -
+METHOD protected com.eu.habbo.messages.outgoing.wired.WiredClickUserResponseComposer#composeInternal(-):com.eu.habbo.messages.ServerMessage throws -
+
 TYPE public com.eu.habbo.messages.outgoing.wired.WiredConditionDataComposer extends com.eu.habbo.messages.outgoing.MessageComposer
 CONSTRUCTOR public com.eu.habbo.messages.outgoing.wired.WiredConditionDataComposer(com.eu.habbo.habbohotel.items.interactions.InteractionWiredCondition,com.eu.habbo.habbohotel.rooms.Room) throws -
 METHOD protected com.eu.habbo.messages.outgoing.wired.WiredConditionDataComposer#composeInternal(-):com.eu.habbo.messages.ServerMessage throws -
