@@ -721,6 +721,7 @@ public class Outgoing {
     public static final int MessengerMessageFailedComposer = 4903;
     public static final int MessengerMessageComposer = 4904;
     public static final int MessengerReadCursorComposer = 4905;
+    public static final int FriendIsTypingComposer = 4088;
     // Quest engine (AIR 13 daily tasks and reward track; 9450-9452 replace the colliding official 2392/596/2142)
     public static final int ActiveDailyTasksComposer = 2900;
     public static final int DailyTasksAddedComposer = 670;

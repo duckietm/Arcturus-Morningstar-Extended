@@ -640,6 +640,10 @@ public class Incoming {
     public static final int RenameFriendCategoryEvent = 4082;
     public static final int RemoveFriendCategoryEvent = 4083;
     public static final int MoveFriendToCategoryEvent = 4084;
+    // Console: mark read by peer id, typing indicator, and the periodic friend list refresh
+    public static final int MarkConsoleReadEvent = 4085;
+    public static final int ConsoleTypingEvent = 4087;
+    public static final int RefreshFriendListEvent = 1419;
     // Quest engine (AIR 13 quests, daily tasks and reward track; the client-side ids of the renderer)
     public static final int GetQuestsEvent = 3333;
     public static final int GetSeasonalQuestsOnlyEvent = 1190;

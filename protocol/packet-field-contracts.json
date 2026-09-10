@@ -19592,6 +19592,98 @@
           "name": ""
         }
       ]
+    },
+    {
+      "name": "CONSOLE_TYPING",
+      "direction": "client_to_server",
+      "header": 4087,
+      "java": {
+        "symbol": "ConsoleTypingEvent",
+        "className": "ConsoleTypingEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/friends/ConsoleTypingEvent.java"
+      },
+      "typescript": {
+        "symbol": "CONSOLE_TYPING",
+        "className": "ConsoleTypingComposer",
+        "path": "packages/communication/src/messages/outgoing/friendlist/ConsoleTypingComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "peerId"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "typing"
+        }
+      ]
+    },
+    {
+      "name": "MARK_CONSOLE_READ",
+      "direction": "client_to_server",
+      "header": 4085,
+      "java": {
+        "symbol": "MarkConsoleReadEvent",
+        "className": "MarkConsoleReadEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/friends/MarkConsoleReadEvent.java"
+      },
+      "typescript": {
+        "symbol": "MARK_CONSOLE_READ",
+        "className": "MarkConsoleReadComposer",
+        "path": "packages/communication/src/messages/outgoing/friendlist/MarkConsoleReadComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "peerId"
+        }
+      ]
+    },
+    {
+      "name": "FRIEND_LIST_UPDATE",
+      "direction": "client_to_server",
+      "header": 1419,
+      "java": {
+        "symbol": "RefreshFriendListEvent",
+        "className": "RefreshFriendListEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/friends/RefreshFriendListEvent.java"
+      },
+      "typescript": {
+        "symbol": "FRIEND_LIST_UPDATE",
+        "className": "FriendListUpdateComposer",
+        "path": "packages/communication/src/messages/outgoing/friendlist/FriendListUpdateComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "FRIEND_TYPING",
+      "direction": "server_to_client",
+      "header": 4088,
+      "java": {
+        "symbol": "FriendIsTypingComposer",
+        "className": "FriendIsTypingComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/friends/FriendIsTypingComposer.java"
+      },
+      "typescript": {
+        "symbol": "FRIEND_TYPING",
+        "className": "FriendIsTypingParser",
+        "path": "packages/communication/src/messages/parser/friendlist/FriendIsTypingParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "senderId"
+        },
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "typing"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -19937,14 +20029,6 @@
       "header": 1379,
       "symbol": "SET_PHONE_NUMBER_VERIFICATION_STATUS",
       "path": "packages/communication/src/messages/outgoing/gifts/SetPhoneNumberVerificationStatusMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 1419,
-      "symbol": "FRIEND_LIST_UPDATE",
-      "path": "packages/communication/src/messages/outgoing/friendlist/FriendListUpdateComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20398,22 +20482,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 4085,
-      "symbol": "MARK_CONSOLE_READ",
-      "path": "packages/communication/src/messages/outgoing/friendlist/MarkConsoleReadComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 4087,
-      "symbol": "CONSOLE_TYPING",
-      "path": "packages/communication/src/messages/outgoing/friendlist/ConsoleTypingComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 6200,
       "symbol": "POLL_VOTE_COUNTER",
       "path": "packages/communication/src/messages/outgoing/poll/VotePollCounterMessageComposer.ts",
@@ -20689,14 +20757,6 @@
       "header": 4086,
       "symbol": "CONSOLE_READ_RECEIPT",
       "path": "packages/communication/src/messages/parser/friendlist/ConsoleReadReceiptParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 4088,
-      "symbol": "FRIEND_TYPING",
-      "path": "packages/communication/src/messages/parser/friendlist/FriendIsTypingParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
