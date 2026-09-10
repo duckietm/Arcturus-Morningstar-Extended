@@ -289,8 +289,8 @@ public class RoomItemManager {
             return null;
         }
 
-        // If underpass is disabled for this room, just return the top item
-        if (!this.room.isAllowUnderpass()) {
+        // If underpass is disabled for this room and this item, just return the top item
+        if (!this.room.isAllowUnderpass() && !topItem.isAllowUnderpass()) {
             return topItem;
         }
 

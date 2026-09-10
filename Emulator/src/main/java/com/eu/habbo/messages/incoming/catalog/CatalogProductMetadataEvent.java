@@ -50,7 +50,8 @@ public class CatalogProductMetadataEvent extends MessageHandler {
 
     private static List<CatalogProductMetadataEntry> collectEntries(CatalogPage page) {
         List<CatalogProductMetadataEntry> entries = new ArrayList<>();
-        List<CatalogItem> offers = new ArrayList<>(page.getCatalogItems().values());
+        List<CatalogItem> offers =
+                Emulator.getGameEnvironment().getCatalogManager().getEffectivePageItems(page);
         offers.sort(Comparator.comparingInt(CatalogItem::getId));
 
         for (CatalogItem offer : offers) {

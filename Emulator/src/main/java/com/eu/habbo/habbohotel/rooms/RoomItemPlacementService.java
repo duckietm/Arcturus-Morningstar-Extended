@@ -181,6 +181,11 @@ final class RoomItemPlacementService {
         item.setX(tile.x);
         item.setY(tile.y);
         item.setRotation(rotation);
+        // Placing always applies the actor's build-underpass mode, so re-placing
+        // an item without the mode clears a previously set flag.
+        if (owner != null && owner.getRoomUnit() != null) {
+            item.setAllowUnderpass(owner.getRoomUnit().isBuildUnderpass());
+        }
         this.ensureOwnerName(item, owner);
         item.needsUpdate(true);
         this.facade.addHabboItem(item);

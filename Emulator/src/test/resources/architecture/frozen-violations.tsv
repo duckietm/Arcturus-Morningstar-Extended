@@ -112,7 +112,7 @@ U|com/eu/habbo/habbohotel/catalog/CatalogLimitedConfiguration.java|CALL|getConfi
 U|com/eu/habbo/habbohotel/catalog/CatalogLimitedConfiguration.java|CALL|getDatabase|4
 U|com/eu/habbo/habbohotel/catalog/CatalogLimitedConfiguration.java|CALL|getGameEnvironment|4
 U|com/eu/habbo/habbohotel/catalog/CatalogLimitedConfiguration.java|CALL|getIntUnixTimestamp|1
-U|com/eu/habbo/habbohotel/catalog/CatalogManager.java|CALL|getConfig|17
+U|com/eu/habbo/habbohotel/catalog/CatalogManager.java|CALL|getConfig|18
 U|com/eu/habbo/habbohotel/catalog/CatalogManager.java|CALL|getDatabase|14
 U|com/eu/habbo/habbohotel/catalog/CatalogManager.java|CALL|getGameEnvironment|41
 U|com/eu/habbo/habbohotel/catalog/CatalogManager.java|CALL|getIntUnixTimestamp|6
@@ -1139,7 +1139,7 @@ U|com/eu/habbo/messages/incoming/catalog/CatalogBuyItemEvent.java|CALL|getGameEn
 U|com/eu/habbo/messages/incoming/catalog/CatalogBuyItemEvent.java|CALL|getIntUnixTimestamp|3
 U|com/eu/habbo/messages/incoming/catalog/CatalogBuyItemEvent.java|CALL|getTexts|1
 U|com/eu/habbo/messages/incoming/catalog/CatalogBuyItemEvent.java|CALL|getThreading|1
-U|com/eu/habbo/messages/incoming/catalog/CatalogProductMetadataEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/catalog/CatalogProductMetadataEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/catalog/CatalogRequestClubDiscountEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/catalog/CatalogSearchedItemEvent.java|CALL|getGameEnvironment|3
 U|com/eu/habbo/messages/incoming/catalog/CatalogSelectClubGiftEvent.java|CALL|getGameEnvironment|2
@@ -1684,7 +1684,7 @@ U|com/eu/habbo/messages/incoming/wired/WiredEffectSaveDataEvent.java|CALL|getThr
 U|com/eu/habbo/messages/incoming/wired/WiredTriggerSaveDataEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/outgoing/achievements/AchievementListComposer.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/outgoing/achievements/talenttrack/TalentTrackComposer.java|CALL|getGameEnvironment|1
-U|com/eu/habbo/messages/outgoing/catalog/CatalogPageComposer.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/outgoing/catalog/CatalogPageComposer.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/outgoing/catalog/CatalogPagesListComposer.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/outgoing/catalog/CatalogRuntimeConfigurationComposer.java|CALL|getConfig|1
 U|com/eu/habbo/messages/outgoing/catalog/ClubDataComposer.java|CALL|getGameEnvironment|1
