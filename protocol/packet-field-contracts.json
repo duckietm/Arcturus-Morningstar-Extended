@@ -7495,6 +7495,44 @@
       ]
     },
     {
+      "name": "ROOM_REMOVE_BACKGROUND",
+      "direction": "client_to_server",
+      "header": 7020,
+      "java": {
+        "symbol": "RoomRemoveBackgroundEvent",
+        "className": "RoomRemoveBackgroundEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/RoomRemoveBackgroundEvent.java"
+      },
+      "typescript": {
+        "symbol": "ROOM_REMOVE_BACKGROUND",
+        "className": "RoomRemoveBackgroundComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/RoomRemoveBackgroundComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "ROOM_REMOVE_PAINT",
+      "direction": "client_to_server",
+      "header": 7021,
+      "java": {
+        "symbol": "RoomRemovePaintEvent",
+        "className": "RoomRemovePaintEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/RoomRemovePaintEvent.java"
+      },
+      "typescript": {
+        "symbol": "ROOM_REMOVE_PAINT",
+        "className": "RoomRemovePaintComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/RoomRemovePaintComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "paintType"
+        }
+      ]
+    },
+    {
       "name": "HOUSEKEEPING_FIND_USER_BY_NAME",
       "direction": "client_to_server",
       "header": 9100,
