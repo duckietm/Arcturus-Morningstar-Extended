@@ -7,6 +7,10 @@ import com.eu.habbo.messages.outgoing.rooms.RoomPaintComposer;
 
 public class RoomRemovePaintEvent extends MessageHandler {
     private static final String DEFAULT_PAINT = "0.0";
+
+    // "0.0" is the stored sentinel (paint packets are skipped on room entry),
+    // but a live broadcast must carry the texture ids the renderer defaults
+    // to for a fresh room, or the paint renders as a bare colour instead.
     private static final String CLIENT_DEFAULT_FLOOR = "111";
     private static final String CLIENT_DEFAULT_WALL = "201";
 
