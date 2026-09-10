@@ -540,6 +540,8 @@ public class Incoming {
     public static final int SetActiveNickIconEvent = 7017;
     public static final int PurchaseCatalogPrefixEvent = 7018;
     public static final int SetDisplayOrderEvent = 7019;
+    public static final int RoomRemoveBackgroundEvent = 7020;
+    public static final int RoomRemovePaintEvent = 7021;
 
     // YouTube Room Broadcast
     public static final int YouTubeRoomPlayEvent = 8001;

@@ -303,6 +303,8 @@ import com.eu.habbo.messages.incoming.rooms.RoomFavoriteEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomMuteEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomPlacePaintEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomRemoveAllRightsEvent;
+import com.eu.habbo.messages.incoming.rooms.RoomRemoveBackgroundEvent;
+import com.eu.habbo.messages.incoming.rooms.RoomRemovePaintEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomRemoveRightsEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomRequestBannedUsersEvent;
 import com.eu.habbo.messages.incoming.rooms.RoomSettingsSaveEvent;
@@ -947,6 +949,8 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomPickupItemEvent, RoomPickupItemEvent.class);
         this.registerHandler(Incoming.RoomPickupChooserEvent, RoomPickupChooserEvent.class);
         this.registerHandler(Incoming.RoomPlacePaintEvent, RoomPlacePaintEvent.class);
+        this.registerHandler(Incoming.RoomRemoveBackgroundEvent, RoomRemoveBackgroundEvent.class);
+        this.registerHandler(Incoming.RoomRemovePaintEvent, RoomRemovePaintEvent.class);
         this.registerHandler(Incoming.RoomUserStartTypingEvent, RoomUserStartTypingEvent.class);
         this.registerHandler(Incoming.RoomUserStopTypingEvent, RoomUserStopTypingEvent.class);
         this.registerHandler(Incoming.ClickFurniEvent, ClickFurniEvent.class);
