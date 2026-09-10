@@ -51,10 +51,10 @@ public class CatalogPageComposer extends MessageComposer {
                 item.serialize(this.response);
             }
         } else {
-            this.response.appendInt(this.page.getCatalogItems().size());
             List<CatalogItem> items =
-                    new ArrayList<>(this.page.getCatalogItems().values());
+                    Emulator.getGameEnvironment().getCatalogManager().getEffectivePageItems(this.page);
             Collections.sort(items);
+            this.response.appendInt(items.size());
             for (CatalogItem item : items) {
                 item.serialize(this.response);
             }

@@ -1287,6 +1287,45 @@ public class CatalogManager {
         }
     }
 
+    /** True when the item is a limited edition whose whole stock has been claimed. */
+    public boolean isLimitedSoldOut(CatalogItem item) {
+        if (item == null || !item.isLimited()) {
+            return false;
+        }
+
+        CatalogLimitedConfiguration configuration = this.getLimitedConfig(item);
+
+        return configuration != null && configuration.available() == 0;
+    }
+
+    public List<CatalogItem> getEffectivePageItems(CatalogPage page) {
+        List<CatalogItem> items = new ArrayList<>(page.getCatalogItems().values());
+
+        int soldOutPageId = Emulator.getConfig().getInt("catalog.ltd.page.soldout");
+        if (soldOutPageId <= 0) {
+            return items;
+        }
+
+        if (page.getId() == soldOutPageId) {
+            synchronized (this.limitedNumbers) {
+                for (Map.Entry<Integer, CatalogLimitedConfiguration> entry : this.limitedNumbers.entrySet()) {
+                    if (entry.getValue().available() != 0) {
+                        continue;
+                    }
+
+                    CatalogItem soldOut = this.getCatalogItem(entry.getKey());
+                    if (soldOut != null && soldOut.getPageId() != soldOutPageId && !items.contains(soldOut)) {
+                        items.add(soldOut);
+                    }
+                }
+            }
+        } else {
+            items.removeIf(this::isLimitedSoldOut);
+        }
+
+        return items;
+    }
+
     public CatalogLimitedConfiguration createOrUpdateLimitedConfig(CatalogItem item) {
         if (!item.isLimited()) return null;
 
@@ -2443,7 +2482,6 @@ public class CatalogManager {
             this.publishAtomicFurniturePurchase(habbo, purchase);
             if (limitedConfiguration != null) {
                 habbo.getHabboStats().addLtdLog(item.getId(), Emulator.getIntUnixTimestamp());
-                limitedConfiguration.markSoldOutIfEmpty();
             }
         } catch (SQLException exception) {
             if (limitedConfiguration != null && limitedNumber > 0) limitedConfiguration.restoreNumber(limitedNumber);

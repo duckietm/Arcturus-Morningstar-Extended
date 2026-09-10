@@ -18,7 +18,6 @@ public class CatalogLimitedConfiguration implements Runnable {
     private final int itemId;
     private final LinkedList<Integer> limitedNumbers;
     private int totalSet;
-    private int soldOutFromPageId = 0;
 
     public CatalogLimitedConfiguration(int itemId, LinkedList<Integer> availableNumbers, int totalSet) {
         this(itemId, availableNumbers, totalSet, Emulator.getConfig().getBoolean("catalog.ltd.random", true));
@@ -53,17 +52,6 @@ public class CatalogLimitedConfiguration implements Runnable {
         synchronized (this.limitedNumbers) {
             if (!this.limitedNumbers.contains(number)) this.limitedNumbers.push(number);
 
-            if (this.soldOutFromPageId > 0) {
-                CatalogItem catalogItem =
-                        Emulator.getGameEnvironment().getCatalogManager().getCatalogItem(this.itemId);
-                if (catalogItem != null) {
-                    Emulator.getGameEnvironment()
-                            .getCatalogManager()
-                            .moveCatalogItem(catalogItem, this.soldOutFromPageId);
-                }
-                this.soldOutFromPageId = 0;
-            }
-
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection();
                     PreparedStatement statement = connection.prepareStatement(
                             "UPDATE catalog_items_limited SET user_id = 0, timestamp = 0, item_id = 0 WHERE catalog_item_id = ? AND number = ? LIMIT 1")) {
@@ -80,7 +68,6 @@ public class CatalogLimitedConfiguration implements Runnable {
         synchronized (this.limitedNumbers) {
             try (Connection connection = Emulator.getDatabase().getDataSource().getConnection()) {
                 this.limitedSold(connection, catalogItemId, habbo, item);
-                this.markSoldOutIfEmpty();
             } catch (SQLException e) {
                 LOGGER.error("Caught SQL exception", e);
             }
@@ -104,24 +91,6 @@ public class CatalogLimitedConfiguration implements Runnable {
     public void restoreNumber(int number) {
         synchronized (this.limitedNumbers) {
             if (!this.limitedNumbers.contains(number)) this.limitedNumbers.push(number);
-        }
-    }
-
-    public void markSoldOutIfEmpty() {
-        synchronized (this.limitedNumbers) {
-            if (this.limitedNumbers.isEmpty()) {
-                int soldOutPageId = Emulator.getConfig().getInt("catalog.ltd.page.soldout");
-                if (soldOutPageId <= 0) {
-                    return;
-                }
-
-                CatalogItem catalogItem =
-                        Emulator.getGameEnvironment().getCatalogManager().getCatalogItem(this.itemId);
-                if (catalogItem != null) {
-                    this.soldOutFromPageId = catalogItem.getPageId();
-                    Emulator.getGameEnvironment().getCatalogManager().moveCatalogItem(catalogItem, soldOutPageId);
-                }
-            }
         }
     }
 
