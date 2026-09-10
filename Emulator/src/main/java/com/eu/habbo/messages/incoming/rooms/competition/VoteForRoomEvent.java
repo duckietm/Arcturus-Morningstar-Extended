@@ -46,7 +46,6 @@ public class VoteForRoomEvent extends MessageHandler {
             votesLeft = manager.votesLeft(userId, competition);
         }
 
-        RoomCompetitionSupport.sendVotingState(
-                this.client, competition, RoomCompetitionResult.VOTE_ALLOWED, votesLeft);
+        RoomCompetitionSupport.sendVotingState(this.client, competition, RoomCompetitionResult.VOTE_ALLOWED, votesLeft);
     }
 }

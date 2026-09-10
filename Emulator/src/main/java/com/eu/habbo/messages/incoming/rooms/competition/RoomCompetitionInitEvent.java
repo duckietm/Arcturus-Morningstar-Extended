@@ -56,7 +56,6 @@ public class RoomCompetitionInitEvent extends MessageHandler {
 
         int votesLeft = manager.votesLeft(habbo.getHabboInfo().getId(), competition);
 
-        RoomCompetitionSupport.sendVotingState(
-                this.client, competition, RoomCompetitionResult.VOTE_ALLOWED, votesLeft);
+        RoomCompetitionSupport.sendVotingState(this.client, competition, RoomCompetitionResult.VOTE_ALLOWED, votesLeft);
     }
 }
