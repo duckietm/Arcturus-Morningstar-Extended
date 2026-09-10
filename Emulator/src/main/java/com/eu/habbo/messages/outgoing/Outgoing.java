@@ -698,6 +698,7 @@ public class Outgoing {
     // Custom features — IDs 9400+ reserved
     public static final int RareValuesComposer = 9400;
     public static final int HotLooksComposer = 9360; // AIR 13 avatar editor hot looks tab
+    public static final int BuildHeightAvailableComposer = 9350; // Build height widget availability
     public static final int WheelDataComposer = 9401;
     public static final int WheelResultComposer = 9402;
     public static final int WheelRecentWinsComposer = 9403;

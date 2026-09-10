@@ -560,6 +560,7 @@ public class Incoming {
     public static final int RoomRemoveBackgroundEvent = 7020;
     public static final int RoomRemovePaintEvent = 7021;
     public static final int SetBuildUnderpassEvent = 7022;
+    public static final int SetBuildHeightEvent = 9351;
 
     // YouTube Room Broadcast
     public static final int YouTubeRoomPlayEvent = 8001;

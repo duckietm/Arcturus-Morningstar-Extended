@@ -19684,6 +19684,65 @@
           "name": "typing"
         }
       ]
+    },
+    {
+      "name": "SET_BUILD_HEIGHT",
+      "direction": "client_to_server",
+      "header": 9351,
+      "java": {
+        "symbol": "SetBuildHeightEvent",
+        "className": "SetBuildHeightEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/SetBuildHeightEvent.java"
+      },
+      "typescript": {
+        "symbol": "SET_BUILD_HEIGHT",
+        "className": "SetBuildHeightComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/buildheight/SetBuildHeightComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "enabled"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "heightHundredths"
+        }
+      ]
+    },
+    {
+      "name": "BUILD_HEIGHT_AVAILABLE",
+      "direction": "server_to_client",
+      "header": 9350,
+      "java": {
+        "symbol": "BuildHeightAvailableComposer",
+        "className": "BuildHeightAvailableComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/BuildHeightAvailableComposer.java"
+      },
+      "typescript": {
+        "symbol": "BUILD_HEIGHT_AVAILABLE",
+        "className": "BuildHeightAvailableParser",
+        "path": "packages/communication/src/messages/parser/room/furniture/BuildHeightAvailableParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "available"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "minHeight"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "maxHeight"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -20488,14 +20547,6 @@
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 9351,
-      "symbol": "SET_BUILD_HEIGHT",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/buildheight/SetBuildHeightComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
       "direction": "server_to_client",
       "side": "typescript",
       "header": 84,
@@ -20805,14 +20856,6 @@
       "header": 5210,
       "symbol": "FIREWORK_CHARGE_DATA",
       "path": "packages/communication/src/messages/parser/catalog/FireworkChargeDataParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 9350,
-      "symbol": "BUILD_HEIGHT_AVAILABLE",
-      "path": "packages/communication/src/messages/parser/room/furniture/BuildHeightAvailableParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

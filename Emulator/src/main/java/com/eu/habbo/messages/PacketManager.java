@@ -380,6 +380,7 @@ import com.eu.habbo.messages.incoming.rooms.items.RoomPickupItemEvent;
 import com.eu.habbo.messages.incoming.rooms.items.RoomPlaceItemEvent;
 import com.eu.habbo.messages.incoming.rooms.items.RotateMoveItemEvent;
 import com.eu.habbo.messages.incoming.rooms.items.SavePostItStickyPoleEvent;
+import com.eu.habbo.messages.incoming.rooms.items.SetBuildHeightEvent;
 import com.eu.habbo.messages.incoming.rooms.items.SetBuildUnderpassEvent;
 import com.eu.habbo.messages.incoming.rooms.items.SetStackHelperAdjacentHeightEvent;
 import com.eu.habbo.messages.incoming.rooms.items.SetStackHelperHeightEvent;
@@ -1025,6 +1026,7 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomRemoveBackgroundEvent, RoomRemoveBackgroundEvent.class);
         this.registerHandler(Incoming.RoomRemovePaintEvent, RoomRemovePaintEvent.class);
         this.registerHandler(Incoming.SetBuildUnderpassEvent, SetBuildUnderpassEvent.class);
+        this.registerHandler(Incoming.SetBuildHeightEvent, SetBuildHeightEvent.class);
         this.registerHandler(Incoming.RoomUserStartTypingEvent, RoomUserStartTypingEvent.class);
         this.registerHandler(Incoming.RoomUserStopTypingEvent, RoomUserStopTypingEvent.class);
         this.registerHandler(Incoming.ClickFurniEvent, ClickFurniEvent.class);

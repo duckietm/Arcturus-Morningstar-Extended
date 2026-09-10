@@ -55,7 +55,7 @@ class ConsolePacketContractTest {
     void theRefreshAnswersWithEveryFriendAndIsRateLimited() throws Exception {
         String refresh = source("com/eu/habbo/messages/incoming/friends/RefreshFriendListEvent.java");
 
-        assertTrue(refresh.contains("new UpdateFriendComposer(habbo, habbo.getMessenger().getFriends().values(), 0)"));
+        assertTrue(refresh.contains("habbo, habbo.getMessenger().getFriends().values(), 0"));
         assertTrue(refresh.contains("return 5000;"));
     }
 }

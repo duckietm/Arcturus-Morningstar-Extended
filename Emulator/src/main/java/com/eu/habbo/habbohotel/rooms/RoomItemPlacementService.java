@@ -169,6 +169,8 @@ final class RoomItemPlacementService {
             height = Math.max(height, occupiedTile.getStackHeight());
         }
 
+        height = RoomBuildHeight.apply(owner, layout, tile, height);
+
         if (Emulator.getPluginManager().isRegistered(FurnitureBuildheightEvent.class, true)) {
             FurnitureBuildheightEvent event =
                     Emulator.getPluginManager().fireEvent(new FurnitureBuildheightEvent(item, owner, 0.00, height));
