@@ -19943,6 +19943,185 @@
           "name": "readerId"
         }
       ]
+    },
+    {
+      "name": "VOTE_FOR_ROOM",
+      "direction": "client_to_server",
+      "header": 143,
+      "java": {
+        "symbol": "VoteForRoomEvent",
+        "className": "VoteForRoomEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/VoteForRoomEvent.java"
+      },
+      "typescript": {
+        "symbol": "VOTE_FOR_ROOM",
+        "className": "VoteForRoomMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/VoteForRoomMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "goalCode"
+        }
+      ]
+    },
+    {
+      "name": "FORWARD_TO_A_COMPETITION_ROOM",
+      "direction": "client_to_server",
+      "header": 172,
+      "java": {
+        "symbol": "ForwardToACompetitionRoomEvent",
+        "className": "ForwardToACompetitionRoomEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/ForwardToACompetitionRoomEvent.java"
+      },
+      "typescript": {
+        "symbol": "FORWARD_TO_A_COMPETITION_ROOM",
+        "className": "ForwardToACompetitionRoomMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/ForwardToACompetitionRoomMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "goalCode"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "roomId"
+        }
+      ]
+    },
+    {
+      "name": "FORWARD_TO_RANDOM_COMPETITION_ROOM",
+      "direction": "client_to_server",
+      "header": 865,
+      "java": {
+        "symbol": "ForwardToRandomCompetitionRoomEvent",
+        "className": "ForwardToRandomCompetitionRoomEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/ForwardToRandomCompetitionRoomEvent.java"
+      },
+      "typescript": {
+        "symbol": "FORWARD_TO_RANDOM_COMPETITION_ROOM",
+        "className": "ForwardToRandomCompetitionRoomMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/ForwardToRandomCompetitionRoomMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "goalCode"
+        }
+      ]
+    },
+    {
+      "name": "ROOM_COMPETITION_INIT",
+      "direction": "client_to_server",
+      "header": 1334,
+      "java": {
+        "symbol": "RoomCompetitionInitEvent",
+        "className": "RoomCompetitionInitEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/RoomCompetitionInitEvent.java"
+      },
+      "typescript": {
+        "symbol": "ROOM_COMPETITION_INIT",
+        "className": "RoomCompetitionInitMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/RoomCompetitionInitMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "FORWARD_TO_A_SUBMITTABLE_ROOM",
+      "direction": "client_to_server",
+      "header": 1450,
+      "java": {
+        "symbol": "ForwardToASubmittableRoomEvent",
+        "className": "ForwardToASubmittableRoomEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/ForwardToASubmittableRoomEvent.java"
+      },
+      "typescript": {
+        "symbol": "FORWARD_TO_A_SUBMITTABLE_ROOM",
+        "className": "ForwardToASubmittableRoomMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/ForwardToASubmittableRoomMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "GET_IS_USER_PART_OF_COMPETITION",
+      "direction": "client_to_server",
+      "header": 2077,
+      "java": {
+        "symbol": "GetIsUserPartOfCompetitionEvent",
+        "className": "GetIsUserPartOfCompetitionEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/GetIsUserPartOfCompetitionEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_IS_USER_PART_OF_COMPETITION",
+        "className": "GetIsUserPartOfCompetitionMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/GetIsUserPartOfCompetitionMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "goalCode"
+        }
+      ]
+    },
+    {
+      "name": "SUBMIT_ROOM_TO_COMPETITION",
+      "direction": "client_to_server",
+      "header": 2595,
+      "java": {
+        "symbol": "SubmitRoomToCompetitionEvent",
+        "className": "SubmitRoomToCompetitionEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/competition/SubmitRoomToCompetitionEvent.java"
+      },
+      "typescript": {
+        "symbol": "SUBMIT_ROOM_TO_COMPETITION",
+        "className": "SubmitRoomToCompetitionMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/competition/SubmitRoomToCompetitionMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "goalCode"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "confirmLevel"
+        }
+      ]
+    },
+    {
+      "name": "COMPETITION_USER_PART_OF",
+      "direction": "server_to_client",
+      "header": 3841,
+      "java": {
+        "symbol": "IsUserPartOfCompetitionComposer",
+        "className": "IsUserPartOfCompetitionComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/rooms/competition/IsUserPartOfCompetitionComposer.java"
+      },
+      "typescript": {
+        "symbol": "COMPETITION_USER_PART_OF",
+        "className": "IsUserPartOfCompetitionMessageParser",
+        "path": "packages/communication/src/messages/parser/competition/IsUserPartOfCompetitionMessageParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "partOf"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "targetId"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -20101,22 +20280,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 143,
-      "symbol": "VOTE_FOR_ROOM",
-      "path": "packages/communication/src/messages/outgoing/competition/VoteForRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 172,
-      "symbol": "FORWARD_TO_A_COMPETITION_ROOM",
-      "path": "packages/communication/src/messages/outgoing/competition/ForwardToACompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 389,
       "symbol": "GETUSERGAMEACHIEVEMENTSMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/lobby/GetUserGameAchievementsMessageComposer.ts",
@@ -20197,14 +20360,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 865,
-      "symbol": "FORWARD_TO_RANDOM_COMPETITION_ROOM",
-      "path": "packages/communication/src/messages/outgoing/competition/ForwardToRandomCompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 1002,
       "symbol": "MY_FREQUENT_ROOM_HISTORY_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/MyFrequentRoomHistorySearchMessageComposer.ts",
@@ -20253,14 +20408,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 1334,
-      "symbol": "ROOM_COMPETITION_INIT",
-      "path": "packages/communication/src/messages/outgoing/competition/RoomCompetitionInitMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 1347,
       "symbol": "GET_IS_OFFER_GIFTABLE",
       "path": "packages/communication/src/messages/outgoing/catalog/GetIsOfferGiftableComposer.ts",
@@ -20288,14 +20435,6 @@
       "header": 1445,
       "symbol": "GAME2EXITGAMEMESSAGE",
       "path": "packages/communication/src/messages/outgoing/game/arena/Game2ExitGameMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 1450,
-      "symbol": "FORWARD_TO_A_SUBMITTABLE_ROOM",
-      "path": "packages/communication/src/messages/outgoing/competition/ForwardToASubmittableRoomMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20344,14 +20483,6 @@
       "header": 2031,
       "symbol": "SEARCH_FAQS",
       "path": "packages/communication/src/messages/outgoing/help/SearchFaqsMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2077,
-      "symbol": "GET_IS_USER_PART_OF_COMPETITION",
-      "path": "packages/communication/src/messages/outgoing/competition/GetIsUserPartOfCompetitionMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20472,14 +20603,6 @@
       "header": 2565,
       "symbol": "GAME2GETWEEKLYLEADERBOARD",
       "path": "packages/communication/src/messages/outgoing/game/score/Game2GetWeeklyLeaderboardComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2595,
-      "symbol": "SUBMIT_ROOM_TO_COMPETITION",
-      "path": "packages/communication/src/messages/outgoing/competition/SubmitRoomToCompetitionMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20920,14 +21043,6 @@
       "header": 3684,
       "symbol": "BOT_RECEIVED",
       "path": "packages/communication/src/messages/parser/bots/BotReceivedMessageParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 3841,
-      "symbol": "COMPETITION_USER_PART_OF",
-      "path": "packages/communication/src/messages/parser/competition/IsUserPartOfCompetitionMessageParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

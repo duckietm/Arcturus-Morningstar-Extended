@@ -989,6 +989,8 @@ U|com/eu/habbo/habbohotel/rooms/RoomWordQuizManager.java|CALL|getIntUnixTimestam
 U|com/eu/habbo/habbohotel/rooms/TraxManager.java|CALL|getGameEnvironment|13
 U|com/eu/habbo/habbohotel/rooms/TraxManager.java|CALL|getIntUnixTimestamp|6
 U|com/eu/habbo/habbohotel/rooms/TraxManager.java|CALL|getThreading|3
+U|com/eu/habbo/habbohotel/rooms/competition/RoomCompetitionManager.java|CALL|getDatabase|8
+U|com/eu/habbo/habbohotel/rooms/competition/RoomCompetitionManager.java|CALL|getIntUnixTimestamp|4
 U|com/eu/habbo/habbohotel/rooms/pathfinding/impl/PathfinderImpl.java|CALL|getConfig|2
 U|com/eu/habbo/habbohotel/soundboard/SoundboardManager.java|CALL|getDatabase|3
 U|com/eu/habbo/habbohotel/translations/GoogleTranslateManager.java|CALL|getConfig|1
@@ -1527,6 +1529,10 @@ U|com/eu/habbo/messages/incoming/rooms/bots/BotSaveSettingsEvent.java|CALL|getCo
 U|com/eu/habbo/messages/incoming/rooms/bots/BotSaveSettingsEvent.java|CALL|getGameEnvironment|3
 U|com/eu/habbo/messages/incoming/rooms/bots/BotSaveSettingsEvent.java|CALL|getPluginManager|3
 U|com/eu/habbo/messages/incoming/rooms/bots/BotSaveSettingsEvent.java|CALL|getThreading|1
+U|com/eu/habbo/messages/incoming/rooms/competition/ForwardToASubmittableRoomEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/rooms/competition/RoomCompetitionInitEvent.java|CALL|getIntUnixTimestamp|1
+U|com/eu/habbo/messages/incoming/rooms/competition/SubmitRoomToCompetitionEvent.java|CALL|getIntUnixTimestamp|1
+U|com/eu/habbo/messages/incoming/rooms/competition/VoteForRoomEvent.java|CALL|getIntUnixTimestamp|1
 U|com/eu/habbo/messages/incoming/rooms/items/AdvertisingSaveEvent.java|CALL|getConfig|1
 U|com/eu/habbo/messages/incoming/rooms/items/AdvertisingSaveEvent.java|CALL|getTexts|1
 U|com/eu/habbo/messages/incoming/rooms/items/AdvertisingSaveEvent.java|CALL|getThreading|1
