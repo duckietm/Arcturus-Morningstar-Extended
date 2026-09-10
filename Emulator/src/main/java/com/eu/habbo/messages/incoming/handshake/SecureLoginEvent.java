@@ -1,6 +1,7 @@
 package com.eu.habbo.messages.incoming.handshake;
 
 import com.eu.habbo.Emulator;
+import com.eu.habbo.habbohotel.achievements.TalentTrackType;
 import com.eu.habbo.habbohotel.gameclients.GameClient;
 import com.eu.habbo.habbohotel.gameclients.GameClientManager;
 import com.eu.habbo.habbohotel.gameclients.SessionResumeManager;
@@ -35,11 +36,14 @@ import com.eu.habbo.messages.outgoing.inventory.InventoryAchievementsComposer;
 import com.eu.habbo.messages.outgoing.inventory.UserEffectsListComposer;
 import com.eu.habbo.messages.outgoing.modtool.CfhTopicsMessageComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolComposer;
+import com.eu.habbo.messages.outgoing.modtool.ModToolIssueHandlerDimensionsComposer;
 import com.eu.habbo.messages.outgoing.modtool.ModToolSanctionInfoComposer;
 import com.eu.habbo.messages.outgoing.mysterybox.MysteryBoxKeysComposer;
 import com.eu.habbo.messages.outgoing.navigator.NewNavigatorSavedSearchesComposer;
+import com.eu.habbo.messages.outgoing.unknown.UnknownStatusComposer;
 import com.eu.habbo.messages.outgoing.users.FavoriteRoomsCountComposer;
 import com.eu.habbo.messages.outgoing.users.UserAchievementScoreComposer;
+import com.eu.habbo.messages.outgoing.users.UserCitizinShipComposer;
 import com.eu.habbo.messages.outgoing.users.UserClothesComposer;
 import com.eu.habbo.messages.outgoing.users.UserClubComposer;
 import com.eu.habbo.messages.outgoing.users.UserHomeRoomComposer;
@@ -58,6 +62,10 @@ import org.slf4j.LoggerFactory;
 public class SecureLoginEvent extends MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureLoginEvent.class);
     private static final int MAX_SSO_TICKET_LENGTH = 128;
+    /** AccountSafetyLockStatusChange: 0 locks the account, 1 releases it. */
+    private static final int SAFETY_LOCK_LOCKED = 0;
+
+    private static final int SAFETY_LOCK_UNLOCKED = 1;
 
     @Override
     public int getRatelimit() {
@@ -374,6 +382,29 @@ public class SecureLoginEvent extends MessageHandler {
                 // Hardcoded
                 // this.client.sendResponse(new ForumsTestComposer());
                 this.client.sendResponse(new InventoryAchievementsComposer());
+
+                // Official TalentTrackLevel (1203): TalentPromoCtrl needs the level pair of both
+                // tracks before the hotel view decides whether to promote them.
+                if (Emulator.getConfig().getBoolean("hotel.talenttrack.enabled")) {
+                    for (TalentTrackType talentTrackType : TalentTrackType.values()) {
+                        this.client.sendResponse(UserCitizinShipComposer.forHabbo(habbo, talentTrackType));
+                    }
+                }
+
+                // Official AccountSafetyLockStatusChange (1243): the toolbar badge stays up for as
+                // long as the account is locked, so replay the stored status on every login.
+                this.client.sendResponse(new UnknownStatusComposer(
+                        habbo.getHabboStats().safetyLocked ? SAFETY_LOCK_LOCKED : SAFETY_LOCK_UNLOCKED));
+
+                // Official ModToolPreferences (31) round trip: replay where the moderator left the
+                // issue handler window.
+                if (habbo.hasPermission(Permission.ACC_SUPPORTTOOL) && habbo.getHabboStats().modToolWindowWidth > 0) {
+                    this.client.sendResponse(new ModToolIssueHandlerDimensionsComposer(
+                            habbo.getHabboStats().modToolWindowX,
+                            habbo.getHabboStats().modToolWindowY,
+                            habbo.getHabboStats().modToolWindowWidth,
+                            habbo.getHabboStats().modToolWindowHeight));
+                }
 
                 ModToolSanctions modToolSanctions =
                         Emulator.getGameEnvironment().getModToolSanctions();
