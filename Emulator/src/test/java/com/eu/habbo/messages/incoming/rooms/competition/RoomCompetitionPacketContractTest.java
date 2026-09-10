@@ -63,7 +63,7 @@ class RoomCompetitionPacketContractTest {
 
         assertTrue(support.contains("room.getOwnerId() == habbo.getHabboInfo().getId()"));
         assertTrue(vote.contains("RoomCompetitionSupport.votableEntryId(habbo, room, competition)"));
-        assertTrue(vote.contains("entryId <= 0"));
+        assertTrue(vote.contains("if (entryId <= 0) return;"));
         assertTrue(vote.contains("votesLeft > 0"));
     }
 

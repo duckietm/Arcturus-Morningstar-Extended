@@ -35,10 +35,9 @@ public class VoteForRoomEvent extends MessageHandler {
         int entryId = RoomCompetitionSupport.votableEntryId(habbo, room, competition);
         int userId = habbo.getHabboInfo().getId();
 
-        if (entryId <= 0) {
-            RoomCompetitionSupport.sendVotingState(this.client, competition, RoomCompetitionResult.VOTE_NOT_ALLOWED, 0);
-            return;
-        }
+        // Nothing to vote for: the window is not open on a room that never entered, so a packet
+        // for one is either stale or crafted and gets no answer.
+        if (entryId <= 0) return;
 
         int votesLeft = manager.votesLeft(userId, competition);
 
@@ -48,9 +47,6 @@ public class VoteForRoomEvent extends MessageHandler {
         }
 
         RoomCompetitionSupport.sendVotingState(
-                this.client,
-                competition,
-                votesLeft > 0 ? RoomCompetitionResult.VOTE_ALLOWED : RoomCompetitionResult.VOTE_NOT_ALLOWED,
-                votesLeft);
+                this.client, competition, RoomCompetitionResult.VOTE_ALLOWED, votesLeft);
     }
 }

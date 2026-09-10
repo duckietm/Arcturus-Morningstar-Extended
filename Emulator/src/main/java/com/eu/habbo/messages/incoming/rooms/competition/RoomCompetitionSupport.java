@@ -24,9 +24,9 @@ final class RoomCompetitionSupport {
     }
 
     /**
-     * The voting window. The renderer reads four fields where the official client also reads a
-     * "voting allowed" flag, so the state travels in the result code: a visitor who may not vote
-     * gets {@link RoomCompetitionResult#VOTE_NOT_ALLOWED}, everybody else the votes they have left.
+     * The voting window. The result code says whether the visitor is eligible at all (the renderer
+     * derives its "voting allowed" flag from it being zero) and the votes left decide whether the
+     * button is offered: somebody who used today's votes is eligible but has none left.
      */
     static void sendVotingState(GameClient client, RoomCompetition competition, int resultCode, int votesLeft) {
         client.sendResponse(

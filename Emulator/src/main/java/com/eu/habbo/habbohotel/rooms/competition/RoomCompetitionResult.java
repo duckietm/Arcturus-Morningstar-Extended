@@ -27,11 +27,18 @@ public final class RoomCompetitionResult {
     /** First contact: the rules, and a button that accepts them. */
     public static final int RULES = 6;
 
-    /** Voting: "Ouch! You cannot vote yet." */
-    public static final int VOTE_NOT_ALLOWED = 1;
+    /**
+     * Voting: the visitor may vote, and the votes they have left say whether the button is offered.
+     * The renderer names these three (CompetitionVotingInfoResult): anything but zero is a visitor
+     * who is not eligible at all, which is a rule this hotel does not have yet.
+     */
+    public static final int VOTE_ALLOWED = 0;
 
-    /** Voting: the room can be voted for, if the visitor has votes left. */
-    public static final int VOTE_ALLOWED = 2;
+    /** Voting: the visitor lacks a talent-track perk the competition asks for. */
+    public static final int VOTE_PERK_MISSING = 1;
+
+    /** Voting: the visitor lacks a badge the competition asks for. */
+    public static final int VOTE_BADGE_MISSING = 2;
 
     private RoomCompetitionResult() {}
 }
