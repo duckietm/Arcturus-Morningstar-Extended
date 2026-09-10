@@ -810,6 +810,21 @@ public class ModToolManager {
         }
     }
 
+    /**
+     * Closes a call the reporter withdrew themselves, which is what the pending-call dialog offers
+     * when somebody logs back in with a report still open. The call simply goes away: no verdict is
+     * sent back, nobody is sanctioned, and the moderators' list loses the row.
+     */
+    public void closeTicketAsWithdrawn(ModToolIssue issue) {
+        issue.state = ModToolTicketState.CLOSED;
+        issue.closedTimestamp = Emulator.getIntUnixTimestamp();
+        issue.sanctioned = false;
+        issue.updateInDatabase();
+
+        this.updateTicketToMods(issue);
+        this.removeTicket(issue);
+    }
+
     public void closeTicketAsUseless(ModToolIssue issue, Habbo sender) {
         issue.state = ModToolTicketState.CLOSED;
         // The reporter's own "my reports" window shows when the report was decided and

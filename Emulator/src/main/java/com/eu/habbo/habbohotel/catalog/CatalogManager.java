@@ -2493,7 +2493,12 @@ public class CatalogManager {
         }
     }
 
-    private String prepareFurnitureExtraData(Habbo habbo, Item baseItem, String extraData) {
+    /**
+     * Builds the extra data a trophy or a badge display carries: the owner, the date and the filtered
+     * text, in the layout the client reads. Engraving a mystery trophy in a room goes through here too,
+     * so a trophy bought in the catalog and one engraved in a room are written the same way.
+     */
+    public String prepareFurnitureExtraData(Habbo habbo, Item baseItem, String extraData) {
         if (baseItem.getInteractionType().getType() != InteractionTrophy.class
                 && baseItem.getInteractionType().getType() != InteractionBadgeDisplay.class) return extraData;
 

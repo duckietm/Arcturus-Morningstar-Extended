@@ -811,7 +811,7 @@ U|com/eu/habbo/habbohotel/modtool/ModToolIssue.java|CALL|getThreading|1
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getDatabase|15
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getGameEnvironment|11
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getGameServer|5
-U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getIntUnixTimestamp|12
+U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getIntUnixTimestamp|13
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getPluginManager|7
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getTexts|3
 U|com/eu/habbo/habbohotel/modtool/ModToolManager.java|CALL|getThreading|3
@@ -1384,6 +1384,7 @@ U|com/eu/habbo/messages/incoming/mentions/DeleteMentionEvent.java|CALL|getGameEn
 U|com/eu/habbo/messages/incoming/mentions/MarkMentionsReadEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/mentions/RequestMentionsEvent.java|CALL|getConfig|1
 U|com/eu/habbo/messages/incoming/mentions/RequestMentionsEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/modtool/DeletePendingCallsForHelpEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/modtool/ModToolAlertEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/modtool/ModToolAlertEvent.java|CALL|getTexts|1
 U|com/eu/habbo/messages/incoming/modtool/ModToolChangeRoomSettingsEvent.java|CALL|getGameEnvironment|2
@@ -1442,6 +1443,7 @@ U|com/eu/habbo/messages/incoming/modtool/RequestReportRoomEvent.java|CALL|getGam
 U|com/eu/habbo/messages/incoming/modtool/RequestReportUserBullyingEvent.java|CALL|getConfig|1
 U|com/eu/habbo/messages/incoming/modtool/RequestReportUserBullyingEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/modtool/StartSafetyQuizEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/navigator/ConvertGlobalRoomIdEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/navigator/GetCategoriesWithUserCountEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/navigator/NavigatorCategoryListModeEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/navigator/NewNavigatorActionEvent.java|CALL|getConfig|1
@@ -1539,6 +1541,8 @@ U|com/eu/habbo/messages/incoming/rooms/items/MannequinSaveNameEvent.java|CALL|ge
 U|com/eu/habbo/messages/incoming/rooms/items/MoodLightSaveSettingsEvent.java|CALL|getConfig|1
 U|com/eu/habbo/messages/incoming/rooms/items/MoodLightSaveSettingsEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/incoming/rooms/items/MoodLightTurnOnEvent.java|CALL|getThreading|1
+U|com/eu/habbo/messages/incoming/rooms/items/OpenMysteryTrophyEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/rooms/items/OpenMysteryTrophyEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/incoming/rooms/items/PostItDeleteEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/incoming/rooms/items/PostItPlaceEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/rooms/items/PostItPlaceEvent.java|CALL|getThreading|1
@@ -1581,6 +1585,7 @@ U|com/eu/habbo/messages/incoming/rooms/pets/PetSupplementEvent.java|CALL|getIntU
 U|com/eu/habbo/messages/incoming/rooms/pets/PetSupplementEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/incoming/rooms/pets/PetUseItemEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/rooms/pets/PetUseItemEvent.java|CALL|getThreading|7
+U|com/eu/habbo/messages/incoming/rooms/pets/RoomUserGiveHandItemPetEvent.java|CALL|getThreading|1
 U|com/eu/habbo/messages/incoming/rooms/pets/ScratchPetEvent.java|CALL|getConfig|1
 U|com/eu/habbo/messages/incoming/rooms/pets/ScratchPetEvent.java|CALL|getIntUnixTimestamp|1
 U|com/eu/habbo/messages/incoming/rooms/pets/ScratchPetEvent.java|CALL|getThreading|2

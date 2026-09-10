@@ -19765,6 +19765,93 @@
           "name": "userId"
         }
       ]
+    },
+    {
+      "name": "CONVERT_GLOBAL_ROOM_ID",
+      "direction": "client_to_server",
+      "header": 314,
+      "java": {
+        "symbol": "ConvertGlobalRoomIdEvent",
+        "className": "ConvertGlobalRoomIdEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/navigator/ConvertGlobalRoomIdEvent.java"
+      },
+      "typescript": {
+        "symbol": "CONVERT_GLOBAL_ROOM_ID",
+        "className": "ConvertGlobalRoomIdComposer",
+        "path": "packages/communication/src/messages/outgoing/navigator/ConvertGlobalRoomIdComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "target"
+        }
+      ]
+    },
+    {
+      "name": "UNIT_GIVE_HANDITEM_PET",
+      "direction": "client_to_server",
+      "header": 2768,
+      "java": {
+        "symbol": "RoomUserGiveHandItemPetEvent",
+        "className": "RoomUserGiveHandItemPetEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/pets/RoomUserGiveHandItemPetEvent.java"
+      },
+      "typescript": {
+        "symbol": "UNIT_GIVE_HANDITEM_PET",
+        "className": "RoomUnitGiveHandItemPetComposer",
+        "path": "packages/communication/src/messages/outgoing/room/unit/RoomUnitGiveHandItemPetComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "petId"
+        }
+      ]
+    },
+    {
+      "name": "MYSTERYBOX_OPEN_TROPHY",
+      "direction": "client_to_server",
+      "header": 3074,
+      "java": {
+        "symbol": "OpenMysteryTrophyEvent",
+        "className": "OpenMysteryTrophyEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/OpenMysteryTrophyEvent.java"
+      },
+      "typescript": {
+        "symbol": "MYSTERYBOX_OPEN_TROPHY",
+        "className": "OpenMysteryTrophyMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/OpenMysteryTrophyMessageComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "itemId"
+        },
+        {
+          "kind": "scalar",
+          "type": "string",
+          "name": "text"
+        }
+      ]
+    },
+    {
+      "name": "DELETE_PENDING_CALLS_FOR_HELP",
+      "direction": "client_to_server",
+      "header": 3605,
+      "java": {
+        "symbol": "DeletePendingCallsForHelpEvent",
+        "className": "DeletePendingCallsForHelpEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/modtool/DeletePendingCallsForHelpEvent.java"
+      },
+      "typescript": {
+        "symbol": "DELETE_PENDING_CALLS_FOR_HELP",
+        "className": "DeletePendingCallsForHelpMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/help/DeletePendingCallsForHelpMessageComposer.ts"
+      },
+      "fields": []
     }
   ],
   "unpaired": [
@@ -19934,14 +20021,6 @@
       "header": 172,
       "symbol": "FORWARD_TO_A_COMPETITION_ROOM",
       "path": "packages/communication/src/messages/outgoing/competition/ForwardToACompetitionRoomMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 314,
-      "symbol": "CONVERT_GLOBAL_ROOM_ID",
-      "path": "packages/communication/src/messages/outgoing/navigator/ConvertGlobalRoomIdComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20395,14 +20474,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 2768,
-      "symbol": "UNIT_GIVE_HANDITEM_PET",
-      "path": "packages/communication/src/messages/outgoing/room/unit/RoomUnitGiveHandItemPetComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 2809,
       "symbol": "ROOM_AD_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/RoomAdSearchMessageComposer.ts",
@@ -20414,14 +20485,6 @@
       "header": 2930,
       "symbol": "GUILD_BASE_SEARCH",
       "path": "packages/communication/src/messages/outgoing/navigator/GuildBaseSearchMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 3074,
-      "symbol": "MYSTERYBOX_OPEN_TROPHY",
-      "path": "packages/communication/src/messages/outgoing/room/furniture/OpenMysteryTrophyMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {
@@ -20510,14 +20573,6 @@
       "header": 3498,
       "symbol": "GET_SOUND_MACHINE_PLAYLIST",
       "path": "packages/communication/src/messages/outgoing/sound/GetSoundMachinePlayListMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 3605,
-      "symbol": "DELETE_PENDING_CALLS_FOR_HELP",
-      "path": "packages/communication/src/messages/outgoing/help/DeletePendingCallsForHelpMessageComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

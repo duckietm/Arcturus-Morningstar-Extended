@@ -237,6 +237,7 @@ import com.eu.habbo.messages.incoming.inventory.prefixes.SetDisplayOrderEvent;
 import com.eu.habbo.messages.incoming.mentions.DeleteMentionEvent;
 import com.eu.habbo.messages.incoming.mentions.MarkMentionsReadEvent;
 import com.eu.habbo.messages.incoming.mentions.RequestMentionsEvent;
+import com.eu.habbo.messages.incoming.modtool.DeletePendingCallsForHelpEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolAlertEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolChangeRoomSettingsEvent;
 import com.eu.habbo.messages.incoming.modtool.ModToolCloseTicketEvent;
@@ -269,6 +270,7 @@ import com.eu.habbo.messages.incoming.modtool.ReportThreadEvent;
 import com.eu.habbo.messages.incoming.modtool.RequestReportRoomEvent;
 import com.eu.habbo.messages.incoming.modtool.RequestReportUserBullyingEvent;
 import com.eu.habbo.messages.incoming.navigator.AddSavedSearchEvent;
+import com.eu.habbo.messages.incoming.navigator.ConvertGlobalRoomIdEvent;
 import com.eu.habbo.messages.incoming.navigator.DeleteSavedSearchEvent;
 import com.eu.habbo.messages.incoming.navigator.GetCategoriesWithUserCountEvent;
 import com.eu.habbo.messages.incoming.navigator.NavigatorCategoryListModeEvent;
@@ -369,6 +371,7 @@ import com.eu.habbo.messages.incoming.rooms.items.MoodLightSaveSettingsEvent;
 import com.eu.habbo.messages.incoming.rooms.items.MoodLightSettingsEvent;
 import com.eu.habbo.messages.incoming.rooms.items.MoodLightTurnOnEvent;
 import com.eu.habbo.messages.incoming.rooms.items.MoveWallItemEvent;
+import com.eu.habbo.messages.incoming.rooms.items.OpenMysteryTrophyEvent;
 import com.eu.habbo.messages.incoming.rooms.items.PostItDeleteEvent;
 import com.eu.habbo.messages.incoming.rooms.items.PostItPlaceEvent;
 import com.eu.habbo.messages.incoming.rooms.items.PostItRequestDataEvent;
@@ -426,6 +429,7 @@ import com.eu.habbo.messages.incoming.rooms.pets.PetSupplementEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.PetUseItemEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.RequestPetInformationEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.RequestPetTrainingPanelEvent;
+import com.eu.habbo.messages.incoming.rooms.pets.RoomUserGiveHandItemPetEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.ScratchPetEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.StopBreedingEvent;
 import com.eu.habbo.messages.incoming.rooms.pets.ToggleMonsterplantBreedableEvent;
@@ -954,6 +958,7 @@ public class PacketManager {
         this.registerHandler(Incoming.NavigatorCollapseCategoryEvent, NavigatorCollapseCategoryEvent.class);
         this.registerHandler(Incoming.NavigatorUncollapseCategoryEvent, NavigatorUncollapseCategoryEvent.class);
         this.registerHandler(Incoming.AddSavedSearchEvent, AddSavedSearchEvent.class);
+        this.registerHandler(Incoming.ConvertGlobalRoomIdEvent, ConvertGlobalRoomIdEvent.class);
         this.registerHandler(Incoming.DeleteSavedSearchEvent, DeleteSavedSearchEvent.class);
     }
 
@@ -1028,6 +1033,7 @@ public class PacketManager {
         this.registerHandler(Incoming.RoomRemovePaintEvent, RoomRemovePaintEvent.class);
         this.registerHandler(Incoming.SetBuildUnderpassEvent, SetBuildUnderpassEvent.class);
         this.registerHandler(Incoming.SetBuildHeightEvent, SetBuildHeightEvent.class);
+        this.registerHandler(Incoming.OpenMysteryTrophyEvent, OpenMysteryTrophyEvent.class);
         this.registerHandler(Incoming.RoomUserStartTypingEvent, RoomUserStartTypingEvent.class);
         this.registerHandler(Incoming.RoomUserStopTypingEvent, RoomUserStopTypingEvent.class);
         this.registerHandler(Incoming.ClickFurniEvent, ClickFurniEvent.class);
@@ -1111,6 +1117,7 @@ public class PacketManager {
         this.registerHandler(Incoming.ExtendRentOrBuyoutStripItemEvent, ExtendRentOrBuyoutStripItemEvent.class);
         this.registerHandler(Incoming.SetHomeRoomEvent, SetHomeRoomEvent.class);
         this.registerHandler(Incoming.RoomUserGiveHandItemEvent, RoomUserGiveHandItemEvent.class);
+        this.registerHandler(Incoming.RoomUserGiveHandItemPetEvent, RoomUserGiveHandItemPetEvent.class);
         this.registerHandler(Incoming.RoomMuteEvent, RoomMuteEvent.class);
         this.registerHandler(Incoming.RequestRoomWordFilterEvent, RequestRoomWordFilterEvent.class);
         this.registerHandler(Incoming.RoomWordFilterModifyEvent, RoomWordFilterModifyEvent.class);
@@ -1180,6 +1187,7 @@ public class PacketManager {
         this.registerHandler(Incoming.ModToolIssueDefaultSanctionEvent, ModToolIssueDefaultSanctionEvent.class);
 
         this.registerHandler(Incoming.RequestReportRoomEvent, RequestReportRoomEvent.class);
+        this.registerHandler(Incoming.DeletePendingCallsForHelpEvent, DeletePendingCallsForHelpEvent.class);
         this.registerHandler(Incoming.RequestReportUserBullyingEvent, RequestReportUserBullyingEvent.class);
         this.registerHandler(Incoming.ReportBullyEvent, ReportBullyEvent.class);
         this.registerHandler(Incoming.ReportEvent, ReportEvent.class);

@@ -198,6 +198,7 @@ public class Incoming {
     public static final int SearchRoomsByTagEvent = UnsupportedIncoming.SearchRoomsByTagEvent;
 
     public static final int RequestPublicRoomsEvent = 1229;
+    public static final int ConvertGlobalRoomIdEvent = 314;
     public static final int RequestResolutionEvent = 359;
     public static final int RequestInventoryItemsEvent = 3150;
     public static final int ModToolRoomAlertEvent = 3842;
@@ -253,7 +254,9 @@ public class Incoming {
     public static final int RequestGuildFurniWidgetEvent = 2651;
     public static final int ClickFurniEvent = 6002;
     public static final int RequestOwnItemsEvent = 2105;
+    // The help window's pending calls: 3267 asks for them, 3605 discards them
     public static final int RequestReportRoomEvent = 3267;
+    public static final int DeletePendingCallsForHelpEvent = 3605;
     public static final int ReportEvent = 1691;
     public static final int TriggerOneWayGateEvent = 2765;
     public static final int FloorPlanEditorSaveEvent = 875;
@@ -297,6 +300,7 @@ public class Incoming {
     public static final int GuildDeleteEvent = 1134;
     public static final int SetHomeRoomEvent = 1740;
     public static final int RoomUserGiveHandItemEvent = 2941;
+    public static final int RoomUserGiveHandItemPetEvent = 2768;
     public static final int AmbassadorVisitCommandEvent = 2970;
     public static final int AmbassadorAlertCommandEvent = 2996;
     public static final int SaveUserVolumesEvent = 1367;
@@ -562,6 +566,7 @@ public class Incoming {
     public static final int RoomRemovePaintEvent = 7021;
     public static final int SetBuildUnderpassEvent = 7022;
     public static final int SetBuildHeightEvent = 9351;
+    public static final int OpenMysteryTrophyEvent = 3074;
 
     // YouTube Room Broadcast
     public static final int YouTubeRoomPlayEvent = 8001;
