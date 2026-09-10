@@ -9,7 +9,6 @@ import com.eu.habbo.habbohotel.users.Habbo;
 import com.eu.habbo.messages.incoming.MessageHandler;
 import com.eu.habbo.messages.outgoing.navigator.OpenRoomCreationWindowComposer;
 import com.eu.habbo.messages.outgoing.rooms.ForwardToRoomComposer;
-
 import java.util.List;
 
 /**

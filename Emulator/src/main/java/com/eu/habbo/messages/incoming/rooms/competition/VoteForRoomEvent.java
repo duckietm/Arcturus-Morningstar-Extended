@@ -36,8 +36,7 @@ public class VoteForRoomEvent extends MessageHandler {
         int userId = habbo.getHabboInfo().getId();
 
         if (entryId <= 0) {
-            RoomCompetitionSupport.sendVotingState(
-                    this.client, competition, RoomCompetitionResult.VOTE_NOT_ALLOWED, 0);
+            RoomCompetitionSupport.sendVotingState(this.client, competition, RoomCompetitionResult.VOTE_NOT_ALLOWED, 0);
             return;
         }
 
