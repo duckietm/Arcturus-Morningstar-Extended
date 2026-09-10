@@ -354,6 +354,7 @@ public class Incoming {
     public static final int HotelViewRequestConcurrentUsersEvent = 1343;
     public static final int HotelViewConcurrentUsersButtonEvent = 3872;
     public static final int IgnoreRoomUserEvent = 1117;
+    public static final int IgnoreUserIdEvent = 3314;
     public static final int UnIgnoreRoomUserEvent = 2061;
     public static final int UnbanRoomUserEvent = 992;
     public static final int RoomUserBanEvent = 1477;

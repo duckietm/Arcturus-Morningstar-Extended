@@ -434,6 +434,7 @@ import com.eu.habbo.messages.incoming.rooms.promotions.RequestPromotionRoomsEven
 import com.eu.habbo.messages.incoming.rooms.promotions.UpdateRoomPromotionEvent;
 import com.eu.habbo.messages.incoming.rooms.users.ClickUserEvent;
 import com.eu.habbo.messages.incoming.rooms.users.IgnoreRoomUserEvent;
+import com.eu.habbo.messages.incoming.rooms.users.IgnoreUserIdEvent;
 import com.eu.habbo.messages.incoming.rooms.users.RequestRoomUserTagsEvent;
 import com.eu.habbo.messages.incoming.rooms.users.RoomUserActionEvent;
 import com.eu.habbo.messages.incoming.rooms.users.RoomUserBanEvent;
@@ -1130,6 +1131,7 @@ public class PacketManager {
         this.registerHandler(Incoming.BuyRoomPromotionEvent, BuyRoomPromotionEvent.class);
         this.registerHandler(Incoming.EditRoomPromotionMessageEvent, UpdateRoomPromotionEvent.class);
         this.registerHandler(Incoming.IgnoreRoomUserEvent, IgnoreRoomUserEvent.class);
+        this.registerHandler(Incoming.IgnoreUserIdEvent, IgnoreUserIdEvent.class);
         this.registerHandler(Incoming.UnIgnoreRoomUserEvent, UnIgnoreRoomUserEvent.class);
         this.registerHandler(Incoming.RoomUserMuteEvent, RoomUserMuteEvent.class);
         this.registerHandler(Incoming.RoomUserBanEvent, RoomUserBanEvent.class);

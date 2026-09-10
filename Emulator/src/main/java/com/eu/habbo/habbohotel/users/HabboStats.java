@@ -998,7 +998,10 @@ public class HabboStats implements Runnable {
     public boolean ignoreUser(GameClient gameClient, int userId) {
         final Habbo target = Emulator.getGameEnvironment().getHabboManager().getHabbo(userId);
 
-        if (!Emulator.getConfig().getBoolean("hotel.allow.ignore.staffs")
+        // The target may be offline: an ignore is stored by id, and only somebody who is connected
+        // can be checked against the unignorable permission.
+        if (target != null
+                && !Emulator.getConfig().getBoolean("hotel.allow.ignore.staffs")
                 && target.hasPermission(Permission.ACC_UNIGNORABLE)) {
             gameClient
                     .getHabbo()
