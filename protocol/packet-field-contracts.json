@@ -19921,6 +19921,28 @@
         "path": "packages/communication/src/messages/outgoing/catalog/GetTargetedOfferComposer.ts"
       },
       "fields": []
+    },
+    {
+      "name": "CONSOLE_READ_RECEIPT",
+      "direction": "server_to_client",
+      "header": 4086,
+      "java": {
+        "symbol": "ConsoleReadReceiptComposer",
+        "className": "ConsoleReadReceiptComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/friends/ConsoleReadReceiptComposer.java"
+      },
+      "typescript": {
+        "symbol": "CONSOLE_READ_RECEIPT",
+        "className": "ConsoleReadReceiptParser",
+        "path": "packages/communication/src/messages/parser/friendlist/ConsoleReadReceiptParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "readerId"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -20914,14 +20936,6 @@
       "header": 3954,
       "symbol": "COMPETITION_ROOMS_DATA",
       "path": "packages/communication/src/messages/parser/navigator/CompetitionRoomsDataMessageParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 4086,
-      "symbol": "CONSOLE_READ_RECEIPT",
-      "path": "packages/communication/src/messages/parser/friendlist/ConsoleReadReceiptParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

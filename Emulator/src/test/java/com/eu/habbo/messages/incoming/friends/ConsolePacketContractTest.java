@@ -20,6 +20,7 @@ class ConsolePacketContractTest {
         assertTrue(incoming.contains("ConsoleTypingEvent = 4087"));
         assertTrue(incoming.contains("RefreshFriendListEvent = 1419"));
         assertTrue(outgoing.contains("FriendIsTypingComposer = 4088"));
+        assertTrue(outgoing.contains("ConsoleReadReceiptComposer = 4086"));
     }
 
     @Test
@@ -49,6 +50,8 @@ class ConsolePacketContractTest {
         assertTrue(read.contains("summary.participantId() == peerId"));
         assertTrue(read.contains("history.markRead(conversation.id(), userId, conversation.lastMessageId())"));
         assertTrue(read.contains("new MessengerReadCursorComposer("));
+        assertTrue(read.contains("memberId == peerId"));
+        assertTrue(read.contains("new ConsoleReadReceiptComposer(userId)"));
     }
 
     @Test
