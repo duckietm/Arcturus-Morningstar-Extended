@@ -43,7 +43,6 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
 
     private int orderNumber;
 
-    /** Days the furni stays with the buyer; 0 for a plain purchase (AIR rent offers). */
     private int rentDays;
 
     private Map<Integer, Integer> bundle;
@@ -171,7 +170,6 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         return this.rentDays;
     }
 
-    /** True when buying this offer rents the furni for {@link #getRentDays()} days. */
     public boolean isRentOffer() {
         return this.rentDays > 0;
     }
@@ -210,18 +208,16 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         this.needsUpdate = true;
 
         if (this.limitedSells == this.limitedStack) {
-            Emulator.getGameEnvironment()
-                    .getCatalogManager()
-                    .moveCatalogItem(this, Emulator.getConfig().getInt("catalog.ltd.page.soldout"));
+            int soldOutPageId = Emulator.getConfig().getInt("catalog.ltd.page.soldout");
+            if (soldOutPageId > 0) {
+                Emulator.getGameEnvironment().getCatalogManager().moveCatalogItem(this, soldOutPageId);
+            }
         }
 
         Emulator.getThreading().run(this);
     }
 
     public Set<Item> getBaseItems() {
-        // LinkedHashSet keeps the order of the item_ids string (e.g. "1;2;3;4;5") so the
-        // client receives the products in that order — the first id is always serialised
-        // first and lands in the main-item slot instead of an arbitrary HashSet order.
         Set<Item> items = new LinkedHashSet<>();
 
         if (!this.itemId.isEmpty()) {
@@ -309,7 +305,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
         message.appendInt(this.getCredits());
         message.appendInt(this.getPoints());
         message.appendInt(this.getPointsType());
-        message.appendBoolean(this.allowGift); // Can gift
+        message.appendBoolean(this.allowGift);
 
         Set<Item> items = this.getBaseItems();
 
@@ -360,7 +356,7 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
 
         message.appendInt(this.clubOnly);
         message.appendBoolean(haveOffer(this));
-        message.appendBoolean(false); // unknown
+        message.appendBoolean(false);
         message.appendString(this.name + ".png");
         message.appendString(this.itemId == null ? "" : this.itemId);
         message.appendBoolean(this.haveOffer);

@@ -1471,11 +1471,13 @@ public class CatalogManager {
 
                 if (this.isAtomicEntitlementPurchase(item)) {
                     this.purchaseEntitlementsAtomically(item, habbo, amount, free, totalCredits, totalPoints);
+                    purchaseDelivered = true;
                     return;
                 }
 
                 if (this.isAtomicBotOrPetPurchase(item)) {
                     this.purchaseBotsAndPetsAtomically(item, habbo, amount, extradata, free, totalCredits, totalPoints);
+                    purchaseDelivered = true;
                     return;
                 }
 
@@ -1491,6 +1493,7 @@ public class CatalogManager {
                             limitedNumber,
                             totalCredits,
                             totalPoints);
+                    purchaseDelivered = true;
                     return;
                 }
 
