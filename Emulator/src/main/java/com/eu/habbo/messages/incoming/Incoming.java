@@ -410,6 +410,7 @@ public class Incoming {
     public static final int GameCenterLoadGameEvent = 1054;
     public static final int GameCenterEvent = 2914;
     public static final int GameCenterLeaveGameEvent = 3207;
+    public static final int GameCenterCheckDirectoryStatusEvent = 3259;
 
     public static final int ModToolSanctionAlertEvent = 229;
     public static final int ModToolSanctionMuteEvent = 1945;

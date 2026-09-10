@@ -131,6 +131,7 @@ import com.eu.habbo.messages.incoming.furnieditor.FurniEditorRevertFurnidataEven
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorSearchEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorUpdateEvent;
 import com.eu.habbo.messages.incoming.furnieditor.FurniEditorUpdateFurnidataEvent;
+import com.eu.habbo.messages.incoming.gamecenter.GameCenterCheckDirectoryStatusEvent;
 import com.eu.habbo.messages.incoming.gamecenter.GameCenterEvent;
 import com.eu.habbo.messages.incoming.gamecenter.GameCenterJoinGameEvent;
 import com.eu.habbo.messages.incoming.gamecenter.GameCenterLeaveGameEvent;
@@ -1438,6 +1439,7 @@ public class PacketManager {
         this.registerHandler(Incoming.GameCenterJoinGameEvent, GameCenterJoinGameEvent.class);
         this.registerHandler(Incoming.GameCenterLoadGameEvent, GameCenterLoadGameEvent.class);
         this.registerHandler(Incoming.GameCenterLeaveGameEvent, GameCenterLeaveGameEvent.class);
+        this.registerHandler(Incoming.GameCenterCheckDirectoryStatusEvent, GameCenterCheckDirectoryStatusEvent.class);
         this.registerHandler(Incoming.GameCenterEvent, GameCenterEvent.class);
         this.registerHandler(Incoming.GameCenterRequestGameStatusEvent, GameCenterRequestGameStatusEvent.class);
 

@@ -19852,6 +19852,59 @@
         "path": "packages/communication/src/messages/outgoing/help/DeletePendingCallsForHelpMessageComposer.ts"
       },
       "fields": []
+    },
+    {
+      "name": "GAME2CHECKGAMEDIRECTORYSTATUSMESSAGE",
+      "direction": "client_to_server",
+      "header": 3259,
+      "java": {
+        "symbol": "GameCenterCheckDirectoryStatusEvent",
+        "className": "GameCenterCheckDirectoryStatusEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/gamecenter/GameCenterCheckDirectoryStatusEvent.java"
+      },
+      "typescript": {
+        "symbol": "GAME2CHECKGAMEDIRECTORYSTATUSMESSAGE",
+        "className": "Game2CheckGameDirectoryStatusMessageComposer",
+        "path": "packages/communication/src/messages/outgoing/game/directory/Game2CheckGameDirectoryStatusMessageComposer.ts"
+      },
+      "fields": []
+    },
+    {
+      "name": "GAME_CENTER_DIRECTORY_STATUS",
+      "direction": "server_to_client",
+      "header": 2246,
+      "java": {
+        "symbol": "GameCenterDirectoryStatusComposer",
+        "className": "GameCenterDirectoryStatusComposer",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/outgoing/gamecenter/GameCenterDirectoryStatusComposer.java"
+      },
+      "typescript": {
+        "symbol": "GAME_CENTER_DIRECTORY_STATUS",
+        "className": "Game2GameDirectoryStatusMessageParser",
+        "path": "packages/communication/src/messages/parser/game/directory/Game2GameDirectoryStatusMessageParser.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "status"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "blockLengthSeconds"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "gamesPlayed"
+        },
+        {
+          "kind": "scalar",
+          "type": "int",
+          "name": "freeGamesLeft"
+        }
+      ]
     }
   ],
   "unpaired": [
@@ -20538,14 +20591,6 @@
     {
       "direction": "client_to_server",
       "side": "typescript",
-      "header": 3259,
-      "symbol": "GAME2CHECKGAMEDIRECTORYSTATUSMESSAGE",
-      "path": "packages/communication/src/messages/outgoing/game/directory/Game2CheckGameDirectoryStatusMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
       "header": 3305,
       "symbol": "SET_ROOM_SESSION_TAGS",
       "path": "packages/communication/src/messages/outgoing/navigator/SetRoomSessionTagsMessageComposer.ts",
@@ -20733,14 +20778,6 @@
       "header": 2196,
       "symbol": "WEEKLY_GAME2_LEADERBOARD",
       "path": "packages/communication/src/messages/parser/game/score/Game2WeeklyLeaderboardParser.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "server_to_client",
-      "side": "typescript",
-      "header": 2246,
-      "symbol": "GAME_CENTER_DIRECTORY_STATUS",
-      "path": "packages/communication/src/messages/parser/game/directory/Game2GameDirectoryStatusMessageParser.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

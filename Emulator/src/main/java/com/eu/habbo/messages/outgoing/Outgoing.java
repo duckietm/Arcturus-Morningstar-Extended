@@ -514,6 +514,7 @@ public class Outgoing {
     public static final int UnknownComposer_152 = 3954; // PRODUCTION-201611291003-338511768
     public static final int UnknownComposer_1577 = 2641; // PRODUCTION-201611291003-338511768
     public static final int NewYearResolutionCompletedComposer = 740; // PRODUCTION-201611291003-338511768
+    // The game hub's directory status; the name is kept because plugins compile against it.
     public static final int UnknownComposer_1741 = 2246; // PRODUCTION-201611291003-338511768
     public static final int UnknownComposer_1744 = 2873; // PRODUCTION-201611291003-338511768
     public static final int AdventCalendarProductComposer = 2551; // PRODUCTION-201611291003-338511768
