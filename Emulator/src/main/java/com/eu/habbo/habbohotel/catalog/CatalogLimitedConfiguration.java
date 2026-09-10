@@ -94,6 +94,9 @@ public class CatalogLimitedConfiguration implements Runnable {
         }
     }
 
+    @Deprecated
+    public void markSoldOutIfEmpty() {}
+
     public void generateNumbers(int starting, int amount) {
         synchronized (this.limitedNumbers) {
             LinkedList<Integer> generatedNumbers = new LinkedList<>();
