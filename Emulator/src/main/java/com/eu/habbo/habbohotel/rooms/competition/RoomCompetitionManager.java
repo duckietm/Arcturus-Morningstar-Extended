@@ -120,12 +120,14 @@ public class RoomCompetitionManager {
      * furniture.
      */
     public RoomCompetitionSubmitState submitState(Habbo habbo, Room room, RoomCompetition competition) {
+        // Somebody else's room, and a second room of somebody who already entered, have no window at
+        // all: the official codes are all about a room that could still enter.
         if (habbo == null || room == null || competition == null) {
-            return RoomCompetitionSubmitState.of(RoomCompetitionResult.ROOM_NOT_ELIGIBLE);
+            return RoomCompetitionSubmitState.of(RoomCompetitionResult.NOTHING);
         }
 
         if (room.getOwnerId() != habbo.getHabboInfo().getId()) {
-            return RoomCompetitionSubmitState.of(RoomCompetitionResult.ROOM_NOT_ELIGIBLE);
+            return RoomCompetitionSubmitState.of(RoomCompetitionResult.NOTHING);
         }
 
         int entered = this.entryRoomId(habbo.getHabboInfo().getId(), competition);
@@ -135,7 +137,7 @@ public class RoomCompetitionManager {
         }
 
         if (entered > 0) {
-            return RoomCompetitionSubmitState.of(RoomCompetitionResult.ROOM_NOT_ELIGIBLE);
+            return RoomCompetitionSubmitState.of(RoomCompetitionResult.NOTHING);
         }
 
         if (room.getState() != RoomState.OPEN) {

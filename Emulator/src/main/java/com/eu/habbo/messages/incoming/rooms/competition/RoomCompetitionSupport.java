@@ -19,6 +19,8 @@ final class RoomCompetitionSupport {
     private RoomCompetitionSupport() {}
 
     static void sendSubmitState(GameClient client, RoomCompetition competition, RoomCompetitionSubmitState state) {
+        if (state.result() == RoomCompetitionResult.NOTHING) return;
+
         client.sendResponse(new CompetitionEntrySubmitResultComposer(
                 competition.id(), competition.code(), state.result(), state.requiredFurni(), state.missingFurni()));
     }

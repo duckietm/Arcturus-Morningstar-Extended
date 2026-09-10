@@ -6,6 +6,9 @@ package com.eu.habbo.habbohotel.rooms.competition;
  * come from `roomcompetition.caption.submit.<n>` and `roomcompetition.caption.vote.<n>`.
  */
 public final class RoomCompetitionResult {
+    /** Not a code the client knows: there is no window to show in this room at all. */
+    public static final int NOTHING = -1;
+
     /** "Your room is now part of the competition!" — the entry is in. */
     public static final int SUBMITTED = 0;
 
