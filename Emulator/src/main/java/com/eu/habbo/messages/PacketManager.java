@@ -39,6 +39,7 @@ import com.eu.habbo.messages.incoming.catalog.RequestDiscountEvent;
 import com.eu.habbo.messages.incoming.catalog.RequestGiftConfigurationEvent;
 import com.eu.habbo.messages.incoming.catalog.RequestMarketplaceConfigEvent;
 import com.eu.habbo.messages.incoming.catalog.RequestPetBreedsEvent;
+import com.eu.habbo.messages.incoming.catalog.RequestTargetOfferEvent;
 import com.eu.habbo.messages.incoming.catalog.TargetOfferStateEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminCreateOfferEvent;
 import com.eu.habbo.messages.incoming.catalog.catalogadmin.CatalogAdminCreatePageEvent;
@@ -795,6 +796,7 @@ public class PacketManager {
         this.registerHandler(Incoming.GetClubDataEvent, RequestClubDataEvent.class);
         this.registerHandler(Incoming.RequestClubGiftsEvent, RequestClubGiftsEvent.class);
         this.registerHandler(Incoming.CatalogSearchedItemEvent, CatalogSearchedItemEvent.class);
+        this.registerHandler(Incoming.RequestTargetOfferEvent, RequestTargetOfferEvent.class);
         this.registerHandler(Incoming.PurchaseTargetOfferEvent, PurchaseTargetOfferEvent.class);
         this.registerHandler(Incoming.TargetOfferStateEvent, TargetOfferStateEvent.class);
         this.registerHandler(Incoming.CatalogSelectClubGiftEvent, CatalogSelectClubGiftEvent.class);

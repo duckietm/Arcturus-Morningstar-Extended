@@ -19905,6 +19905,22 @@
           "name": "freeGamesLeft"
         }
       ]
+    },
+    {
+      "name": "GET_TARGETED_OFFER",
+      "direction": "client_to_server",
+      "header": 2487,
+      "java": {
+        "symbol": "RequestTargetOfferEvent",
+        "className": "RequestTargetOfferEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/catalog/RequestTargetOfferEvent.java"
+      },
+      "typescript": {
+        "symbol": "GET_TARGETED_OFFER",
+        "className": "GetTargetedOfferComposer",
+        "path": "packages/communication/src/messages/outgoing/catalog/GetTargetedOfferComposer.ts"
+      },
+      "fields": []
     }
   ],
   "unpaired": [
@@ -20402,14 +20418,6 @@
       "header": 2468,
       "symbol": "UPDATE_ROOM_THUMBNAIL",
       "path": "packages/communication/src/messages/outgoing/navigator/UpdateRoomThumbnailMessageComposer.ts",
-      "reason": "Header is registered only by the Octane Renderer packet registry"
-    },
-    {
-      "direction": "client_to_server",
-      "side": "typescript",
-      "header": 2487,
-      "symbol": "GET_TARGETED_OFFER",
-      "path": "packages/communication/src/messages/outgoing/catalog/GetTargetedOfferComposer.ts",
       "reason": "Header is registered only by the Octane Renderer packet registry"
     },
     {

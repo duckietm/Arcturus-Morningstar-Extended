@@ -1153,6 +1153,7 @@ U|com/eu/habbo/messages/incoming/catalog/RequestCatalogPageEvent.java|CALL|getGa
 U|com/eu/habbo/messages/incoming/catalog/RequestCatalogPageEvent.java|CALL|getTexts|1
 U|com/eu/habbo/messages/incoming/catalog/RequestClubExtendConfirmEvent.java|CALL|getGameEnvironment|2
 U|com/eu/habbo/messages/incoming/catalog/RequestPetBreedsEvent.java|CALL|getGameEnvironment|1
+U|com/eu/habbo/messages/incoming/catalog/RequestTargetOfferEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/catalog/catalogadmin/CatalogAdminCreateOfferEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/catalog/catalogadmin/CatalogAdminSaveOfferEvent.java|CALL|getGameEnvironment|1
 U|com/eu/habbo/messages/incoming/catalog/marketplace/SellItemEvent.java|CALL|getTexts|2
