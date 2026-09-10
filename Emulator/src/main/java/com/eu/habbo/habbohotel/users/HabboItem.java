@@ -36,6 +36,7 @@ import java.awt.Rectangle;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +74,8 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
     private boolean needsUpdate = false;
     private boolean needsDelete = false;
     private boolean isFromGift = false;
+    /** Avatars may walk underneath this item when it is raised high enough, even when the room-wide underpass setting is off. */
+    private boolean allowUnderpass = false;
     /** Unix timestamp the rent period ends at, {@link RentableFurniture#NEVER} for furni owned outright. */
     private int expiresTimestamp = RentableFurniture.NEVER;
 
@@ -96,7 +99,19 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
         }
 
         this.expiresTimestamp = RentableFurniture.readExpires(set);
+        this.allowUnderpass = readAllowUnderpass(set);
         RentableFurnitureManager.track(this);
+    }
+
+    /** {@code items.allow_underpass}, tolerant of result sets that predate the column. */
+    private static boolean readAllowUnderpass(ResultSet set) throws SQLException {
+        ResultSetMetaData metaData = set.getMetaData();
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            if ("allow_underpass".equalsIgnoreCase(metaData.getColumnLabel(i))) {
+                return set.getInt("allow_underpass") == 1;
+            }
+        }
+        return false;
     }
 
     public HabboItem(int id, int userId, Item item, String extradata, int limitedStack, int limitedSells) {
@@ -318,7 +333,7 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                 }
             } else if (this.needsUpdate) {
                 try (PreparedStatement statement = connection.prepareStatement(
-                        "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ?, expires = ? WHERE id = ?")) {
+                        "UPDATE items SET user_id = ?, room_id = ?, wall_pos = ?, x = ?, y = ?, z = ?, rot = ?, extra_data = ?, limited_data = ?, expires = ?, allow_underpass = ? WHERE id = ?")) {
                     statement.setInt(1, this.databaseUserId);
                     statement.setInt(2, this.roomId);
                     statement.setString(3, this.wallPosition);
@@ -330,7 +345,8 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
                     statement.setString(8, this instanceof InteractionGuildGate ? "" : this.getDatabaseExtraData());
                     statement.setString(9, this.limitedStack + ":" + this.limitedSells);
                     statement.setInt(10, this.expiresTimestamp);
-                    statement.setInt(11, this.id);
+                    statement.setInt(11, this.allowUnderpass ? 1 : 0);
+                    statement.setInt(12, this.id);
                     statement.execute();
                 } catch (SQLException e) {
                     LOGGER.error("Caught SQL exception", e);
@@ -352,6 +368,15 @@ public abstract class HabboItem implements Runnable, IEventTriggers {
 
     public void setExpiresTimestamp(int expiresTimestamp) {
         this.expiresTimestamp = expiresTimestamp;
+    }
+
+    /** True when avatars may walk underneath this item regardless of the room-wide underpass setting. */
+    public boolean isAllowUnderpass() {
+        return this.allowUnderpass;
+    }
+
+    public void setAllowUnderpass(boolean allowUnderpass) {
+        this.allowUnderpass = allowUnderpass;
     }
 
     /** True for furni bought through a rent offer that has not been bought out. */

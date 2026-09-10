@@ -7533,6 +7533,28 @@
       ]
     },
     {
+      "name": "SET_BUILD_UNDERPASS",
+      "direction": "client_to_server",
+      "header": 7022,
+      "java": {
+        "symbol": "SetBuildUnderpassEvent",
+        "className": "SetBuildUnderpassEvent",
+        "path": "Emulator/src/main/java/com/eu/habbo/messages/incoming/rooms/items/SetBuildUnderpassEvent.java"
+      },
+      "typescript": {
+        "symbol": "SET_BUILD_UNDERPASS",
+        "className": "SetBuildUnderpassComposer",
+        "path": "packages/communication/src/messages/outgoing/room/furniture/buildheight/SetBuildUnderpassComposer.ts"
+      },
+      "fields": [
+        {
+          "kind": "scalar",
+          "type": "boolean",
+          "name": "enabled"
+        }
+      ]
+    },
+    {
       "name": "HOUSEKEEPING_FIND_USER_BY_NAME",
       "direction": "client_to_server",
       "header": 9100,

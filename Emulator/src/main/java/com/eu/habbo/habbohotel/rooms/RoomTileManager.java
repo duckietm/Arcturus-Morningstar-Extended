@@ -93,7 +93,8 @@ public class RoomTileManager {
             tallestItem = item;
         }
 
-        if (this.room.isAllowUnderpass() && result == RoomTileState.BLOCKED && tallestItem != null) {
+        if (result == RoomTileState.BLOCKED && tallestItem != null
+                && (this.room.isAllowUnderpass() || tallestItem.isAllowUnderpass())) {
             double walkSurface = this.getUnderpassWalkHeight(tile, items, exclude);
             if (tallestItem.getZ() - walkSurface >= RoomLayout.UNDERPASS_HEIGHT) {
                 result = RoomTileState.OPEN;
@@ -236,7 +237,7 @@ public class RoomTileManager {
             double itemTop = item.getZ() + (item.getBaseItem().allowSit() ? 0 : Item.getCurrentHeight(item));
 
             // Underpass: if the top item is blocking but high enough to walk under, use floor height
-            if (this.room.isAllowUnderpass() && !item.isWalkable() && !item.getBaseItem().allowWalk() && !item.getBaseItem().allowSit() && !item.getBaseItem().allowLay()) {
+            if ((this.room.isAllowUnderpass() || item.isAllowUnderpass()) && !item.isWalkable() && !item.getBaseItem().allowWalk() && !item.getBaseItem().allowSit() && !item.getBaseItem().allowLay()) {
                 RoomLayout layout2 = this.room.getLayout();
                 RoomTile tile = layout2 != null ? layout2.getTile(x, y) : null;
                 Set<HabboItem> allItems = tile != null ? this.room.getItemManager().getItemsAt(tile) : null;
@@ -456,7 +457,7 @@ public class RoomTileManager {
         }
 
         // Underpass: if top item blocks but is high enough, allow walking under
-        if (this.room.isAllowUnderpass() && !canWalk && topItem != null) {
+        if (!canWalk && topItem != null && (this.room.isAllowUnderpass() || topItem.isAllowUnderpass())) {
             double walkSurface = this.getUnderpassWalkHeight(roomTile, items, null);
             if (topItem.getZ() - walkSurface >= RoomLayout.UNDERPASS_HEIGHT) {
                 canWalk = true;

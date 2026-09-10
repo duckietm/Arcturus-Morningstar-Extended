@@ -62,6 +62,8 @@ public class RoomUnit {
   private boolean inRoom;
   private boolean canWalk;
   private boolean fastWalk = false;
+  /** Build tool mode: furniture this user places or moves is marked to allow walking underneath. Reset per room visit. */
+  private boolean buildUnderpass = false;
   private boolean statusUpdate = false;
   private boolean invisible = false;
   private boolean canLeaveRoomByDoor = true;
@@ -496,6 +498,14 @@ public class RoomUnit {
 
   public boolean isFastWalk() {
     return this.fastWalk;
+  }
+
+  public boolean isBuildUnderpass() {
+    return this.buildUnderpass;
+  }
+
+  public void setBuildUnderpass(boolean buildUnderpass) {
+    this.buildUnderpass = buildUnderpass;
   }
 
   public void setFastWalk(boolean fastWalk) {
