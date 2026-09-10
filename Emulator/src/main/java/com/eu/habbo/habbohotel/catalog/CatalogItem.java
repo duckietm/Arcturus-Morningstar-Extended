@@ -207,13 +207,6 @@ public class CatalogItem implements ISerialize, Runnable, Comparable<CatalogItem
 
         this.needsUpdate = true;
 
-        if (this.limitedSells == this.limitedStack) {
-            int soldOutPageId = Emulator.getConfig().getInt("catalog.ltd.page.soldout");
-            if (soldOutPageId > 0) {
-                Emulator.getGameEnvironment().getCatalogManager().moveCatalogItem(this, soldOutPageId);
-            }
-        }
-
         Emulator.getThreading().run(this);
     }
 
